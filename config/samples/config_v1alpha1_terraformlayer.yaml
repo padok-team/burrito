@@ -1,0 +1,12 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  labels:
+    app.kubernetes.io/name: terraformlayer
+    app.kubernetes.io/instance: terraformlayer-sample
+    app.kubernetes.io/part-of: burrito
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: burrito
+  name: terraformlayer-sample
+spec:
+  # TODO(user): Add fields here

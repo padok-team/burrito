@@ -1,0 +1,27 @@
+# permissions for end users to view terraformrepositories.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: terraformrepository-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: burrito
+    app.kubernetes.io/part-of: burrito
+    app.kubernetes.io/managed-by: kustomize
+  name: terraformrepository-viewer-role
+rules:
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformrepositories
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformrepositories/status
+  verbs:
+  - get
