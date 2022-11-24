@@ -94,10 +94,10 @@ type TerraformLayerConditions struct {
 }
 
 func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Condition) {
-	isTerraformRunning := t.RunningCondition.Evaluate(t.Cache)
-	isPlanArtifactUpToDate := t.PlanArtifact.Evaluate(t.Cache)
-	isApplyUpToDate := t.ApplyUpToDate.Evaluate(t.Cache)
-	hasTerraformFailed := t.TerraformFailure.Evaluate(t.Cache)
+	isTerraformRunning := t.RunningCondition.Evaluate(t.Cache, t.Resource)
+	isPlanArtifactUpToDate := t.PlanArtifact.Evaluate(t.Cache, t.Resource)
+	isApplyUpToDate := t.ApplyUpToDate.Evaluate(t.Cache, t.Resource)
+	hasTerraformFailed := t.TerraformFailure.Evaluate(t.Cache, t.Resource)
 	conditions := []metav1.Condition{t.RunningCondition.Status, t.PlanArtifact.Status, t.ApplyUpToDate.Status, t.TerraformFailure.Status}
 	switch {
 	case isTerraformRunning:
@@ -142,7 +142,7 @@ type TerraformRunningCondition struct {
 	Status metav1.Condition
 }
 
-func (c *TerraformRunningCondition) Evaluate(cache *Cache) bool {
+func (c *TerraformRunningCondition) Evaluate(cache *Cache, t *configv1alpha1.TerraformLayer) bool {
 	//TODO: Compute key : Path + Repository
 	return true
 }
@@ -151,17 +151,16 @@ type TerraformPlanArtifactCondition struct {
 	Status metav1.Condition
 }
 
-func (c *TerraformPlanArtifactCondition) Evaluate(cache *Cache) bool {
+func (c *TerraformPlanArtifactCondition) Evaluate(cache *Cache, t *configv1alpha1.TerraformLayer) bool {
 	//TODO: Compute key : Path + Repository + Branch / Value: Hash Artifact + Timestamp for Last plan date
 	return true
-
 }
 
 type TerraformApplyUpToDateCondition struct {
 	Status metav1.Condition
 }
 
-func (c *TerraformApplyUpToDateCondition) Evaluate(cache *Cache) bool {
+func (c *TerraformApplyUpToDateCondition) Evaluate(cache *Cache, t *configv1alpha1.TerraformLayer) bool {
 	//TODO: Compute key : Path + Repository / Value: Hash Artifact
 	//TODO: Compare hash artifact values (Plan vs Apply)
 	return true
@@ -172,7 +171,7 @@ type TerraformFailureCondition struct {
 	Status metav1.Condition
 }
 
-func (c *TerraformFailureCondition) Evaluate(cache *Cache) bool {
+func (c *TerraformFailureCondition) Evaluate(cache *Cache, t *configv1alpha1.TerraformLayer) bool {
 	//TODO: Compute key: Path + Repository + Branch / Value: bool
 	return true
 }
