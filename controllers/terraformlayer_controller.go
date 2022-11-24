@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"hash/fnv"
 	"strings"
@@ -105,11 +106,11 @@ func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Cond
 	switch {
 	case isTerraformRunning:
 		return func() ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(2)}
+			return ctrl.Result{RequeueAfter: time.Minute * 2}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && isApplyUpToDate:
 		return func() ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(20)}
+			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
 		return func() ctrl.Result {
@@ -120,7 +121,7 @@ func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Cond
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
 		return func() ctrl.Result {
 			//TODO: Launch Apply
-			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(20)}
+			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
 		return func() ctrl.Result {
@@ -131,7 +132,7 @@ func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Cond
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
 		return func() ctrl.Result {
 			//TODO: Launch Plan
-			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(20)}
+			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	default:
 		return func() ctrl.Result {
@@ -154,7 +155,21 @@ type TerraformRunningCondition struct {
 }
 
 func (c *TerraformRunningCondition) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
-	//TODO: Compute key : Path + Repository
+	c.Status = metav1.Condition{
+		Type:               TerraformFailure,
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+	}
+	key := "lock-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	_, err := cache.Get(key)
+	if err != nil {
+		c.Status.Reason = "NoLockInCache"
+		c.Status.Message = "No lock has been found in Cache. Terraform is not running on this layer."
+		c.Status.Status = metav1.ConditionFalse
+		return false
+	}
+	c.Status.Reason = "LockInCache"
+	c.Status.Message = "Lock has been found in Cache. Terraform is already running on this layer."
+	c.Status.Status = metav1.ConditionTrue
 	return true
 }
 
@@ -163,7 +178,31 @@ type TerraformPlanArtifactCondition struct {
 }
 
 func (c *TerraformPlanArtifactCondition) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
-	//TODO: Compute key : Path + Repository + Branch / Value: Hash Artifact + Timestamp for Last plan date
+	c.Status = metav1.Condition{
+		Type:               TerraformFailure,
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+	}
+	key := "lastPlanDate-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	value, err := cache.Get(key)
+	if err != nil {
+		c.Status.Reason = "NoTimestampInCache"
+		c.Status.Message = "The last plan date is not in cache."
+		c.Status.Status = metav1.ConditionFalse
+		return false
+	}
+	unixTimestamp := int64(binary.BigEndian.Uint64(value))
+	lastPlanDate := time.Unix(unixTimestamp, 0)
+	nextPlanDate := lastPlanDate.Add(20 * time.Minute)
+	now := time.Now()
+	if nextPlanDate.After(now) {
+		c.Status.Reason = "PlanIsRecent"
+		c.Status.Message = "The plan has been made less than 20 minutes ago."
+		c.Status.Status = metav1.ConditionFalse
+		return false
+	}
+	c.Status.Reason = "PlanIsTooOld"
+	c.Status.Message = "The plan has been made more than 20 minutes ago."
+	c.Status.Status = metav1.ConditionTrue
 	return true
 }
 
