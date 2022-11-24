@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,14 +29,30 @@ type TerraformLayerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of TerraformLayer. Edit terraformlayer_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Path                string                            `json:"path,omitempty"`
+	Branch              string                            `json:"branch,omitempty"`
+	TerraformVersion    string                            `json:"terraformVersion,omitempty"`
+	Repository          TerraformLayerRepository          `json:"repository,omitempty"`
+	RemediationStrategy TerraformLayerRemediationStrategy `json:"remediationStrategy,omitempty"`
+	PlanOnPullRequest   bool                              `json:"planOnPullRequest,omitempty"`
+	RunnerPodTemplate   corev1.PodTemplateSpec            `json:"template,omitempty"`
+}
+
+type TerraformLayerRemediationStrategy struct {
+	PlanOnDrift  bool `json:"planOnDrift,omitempty"`
+	ApplyOnDrift bool `json:"applyOnDrift,omitempty"`
+	ApplyOnPush  bool `json:"applyOnPush,omitempty"`
+}
+
+type TerraformLayerRepository struct {
+	Kind      string `json:"kind,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // TerraformLayerStatus defines the observed state of TerraformLayer
 type TerraformLayerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true

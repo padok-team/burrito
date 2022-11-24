@@ -18,7 +18,10 @@ package controllers
 
 import (
 	"context"
+	"time"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,6 +34,7 @@ import (
 type TerraformLayerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Cache  Cache
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformlayers,verbs=get;list;watch;create;update;patch;delete
@@ -48,15 +52,127 @@ type TerraformLayerReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	layer := &configv1alpha1.TerraformLayer{}
+	err := r.Client.Get(context.TODO(), req.NamespacedName, layer)
+	if errors.IsNotFound(err) {
+		log.Log.Info("TerraformLayer resource not found. Ignoring since object must be deleted.")
+		return ctrl.Result{}, nil
+	}
+	if err != nil {
+		log.Log.Error(err, "Failed to get TerraformLayer.")
+		return ctrl.Result{}, err
+	}
+	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache}
+	evalFunc, conditions := c.Evaluate()
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
+	r.Client.Status().Update(context.TODO(), layer)
+	return evalFunc(), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Cache = newMemoryCache()
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
+}
+
+const (
+	RunningCondition = "IsTerraformRunning"
+	PlanArtifact     = "IsPlanArtifactUpToDate"
+	ApplyUpToDate    = "IsApplyUpToDate"
+	TerraformFailure = "HasTerraformFailed"
+)
+
+type TerraformLayerConditions struct {
+	RunningCondition TerraformRunningCondition
+	PlanArtifact     TerraformPlanArtifactCondition
+	ApplyUpToDate    TerraformApplyUpToDateCondition
+	TerraformFailure TerraformFailureCondition
+	Cache            *Cache
+	Resource         *configv1alpha1.TerraformLayer
+}
+
+func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Condition) {
+	isTerraformRunning := t.RunningCondition.Evaluate(t.Cache)
+	isPlanArtifactUpToDate := t.PlanArtifact.Evaluate(t.Cache)
+	isApplyUpToDate := t.ApplyUpToDate.Evaluate(t.Cache)
+	hasTerraformFailed := t.TerraformFailure.Evaluate(t.Cache)
+	conditions := []metav1.Condition{t.RunningCondition.Status, t.PlanArtifact.Status, t.ApplyUpToDate.Status, t.TerraformFailure.Status}
+	switch {
+	case isTerraformRunning:
+		return func() ctrl.Result {
+			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(2)}
+		}, conditions
+	case !isTerraformRunning && isPlanArtifactUpToDate && isApplyUpToDate:
+		return func() ctrl.Result {
+			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(20)}
+		}, conditions
+	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
+		return func() ctrl.Result {
+			//TODO: Launch Apply
+			//TODO: Implement Exponential backoff
+			return ctrl.Result{}
+		}, conditions
+	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
+		return func() ctrl.Result {
+			//TODO: Launch Apply
+			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(20)}
+		}, conditions
+	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
+		return func() ctrl.Result {
+			//TODO: Launch Plan
+			//TODO: Implement Exponential backoff
+			return ctrl.Result{}
+		}, conditions
+	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
+		return func() ctrl.Result {
+			//TODO: Launch Plan
+			return ctrl.Result{RequeueAfter: time.Minute * time.Duration(20)}
+		}, conditions
+	default:
+		return func() ctrl.Result {
+			//TODO: Add Log -> This should not have happened
+			return ctrl.Result{}
+		}, conditions
+	}
+}
+
+type TerraformRunningCondition struct {
+	Status metav1.Condition
+}
+
+func (c *TerraformRunningCondition) Evaluate(cache *Cache) bool {
+	//TODO: Compute key : Path + Repository
+	return true
+}
+
+type TerraformPlanArtifactCondition struct {
+	Status metav1.Condition
+}
+
+func (c *TerraformPlanArtifactCondition) Evaluate(cache *Cache) bool {
+	//TODO: Compute key : Path + Repository + Branch / Value: Hash Artifact + Timestamp for Last plan date
+	return true
+
+}
+
+type TerraformApplyUpToDateCondition struct {
+	Status metav1.Condition
+}
+
+func (c *TerraformApplyUpToDateCondition) Evaluate(cache *Cache) bool {
+	//TODO: Compute key : Path + Repository / Value: Hash Artifact
+	//TODO: Compare hash artifact values (Plan vs Apply)
+	return true
+
+}
+
+type TerraformFailureCondition struct {
+	Status metav1.Condition
+}
+
+func (c *TerraformFailureCondition) Evaluate(cache *Cache) bool {
+	//TODO: Compute key: Path + Repository + Branch / Value: bool
+	return true
 }
