@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -211,10 +212,32 @@ type TerraformApplyUpToDateCondition struct {
 }
 
 func (c *TerraformApplyUpToDateCondition) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
-	//TODO: Compute key : Path + Repository / Value: Hash Artifact
-	//TODO: Compare hash artifact values (Plan vs Apply)
-	return true
-
+	c.Status = metav1.Condition{
+		Type:               ApplyUpToDate,
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionTrue,
+	}
+	status := true
+	planKey := "last-planned-artifact-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	applyKey := "last-applied-artifact-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	planHash, err := cache.Get(planKey)
+	if err != nil {
+		c.Status.Reason = "NoPlanYet"
+		c.Status.Message = "No plan has run yet, Layer might be new"
+		return status
+	}
+	applyHash, err := cache.Get(applyKey)
+	if err != nil {
+		c.Status.Reason = "NoApplyHasRan"
+		c.Status.Message = "Apply has not ran yet but a plan is available, launching apply"
+		status = false
+	}
+	if bytes.Compare(planHash, applyHash) != 0 {
+		c.Status.Reason = "NewPlanAvailable"
+		c.Status.Message = "Apply will run."
+		status = false
+	}
+	return status
 }
 
 type TerraformFailureCondition struct {
@@ -222,8 +245,30 @@ type TerraformFailureCondition struct {
 }
 
 func (c *TerraformFailureCondition) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
-	key := "run-result-" + computeHash(t.Spec.Path, t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Branch)
-	value, err := cache.Get(key)
-	//TODO: Compute key: Path + Repository + Branch / Value: bool
-	return true
+	c.Status = metav1.Condition{
+		Type:               TerraformFailure,
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionFalse,
+	}
+	status := false
+	hashKey := computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	resultKey := "run-result-" + hashKey
+	messageKey := "run-message-" + hashKey
+	result, err := cache.Get(resultKey)
+	if err != nil {
+		c.Status.Reason = "NoRunYet"
+		c.Status.Message = "Terraform has not ran yet"
+		return status
+	}
+	if string(result) == "1" {
+		c.Status.Status = metav1.ConditionTrue
+		status = true
+	}
+	message, err := cache.Get(messageKey)
+	if err != nil {
+		c.Status.Reason = "UnexpectedRunnerFailure"
+		c.Status.Message = "Terraform runner might have crashed before updating Redis"
+	}
+	c.Status.Message = string(message)
+	return status
 }
