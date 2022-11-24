@@ -87,6 +87,13 @@ const (
 	PlanArtifact     = "IsPlanArtifactUpToDate"
 	ApplyUpToDate    = "IsApplyUpToDate"
 	TerraformFailure = "HasTerraformFailed"
+
+	PrefixLock                = "lock-"
+	PrefixLastPlanDate        = "lastPlandate"
+	PrefixLastPlannedArtifact = "lastPlannedArtifact-"
+	PrefixLastAppliedArtifact = "lastApplyArtifact-"
+	PrefixRunResult           = "runResult-"
+	PrefixRunMessage          = "runMessage-"
 )
 
 type TerraformLayerConditions struct {
@@ -160,7 +167,7 @@ func (c *TerraformRunningCondition) Evaluate(cache Cache, t *configv1alpha1.Terr
 		Type:               TerraformFailure,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 	}
-	key := "lock-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	key := PrefixLock + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
 	_, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoLockInCache"
@@ -183,7 +190,7 @@ func (c *TerraformPlanArtifactCondition) Evaluate(cache Cache, t *configv1alpha1
 		Type:               TerraformFailure,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 	}
-	key := "lastPlanDate-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	key := PrefixLastPlanDate + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
 	value, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoTimestampInCache"
@@ -218,8 +225,8 @@ func (c *TerraformApplyUpToDateCondition) Evaluate(cache Cache, t *configv1alpha
 		Status:             metav1.ConditionTrue,
 	}
 	status := true
-	planKey := "last-planned-artifact-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
-	applyKey := "last-applied-artifact-" + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	planKey := PrefixLastPlannedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	applyKey := PrefixLastAppliedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
 	planHash, err := cache.Get(planKey)
 	if err != nil {
 		c.Status.Reason = "NoPlanYet"
@@ -252,8 +259,8 @@ func (c *TerraformFailureCondition) Evaluate(cache Cache, t *configv1alpha1.Terr
 	}
 	status := false
 	hashKey := computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
-	resultKey := "run-result-" + hashKey
-	messageKey := "run-message-" + hashKey
+	resultKey := PrefixRunResult + hashKey
+	messageKey := PrefixRunMessage + hashKey
 	result, err := cache.Get(resultKey)
 	if err != nil {
 		c.Status.Reason = "NoRunYet"
