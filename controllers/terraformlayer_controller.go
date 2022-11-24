@@ -18,6 +18,9 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"hash/fnv"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -136,6 +139,14 @@ func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Cond
 			return ctrl.Result{}
 		}, conditions
 	}
+}
+
+func computeHash(s ...string) string {
+	beforeHash := ""
+	strings.Join(s, beforeHash)
+	h := fnv.New32a()
+	h.Write([]byte(beforeHash))
+	return fmt.Sprint(h.Sum32())
 }
 
 type TerraformRunningCondition struct {
