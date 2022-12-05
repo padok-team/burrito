@@ -95,16 +95,13 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with last timestamp in cache < 20min", func() {
 			It("should return true", func() {
-				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch),
-					[]byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
 		Context("with last timestamp in cache > 20min", func() {
 			It("should return false", func() {
-				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch),
-					[]byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
-
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
 		})
@@ -187,7 +184,7 @@ var _ = Describe("TerraformLayer", func() {
 				Expect(out[2].Status).To(Equal(metav1.ConditionTrue))
 			})
 		})
-		Context("terraform not running, plan up to date, apply noy up to date, terraform has failed", func() {
+		Context("terraform not running, plan up to date, apply not up to date, terraform has failed", func() {
 			It("", func() {
 				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
 				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
@@ -198,6 +195,39 @@ var _ = Describe("TerraformLayer", func() {
 				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
 				Expect(out[2].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[3].Status).To(Equal(metav1.ConditionTrue))
+			})
+		})
+		Context("terraform not running, plan up to date, apply noy up to date, terraform has not failed", func() {
+			It("", func() {
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
+				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
+				cache.Set(CachePrefixLastAppliedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte("ThisIsAnotherPlanArtifact"), 0)
+				cache.Set(CachePrefixRunResult+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("0"), 0)
+				_, out := conditions.Evaluate()
+				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
+				Expect(out[2].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[3].Status).To(Equal(metav1.ConditionFalse))
+			})
+		})
+		Context("terraform not running, plan not up to date, terraform has failed", func() {
+			It("", func() {
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
+				cache.Set(CachePrefixRunResult+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("1"), 0)
+				_, out := conditions.Evaluate()
+				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[1].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[3].Status).To(Equal(metav1.ConditionTrue))
+			})
+		})
+		Context("terraform not running, plan not up to date, terraform has failed", func() {
+			It("", func() {
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
+				cache.Set(CachePrefixRunResult+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("0"), 0)
+				_, out := conditions.Evaluate()
+				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[1].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[3].Status).To(Equal(metav1.ConditionFalse))
 			})
 		})
 	})
