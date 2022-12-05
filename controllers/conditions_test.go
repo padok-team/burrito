@@ -65,9 +65,9 @@ var _ = Describe("TerraformLayer", func() {
 	})
 
 	Describe("TerraformRunningCondition", func() {
-		var condition TerraformRunningCondition
+		var condition TerraformRunning
 		BeforeEach(func() {
-			condition = TerraformRunningCondition{}
+			condition = TerraformRunning{}
 		})
 		Context("with lock in cache", func() {
 			It("should return true", func() {
@@ -82,9 +82,9 @@ var _ = Describe("TerraformLayer", func() {
 		})
 	})
 	Describe("TerraformPlanArtifactCondition", func() {
-		var condition TerraformPlanArtifactCondition
+		var condition TerraformPlanArtifactUpToDate
 		BeforeEach(func() {
-			condition = TerraformPlanArtifactCondition{}
+			condition = TerraformPlanArtifactUpToDate{}
 		})
 		Context("without last timestamp in cache", func() {
 			It("should return false", func() {
@@ -108,9 +108,9 @@ var _ = Describe("TerraformLayer", func() {
 		})
 	})
 	Describe("TerraformApplyUpToDateCondition", func() {
-		var condition TerraformApplyUpToDateCondition
+		var condition TerraformApplyUpToDate
 		BeforeEach(func() {
-			condition = TerraformApplyUpToDateCondition{}
+			condition = TerraformApplyUpToDate{}
 		})
 		Context("without plan in cache", func() {
 			It("should return true", func() {
@@ -139,9 +139,9 @@ var _ = Describe("TerraformLayer", func() {
 		})
 	})
 	Describe("TerraformFailureCondition", func() {
-		var condition TerraformFailureCondition
+		var condition TerraformFailure
 		BeforeEach(func() {
-			condition = TerraformFailureCondition{}
+			condition = TerraformFailure{}
 		})
 		Context("without run result in cache", func() {
 			It("should return false", func() {
@@ -161,5 +161,8 @@ var _ = Describe("TerraformLayer", func() {
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
+	})
+	Describe("TerraformLayerCondition", func() {
+
 	})
 })
