@@ -19,9 +19,9 @@ package controllers
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"hash/fnv"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,12 +88,12 @@ const (
 	ApplyUpToDate    = "IsApplyUpToDate"
 	TerraformFailure = "HasTerraformFailed"
 
-	PrefixLock                = "lock-"
-	PrefixLastPlanDate        = "lastPlandate"
-	PrefixLastPlannedArtifact = "lastPlannedArtifact-"
-	PrefixLastAppliedArtifact = "lastApplyArtifact-"
-	PrefixRunResult           = "runResult-"
-	PrefixRunMessage          = "runMessage-"
+	CachePrefixLock                = "lock-"
+	CachePrefixLastPlanDate        = "lastPlandate"
+	CachePrefixLastPlannedArtifact = "lastPlannedArtifact-"
+	CachePrefixLastAppliedArtifact = "lastApplyArtifact-"
+	CachePrefixRunResult           = "runResult-"
+	CachePrefixRunMessage          = "runMessage-"
 )
 
 type TerraformLayerConditions struct {
@@ -158,6 +158,10 @@ func computeHash(s ...string) string {
 	return fmt.Sprint(h.Sum32())
 }
 
+type TerraformCondition interface {
+	Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool
+}
+
 type TerraformRunningCondition struct {
 	Status metav1.Condition
 }
@@ -167,7 +171,7 @@ func (c *TerraformRunningCondition) Evaluate(cache Cache, t *configv1alpha1.Terr
 		Type:               TerraformFailure,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 	}
-	key := PrefixLock + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	key := CachePrefixLock + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
 	_, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoLockInCache"
@@ -190,7 +194,7 @@ func (c *TerraformPlanArtifactCondition) Evaluate(cache Cache, t *configv1alpha1
 		Type:               TerraformFailure,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 	}
-	key := PrefixLastPlanDate + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	key := CachePrefixLastPlanDate + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
 	value, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoTimestampInCache"
@@ -198,20 +202,20 @@ func (c *TerraformPlanArtifactCondition) Evaluate(cache Cache, t *configv1alpha1
 		c.Status.Status = metav1.ConditionFalse
 		return false
 	}
-	unixTimestamp := int64(binary.BigEndian.Uint64(value))
+	unixTimestamp, _ := strconv.ParseInt(string(value), 10, 64)
 	lastPlanDate := time.Unix(unixTimestamp, 0)
 	nextPlanDate := lastPlanDate.Add(20 * time.Minute)
 	now := time.Now()
 	if nextPlanDate.After(now) {
 		c.Status.Reason = "PlanIsRecent"
 		c.Status.Message = "The plan has been made less than 20 minutes ago."
-		c.Status.Status = metav1.ConditionFalse
-		return false
+		c.Status.Status = metav1.ConditionTrue
+		return true
 	}
 	c.Status.Reason = "PlanIsTooOld"
 	c.Status.Message = "The plan has been made more than 20 minutes ago."
-	c.Status.Status = metav1.ConditionTrue
-	return true
+	c.Status.Status = metav1.ConditionFalse
+	return false
 }
 
 type TerraformApplyUpToDateCondition struct {
@@ -225,15 +229,15 @@ func (c *TerraformApplyUpToDateCondition) Evaluate(cache Cache, t *configv1alpha
 		Status:             metav1.ConditionTrue,
 	}
 	status := true
-	planKey := PrefixLastPlannedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
-	applyKey := PrefixLastAppliedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
-	planHash, err := cache.Get(planKey)
+	key := CachePrefixLastPlannedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	planHash, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoPlanYet"
 		c.Status.Message = "No plan has run yet, Layer might be new"
 		return status
 	}
-	applyHash, err := cache.Get(applyKey)
+	key = CachePrefixLastAppliedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	applyHash, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoApplyHasRan"
 		c.Status.Message = "Apply has not ran yet but a plan is available, launching apply"
@@ -258,10 +262,8 @@ func (c *TerraformFailureCondition) Evaluate(cache Cache, t *configv1alpha1.Terr
 		Status:             metav1.ConditionFalse,
 	}
 	status := false
-	hashKey := computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
-	resultKey := PrefixRunResult + hashKey
-	messageKey := PrefixRunMessage + hashKey
-	result, err := cache.Get(resultKey)
+	key := CachePrefixRunResult + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	result, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "NoRunYet"
 		c.Status.Message = "Terraform has not ran yet"
@@ -271,7 +273,8 @@ func (c *TerraformFailureCondition) Evaluate(cache Cache, t *configv1alpha1.Terr
 		c.Status.Status = metav1.ConditionTrue
 		status = true
 	}
-	message, err := cache.Get(messageKey)
+	key = CachePrefixRunMessage + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	message, err := cache.Get(key)
 	if err != nil {
 		c.Status.Reason = "UnexpectedRunnerFailure"
 		c.Status.Message = "Terraform runner might have crashed before updating Redis"
