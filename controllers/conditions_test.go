@@ -25,6 +25,8 @@ import (
 	. "github.com/onsi/gomega"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	//+kubebuilder:scaffold:imports
@@ -162,7 +164,41 @@ var _ = Describe("TerraformLayer", func() {
 			})
 		})
 	})
-	Describe("TerraformLayerCondition", func() {
-
+	Describe("TerraformLayerConditions", func() {
+		var conditions TerraformLayerConditions
+		BeforeEach(func() {
+			conditions = TerraformLayerConditions{Resource: t, Cache: &cache}
+		})
+		Context("terraform is running", func() {
+			It("", func() {
+				cache.Set(CachePrefixLock+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte{1}, 0)
+				_, out := conditions.Evaluate()
+				Expect(out[0].Status).To(Equal(metav1.ConditionTrue))
+			})
+		})
+		Context("terraform not running and everything is up to date", func() {
+			It("", func() {
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
+				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
+				cache.Set(CachePrefixLastAppliedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte("ThisIsAPlanArtifact"), 0)
+				_, out := conditions.Evaluate()
+				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
+				Expect(out[2].Status).To(Equal(metav1.ConditionTrue))
+			})
+		})
+		Context("terraform not running, plan up to date, apply noy up to date, terraform has failed", func() {
+			It("", func() {
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
+				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
+				cache.Set(CachePrefixLastAppliedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte("ThisIsAnotherPlanArtifact"), 0)
+				cache.Set(CachePrefixRunResult+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("1"), 0)
+				_, out := conditions.Evaluate()
+				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
+				Expect(out[2].Status).To(Equal(metav1.ConditionFalse))
+				Expect(out[3].Status).To(Equal(metav1.ConditionTrue))
+			})
+		})
 	})
 })
