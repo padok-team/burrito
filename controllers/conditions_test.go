@@ -71,11 +71,11 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with lock in cache", func() {
 			It("should return true", func() {
-				cache.Set(PrefixLock+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte{1}, 0)
+				cache.Set(CachePrefixLock+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte{1}, 0)
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
-		Context("with lock not in cache", func() {
+		Context("without lock in cache", func() {
 			It("should return false", func() {
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
@@ -86,58 +86,80 @@ var _ = Describe("TerraformLayer", func() {
 		BeforeEach(func() {
 			condition = TerraformPlanArtifactCondition{}
 		})
-		Context("with no last timestamp in cache", func() {
+		Context("without last timestamp in cache", func() {
 			It("should return false", func() {
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
 		})
 		Context("with last timestamp in cache < 20min", func() {
 			It("should return true", func() {
-				cache.Set(PrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch),
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch),
 					[]byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
 		Context("with last timestamp in cache > 20min", func() {
 			It("should return false", func() {
-				cache.Set(PrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch),
-					[]byte(strconv.Itoa(int(time.Now().Add(-25*time.Minute).Unix()))), 0)
+				cache.Set(CachePrefixLastPlanDate+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch),
+					[]byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
+
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
 		})
 	})
-	// Describe("TerraformPlanArtifactCondition", func() {
-	// 	var runningCondition TerraformRunningCondition
-	// 	BeforeEach(func() {
-	// 		runningCondition = TerraformRunningCondition{}
-	// 	})
-	// 	Context("with lock in cache", func() {
-	// 		It("should return true", func() {
-	// 			cache.Set(PrefixLock+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte{1}, 0)
-	// 			Expect(runningCondition.Evaluate(cache, t)).To(Equal(true))
-	// 		})
-	// 	})
-	// 	Context("with lock not in cache", func() {
-	// 		It("should return false", func() {
-	// 			Expect(runningCondition.Evaluate(cache, t)).To(Equal(false))
-	// 		})
-	// 	})
-	// })
-	// Describe("TerraformPlanArtifactCondition", func() {
-	// 	var runningCondition TerraformRunningCondition
-	// 	BeforeEach(func() {
-	// 		runningCondition = TerraformRunningCondition{}
-	// 	})
-	// 	Context("with lock in cache", func() {
-	// 		It("should return true", func() {
-	// 			cache.Set(PrefixLock+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte{1}, 0)
-	// 			Expect(runningCondition.Evaluate(cache, t)).To(Equal(true))
-	// 		})
-	// 	})
-	// 	Context("with lock not in cache", func() {
-	// 		It("should return false", func() {
-	// 			Expect(runningCondition.Evaluate(cache, t)).To(Equal(false))
-	// 		})
-	// 	})
-	// })
+	Describe("TerraformApplyUpToDateCondition", func() {
+		var condition TerraformApplyUpToDateCondition
+		BeforeEach(func() {
+			condition = TerraformApplyUpToDateCondition{}
+		})
+		Context("without plan in cache", func() {
+			It("should return true", func() {
+				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+			})
+		})
+		Context("with plan in cache but no apply", func() {
+			It("should return false", func() {
+				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
+				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+			})
+		})
+		Context("with same plan and apply in cache", func() {
+			It("should return true", func() {
+				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
+				cache.Set(CachePrefixLastAppliedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte("ThisIsAPlanArtifact"), 0)
+				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+			})
+		})
+		Context("with different plan and apply in cache", func() {
+			It("should return false", func() {
+				cache.Set(CachePrefixLastPlannedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("ThisIsAPlanArtifact"), 0)
+				cache.Set(CachePrefixLastAppliedArtifact+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path), []byte("ThisIsAnotherPlanArtifact"), 0)
+				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+			})
+		})
+	})
+	Describe("TerraformFailureCondition", func() {
+		var condition TerraformFailureCondition
+		BeforeEach(func() {
+			condition = TerraformFailureCondition{}
+		})
+		Context("without run result in cache", func() {
+			It("should return false", func() {
+				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+			})
+		})
+		Context("with terraform failure in cache", func() {
+			It("should return true", func() {
+				cache.Set(CachePrefixRunResult+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("1"), 0)
+				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+			})
+		})
+		Context("with terraform failure and message in cache", func() {
+			It("should return true", func() {
+				cache.Set(CachePrefixRunResult+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("1"), 0)
+				cache.Set(CachePrefixRunMessage+computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch), []byte("This is an error message."), 0)
+				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+			})
+		})
+	})
 })
