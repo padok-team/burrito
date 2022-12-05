@@ -158,10 +158,6 @@ func computeHash(s ...string) string {
 	return fmt.Sprint(h.Sum32())
 }
 
-type TerraformCondition interface {
-	Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool
-}
-
 type TerraformRunning struct {
 	Condition metav1.Condition
 }
