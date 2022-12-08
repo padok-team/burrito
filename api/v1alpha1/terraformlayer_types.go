@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,7 +34,7 @@ type TerraformLayerSpec struct {
 	Repository          TerraformLayerRepository          `json:"repository,omitempty"`
 	RemediationStrategy TerraformLayerRemediationStrategy `json:"remediationStrategy,omitempty"`
 	PlanOnPullRequest   bool                              `json:"planOnPullRequest,omitempty"`
-	RunnerPodTemplate   corev1.PodTemplateSpec            `json:"template,omitempty"`
+	// RunnerPodTemplate   corev1.PodSpec                    `json:"template,omitempty"`
 }
 
 type TerraformLayerRemediationStrategy struct {
