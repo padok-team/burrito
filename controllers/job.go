@@ -14,12 +14,12 @@ const (
 
 func defaultPodSpec() corev1.PodSpec {
 	return corev1.PodSpec{
-		Containers: [
+		Containers: []corev1.Container{
 			corev1.Container{
-				Image: "",
+				Image:   "",
+				Command: []string{"terraform init"},
 			},
-		],
-
+		},
 	}
 }
 
