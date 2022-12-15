@@ -32,20 +32,24 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 				},
 				Env: []corev1.EnvVar{
 					{
-						Name: "REDIS_URL",
+						Name:  "REDIS_URL",
 						Value: "redis",
 					},
 					{
-						Name: "REDIS_USER",
+						Name:  "REDIS_USER",
 						Value: "redis",
 					},
 					{
-						Name: "REDIS_PASSWORD",
+						Name:  "REDIS_PASSWORD",
 						Value: "",
 					},
 					{
-						Name: "REDIS_PORT",
+						Name:  "REDIS_PORT",
 						Value: "6379",
+					},
+					{
+						Name:  "CACHE_LOCK_KEY",
+						Value: fmt.Sprintf("%s%s", CachePrefixLock, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path)),
 					},
 				},
 			},
@@ -107,22 +111,27 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 	}
 	switch action {
 	case PlanAction:
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name:  "CACHE_SUM_KEY",
+			Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name:  "CACHE_BIN_KEY",
+			Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+		})
 		pod.Spec.Containers[0].Command = []string{
 			"sh",
 			"-c",
 			fmt.Sprintf("%s;%s;%s;%s;%s;%s",
-			"cd /repository",
-			"terraform init",
-			"terraform plan -out plan.out",
-			"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HSET set ${KEY} plan_binary <plan.out", //TODO: Replace with the correct key
-			"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} delete ${KEY}", //TODO: Replace with the correct key
-		)
-			
+				"cd /repository",
+				"terraform init",
+				"terraform plan -out plan.out",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HSET set ${CACHE_BIN_KEY} plan_binary <plan.out",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} SET ${CACHE_SUM_KEY} $(sha256sum plan.out)",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} DELETE ${CACHE_LOCK_KEY} $(sha256sum plan.out)",
+			),
 		}
 	case ApplyAction:
-		pod.Spec.Containers[0].Command = []string{
-			"",
-		}
 	}
 	return pod
 }

@@ -102,12 +102,14 @@ const (
 	IsApplyUpToDate        = "IsApplyUpToDate"
 	HasFailed              = "HasTerraformFailed"
 
-	CachePrefixLock                = "lock-"
-	CachePrefixLastPlanDate        = "lastPlandate"
-	CachePrefixLastPlannedArtifact = "lastPlannedArtifact-"
-	CachePrefixLastAppliedArtifact = "lastApplyArtifact-"
-	CachePrefixRunResult           = "runResult-"
-	CachePrefixRunMessage          = "runMessage-"
+	CachePrefixLock                   = "lock-"
+	CachePrefixLastPlanDate           = "lastPlandate"
+	CachePrefixLastPlannedArtifact    = "lastPlannedArtifact-"
+	CachePrefixLastAppliedArtifact    = "lastApplyArtifact-"
+	CachePrefixLastPlannedArtifactBin = "lastPlannedArtifactBin-"
+	CachePrefixLastAppliedArtifactBin = "lastApplyArtifactBin-"
+	CachePrefixRunResult              = "runResult-"
+	CachePrefixRunMessage             = "runMessage-"
 )
 
 type TerraformLayerConditions struct {
@@ -126,6 +128,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	isApplyUpToDate := t.IsApplyUpToDate.Evaluate(*t.Cache, t.Resource)
 	hasTerraformFailed := t.HasFailed.Evaluate(*t.Cache, t.Resource)
 	conditions := []metav1.Condition{t.IsRunning.Condition, t.IsPlanArtifactUpToDate.Condition, t.IsApplyUpToDate.Condition, t.HasFailed.Condition}
+	cache := *t.Cache
 	switch {
 	case isTerraformRunning:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
@@ -138,9 +141,11 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
+			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action", err)
+				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			//TODO: Implement Exponential backoff
 			return ctrl.Result{}
@@ -148,18 +153,22 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
+			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action", err)
+				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
+			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action", err)
+				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			//TODO: Implement Exponential backoff
 			return ctrl.Result{}
@@ -167,9 +176,11 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
+			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action", err)
+				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
