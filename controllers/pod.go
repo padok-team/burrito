@@ -51,6 +51,26 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						Name:  "CACHE_LOCK_KEY",
 						Value: fmt.Sprintf("%s%s", CachePrefixLock, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path)),
 					},
+					{
+						Name:  "CACHE_PLAN_SUM_KEY",
+						Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+					},
+					{
+						Name:  "CACHE_PLAN_BIN_KEY",
+						Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+					},
+					{
+						Name:  "CACHE_PLAN_DATE_KEY",
+						Value: fmt.Sprintf("%s%s", CachePrefixLastPlanDate, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+					},
+					{
+						Name:  "CACHE_APPLY_SUM_KEY",
+						Value: fmt.Sprintf("%s%s", CachePrefixLastAppliedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+					},
+					{
+						Name:  "CACHE_APPLY_BIN_KEY",
+						Value: fmt.Sprintf("%s%s", CachePrefixLastAppliedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+					},
 				},
 			},
 		},
@@ -111,27 +131,33 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 	}
 	switch action {
 	case PlanAction:
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
-			Name:  "CACHE_SUM_KEY",
-			Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
-		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
-			Name:  "CACHE_BIN_KEY",
-			Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
-		})
 		pod.Spec.Containers[0].Command = []string{
 			"sh",
 			"-c",
-			fmt.Sprintf("%s;%s;%s;%s;%s;%s",
+			fmt.Sprintf("%s;%s;%s;%s;%s;%s;%s",
 				"cd /repository",
 				"terraform init",
 				"terraform plan -out plan.out",
-				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HSET set ${CACHE_BIN_KEY} plan_binary <plan.out",
-				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} SET ${CACHE_SUM_KEY} $(sha256sum plan.out)",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} SET ${CACHE_PLAN_DATE_KEY} $(date +%%s)",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HSET set ${CACHE_PLAN_BIN_KEY} plan_binary <plan.out",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} SET ${CACHE_PLAN_SUM_KEY} $(sha256sum plan.out)",
 				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} DELETE ${CACHE_LOCK_KEY} $(sha256sum plan.out)",
 			),
 		}
 	case ApplyAction:
+		pod.Spec.Containers[0].Command = []string{
+			"sh",
+			"-c",
+			fmt.Sprintf("%s;%s;%s;%s;%s;%s;%s",
+				"cd /repository",
+				"terraform init",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HGET set ${CACHE_PLAN_BIN_KEY} plan_binary > plan.out",
+				"terraform apply --auto-approve plan.out",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HSET set ${CACHE_APPLY_BIN_KEY} plan_binary <plan.out",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} SET ${CACHE_APPLY_SUM_KEY} $(sha256sum plan.out)",
+				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} DELETE ${CACHE_LOCK_KEY} $(sha256sum plan.out)",
+			),
+		}
 	}
 	return pod
 }
