@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -67,11 +68,24 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		log.Log.Error(err, "Failed to get TerraformLayer.")
 		return ctrl.Result{}, err
 	}
-	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache}
+	repository := &configv1alpha1.TerraformRepository{}
+	err = r.Client.Get(context.TODO(), types.NamespacedName{
+		Namespace: layer.Spec.Repository.Namespace,
+		Name:      layer.Spec.Repository.Name,
+	}, repository)
+	if errors.IsNotFound(err) {
+		log.Log.Info("TerraformRepository linked to TerraformLayer not found, ignoring layer until it's modified.")
+		return ctrl.Result{RequeueAfter: time.Minute * 2}, err
+	}
+	if err != nil {
+		log.Log.Error(err, "Failed to get TerraformRepository")
+		return ctrl.Result{}, err
+	}
+	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache, Repository: repository}
 	evalFunc, conditions := c.Evaluate()
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
 	r.Client.Status().Update(context.TODO(), layer)
-	return evalFunc(), nil
+	return evalFunc(ctx, r.Client), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -103,9 +117,10 @@ type TerraformLayerConditions struct {
 	HasFailed              TerraformFailure
 	Cache                  *Cache
 	Resource               *configv1alpha1.TerraformLayer
+	Repository             *configv1alpha1.TerraformRepository
 }
 
-func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Condition) {
+func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c client.Client) ctrl.Result, []metav1.Condition) {
 	isTerraformRunning := t.IsRunning.Evaluate(*t.Cache, t.Resource)
 	isPlanArtifactUpToDate := t.IsPlanArtifactUpToDate.Evaluate(*t.Cache, t.Resource)
 	isApplyUpToDate := t.IsApplyUpToDate.Evaluate(*t.Cache, t.Resource)
@@ -113,37 +128,53 @@ func (t *TerraformLayerConditions) Evaluate() (func() ctrl.Result, []metav1.Cond
 	conditions := []metav1.Condition{t.IsRunning.Condition, t.IsPlanArtifactUpToDate.Condition, t.IsApplyUpToDate.Condition, t.HasFailed.Condition}
 	switch {
 	case isTerraformRunning:
-		return func() ctrl.Result {
+		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Minute * 2}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && isApplyUpToDate:
-		return func() ctrl.Result {
+		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
-		return func() ctrl.Result {
-			//TODO: Launch Apply
+		return func(ctx context.Context, c client.Client) ctrl.Result {
+			pod := getPod(t.Resource, t.Repository, "apply")
+			err := c.Create(ctx, &pod)
+			if err != nil {
+				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action", err)
+			}
 			//TODO: Implement Exponential backoff
 			return ctrl.Result{}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
-		return func() ctrl.Result {
-			//TODO: Launch Apply
+		return func(ctx context.Context, c client.Client) ctrl.Result {
+			pod := getPod(t.Resource, t.Repository, "apply")
+			err := c.Create(ctx, &pod)
+			if err != nil {
+				log.Log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action", err)
+			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
-		return func() ctrl.Result {
-			//TODO: Launch Plan
+		return func(ctx context.Context, c client.Client) ctrl.Result {
+			pod := getPod(t.Resource, t.Repository, "plan")
+			err := c.Create(ctx, &pod)
+			if err != nil {
+				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action", err)
+			}
 			//TODO: Implement Exponential backoff
 			return ctrl.Result{}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
-		return func() ctrl.Result {
-			//TODO: Launch Plan
+		return func(ctx context.Context, c client.Client) ctrl.Result {
+			pod := getPod(t.Resource, t.Repository, "plan")
+			err := c.Create(ctx, &pod)
+			if err != nil {
+				log.Log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action", err)
+			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	default:
-		return func() ctrl.Result {
+		return func(ctx context.Context, c client.Client) ctrl.Result {
 			//TODO: Add Log -> This should not have happened
 			return ctrl.Result{}
 		}, conditions
