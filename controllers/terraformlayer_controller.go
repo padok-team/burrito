@@ -90,7 +90,7 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Cache = newMemoryCache()
+	r.Cache = newRedisCache("redis:6379", "", 0)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
