@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	internal "github.com/padok-team/burrito/cache"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -50,7 +51,7 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("TerraformLayer", func() {
 	var t *configv1alpha1.TerraformLayer
-	var cache Cache
+	var cache internal.Cache
 
 	BeforeEach(func() {
 		t = &configv1alpha1.TerraformLayer{
@@ -63,7 +64,7 @@ var _ = Describe("TerraformLayer", func() {
 				},
 			},
 		}
-		cache = newMemoryCache()
+		cache = internal.NewMemoryCache()
 	})
 
 	Describe("TerraformRunningCondition", func() {

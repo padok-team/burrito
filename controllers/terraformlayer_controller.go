@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	internal "github.com/padok-team/burrito/cache"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,7 +41,7 @@ import (
 type TerraformLayerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Cache  Cache
+	Cache  internal.Cache
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformlayers,verbs=get;list;watch;create;update;patch;delete
@@ -90,7 +91,7 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Cache = newRedisCache("redis:6379", "", 0)
+	r.Cache = internal.NewRedisCache("redis:6379", "", 0)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
@@ -103,7 +104,7 @@ const (
 	HasFailed              = "HasTerraformFailed"
 
 	CachePrefixLock                   = "lock-"
-	CachePrefixLastPlanDate           = "lastPlandate"
+	CachePrefixLastPlanDate           = "lastPlanDate"
 	CachePrefixLastPlannedArtifact    = "lastPlannedArtifact-"
 	CachePrefixLastAppliedArtifact    = "lastApplyArtifact-"
 	CachePrefixLastPlannedArtifactBin = "lastPlannedArtifactBin-"
@@ -117,7 +118,7 @@ type TerraformLayerConditions struct {
 	IsPlanArtifactUpToDate TerraformPlanArtifactUpToDate
 	IsApplyUpToDate        TerraformApplyUpToDate
 	HasFailed              TerraformFailure
-	Cache                  *Cache
+	Cache                  *internal.Cache
 	Resource               *configv1alpha1.TerraformLayer
 	Repository             *configv1alpha1.TerraformRepository
 }
@@ -204,7 +205,7 @@ type TerraformRunning struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformRunning) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
+func (c *TerraformRunning) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) bool {
 	c.Condition = metav1.Condition{
 		Type:               IsRunning,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -228,7 +229,7 @@ type TerraformPlanArtifactUpToDate struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformPlanArtifactUpToDate) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
+func (c *TerraformPlanArtifactUpToDate) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) bool {
 	c.Condition = metav1.Condition{
 		Type:               IsPlanArtifactUpToDate,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -262,7 +263,7 @@ type TerraformApplyUpToDate struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformApplyUpToDate) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
+func (c *TerraformApplyUpToDate) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) bool {
 	c.Condition = metav1.Condition{
 		Type:               IsApplyUpToDate,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -300,7 +301,7 @@ type TerraformFailure struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformFailure) Evaluate(cache Cache, t *configv1alpha1.TerraformLayer) bool {
+func (c *TerraformFailure) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) bool {
 	c.Condition = metav1.Condition{
 		Type:               HasFailed,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
