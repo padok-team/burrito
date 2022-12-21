@@ -19,10 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
-	"fmt"
-	"hash/fnv"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/padok-team/burrito/burrito/config"
@@ -104,14 +101,6 @@ const (
 	IsPlanArtifactUpToDate = "IsPlanArtifactUpToDate"
 	IsApplyUpToDate        = "IsApplyUpToDate"
 	HasFailed              = "HasTerraformFailed"
-
-	CachePrefixLock                   = "lock-"
-	CachePrefixLastPlanDate           = "lastPlanDate"
-	CachePrefixLastPlannedArtifact    = "lastPlannedArtifact-"
-	CachePrefixLastAppliedArtifact    = "lastApplyArtifact-"
-	CachePrefixLastPlannedArtifactBin = "lastPlannedArtifactBin-"
-	CachePrefixRunResult              = "runResult-"
-	CachePrefixRunMessage             = "runMessage-"
 )
 
 type TerraformLayerConditions struct {
@@ -143,7 +132,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
-			err := cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
+			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] failed to create lock in cache")
 				// TODO: time to requeue
@@ -152,7 +141,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action")
-				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
+				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
 			//TODO: Implement Exponential backoff
 			return ctrl.Result{}
@@ -160,7 +149,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
-			err := cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
+			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyNeeded] failed to create lock in cache")
 				// TODO: time to requeue
@@ -169,14 +158,14 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
-				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
+				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
-			err := cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
+			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] failed to create lock in cache")
 				// TODO: time to requeue
@@ -185,7 +174,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action")
-				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
+				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
 			//TODO: Implement Exponential backoff
 			return ctrl.Result{}
@@ -193,7 +182,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
-			err := cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
+			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanNeeded] failed to create lock in cache")
 				// TODO: time to requeue
@@ -202,7 +191,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action")
-				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
+				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
@@ -212,14 +201,6 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			return ctrl.Result{}
 		}, conditions
 	}
-}
-
-func computeHash(s ...string) string {
-	beforeHash := ""
-	strings.Join(s, beforeHash)
-	h := fnv.New32a()
-	h.Write([]byte(beforeHash))
-	return fmt.Sprint(h.Sum32())
 }
 
 type TerraformRunning struct {
@@ -232,7 +213,7 @@ func (c *TerraformRunning) Evaluate(cache internal.Cache, t *configv1alpha1.Terr
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 	}
-	key := CachePrefixLock + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	key := internal.GenerateKey(internal.Lock, t)
 	_, err := cache.Get(key)
 	if err != nil {
 		c.Condition.Reason = "NoLockInCache"
@@ -256,7 +237,7 @@ func (c *TerraformPlanArtifactUpToDate) Evaluate(cache internal.Cache, t *config
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 	}
-	key := CachePrefixLastPlanDate + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	key := internal.GenerateKey(internal.LastPlanDate, t)
 	value, err := cache.Get(key)
 	if err != nil {
 		c.Condition.Reason = "NoTimestampInCache"
@@ -290,7 +271,7 @@ func (c *TerraformApplyUpToDate) Evaluate(cache internal.Cache, t *configv1alpha
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 	}
-	key := CachePrefixLastPlannedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	key := internal.GenerateKey(internal.LastPlannedArtifact, t)
 	planHash, err := cache.Get(key)
 	if err != nil {
 		c.Condition.Reason = "NoPlanYet"
@@ -298,7 +279,7 @@ func (c *TerraformApplyUpToDate) Evaluate(cache internal.Cache, t *configv1alpha
 		c.Condition.Status = metav1.ConditionTrue
 		return true
 	}
-	key = CachePrefixLastAppliedArtifact + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path)
+	key = internal.GenerateKey(internal.LastAppliedArtifact, t)
 	applyHash, err := cache.Get(key)
 	if err != nil {
 		c.Condition.Reason = "NoApplyHasRan"
@@ -328,7 +309,7 @@ func (c *TerraformFailure) Evaluate(cache internal.Cache, t *configv1alpha1.Terr
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 	}
-	key := CachePrefixRunResult + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	key := internal.GenerateKey(internal.RunResult, t)
 	result, err := cache.Get(key)
 	if err != nil {
 		c.Condition.Reason = "NoRunYet"
@@ -343,7 +324,7 @@ func (c *TerraformFailure) Evaluate(cache internal.Cache, t *configv1alpha1.Terr
 		return false
 	}
 	c.Condition.Status = metav1.ConditionTrue
-	key = CachePrefixRunMessage + computeHash(t.Spec.Repository.Name, t.Spec.Repository.Namespace, t.Spec.Path, t.Spec.Branch)
+	key = internal.GenerateKey(internal.RunMessage, t)
 	message, err := cache.Get(key)
 	if err != nil {
 		c.Condition.Reason = "UnexpectedRunnerFailure"
