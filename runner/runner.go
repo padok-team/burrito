@@ -33,6 +33,7 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() {
+	r.cache = cache.NewRedisCache(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
 	defer r.cache.Delete(r.config.Runner.Layer.Lock)
 	err := r.init()
 	if err != nil {
@@ -49,7 +50,6 @@ func (r *Runner) Exec() {
 }
 
 func (r *Runner) init() error {
-	r.cache = cache.NewRedisCache(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
 	log.Printf("Using Terraform version: %s", r.config.Runner.Version)
 	terraformVersion, err := version.NewVersion(r.config.Runner.Version)
 	if err != nil {
