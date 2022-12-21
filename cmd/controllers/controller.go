@@ -10,7 +10,10 @@ import (
 )
 
 func BuildControllersCmd(app *burrito.App) *cobra.Command {
-	cmd := &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "controllers",
+		Short: "cmd to use burrito's controllers",
+	}
 	cmd.AddCommand(buildControllersStartCmd(app))
 	return cmd
 }

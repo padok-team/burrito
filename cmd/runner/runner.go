@@ -9,7 +9,10 @@ import (
 )
 
 func BuildRunnerCmd(app *burrito.App) *cobra.Command {
-	cmd := &cobra.Command{}
+	cmd := &cobra.Command{
+		Use:   "runner",
+		Short: "cmd to use burrito's runner",
+	}
 	cmd.AddCommand(buildRunnerStartCmd(app))
 	return cmd
 }
