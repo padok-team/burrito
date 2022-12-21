@@ -18,15 +18,15 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 	pod := corev1.Pod{
 		Spec: defaultPodSpec(layer, repository),
 	}
+	pod.SetNamespace(layer.Namespace)
+	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
 	switch action {
 	case PlanAction:
-		pod.GenerateName = fmt.Sprintf("%s-%s-%s-%s-", layer.Spec.Repository.Name, layer.Spec.Path, layer.Spec.Branch, action)
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "plan",
 		})
 	case ApplyAction:
-		pod.GenerateName = fmt.Sprintf("%s-%s-%s-%s-", layer.Spec.Repository.Name, layer.Spec.Path, layer.Spec.Branch, action)
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "apply",
@@ -46,7 +46,7 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 				Env: []corev1.EnvVar{
 					{
 						Name:  "BURRITO_REDIS_URL",
-						Value: "redis:6379",
+						Value: "burrito-redis-headless:6379",
 					},
 					{
 						Name:  "BURRITO_REDIS_PASSWORD",
