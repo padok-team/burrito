@@ -94,11 +94,11 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					},
 					{
 						Name:  "BURRITO_RUNNER_LAYER_PLANBIN",
-						Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+						Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
 					},
 					{
 						Name:  "BURRITO_RUNNER_LAYER_APPLYSUM",
-						Value: fmt.Sprintf("%s%s", CachePrefixLastPlannedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
+						Value: fmt.Sprintf("%s%s", CachePrefixLastAppliedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
 					},
 				},
 			},
