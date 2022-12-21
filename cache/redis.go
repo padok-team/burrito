@@ -38,5 +38,9 @@ func (r *RedisCache) Set(key string, value []byte, ttl int) error {
 }
 
 func (r *RedisCache) Delete(key string) error {
+	err := r.Client.Del(context.TODO(), key).Err()
+	if err != nil {
+		return err
+	}
 	return nil
 }
