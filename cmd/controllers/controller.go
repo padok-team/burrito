@@ -1,15 +1,16 @@
 /*
 Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 */
-package runner
+package controllers
 
 import (
 	"github.com/padok-team/burrito/burrito"
+
 	"github.com/spf13/cobra"
 )
 
-func BuildRunnerCmd(app *burrito.App) *cobra.Command {
+func BuildControllersCmd(app *burrito.App) *cobra.Command {
 	cmd := &cobra.Command{}
-	cmd.AddCommand(buildRunnerStartCmd(app))
+	cmd.AddCommand(buildControllersStartCmd(app))
 	return cmd
 }

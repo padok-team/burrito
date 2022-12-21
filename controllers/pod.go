@@ -144,7 +144,7 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 		pod.Spec.Containers[0].Command = []string{
 			"sh",
 			"-c",
-			fmt.Sprintf("%s;%s;%s;%s;%s;%s;%s",
+			fmt.Sprintf("%s;%s;%s;%s;%s;%s",
 				"cd /repository",
 				"terraform init",
 				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HGET get ${CACHE_PLAN_BIN_KEY} plan_binary > plan.out",
