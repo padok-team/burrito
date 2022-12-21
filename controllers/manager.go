@@ -109,6 +109,7 @@ func (c *Controllers) Exec() {
 	if err = (&TerraformLayerReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		Config: c.config,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "TerraformLayer")
 		os.Exit(1)

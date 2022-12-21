@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/padok-team/burrito/burrito/config"
 	internal "github.com/padok-team/burrito/cache"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,6 +43,7 @@ type TerraformLayerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	Cache  internal.Cache
+	Config *config.Config
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformlayers,verbs=get;list;watch;create;update;patch;delete
@@ -91,7 +93,7 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Cache = internal.NewRedisCache("redis:6379", "", 0)
+	r.Cache = internal.NewRedisCache(r.Config.Redis.URL, r.Config.Redis.Password, r.Config.Redis.Database)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
