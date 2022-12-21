@@ -108,7 +108,6 @@ const (
 	CachePrefixLastPlannedArtifact    = "lastPlannedArtifact-"
 	CachePrefixLastAppliedArtifact    = "lastApplyArtifact-"
 	CachePrefixLastPlannedArtifactBin = "lastPlannedArtifactBin-"
-	CachePrefixLastAppliedArtifactBin = "lastApplyArtifactBin-"
 	CachePrefixRunResult              = "runResult-"
 	CachePrefixRunMessage             = "runMessage-"
 )

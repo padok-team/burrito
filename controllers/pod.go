@@ -67,10 +67,6 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						Name:  "CACHE_APPLY_SUM_KEY",
 						Value: fmt.Sprintf("%s%s", CachePrefixLastAppliedArtifact, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
 					},
-					{
-						Name:  "CACHE_APPLY_BIN_KEY",
-						Value: fmt.Sprintf("%s%s", CachePrefixLastAppliedArtifactBin, computeHash(layer.Spec.Repository.Name, layer.Spec.Repository.Namespace, layer.Spec.Path, layer.Spec.Branch)),
-					},
 				},
 			},
 		},
@@ -153,7 +149,6 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 				"terraform init",
 				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HGET get ${CACHE_PLAN_BIN_KEY} plan_binary > plan.out",
 				"terraform apply --auto-approve plan.out",
-				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} -x HSET set ${CACHE_APPLY_BIN_KEY} plan_binary <plan.out",
 				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} SET ${CACHE_APPLY_SUM_KEY} $(sha256sum plan.out)",
 				"/redis/cli -u redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT} DELETE ${CACHE_LOCK_KEY} $(sha256sum plan.out)",
 			),
