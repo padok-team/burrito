@@ -18,7 +18,7 @@ import (
 )
 
 const PlanArtifact string = "plan.out"
-const WorkingDir string = "/burrito"
+const WorkingDir string = "/repository"
 
 type Runner struct {
 	config    *config.Config
@@ -33,6 +33,7 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() {
+	defer r.cache.Delete(r.config.Runner.Layer.Lock)
 	err := r.init()
 	if err != nil {
 		log.Fatalf("error initializing runner: %s", err)
@@ -49,18 +50,22 @@ func (r *Runner) Exec() {
 
 func (r *Runner) init() error {
 	r.cache = cache.NewRedisCache(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
-
+	log.Printf("Using Terraform version: %s", r.config.Runner.Version)
+	terraformVersion, err := version.NewVersion(r.config.Runner.Version)
+	if err != nil {
+		return err
+	}
 	installer := &releases.ExactVersion{
 		Product: product.Terraform,
-		Version: version.Must(version.NewVersion(r.config.Runner.Version)),
+		Version: version.Must(terraformVersion, nil),
 	}
 	execPath, err := installer.Install(context.Background())
 	if err != nil {
 		return err
 	}
-	//TODO: Implement authentication here
+	log.Printf("Cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
 	_, err = git.PlainClone(WorkingDir, false, &git.CloneOptions{
-		ReferenceName: plumbing.ReferenceName(r.config.Runner.Branch),
+		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
 		URL:           r.config.Runner.Repository.URL,
 	})
 	if err != nil {
@@ -71,6 +76,9 @@ func (r *Runner) init() error {
 	if err != nil {
 		return err
 	}
+	r.terraform.SetStdout(os.Stdout)
+	r.terraform.SetStderr(os.Stderr)
+	log.Printf("Launching terraform init in %s", workingDir)
 	err = r.terraform.Init(context.Background(), tfexec.Upgrade(true))
 	if err != nil {
 		return err
@@ -79,7 +87,7 @@ func (r *Runner) init() error {
 }
 
 func (r *Runner) plan() {
-	defer r.cache.Delete(r.config.Runner.Layer.Lock)
+	log.Print("Launching terraform plan")
 	_, err := r.terraform.Plan(context.Background(), tfexec.Out(PlanArtifact))
 	if err != nil {
 		log.Printf("Terraform plan errored: %s", err)
@@ -90,20 +98,22 @@ func (r *Runner) plan() {
 		log.Fatalf("Could not read plan output: %s", err)
 		return
 	}
+	log.Print("Terraform plan ran successfully")
 	sum := sha256.Sum256(plan)
+	log.Printf("Setting plan binary into cache at key %s", r.config.Runner.Layer.PlanBin)
 	err = r.cache.Set(r.config.Runner.Layer.PlanBin, plan, 3600)
 	if err != nil {
 		log.Fatalf("Could not put plan binary in cache: %s", err)
 	}
+	log.Printf("Setting plan binary checksum into cache at key %s", r.config.Runner.Layer.PlanSum)
 	err = r.cache.Set(r.config.Runner.Layer.PlanSum, sum[:], 3600)
 	if err != nil {
 		log.Fatalf("Could not put plan checksum in cache: %s", err)
 	}
-	log.Print("Terraform plan ran successfully")
 }
 
 func (r *Runner) apply() {
-	defer r.cache.Delete(r.config.Runner.Layer.Lock)
+	log.Printf("Getting plan binary in cache at key %s", r.config.Runner.Layer.PlanBin)
 	plan, err := r.cache.Get(r.config.Runner.Layer.PlanBin)
 	if err != nil {
 		log.Printf("Could not get plan artifact: %s", err)
@@ -115,14 +125,16 @@ func (r *Runner) apply() {
 		log.Printf("Could not write plan artifact to disk: %s", err)
 		return
 	}
+	log.Print("Launching terraform apply")
 	err = r.terraform.Apply(context.Background(), tfexec.DirOrPlan(PlanArtifact))
 	if err != nil {
 		log.Fatalf("Terraform apply errored: %s", err)
 		return
 	}
+	log.Print("Terraform apply ran successfully")
+	log.Printf("Setting plan binary checksum into cache at key %s", r.config.Runner.Layer.ApplySum)
 	err = r.cache.Set(r.config.Runner.Layer.ApplySum, sum[:], 3600)
 	if err != nil {
 		log.Fatalf("Could not put apply checksum in cache: %s", err)
 	}
-	log.Print("Terraform apply ran successfully")
 }

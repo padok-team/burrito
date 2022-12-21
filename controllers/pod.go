@@ -38,16 +38,28 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 
 func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
 	return corev1.PodSpec{
+		Volumes: []corev1.Volume{
+			{
+				Name:         "repository",
+				VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
+			},
+		},
 		Containers: []corev1.Container{
 			{
 				Name:       "runner",
 				Image:      fmt.Sprintf("eu.gcr.io/padok-playground/burrito:%s", "alpha"),
 				WorkingDir: "/repository",
 				Args:       []string{"runner", "start"},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      "repository",
+						MountPath: "/repository",
+					},
+				},
 				Env: []corev1.EnvVar{
 					{
 						Name:  "BURRITO_REDIS_URL",
-						Value: "burrito-redis-headless:6379",
+						Value: "burrito-redis-master:6379",
 					},
 					{
 						Name:  "BURRITO_REDIS_PASSWORD",

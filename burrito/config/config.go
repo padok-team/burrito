@@ -11,20 +11,20 @@ import (
 )
 
 type Config struct {
-	Runner     RunnerConfig     `yaml:"runner,omitempty"`
-	Controller ControllerConfig `yaml:"controller,omitempty"`
+	Runner     RunnerConfig     `yaml:"runner"`
+	Controller ControllerConfig `yaml:"controller"`
 	Redis      Redis            `yaml:"redis"`
 }
 
 type ControllerConfig struct {
-	WatchedNamespaces []string `yaml:"namespaces,omitempty"`
+	WatchedNamespaces []string `yaml:"namespaces"`
 }
 
 type RepositoryConfig struct {
 	URL      string `yaml:"url"`
-	SSH      string `yaml:"ssh,omitempty"`
-	Username string `yaml:"username,omitempty"`
-	Password string `yaml:"password,omitempty"`
+	SSH      string `yaml:"ssh"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 type RunnerConfig struct {
@@ -37,16 +37,16 @@ type RunnerConfig struct {
 }
 
 type LayerConfig struct {
-	Lock     string `yaml:"lock,omitempty"`
-	PlanSum  string `yaml:"planSum,omitempty"`
-	PlanBin  string `yaml:"planBin,omitempty"`
-	ApplySum string `yaml:"applySum,omitempty"`
+	Lock     string `yaml:"lock"`
+	PlanSum  string `yaml:"planSum"`
+	PlanBin  string `yaml:"planBin"`
+	ApplySum string `yaml:"applySum"`
 }
 
 type Redis struct {
 	URL      string `yaml:"url"`
-	Password string `yaml:"password,omitempty"`
-	Database int    `yaml:"database,omitempty"`
+	Password string `yaml:"password"`
+	Database int    `yaml:"database"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {

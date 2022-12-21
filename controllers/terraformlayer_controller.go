@@ -59,7 +59,7 @@ type TerraformLayerReconciler struct {
 func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 	layer := &configv1alpha1.TerraformLayer{}
-	err := r.Client.Get(context.TODO(), req.NamespacedName, layer)
+	err := r.Client.Get(ctx, req.NamespacedName, layer)
 	if errors.IsNotFound(err) {
 		log.Log.Info("TerraformLayer resource not found. Ignoring since object must be deleted.")
 		return ctrl.Result{}, nil
@@ -68,8 +68,10 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		log.Log.Error(err, "Failed to get TerraformLayer.")
 		return ctrl.Result{}, err
 	}
+	log.Log.Info("Reconciling TerraformLayer")
 	repository := &configv1alpha1.TerraformRepository{}
-	err = r.Client.Get(context.TODO(), types.NamespacedName{
+	log.Log.Info("Getting Linked TerraformRepository")
+	err = r.Client.Get(ctx, types.NamespacedName{
 		Namespace: layer.Spec.Repository.Namespace,
 		Name:      layer.Spec.Repository.Name,
 	}, repository)
@@ -82,9 +84,10 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache, Repository: repository}
+	log.Log.Info("Evaluating Conditions")
 	evalFunc, conditions := c.Evaluate()
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
-	r.Client.Status().Update(context.TODO(), layer)
+	r.Client.Status().Update(ctx, layer)
 	return evalFunc(ctx, r.Client), nil
 }
 
@@ -122,14 +125,17 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	cache := *t.Cache
 	switch {
 	case isTerraformRunning:
+		log.Log.Info("Terraform is already running on this layer, skipping")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Minute * 2}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && isApplyUpToDate:
+		log.Log.Info("Layer has not drifted")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
+		log.Log.Info("Layer needs to be applied but previous apply failed, launching a new runner")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
@@ -144,9 +150,10 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
 			//TODO: Implement Exponential backoff
-			return ctrl.Result{}
+			return ctrl.Result{RequeueAfter: time.Minute * 2}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
+		log.Log.Info("Layer needs to be applied, launching a new runner")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
@@ -163,6 +170,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
+		log.Log.Info("Layer needs to be planned but previous plan failed, launching a new runner")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
@@ -177,9 +185,10 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
 			//TODO: Implement Exponential backoff
-			return ctrl.Result{}
+			return ctrl.Result{RequeueAfter: time.Minute * 2}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
+		log.Log.Info("Layer needs to be planned, launching a new runner")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
@@ -196,6 +205,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
 		}, conditions
 	default:
+		log.Log.Info("This controller is drunk")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			//TODO: Add Log -> This should not have happened
 			return ctrl.Result{}
