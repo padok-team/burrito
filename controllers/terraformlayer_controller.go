@@ -146,7 +146,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
-				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action", err)
+				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action")
 				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			//TODO: Implement Exponential backoff
@@ -158,7 +158,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
-				log.Log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action", err)
+				log.Log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
 				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
@@ -169,7 +169,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
-				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action", err)
+				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action")
 				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			//TODO: Implement Exponential backoff
@@ -181,7 +181,7 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			cache.Set(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)), []byte("1"), 0)
 			err := c.Create(ctx, &pod)
 			if err != nil {
-				log.Log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action", err)
+				log.Log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action")
 				cache.Delete(fmt.Sprintf("%s%s", CachePrefixLock, computeHash(t.Resource.Spec.Repository.Name, t.Resource.Spec.Repository.Namespace, t.Resource.Spec.Path)))
 			}
 			return ctrl.Result{RequeueAfter: time.Minute * 20}
