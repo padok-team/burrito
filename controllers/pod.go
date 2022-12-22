@@ -114,6 +114,10 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						Name:  "BURRITO_RUNNER_LAYER_APPLYSUM",
 						Value: cache.GenerateKey(cache.LastAppliedArtifact, layer),
 					},
+					{
+						Name:  "BURRITO_RUNNER_LAYER_PLANDATE",
+						Value: cache.GenerateKey(cache.LastPlanDate, layer),
+					},
 				},
 			},
 		},

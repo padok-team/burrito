@@ -41,6 +41,7 @@ type LayerConfig struct {
 	PlanSum  string `yaml:"planSum"`
 	PlanBin  string `yaml:"planBin"`
 	ApplySum string `yaml:"applySum"`
+	PlanDate string `yaml:"planDate"`
 }
 
 type Redis struct {

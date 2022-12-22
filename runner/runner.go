@@ -110,6 +110,11 @@ func (r *Runner) plan() {
 	if err != nil {
 		log.Fatalf("Could not put plan checksum in cache: %s", err)
 	}
+	log.Printf("Setting last plan date cache at key %s", r.config.Runner.Layer.PlanDate)
+	err = r.cache.Set(r.config.Runner.Layer.PlanDate, sum[:], 3600)
+	if err != nil {
+		log.Fatalf("Could not put plan date in cache: %s", err)
+	}
 }
 
 func (r *Runner) apply() {
