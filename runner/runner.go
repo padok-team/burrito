@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -111,7 +113,7 @@ func (r *Runner) plan() {
 		log.Fatalf("Could not put plan checksum in cache: %s", err)
 	}
 	log.Printf("Setting last plan date cache at key %s", r.config.Runner.Layer.PlanDate)
-	err = r.cache.Set(r.config.Runner.Layer.PlanDate, sum[:], 3600)
+	err = r.cache.Set(r.config.Runner.Layer.PlanDate, []byte(strconv.FormatInt(time.Now().Unix(), 10)), 3600)
 	if err != nil {
 		log.Fatalf("Could not put plan date in cache: %s", err)
 	}
