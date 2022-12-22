@@ -90,9 +90,13 @@ func (r *Runner) init() error {
 
 func (r *Runner) plan() {
 	log.Print("Launching terraform plan")
-	_, err := r.terraform.Plan(context.Background(), tfexec.Out(PlanArtifact))
+	diff, err := r.terraform.Plan(context.Background(), tfexec.Out(PlanArtifact))
 	if err != nil {
 		log.Printf("Terraform plan errored: %s", err)
+		return
+	}
+	if !diff {
+		log.Printf("Terraform plan diff empty, no subsequent apply should be launched")
 		return
 	}
 	plan, err := os.ReadFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact))
