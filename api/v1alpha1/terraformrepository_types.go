@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,14 +29,17 @@ type TerraformRepositorySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of TerraformRepository. Edit terraformrepository_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Repository TerraformRepositoryRepository `json:"repository,omitempty"`
+}
+
+type TerraformRepositoryRepository struct {
+	Url       string                 `json:"url,omitempty"`
+	SecretRef corev1.SecretReference `json:"secretRef,omitempty"`
 }
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 //+kubebuilder:object:root=true
