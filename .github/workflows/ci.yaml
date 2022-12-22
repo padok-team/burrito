@@ -40,9 +40,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Get version from main branch
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
     - name: Get version from pull request
       if: ${{ github.event_name == 'pull_request' }}
       run: |
