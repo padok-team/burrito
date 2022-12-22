@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/padok-team/burrito/cache"
 )
 
 type Cache struct {
@@ -23,8 +24,17 @@ func New(addr string, password string, db int) *Cache {
 
 func (c *Cache) Get(key string) ([]byte, error) {
 	val, err := c.Client.Get(context.TODO(), key).Result()
+	if err == redis.Nil {
+		return nil, &cache.CacheError{
+			Err: err,
+			Nil: true,
+		}
+	}
 	if err != nil {
-		return nil, err
+		return nil, &cache.CacheError{
+			Err: err,
+			Nil: false,
+		}
 	}
 	return []byte(val), nil
 }
