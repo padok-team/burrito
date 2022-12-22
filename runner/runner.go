@@ -95,6 +95,11 @@ func (r *Runner) plan() {
 		log.Printf("Terraform plan errored: %s", err)
 		return
 	}
+	log.Printf("Setting last plan date cache at key %s", r.config.Runner.Layer.PlanDate)
+	err = r.cache.Set(r.config.Runner.Layer.PlanDate, []byte(strconv.FormatInt(time.Now().Unix(), 10)), 3600)
+	if err != nil {
+		log.Fatalf("Could not put plan date in cache: %s", err)
+	}
 	if !diff {
 		log.Printf("Terraform plan diff empty, no subsequent apply should be launched")
 		return
@@ -115,11 +120,6 @@ func (r *Runner) plan() {
 	err = r.cache.Set(r.config.Runner.Layer.PlanSum, sum[:], 3600)
 	if err != nil {
 		log.Fatalf("Could not put plan checksum in cache: %s", err)
-	}
-	log.Printf("Setting last plan date cache at key %s", r.config.Runner.Layer.PlanDate)
-	err = r.cache.Set(r.config.Runner.Layer.PlanDate, []byte(strconv.FormatInt(time.Now().Unix(), 10)), 3600)
-	if err != nil {
-		log.Fatalf("Could not put plan date in cache: %s", err)
 	}
 }
 
