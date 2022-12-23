@@ -122,28 +122,28 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	if err != nil {
 		log.Log.Info("Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
 	isPlanArtifactUpToDate, err := t.IsPlanArtifactUpToDate.Evaluate(*t.Cache, t.Resource)
 	if err != nil {
 		log.Log.Info("Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
 	isApplyUpToDate, err := t.IsApplyUpToDate.Evaluate(*t.Cache, t.Resource)
 	if err != nil {
 		log.Log.Info("Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
 	hasTerraformFailed, err := t.HasFailed.Evaluate(*t.Cache, t.Resource)
 	if err != nil {
 		log.Log.Info("Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
 	conditions := []metav1.Condition{t.IsRunning.Condition, t.IsPlanArtifactUpToDate.Condition, t.IsApplyUpToDate.Condition, t.HasFailed.Condition}
