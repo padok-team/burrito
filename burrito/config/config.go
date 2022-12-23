@@ -17,7 +17,14 @@ type Config struct {
 }
 
 type ControllerConfig struct {
-	WatchedNamespaces []string `yaml:"namespaces"`
+	WatchedNamespaces []string         `yaml:"namespaces"`
+	Timers            ControllerTimers `yaml:"timers"`
+}
+
+type ControllerTimers struct {
+	DriftDetection int `yaml:"driftDetection"`
+	WaitAction     int `yaml:"waitAction"`
+	OnError        int `yaml:"onError"`
 }
 
 type RepositoryConfig struct {

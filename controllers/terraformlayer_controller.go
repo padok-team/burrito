@@ -57,18 +57,18 @@ type TerraformLayerReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	_ = log.FromContext(ctx).WithValues("LayerController", req.NamespacedName)
+	log.Log.Info("Starting reconciliation")
 	layer := &configv1alpha1.TerraformLayer{}
 	err := r.Client.Get(ctx, req.NamespacedName, layer)
 	if errors.IsNotFound(err) {
-		log.Log.Info("TerraformLayer resource not found. Ignoring since object must be deleted.")
+		log.Log.Info("Resource not found. Ignoring since object must be deleted.")
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Log.Error(err, "Failed to get TerraformLayer.")
+		log.Log.Error(err, "Failed to get TerraformLayer")
 		return ctrl.Result{}, err
 	}
-	log.Log.Info("Reconciling TerraformLayer")
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Log.Info("Getting Linked TerraformRepository")
 	err = r.Client.Get(ctx, types.NamespacedName{
@@ -76,16 +76,16 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		Name:      layer.Spec.Repository.Name,
 	}, repository)
 	if errors.IsNotFound(err) {
-		log.Log.Info("TerraformRepository linked to TerraformLayer not found, ignoring layer until it's modified.")
-		return ctrl.Result{RequeueAfter: time.Minute * 2}, err
+		log.Log.Info("TerraformRepository not found, ignoring layer until it's modified.")
+		return ctrl.Result{}, err
 	}
 	if err != nil {
 		log.Log.Error(err, "Failed to get TerraformRepository")
 		return ctrl.Result{}, err
 	}
-	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache, Repository: repository}
-	log.Log.Info("Evaluating Conditions")
+	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache, Repository: repository, Config: r.Config}
 	evalFunc, conditions := c.Evaluate()
+	log.Log.Info("Finishing reconciliation for TerraformLayer")
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
 	r.Client.Status().Update(ctx, layer)
 	return evalFunc(ctx, r.Client), nil
@@ -112,6 +112,7 @@ type TerraformLayerConditions struct {
 	IsApplyUpToDate        TerraformApplyUpToDate
 	HasFailed              TerraformFailure
 	Cache                  *internal.Cache
+	Config                 *config.Config
 	Resource               *configv1alpha1.TerraformLayer
 	Repository             *configv1alpha1.TerraformRepository
 }
@@ -127,12 +128,12 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 	case isTerraformRunning:
 		log.Log.Info("Terraform is already running on this layer, skipping")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && isApplyUpToDate:
 		log.Log.Info("Layer has not drifted")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			return ctrl.Result{RequeueAfter: time.Minute * 20}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.DriftDetection)}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
 		log.Log.Info("Layer needs to be applied but previous apply failed, launching a new runner")
@@ -140,17 +141,16 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			pod := getPod(t.Resource, t.Repository, "apply")
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
-				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] failed to create lock in cache")
-				// TODO: time to requeue
-				return ctrl.Result{}
+				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] failed to create lock in cache, requeuing evaluation in %s", t.Config.Controller.Timers.OnError)
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
-				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action")
+				log.Log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action, requeuing evaluation in %s", t.Config.Controller.Timers.OnError)
 				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
-			//TODO: Implement Exponential backoff
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
 		log.Log.Info("Layer needs to be applied, launching a new runner")
@@ -159,15 +159,14 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyNeeded] failed to create lock in cache")
-				// TODO: time to requeue
-				return ctrl.Result{}
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
 				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
-			return ctrl.Result{RequeueAfter: time.Minute * 20}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
 		log.Log.Info("Layer needs to be planned but previous plan failed, launching a new runner")
@@ -176,16 +175,15 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] failed to create lock in cache")
-				// TODO: time to requeue
-				return ctrl.Result{}
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action")
 				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
-			//TODO: Implement Exponential backoff
-			return ctrl.Result{RequeueAfter: time.Minute * 2}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
 		log.Log.Info("Layer needs to be planned, launching a new runner")
@@ -194,20 +192,18 @@ func (t *TerraformLayerConditions) Evaluate() (func(ctx context.Context, c clien
 			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanNeeded] failed to create lock in cache")
-				// TODO: time to requeue
-				return ctrl.Result{}
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action")
 				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
 			}
-			return ctrl.Result{RequeueAfter: time.Minute * 20}
+			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	default:
 		log.Log.Info("This controller is drunk")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
-			//TODO: Add Log -> This should not have happened
 			return ctrl.Result{}
 		}, conditions
 	}
