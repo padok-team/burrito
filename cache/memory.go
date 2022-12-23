@@ -1,8 +1,6 @@
 package cache
 
-import (
-	"errors"
-)
+import "errors"
 
 type MemoryCache struct {
 	data map[string][]byte
@@ -16,7 +14,10 @@ func NewMemoryCache() *MemoryCache {
 
 func (m *MemoryCache) Get(key string) ([]byte, error) {
 	if _, ok := m.data[key]; !ok {
-		return nil, errors.New("key not found")
+		return nil, &CacheError{
+			Err: errors.New("key not found"),
+			Nil: true,
+		}
 	}
 	return m.data[key], nil
 }

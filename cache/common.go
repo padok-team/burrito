@@ -7,6 +7,27 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
+type CacheError struct {
+	Err error
+	Nil bool
+}
+
+func (c *CacheError) Error() string {
+	return c.Err.Error()
+}
+
+func NotFound(err error) bool {
+	ce, ok := err.(*CacheError)
+	if ok {
+		return ce.Nil
+	}
+	return false
+}
+
+func (c *CacheError) NotFound() bool {
+	return c.Nil
+}
+
 type Prefix string
 
 const (
