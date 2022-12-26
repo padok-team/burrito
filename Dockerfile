@@ -18,7 +18,8 @@ COPY controllers/ controllers/
 COPY burrito/ burrito/
 COPY cmd/ cmd/
 COPY runner/ runner/
-COPY cache/ cache 
+COPY cache/ cache/
+COPY annotations/ annotations/
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command

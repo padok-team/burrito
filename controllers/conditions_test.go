@@ -17,12 +17,14 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"strconv"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/padok-team/burrito/annotations"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	internal "github.com/padok-team/burrito/cache"
 
@@ -64,6 +66,7 @@ var _ = Describe("TerraformLayer", func() {
 				},
 			},
 		}
+		t.SetAnnotations(map[string]string{})
 		cache = internal.NewMemoryCache()
 	})
 
@@ -96,13 +99,13 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with last timestamp in cache < 20min", func() {
 			It("should return true", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 15).Unix()))
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
 		Context("with last timestamp in cache > 20min", func() {
 			It("should return false", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 60).Unix()))
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
 		})
@@ -119,21 +122,21 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with plan in cache but no apply", func() {
 			It("should return false", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlannedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
+				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
 		})
 		Context("with same plan and apply in cache", func() {
 			It("should return true", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlannedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.LastAppliedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
+				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
+				t.Annotations[annotations.LastApplySum] = "ThisIsAPlanArtifact"
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
 		Context("with different plan and apply in cache", func() {
 			It("should return false", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlannedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.LastAppliedArtifact, t), []byte("ThisIsAnotherPlanArtifact"), 0)
+				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
+				t.Annotations[annotations.LastApplySum] = "ThisIsAnotherPlanArtifact"
 				Expect(condition.Evaluate(cache, t)).To(Equal(false))
 			})
 		})
@@ -150,14 +153,7 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with terraform failure in cache", func() {
 			It("should return true", func() {
-				cache.Set(internal.GenerateKey(internal.RunResult, t), []byte("1"), 0)
-				Expect(condition.Evaluate(cache, t)).To(Equal(true))
-			})
-		})
-		Context("with terraform failure and message in cache", func() {
-			It("should return true", func() {
-				cache.Set(internal.GenerateKey(internal.RunResult, t), []byte("1"), 0)
-				cache.Set(internal.GenerateKey(internal.RunMessage, t), []byte("This is an error message."), 0)
+				t.Annotations[annotations.Failure] = "1"
 				Expect(condition.Evaluate(cache, t)).To(Equal(true))
 			})
 		})
@@ -170,16 +166,16 @@ var _ = Describe("TerraformLayer", func() {
 		Context("terraform is running", func() {
 			It("", func() {
 				cache.Set(internal.GenerateKey(internal.Lock, t), []byte{1}, 0)
-				_, out := conditions.Evaluate()
+				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionTrue))
 			})
 		})
 		Context("terraform not running and everything is up to date", func() {
 			It("", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
-				cache.Set(internal.GenerateKey(internal.LastPlannedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.LastAppliedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
-				_, out := conditions.Evaluate()
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 15).Unix()))
+				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
+				t.Annotations[annotations.LastApplySum] = "ThisIsAPlanArtifact"
+				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
 				Expect(out[2].Status).To(Equal(metav1.ConditionTrue))
@@ -187,11 +183,11 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("terraform not running, plan up to date, apply not up to date, terraform has failed", func() {
 			It("", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
-				cache.Set(internal.GenerateKey(internal.LastPlannedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.LastAppliedArtifact, t), []byte("ThisIsAnotherPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.RunResult, t), []byte("1"), 0)
-				_, out := conditions.Evaluate()
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 15).Unix()))
+				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
+				t.Annotations[annotations.LastApplySum] = "ThisIsAnotherPlanArtifact"
+				t.Annotations[annotations.Failure] = "1"
+				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
 				Expect(out[2].Status).To(Equal(metav1.ConditionFalse))
@@ -200,11 +196,11 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("terraform not running, plan up to date, apply noy up to date, terraform has not failed", func() {
 			It("", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int((time.Now().Add(-5 * time.Minute)).Unix()))), 0)
-				cache.Set(internal.GenerateKey(internal.LastPlannedArtifact, t), []byte("ThisIsAPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.LastAppliedArtifact, t), []byte("ThisIsAnotherPlanArtifact"), 0)
-				cache.Set(internal.GenerateKey(internal.RunResult, t), []byte("0"), 0)
-				_, out := conditions.Evaluate()
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 15).Unix()))
+				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
+				t.Annotations[annotations.LastApplySum] = "ThisIsAnotherPlanArtifact"
+				t.Annotations[annotations.Failure] = "0"
+				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[1].Status).To(Equal(metav1.ConditionTrue))
 				Expect(out[2].Status).To(Equal(metav1.ConditionFalse))
@@ -213,19 +209,19 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("terraform not running, plan not up to date, terraform has failed", func() {
 			It("", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
-				cache.Set(internal.GenerateKey(internal.RunResult, t), []byte("1"), 0)
-				_, out := conditions.Evaluate()
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 60).Unix()))
+				t.Annotations[annotations.Failure] = "1"
+				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[1].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[3].Status).To(Equal(metav1.ConditionTrue))
 			})
 		})
-		Context("terraform not running, plan not up to date, terraform has failed", func() {
+		Context("terraform not running, plan not up to date, terraform hasn't failed", func() {
 			It("", func() {
-				cache.Set(internal.GenerateKey(internal.LastPlanDate, t), []byte(strconv.Itoa(int(time.Now().Add(-time.Minute*60).Unix()))), 0)
-				cache.Set(internal.GenerateKey(internal.RunResult, t), []byte("0"), 0)
-				_, out := conditions.Evaluate()
+				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 60).Unix()))
+				t.Annotations[annotations.Failure] = "0"
+				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[1].Status).To(Equal(metav1.ConditionFalse))
 				Expect(out[3].Status).To(Equal(metav1.ConditionFalse))

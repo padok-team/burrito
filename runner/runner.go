@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	b64 "encoding/base64"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashicorp/go-version"
@@ -52,7 +54,7 @@ func (r *Runner) Exec() {
 		log.Fatalf("error initializing runner: %s", err)
 	}
 	defer r.cache.Delete(cache.GenerateKey(cache.Lock, r.layer))
-	var ann map[string]string
+	ann := map[string]string{}
 	switch r.config.Runner.Action {
 	case "plan":
 		ann, err = r.plan()
@@ -61,6 +63,7 @@ func (r *Runner) Exec() {
 	default:
 		err = errors.New("Unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
 	}
+	ann[annotations.Failure] = "0"
 	if err != nil {
 		log.Fatalf("Error during runner execution: %s", err)
 		n, ok := r.layer.Annotations[annotations.Failure]
@@ -175,8 +178,8 @@ func (r *Runner) plan() (map[string]string, error) {
 	}
 	planSumKey := cache.GenerateKey(cache.LastPlannedArtifact, r.layer)
 	log.Printf("Setting plan binary checksum into cache at key %s", planSumKey)
-	err = r.cache.Set(planSumKey, sum[:], 3600)
-	ann[annotations.LastPlanSum] = string(sum[:])
+	err = r.cache.Set(planSumKey, []byte(b64.StdEncoding.EncodeToString(sum[:])), 3600)
+	ann[annotations.LastPlanSum] = b64.StdEncoding.EncodeToString(sum[:])
 	if err != nil {
 		log.Fatalf("Could not put plan checksum in cache: %s", err)
 	}
@@ -207,8 +210,8 @@ func (r *Runner) apply() (map[string]string, error) {
 	log.Print("Terraform apply ran successfully")
 	applySumKey := cache.GenerateKey(cache.LastAppliedArtifact, r.layer)
 	log.Printf("Setting plan binary checksum into cache at key %s", applySumKey)
-	err = r.cache.Set(applySumKey, sum[:], 3600)
-	ann[annotations.LastPlanSum] = string(sum[:])
+	err = r.cache.Set(applySumKey, []byte(b64.StdEncoding.EncodeToString(sum[:])), 3600)
+	ann[annotations.LastApplySum] = b64.StdEncoding.EncodeToString(sum[:])
 	if err != nil {
 		log.Fatalf("Could not put apply checksum in cache: %s", err)
 		return nil, err

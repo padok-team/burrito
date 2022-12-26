@@ -43,7 +43,8 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 				VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 			},
 		},
-		RestartPolicy: corev1.RestartPolicyNever,
+		RestartPolicy:      corev1.RestartPolicyNever,
+		ServiceAccountName: "burrito-runner",
 		Containers: []corev1.Container{
 			{
 				Name:       "runner",

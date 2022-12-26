@@ -23,8 +23,17 @@ func NewRedisCache(addr string, password string, db int) *RedisCache {
 
 func (r *RedisCache) Get(key string) ([]byte, error) {
 	val, err := r.Client.Get(context.TODO(), key).Result()
+	if err == redis.Nil {
+		return nil, &CacheError{
+			Err: err,
+			Nil: true,
+		}
+	}
 	if err != nil {
-		return nil, err
+		return nil, &CacheError{
+			Err: err,
+			Nil: false,
+		}
 	}
 	return []byte(val), nil
 }
