@@ -23,7 +23,6 @@ import (
 
 	"github.com/padok-team/burrito/annotations"
 	"github.com/padok-team/burrito/burrito/config"
-	internal "github.com/padok-team/burrito/cache"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,7 +38,6 @@ import (
 type TerraformLayerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Cache  internal.Cache
 	Config *config.Config
 }
 
@@ -83,17 +81,16 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		log.Error(err, "Failed to get TerraformRepository")
 		return ctrl.Result{}, err
 	}
-	c := TerraformLayerConditions{Resource: layer, Cache: &r.Cache, Repository: repository, Config: r.Config}
+	c := TerraformLayerConditions{Resource: layer, Repository: repository, Config: r.Config}
 	evalFunc, conditions := c.Evaluate(ctx)
 	log.Info("Finishing reconciliation for TerraformLayer")
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
-	r.Client.Status().Update(ctx, layer)
+	r.Client.Update(ctx, layer)
 	return evalFunc(ctx, r.Client), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Cache = internal.NewRedisCache(r.Config.Redis.URL, r.Config.Redis.Password, r.Config.Redis.Database)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
@@ -111,7 +108,6 @@ type TerraformLayerConditions struct {
 	IsPlanArtifactUpToDate TerraformPlanArtifactUpToDate
 	IsApplyUpToDate        TerraformApplyUpToDate
 	HasFailed              TerraformFailure
-	Cache                  *internal.Cache
 	Config                 *config.Config
 	Resource               *configv1alpha1.TerraformLayer
 	Repository             *configv1alpha1.TerraformRepository
@@ -119,28 +115,28 @@ type TerraformLayerConditions struct {
 
 func (t *TerraformLayerConditions) Evaluate(ctx context.Context) (func(ctx context.Context, c client.Client) ctrl.Result, []metav1.Condition) {
 	log := log.FromContext(ctx)
-	isTerraformRunning, err := t.IsRunning.Evaluate(*t.Cache, t.Resource)
+	isTerraformRunning, err := t.IsRunning.Evaluate(t.Resource)
 	if err != nil {
 		log.Error(err, "Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
-	isPlanArtifactUpToDate, err := t.IsPlanArtifactUpToDate.Evaluate(*t.Cache, t.Resource)
+	isPlanArtifactUpToDate, err := t.IsPlanArtifactUpToDate.Evaluate(t.Resource)
 	if err != nil {
 		log.Error(err, "Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
-	isApplyUpToDate, err := t.IsApplyUpToDate.Evaluate(*t.Cache, t.Resource)
+	isApplyUpToDate, err := t.IsApplyUpToDate.Evaluate(t.Resource)
 	if err != nil {
 		log.Error(err, "Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}, nil
 	}
-	hasTerraformFailed, err := t.HasFailed.Evaluate(*t.Cache, t.Resource)
+	hasTerraformFailed, err := t.HasFailed.Evaluate(t.Resource)
 	if err != nil {
 		log.Error(err, "Something went wrong with conditions evaluation requeuing")
 		return func(ctx context.Context, c client.Client) ctrl.Result {
@@ -148,7 +144,6 @@ func (t *TerraformLayerConditions) Evaluate(ctx context.Context) (func(ctx conte
 		}, nil
 	}
 	conditions := []metav1.Condition{t.IsRunning.Condition, t.IsPlanArtifactUpToDate.Condition, t.IsApplyUpToDate.Condition, t.HasFailed.Condition}
-	cache := *t.Cache
 	switch {
 	case isTerraformRunning:
 		log.Info("Terraform is already running on this layer, skipping")
@@ -162,67 +157,53 @@ func (t *TerraformLayerConditions) Evaluate(ctx context.Context) (func(ctx conte
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
 		log.Info("Layer needs to be applied but previous apply failed, launching a new runner")
+		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
-			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
-			if err != nil {
-				log.Error(err, "[TerraformApplyHasFailedPreviously] failed to create lock in cache, requeuing evaluation in %s", t.Config.Controller.Timers.OnError)
-				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
-			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action, requeuing evaluation in %s", t.Config.Controller.Timers.OnError)
-				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
+				delete(t.Resource.Annotations, annotations.Lock)
 				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
 		log.Info("Layer needs to be applied, launching a new runner")
+		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "apply")
-			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
-			if err != nil {
-				log.Error(err, "[TerraformApplyNeeded] failed to create lock in cache")
-				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
-			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
-				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
+				delete(t.Resource.Annotations, annotations.Lock)
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
 		log.Info("Layer needs to be planned but previous plan failed, launching a new runner")
+		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
-			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
-			if err != nil {
-				log.Error(err, "[TerraformPlanHasFailedPreviously] failed to create lock in cache")
-				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
-			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action")
-				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
+				delete(t.Resource.Annotations, annotations.Lock)
 				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
 		log.Info("Layer needs to be planned, launching a new runner")
+		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
 			pod := getPod(t.Resource, t.Repository, "plan")
-			err := cache.Set(internal.GenerateKey(internal.Lock, t.Resource), []byte("1"), 0)
-			if err != nil {
-				log.Error(err, "[TerraformPlanNeeded] failed to create lock in cache")
-				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
-			}
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action")
-				cache.Delete(internal.GenerateKey(internal.Lock, t.Resource))
+				delete(t.Resource.Annotations, annotations.Lock)
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
@@ -238,25 +219,21 @@ type TerraformRunning struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformRunning) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) (bool, error) {
+func (c *TerraformRunning) Evaluate(t *configv1alpha1.TerraformLayer) (bool, error) {
 	c.Condition = metav1.Condition{
 		Type:               IsRunning,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 	}
-	key := internal.GenerateKey(internal.Lock, t)
-	_, err := cache.Get(key)
-	if internal.NotFound(err) {
-		c.Condition.Reason = "NoLockInCache"
-		c.Condition.Message = "No lock has been found in Cache. Terraform is not running on this layer."
+	_, ok := t.Annotations[annotations.Lock]
+	if !ok {
+		c.Condition.Reason = "NoLock"
+		c.Condition.Message = "No lock on layer. Terraform is not running on this layer."
 		c.Condition.Status = metav1.ConditionFalse
 		return false, nil
 	}
-	if err != nil {
-		return true, err
-	}
-	c.Condition.Reason = "LockInCache"
-	c.Condition.Message = "Lock has been found in Cache. Terraform is already running on this layer."
+	c.Condition.Reason = "Lock"
+	c.Condition.Message = "Lock on layer. Terraform is already running on this layer."
 	c.Condition.Status = metav1.ConditionTrue
 	return true, nil
 }
@@ -265,7 +242,7 @@ type TerraformPlanArtifactUpToDate struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformPlanArtifactUpToDate) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) (bool, error) {
+func (c *TerraformPlanArtifactUpToDate) Evaluate(t *configv1alpha1.TerraformLayer) (bool, error) {
 	c.Condition = metav1.Condition{
 		Type:               IsPlanArtifactUpToDate,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -298,7 +275,7 @@ type TerraformApplyUpToDate struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformApplyUpToDate) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) (bool, error) {
+func (c *TerraformApplyUpToDate) Evaluate(t *configv1alpha1.TerraformLayer) (bool, error) {
 	c.Condition = metav1.Condition{
 		Type:               IsApplyUpToDate,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -334,7 +311,7 @@ type TerraformFailure struct {
 	Condition metav1.Condition
 }
 
-func (c *TerraformFailure) Evaluate(cache internal.Cache, t *configv1alpha1.TerraformLayer) (bool, error) {
+func (c *TerraformFailure) Evaluate(t *configv1alpha1.TerraformLayer) (bool, error) {
 	c.Condition = metav1.Condition{
 		Type:               HasFailed,
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),

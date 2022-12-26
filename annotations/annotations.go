@@ -8,6 +8,7 @@ const (
 	LastPlanDate    string = "runner.terraform.padok.cloud/plan-date"
 	LastPlanSum     string = "runner.terraform.padok.cloud/plan-sum"
 	Failure         string = "runner.terraform.padok.cloud/failure"
+	Lock            string = "runner.terraform.padok.cloud/lock"
 
 	LastBranchCommit string = "notifications.terraform.padok.cloud/branch-commit"
 	ForceApply       string = "notifications.terraform.padok.cloud/force-apply"

@@ -26,7 +26,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/padok-team/burrito/annotations"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	internal "github.com/padok-team/burrito/cache"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -53,7 +52,6 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("TerraformLayer", func() {
 	var t *configv1alpha1.TerraformLayer
-	var cache internal.Cache
 
 	BeforeEach(func() {
 		t = &configv1alpha1.TerraformLayer{
@@ -67,7 +65,6 @@ var _ = Describe("TerraformLayer", func() {
 			},
 		}
 		t.SetAnnotations(map[string]string{})
-		cache = internal.NewMemoryCache()
 	})
 
 	Describe("TerraformRunningCondition", func() {
@@ -75,15 +72,15 @@ var _ = Describe("TerraformLayer", func() {
 		BeforeEach(func() {
 			condition = TerraformRunning{}
 		})
-		Context("with lock in cache", func() {
+		Context("with lock", func() {
 			It("should return true", func() {
-				cache.Set(internal.GenerateKey(internal.Lock, t), []byte{1}, 0)
-				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+				t.Annotations[annotations.Lock] = "1"
+				Expect(condition.Evaluate(t)).To(Equal(true))
 			})
 		})
-		Context("without lock in cache", func() {
+		Context("without lock", func() {
 			It("should return false", func() {
-				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+				Expect(condition.Evaluate(t)).To(Equal(false))
 			})
 		})
 	})
@@ -92,21 +89,21 @@ var _ = Describe("TerraformLayer", func() {
 		BeforeEach(func() {
 			condition = TerraformPlanArtifactUpToDate{}
 		})
-		Context("without last timestamp in cache", func() {
+		Context("without last timestamp", func() {
 			It("should return false", func() {
-				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+				Expect(condition.Evaluate(t)).To(Equal(false))
 			})
 		})
-		Context("with last timestamp in cache < 20min", func() {
+		Context("with last timestamp < 20min", func() {
 			It("should return true", func() {
 				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 15).Unix()))
-				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+				Expect(condition.Evaluate(t)).To(Equal(true))
 			})
 		})
-		Context("with last timestamp in cache > 20min", func() {
+		Context("with last timestamp > 20min", func() {
 			It("should return false", func() {
 				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 60).Unix()))
-				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+				Expect(condition.Evaluate(t)).To(Equal(false))
 			})
 		})
 	})
@@ -115,29 +112,29 @@ var _ = Describe("TerraformLayer", func() {
 		BeforeEach(func() {
 			condition = TerraformApplyUpToDate{}
 		})
-		Context("without plan in cache", func() {
+		Context("without plan", func() {
 			It("should return true", func() {
-				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+				Expect(condition.Evaluate(t)).To(Equal(true))
 			})
 		})
-		Context("with plan in cache but no apply", func() {
+		Context("with plan but no apply", func() {
 			It("should return false", func() {
 				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
-				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+				Expect(condition.Evaluate(t)).To(Equal(false))
 			})
 		})
-		Context("with same plan and apply in cache", func() {
+		Context("with same plan and apply", func() {
 			It("should return true", func() {
 				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
 				t.Annotations[annotations.LastApplySum] = "ThisIsAPlanArtifact"
-				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+				Expect(condition.Evaluate(t)).To(Equal(true))
 			})
 		})
-		Context("with different plan and apply in cache", func() {
+		Context("with different plan and apply", func() {
 			It("should return false", func() {
 				t.Annotations[annotations.LastPlanSum] = "ThisIsAPlanArtifact"
 				t.Annotations[annotations.LastApplySum] = "ThisIsAnotherPlanArtifact"
-				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+				Expect(condition.Evaluate(t)).To(Equal(false))
 			})
 		})
 	})
@@ -146,26 +143,26 @@ var _ = Describe("TerraformLayer", func() {
 		BeforeEach(func() {
 			condition = TerraformFailure{}
 		})
-		Context("without run result in cache", func() {
+		Context("without run result", func() {
 			It("should return false", func() {
-				Expect(condition.Evaluate(cache, t)).To(Equal(false))
+				Expect(condition.Evaluate(t)).To(Equal(false))
 			})
 		})
-		Context("with terraform failure in cache", func() {
+		Context("with terraform failure", func() {
 			It("should return true", func() {
 				t.Annotations[annotations.Failure] = "1"
-				Expect(condition.Evaluate(cache, t)).To(Equal(true))
+				Expect(condition.Evaluate(t)).To(Equal(true))
 			})
 		})
 	})
 	Describe("TerraformLayerConditions", func() {
 		var conditions TerraformLayerConditions
 		BeforeEach(func() {
-			conditions = TerraformLayerConditions{Resource: t, Cache: &cache}
+			conditions = TerraformLayerConditions{Resource: t}
 		})
 		Context("terraform is running", func() {
 			It("", func() {
-				cache.Set(internal.GenerateKey(internal.Lock, t), []byte{1}, 0)
+				t.Annotations[annotations.Lock] = "1"
 				_, out := conditions.Evaluate(context.TODO())
 				Expect(out[0].Status).To(Equal(metav1.ConditionTrue))
 			})
