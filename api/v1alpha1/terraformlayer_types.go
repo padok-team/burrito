@@ -51,7 +51,7 @@ type TerraformLayerRepository struct {
 
 // TerraformLayerStatus defines the observed state of TerraformLayer
 type TerraformLayerStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true

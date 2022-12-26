@@ -40,15 +40,12 @@ type RunnerConfig struct {
 	Version    string           `yaml:"version"`
 	Action     string           `yaml:"action"`
 	Repository RepositoryConfig `yaml:"repository"`
-	Layer      LayerConfig      `yaml:"layer"`
+	Layer      Layer            `yaml:"layer"`
 }
 
-type LayerConfig struct {
-	Lock     string `yaml:"lock"`
-	PlanSum  string `yaml:"planSum"`
-	PlanBin  string `yaml:"planBin"`
-	ApplySum string `yaml:"applySum"`
-	PlanDate string `yaml:"planDate"`
+type Layer struct {
+	Name      string `yaml:"name"`
+	Namespace string `yaml:"namespace"`
 }
 
 type Redis struct {

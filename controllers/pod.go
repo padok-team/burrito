@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/cache"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -99,24 +98,12 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						Value: layer.Spec.TerraformVersion,
 					},
 					{
-						Name:  "BURRITO_RUNNER_LAYER_LOCK",
-						Value: cache.GenerateKey(cache.Lock, layer),
+						Name:  "BURRITO_RUNNER_LAYER_NAME",
+						Value: layer.GetObjectMeta().GetName(),
 					},
 					{
-						Name:  "BURRITO_RUNNER_LAYER_PLANSUM",
-						Value: cache.GenerateKey(cache.LastPlannedArtifact, layer),
-					},
-					{
-						Name:  "BURRITO_RUNNER_LAYER_PLANBIN",
-						Value: cache.GenerateKey(cache.LastPlannedArtifactBin, layer),
-					},
-					{
-						Name:  "BURRITO_RUNNER_LAYER_APPLYSUM",
-						Value: cache.GenerateKey(cache.LastAppliedArtifact, layer),
-					},
-					{
-						Name:  "BURRITO_RUNNER_LAYER_PLANDATE",
-						Value: cache.GenerateKey(cache.LastPlanDate, layer),
+						Name:  "BURRITO_RUNNER_LAYER_NAMESPACE",
+						Value: layer.GetObjectMeta().GetNamespace(),
 					},
 				},
 			},
