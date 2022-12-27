@@ -85,8 +85,12 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	evalFunc, conditions := c.Evaluate(ctx)
 	log.Info("Finishing reconciliation for TerraformLayer")
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
-	r.Client.Update(ctx, layer)
-	return evalFunc(ctx, r.Client), nil
+	result := evalFunc(ctx, r.Client)
+	err = r.Client.Status().Update(ctx, layer)
+	if err != nil {
+		log.Error(err, "Could not update resource status")
+	}
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -157,52 +161,68 @@ func (t *TerraformLayerConditions) Evaluate(ctx context.Context) (func(ctx conte
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && hasTerraformFailed:
 		log.Info("Layer needs to be applied but previous apply failed, launching a new runner")
-		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
+			err := annotations.AddAnnotations(ctx, c, *t.Resource, map[string]string{annotations.Lock: "runner"})
+			if err != nil {
+				log.Error(err, "Could not set lock on layer, requeing resource")
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			}
 			pod := getPod(t.Resource, t.Repository, "apply")
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformApplyHasFailedPreviously] Failed to create pod for Apply action, requeuing evaluation in %s", t.Config.Controller.Timers.OnError)
-				delete(t.Resource.Annotations, annotations.Lock)
+				_ = annotations.RemoveAnnotation(ctx, c, *t.Resource, annotations.Lock)
 				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && isPlanArtifactUpToDate && !isApplyUpToDate && !hasTerraformFailed:
 		log.Info("Layer needs to be applied, launching a new runner")
-		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
+			err := annotations.AddAnnotations(ctx, c, *t.Resource, map[string]string{annotations.Lock: "runner"})
+			if err != nil {
+				log.Error(err, "Could not set lock on layer, requeing resource")
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			}
 			pod := getPod(t.Resource, t.Repository, "apply")
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
-				delete(t.Resource.Annotations, annotations.Lock)
+				_ = annotations.RemoveAnnotation(ctx, c, *t.Resource, annotations.Lock)
 				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && hasTerraformFailed:
 		log.Info("Layer needs to be planned but previous plan failed, launching a new runner")
-		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
+			err := annotations.AddAnnotations(ctx, c, *t.Resource, map[string]string{annotations.Lock: "runner"})
+			if err != nil {
+				log.Error(err, "Could not set lock on layer, requeing resource")
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			}
 			pod := getPod(t.Resource, t.Repository, "plan")
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformPlanHasFailedPreviously] Failed to create pod for Plan action")
-				delete(t.Resource.Annotations, annotations.Lock)
+				_ = annotations.RemoveAnnotation(ctx, c, *t.Resource, annotations.Lock)
 				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
 		}, conditions
 	case !isTerraformRunning && !isPlanArtifactUpToDate && !hasTerraformFailed:
 		log.Info("Layer needs to be planned, launching a new runner")
-		t.Resource.Annotations[annotations.Lock] = "runner"
 		return func(ctx context.Context, c client.Client) ctrl.Result {
+			err := annotations.AddAnnotations(ctx, c, *t.Resource, map[string]string{annotations.Lock: "runner"})
+			if err != nil {
+				log.Error(err, "Could not set lock on layer, requeing resource")
+				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			}
 			pod := getPod(t.Resource, t.Repository, "plan")
 			err = c.Create(ctx, &pod)
 			if err != nil {
 				log.Error(err, "[TerraformPlanNeeded] Failed to create pod for Plan action")
-				delete(t.Resource.Annotations, annotations.Lock)
+				_ = annotations.RemoveAnnotation(ctx, c, *t.Resource, annotations.Lock)
 				return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 			}
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
