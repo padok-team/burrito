@@ -13,7 +13,13 @@ import (
 type Config struct {
 	Runner     RunnerConfig     `yaml:"runner"`
 	Controller ControllerConfig `yaml:"controller"`
+	Webhook    WebhookConfig    `yaml:"webhook"`
 	Redis      Redis            `yaml:"redis"`
+}
+
+type WebhookConfig struct {
+	RepositoryProvider string `yaml:"provider"`
+	Secret             string `yaml:"secret"`
 }
 
 type ControllerConfig struct {

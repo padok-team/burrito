@@ -19,7 +19,8 @@ COPY burrito/ burrito/
 COPY cmd/ cmd/
 COPY runner/ runner/
 COPY cache/ cache/
-COPY annotations/ annotations/
+COPY internal/ internal/
+COPY webhook/ webhook/
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command

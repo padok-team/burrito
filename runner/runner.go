@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/terraform-exec/tfexec"
-	"github.com/padok-team/burrito/annotations"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/burrito/config"
 	"github.com/padok-team/burrito/cache"
+	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/lock"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -60,16 +61,18 @@ func (r *Runner) Exec() {
 	commit := ref.Hash().String()
 	switch r.config.Runner.Action {
 	case "plan":
-		ann[annotations.LastPlanDate] = strconv.FormatInt(time.Now().Unix(), 10)
-		ann[annotations.LastPlanCommit] = commit
 		sum, err = r.plan()
-		if err != nil {
+		if err == nil {
+			ann[annotations.LastPlanDate] = strconv.FormatInt(time.Now().Unix(), 10)
+			ann[annotations.LastPlanCommit] = commit
+		}
+		if sum != "" {
 			ann[annotations.LastPlanSum] = sum
 		}
 	case "apply":
-		ann[annotations.LastApplyCommit] = commit
 		sum, err = r.apply()
-		if err != nil {
+		if err == nil {
+			ann[annotations.LastApplyCommit] = commit
 			ann[annotations.LastApplySum] = sum
 		}
 	default:
@@ -89,7 +92,10 @@ func (r *Runner) Exec() {
 	if err != nil {
 		log.Fatalf("Could not update layer annotations: %s", err)
 	}
-	err = annotations.RemoveAnnotation(context.TODO(), r.client, *r.layer, annotations.Lock)
+	err = lock.DeleteLock(context.TODO(), r.client, r.layer)
+	if err != nil {
+		log.Fatalf("Could not delete Lease lock: %s", err)
+	}
 }
 
 func (r *Runner) init() error {
@@ -158,7 +164,7 @@ func (r *Runner) plan() (string, error) {
 	}
 	if !diff {
 		log.Printf("Terraform plan diff empty, no subsequent apply should be launched")
-		return "", err
+		return "", nil
 	}
 	plan, err := os.ReadFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact))
 	if err != nil {
