@@ -8,12 +8,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	b64 "encoding/base64"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/hc-install/product"
@@ -134,15 +136,11 @@ func (r *Runner) init() error {
 		return err
 	}
 	log.Printf("Cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
+	cloneOptions, err := r.cloneOptions()
 	if err != nil {
 		return err
 	}
-	r.repository, err = git.PlainClone(WorkingDir, false, &git.CloneOptions{
-		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
-		URL:           r.config.Runner.Repository.URL,
-		Auth:          publicKeys,
-	})
+	r.repository, err = git.PlainClone(WorkingDir, false, cloneOptions)
 	if err != nil {
 		return err
 	}
@@ -210,4 +208,35 @@ func (r *Runner) apply() (string, error) {
 	}
 	log.Print("Terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
+func (r *Runner) cloneOptions() (*git.CloneOptions, error) {
+	authMethod := "ssh"
+	cloneOptions := &git.CloneOptions{
+		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
+		URL:           r.config.Runner.Repository.URL,
+	}
+	if strings.Contains(r.config.Runner.Repository.URL, "https://") {
+		authMethod = "https"
+	}
+	switch authMethod {
+	case "ssh":
+		if r.config.Runner.Repository.SSHPrivateKey == "" {
+			return cloneOptions, nil
+		}
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
+		if err != nil {
+			return cloneOptions, err
+		}
+		cloneOptions.Auth = publicKeys
+
+	case "https":
+		if r.config.Runner.Repository.Username == "" || r.config.Runner.Repository.Password == "" {
+			cloneOptions.Auth = &http.BasicAuth{
+				Username: r.config.Runner.Repository.Username,
+				Password: r.config.Runner.Repository.Password,
+			}
+		}
+	}
+	return cloneOptions, nil
 }

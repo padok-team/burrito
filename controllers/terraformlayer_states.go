@@ -6,14 +6,13 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/lock"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type State interface {
-	getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result
+	getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result
 }
 
 func GetState(ctx context.Context, r *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
@@ -40,23 +39,23 @@ func GetState(ctx context.Context, r *configv1alpha1.TerraformLayer) (State, []m
 
 type IdleState struct{}
 
-func (s *IdleState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result {
-	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result {
+func (s *IdleState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.DriftDetection)}
 	}
 }
 
 type PlanNeededState struct{}
 
-func (s *PlanNeededState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result {
-	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result {
+func (s *PlanNeededState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
 		err := lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
 			log.Error(err, "Could not set lock on layer, requeing resource")
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}
-		pod := getPod(r, repository, secret, "plan")
+		pod := getPod(r, repository, "plan")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "Failed to create pod for Plan action")
@@ -69,15 +68,15 @@ func (s *PlanNeededState) getHandler() func(ctx context.Context, t *TerraformLay
 
 type ApplyNeededState struct{}
 
-func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result {
-	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) ctrl.Result {
+func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
 		err := lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
 			log.Error(err, "Could not set lock on layer, requeing resource")
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}
-		pod := getPod(r, repository, secret, "apply")
+		pod := getPod(r, repository, "apply")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
