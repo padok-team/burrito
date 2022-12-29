@@ -12,9 +12,9 @@ import (
 
 	b64 "encoding/base64"
 
-	"github.com/go-git/go-git/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/releases"
@@ -134,7 +134,7 @@ func (r *Runner) init() error {
 		return err
 	}
 	log.Printf("Cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
-	publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSSPrivateKey))
+	publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
 	if err != nil {
 		return err
 	}
