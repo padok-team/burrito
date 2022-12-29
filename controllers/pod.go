@@ -80,6 +80,17 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 				Name:         "repository",
 				VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 			},
+			{
+				Name: "ssh-known-hosts",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "burrito-ssh-known-hosts",
+						},
+						Optional: &[]bool{true}[0],
+					},
+				},
+			},
 		},
 		RestartPolicy:      corev1.RestartPolicyNever,
 		ServiceAccountName: "burrito-runner",
@@ -93,6 +104,10 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					{
 						Name:      "repository",
 						MountPath: "/repository",
+					},
+					{
+						MountPath: "/go/.ssh/",
+						Name:      "ssh-knwon-hosts",
 					},
 				},
 				Env: []corev1.EnvVar{
@@ -131,10 +146,6 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAMESPACE",
 						Value: layer.GetObjectMeta().GetNamespace(),
-					},
-					{
-						Name:  "SSH_KNOWN_HOSTS",
-						Value: "github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==",
 					},
 				},
 			},
