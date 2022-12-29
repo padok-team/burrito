@@ -32,17 +32,44 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 			Value: "apply",
 		})
 	}
-	// if (corev1.SecretReference{} != repository.Spec.Repository.SecretRef) {
-	// 	pod.Spec.Containers[0].EnvFrom = []corev1.EnvFromSource{
-	// 		{
-	// 			SecretRef: &corev1.SecretEnvSource{
-	// 				LocalObjectReference: corev1.LocalObjectReference{
-	// 					Name: repository.Spec.Repository.SecretRef.Name,
-	// 				},
-	// 			},
-	// 		},
-	// 	}
-	// }
+	if repository.Spec.Repository.SecretRef.Name != "" {
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretRef.Name,
+					},
+					Key:      "username",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretRef.Name,
+					},
+					Key:      "password",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretRef.Name,
+					},
+					Key:      "password",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+	}
 	return pod
 }
 
@@ -104,42 +131,6 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAMESPACE",
 						Value: layer.GetObjectMeta().GetNamespace(),
-					},
-					{
-						Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
-						ValueFrom: &corev1.EnvVarSource{
-							SecretKeyRef: &corev1.SecretKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: repository.Spec.Repository.SecretRef.Name,
-								},
-								Key:      "username",
-								Optional: &[]bool{true}[0],
-							},
-						},
-					},
-					{
-						Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
-						ValueFrom: &corev1.EnvVarSource{
-							SecretKeyRef: &corev1.SecretKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: repository.Spec.Repository.SecretRef.Name,
-								},
-								Key:      "password",
-								Optional: &[]bool{true}[0],
-							},
-						},
-					},
-					{
-						Name: "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
-						ValueFrom: &corev1.EnvVarSource{
-							SecretKeyRef: &corev1.SecretKeySelector{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: repository.Spec.Repository.SecretRef.Name,
-								},
-								Key:      "sshPrivateKey",
-								Optional: &[]bool{true}[0],
-							},
-						},
 					},
 				},
 			},
