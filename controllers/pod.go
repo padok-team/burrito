@@ -58,13 +58,13 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 			},
 		})
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
+			Name: "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: repository.Spec.Repository.SecretRef.Name,
 					},
-					Key:      "password",
+					Key:      "sshPrivateKey",
 					Optional: &[]bool{true}[0],
 				},
 			},

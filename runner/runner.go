@@ -219,11 +219,14 @@ func (r *Runner) cloneOptions() (*git.CloneOptions, error) {
 	if strings.Contains(r.config.Runner.Repository.URL, "https://") {
 		authMethod = "https"
 	}
+	log.Printf("clone method is %s", authMethod)
 	switch authMethod {
 	case "ssh":
 		if r.config.Runner.Repository.SSHPrivateKey == "" {
+			log.Printf("keyless authentication")
 			return cloneOptions, nil
 		}
+		log.Printf("private key found.")
 		publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
 		if err != nil {
 			return cloneOptions, err
@@ -231,12 +234,14 @@ func (r *Runner) cloneOptions() (*git.CloneOptions, error) {
 		cloneOptions.Auth = publicKeys
 
 	case "https":
-		if r.config.Runner.Repository.Username == "" || r.config.Runner.Repository.Password == "" {
+		if r.config.Runner.Repository.Username != "" && r.config.Runner.Repository.Password != "" {
+			log.Printf("username and password found")
 			cloneOptions.Auth = &http.BasicAuth{
 				Username: r.config.Runner.Repository.Username,
 				Password: r.config.Runner.Repository.Password,
 			}
 		}
+		log.Printf("passwordless authentication")
 	}
 	return cloneOptions, nil
 }
