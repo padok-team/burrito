@@ -86,7 +86,7 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 		Containers: []corev1.Container{
 			{
 				Name:       "runner",
-				Image:      fmt.Sprintf("ghcr.io/padok-team/burrito:%s", "latest"),
+				Image:      fmt.Sprintf("eu.gcr.io/padok-playground/burrito:%s", "latest"),
 				WorkingDir: "/repository",
 				Args:       []string{"runner", "start"},
 				VolumeMounts: []corev1.VolumeMount{
