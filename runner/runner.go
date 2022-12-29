@@ -240,8 +240,9 @@ func (r *Runner) cloneOptions() (*git.CloneOptions, error) {
 				Username: r.config.Runner.Repository.Username,
 				Password: r.config.Runner.Repository.Password,
 			}
+		} else {
+			log.Printf("passwordless authentication")
 		}
-		log.Printf("passwordless authentication")
 	}
 	return cloneOptions, nil
 }
