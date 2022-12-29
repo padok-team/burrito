@@ -34,10 +34,10 @@ type ControllerTimers struct {
 }
 
 type RepositoryConfig struct {
-	URL      string `yaml:"url"`
-	SSH      string `yaml:"ssh"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	URL           string `yaml:"url"`
+	SSHPrivateKey string `yaml:"sshPrivateKey"`
+	// Username      string `yaml:"username"`
+	// Password      string `yaml:"password"`
 }
 
 type RunnerConfig struct {

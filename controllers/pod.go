@@ -14,9 +14,9 @@ const (
 	ApplyAction Action = "apply"
 )
 
-func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
+func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret, action Action) corev1.Pod {
 	pod := corev1.Pod{
-		Spec: defaultPodSpec(layer, repository),
+		Spec: defaultPodSpec(layer, repository, secret),
 	}
 	pod.SetNamespace(layer.Namespace)
 	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
@@ -35,7 +35,7 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 	return pod
 }
 
-func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
+func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, secret *corev1.Secret) corev1.PodSpec {
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{
@@ -75,17 +75,17 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						Value: repository.Spec.Repository.Url,
 					},
 					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_SSH",
-						Value: "",
+						Name:  "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
+						Value: secret.StringData["sshPrivateKey"],
 					},
-					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_USERNAME",
-						Value: "",
-					},
-					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_PASSWORD",
-						Value: "",
-					},
+					// {
+					// 	Name:  "BURRITO_RUNNER_REPOSITORY_USERNAME",
+					// 	Value: "",
+					// },
+					// {
+					// 	Name:  "BURRITO_RUNNER_REPOSITORY_PASSWORD",
+					// 	Value: "",
+					// },
 					{
 						Name:  "BURRITO_RUNNER_PATH",
 						Value: layer.Spec.Path,

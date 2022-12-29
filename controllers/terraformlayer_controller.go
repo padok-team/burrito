@@ -18,10 +18,12 @@ package controllers
 
 import (
 	"context"
+	baseErr "errors"
 	"time"
 
 	"github.com/padok-team/burrito/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -88,9 +90,29 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		log.Error(err, "Failed to get TerraformRepository")
 		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
 	}
+	secret := &corev1.Secret{}
+	log.Info("Getting linked Secret")
+	err = r.Client.Get(ctx, types.NamespacedName{
+		Namespace: repository.Spec.Repository.SecretRef.Namespace,
+		Name:      repository.Spec.Repository.SecretRef.Name,
+	}, secret)
+	if (corev1.SecretReference{} == repository.Spec.Repository.SecretRef) {
+		log.Info("No SecretRef defined in TerraformRepository, might be trying to clone public repository.")
+	} else if errors.IsNotFound(err) {
+		log.Info("Secret not found, ignoring layer until it's modified.")
+		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
+	} else if err != nil {
+		log.Error(err, "Failed to get Secret")
+		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
+	}
+	if _, ok := secret.Data["sshPrivateKey"]; !ok {
+		err = baseErr.New("key missing in secret")
+		log.Error(err, "'sshPrivateKey' not found in secret")
+		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
+	}
 	state, conditions := GetState(ctx, layer)
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
-	result := state.getHandler()(ctx, r, layer, repository)
+	result := state.getHandler()(ctx, r, layer, repository, secret)
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
 		log.Error(err, "Could not update resource status")
