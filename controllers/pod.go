@@ -32,13 +32,13 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 			Value: "apply",
 		})
 	}
-	if repository.Spec.Repository.SecretRef.Name != "" {
+	if repository.Spec.Repository.SecretName != "" {
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretRef.Name,
+						Name: repository.Spec.Repository.SecretName,
 					},
 					Key:      "username",
 					Optional: &[]bool{true}[0],
@@ -50,7 +50,7 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretRef.Name,
+						Name: repository.Spec.Repository.SecretName,
 					},
 					Key:      "password",
 					Optional: &[]bool{true}[0],
@@ -62,7 +62,7 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretRef.Name,
+						Name: repository.Spec.Repository.SecretName,
 					},
 					Key:      "sshPrivateKey",
 					Optional: &[]bool{true}[0],

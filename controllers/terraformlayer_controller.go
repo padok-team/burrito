@@ -88,25 +88,6 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		log.Error(err, "Failed to get TerraformRepository")
 		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
 	}
-	// secret := &corev1.Secret{}
-	// log.Info("Getting linked Secret")
-	// err = nil
-	// if (corev1.SecretReference{} == repository.Spec.Repository.SecretRef) {
-	// 	log.Info("No SecretRef defined in TerraformRepository, might be trying to clone public repository.")
-	// } else {
-	// 	err = r.Client.Get(ctx, types.NamespacedName{
-	// 		Namespace: repository.Spec.Repository.SecretRef.Namespace,
-	// 		Name:      repository.Spec.Repository.SecretRef.Name,
-	// 	}, secret)
-	// }
-	// if errors.IsNotFound(err) {
-	// 	log.Info("Secret not found, ignoring layer until it's modified.")
-	// 	return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
-	// }
-	// if err != nil {
-	// 	log.Error(err, "Failed to get Secret")
-	// 	return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
-	// }
 	state, conditions := GetState(ctx, layer)
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
 	result := state.getHandler()(ctx, r, layer, repository)

@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,8 +32,8 @@ type TerraformRepositorySpec struct {
 }
 
 type TerraformRepositoryRepository struct {
-	Url       string                 `json:"url,omitempty"`
-	SecretRef corev1.SecretReference `json:"secretRef,omitempty"`
+	Url        string `json:"url,omitempty"`
+	SecretName string `json:"secretName,omitempty"`
 }
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
