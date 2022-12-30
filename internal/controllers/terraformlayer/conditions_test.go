@@ -17,7 +17,6 @@ limitations under the License.
 package terraformlayer
 
 import (
-	"strconv"
 	"testing"
 	"time"
 
@@ -72,14 +71,14 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with last timestamp < 20min", func() {
 			It("should return true", func() {
-				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 15).Unix()))
+				t.Annotations[annotations.LastPlanDate] = time.Now().Add(-time.Minute * 15).Format(time.UnixDate)
 				_, condition := IsPlanArtifactUpToDate(t)
 				Expect(condition).To(Equal(true))
 			})
 		})
 		Context("with last timestamp > 20min", func() {
 			It("should return false", func() {
-				t.Annotations[annotations.LastPlanDate] = strconv.Itoa(int(time.Now().Add(-time.Minute * 60).Unix()))
+				t.Annotations[annotations.LastPlanDate] = time.Now().Add(-time.Minute * 60).Format(time.UnixDate)
 				_, condition := IsPlanArtifactUpToDate(t)
 				Expect(condition).To(Equal(false))
 			})

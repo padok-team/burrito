@@ -1,7 +1,6 @@
 package terraformlayer
 
 import (
-	"strconv"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -23,8 +22,7 @@ func IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition,
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	unixTimestamp, _ := strconv.ParseInt(value, 10, 64)
-	lastPlanDate := time.Unix(unixTimestamp, 0)
+	lastPlanDate, _ := time.Parse(time.UnixDate, value)
 	nextPlanDate := lastPlanDate.Add(20 * time.Minute)
 	now := time.Now()
 	if nextPlanDate.After(now) {

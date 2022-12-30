@@ -73,7 +73,7 @@ func (r *Runner) Exec() {
 	case "plan":
 		sum, err = r.plan()
 		if err == nil {
-			ann[annotations.LastPlanDate] = strconv.FormatInt(time.Now().Unix(), 10)
+			ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 			ann[annotations.LastPlanCommit] = commit
 		}
 		if sum != "" {
