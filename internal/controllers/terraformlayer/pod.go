@@ -16,25 +16,22 @@ const (
 )
 
 func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
-	pod := corev1.Pod{
-		Spec: defaultPodSpec(r.Config, layer, repository),
-	}
-	pod.SetNamespace(layer.Namespace)
-	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
+	defaultSpec := defaultPodSpec(r.Config, layer, repository)
+
 	switch action {
 	case PlanAction:
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "plan",
 		})
 	case ApplyAction:
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "apply",
 		})
 	}
 	if repository.Spec.Repository.SecretName != "" {
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -46,7 +43,7 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 				},
 			},
 		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -58,7 +55,7 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 				},
 			},
 		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -71,6 +68,13 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 			},
 		})
 	}
+
+	pod := corev1.Pod{
+		Spec: mergeSpecs(defaultSpec, repository.Spec.OverrideRunnerSpec, layer.Spec.OverrideRunnerSpec),
+	}
+	pod.SetNamespace(layer.Namespace)
+	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
+
 	return pod
 }
 
@@ -156,4 +160,35 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 			},
 		},
 	}
+}
+
+func mergeSpecs(defaultSpec corev1.PodSpec, repositorySpec configv1alpha1.OverrideRunnerSpec, layerSpec configv1alpha1.OverrideRunnerSpec) corev1.PodSpec {
+	if len(repositorySpec.ImagePullSecrets) > 0 {
+		defaultSpec.ImagePullSecrets = repositorySpec.ImagePullSecrets
+	}
+	if len(layerSpec.ImagePullSecrets) > 0 {
+		defaultSpec.ImagePullSecrets = layerSpec.ImagePullSecrets
+	}
+
+	if len(repositorySpec.Tolerations) > 0 {
+		defaultSpec.Tolerations = repositorySpec.Tolerations
+	}
+	if len(layerSpec.Tolerations) > 0 {
+		defaultSpec.Tolerations = layerSpec.Tolerations
+	}
+
+	if len(repositorySpec.NodeSelector) > 0 {
+		defaultSpec.NodeSelector = repositorySpec.NodeSelector
+	}
+	if len(layerSpec.NodeSelector) > 0 {
+		defaultSpec.NodeSelector = layerSpec.NodeSelector
+	}
+
+	if len(repositorySpec.ServiceAccountName) > 0 {
+		defaultSpec.ServiceAccountName = repositorySpec.ServiceAccountName
+	}
+	if len(layerSpec.ServiceAccountName) > 0 {
+		defaultSpec.ServiceAccountName = layerSpec.ServiceAccountName
+	}
+	return defaultSpec
 }

@@ -28,7 +28,8 @@ type TerraformRepositorySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Repository TerraformRepositoryRepository `json:"repository,omitempty"`
+	Repository         TerraformRepositoryRepository `json:"repository,omitempty"`
+	OverrideRunnerSpec OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
 }
 
 type TerraformRepositoryRepository struct {

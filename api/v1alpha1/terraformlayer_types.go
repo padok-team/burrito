@@ -34,7 +34,7 @@ type TerraformLayerSpec struct {
 	Repository          TerraformLayerRepository          `json:"repository,omitempty"`
 	RemediationStrategy TerraformLayerRemediationStrategy `json:"remediationStrategy,omitempty"`
 	PlanOnPullRequest   bool                              `json:"planOnPullRequest,omitempty"`
-	// RunnerPodTemplate   corev1.PodSpec                    `json:"template,omitempty"`
+	OverrideRunnerSpec  OverrideRunnerSpec                `json:"overrideRunnerSpec,omitempty"`
 }
 
 type TerraformLayerRemediationStrategy struct {
