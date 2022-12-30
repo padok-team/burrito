@@ -42,12 +42,13 @@ type RepositoryConfig struct {
 }
 
 type RunnerConfig struct {
-	Path       string           `yaml:"path"`
-	Branch     string           `yaml:"branch"`
-	Version    string           `yaml:"version"`
-	Action     string           `yaml:"action"`
-	Repository RepositoryConfig `yaml:"repository"`
-	Layer      Layer            `yaml:"layer"`
+	Path                       string           `yaml:"path"`
+	Branch                     string           `yaml:"branch"`
+	Version                    string           `yaml:"version"`
+	Action                     string           `yaml:"action"`
+	Repository                 RepositoryConfig `yaml:"repository"`
+	Layer                      Layer            `yaml:"layer"`
+	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
 }
 
 type Layer struct {

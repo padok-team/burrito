@@ -55,7 +55,7 @@ func (s *PlanNeededState) getHandler() func(ctx context.Context, t *Reconciler, 
 			log.Error(err, "Could not set lock on layer, requeing resource")
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}
-		pod := getPod(r, repository, "plan")
+		pod := t.getPod(r, repository, "plan")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "Failed to create pod for Plan action")
@@ -76,7 +76,7 @@ func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler,
 			log.Error(err, "Could not set lock on layer, requeing resource")
 			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
 		}
-		pod := getPod(r, repository, "apply")
+		pod := t.getPod(r, repository, "apply")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
