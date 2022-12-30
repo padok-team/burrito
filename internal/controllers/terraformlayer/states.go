@@ -15,10 +15,10 @@ type State interface {
 	getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result
 }
 
-func GetState(ctx context.Context, r *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
+func (r *Reconciler) GetState(ctx context.Context, l *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
 	log := log.FromContext(ctx)
-	c1, isPlanArtifactUpToDate := IsPlanArtifactUpToDate(r)
-	c2, isApplyUpToDate := IsApplyUpToDate(r)
+	c1, isPlanArtifactUpToDate := r.IsPlanArtifactUpToDate(l)
+	c2, isApplyUpToDate := r.IsApplyUpToDate(l)
 	// c3, hasFailed := HasFailed(r)
 	conditions := []metav1.Condition{c1, c2}
 	switch {
@@ -41,7 +41,8 @@ type IdleState struct{}
 
 func (s *IdleState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.DriftDetection)}
+		delta, _ := time.ParseDuration(t.Config.Controller.Timers.DriftDetection)
+		return ctrl.Result{RequeueAfter: delta}
 	}
 }
 
@@ -53,16 +54,19 @@ func (s *PlanNeededState) getHandler() func(ctx context.Context, t *Reconciler, 
 		err := lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
 			log.Error(err, "Could not set lock on layer, requeing resource")
-			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
+			return ctrl.Result{RequeueAfter: delta}
 		}
 		pod := t.getPod(r, repository, "plan")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "Failed to create pod for Plan action")
 			_ = lock.DeleteLock(ctx, t.Client, r)
-			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
+			return ctrl.Result{RequeueAfter: delta}
 		}
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
+		delta, _ := time.ParseDuration(t.Config.Controller.Timers.WaitAction)
+		return ctrl.Result{RequeueAfter: delta}
 	}
 }
 
@@ -74,15 +78,18 @@ func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler,
 		err := lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
 			log.Error(err, "Could not set lock on layer, requeing resource")
-			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
+			return ctrl.Result{RequeueAfter: delta}
 		}
 		pod := t.getPod(r, repository, "apply")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
 			_ = lock.DeleteLock(ctx, t.Client, r)
-			return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.OnError)}
+			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
+			return ctrl.Result{RequeueAfter: delta}
 		}
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.WaitAction)}
+		delta, _ := time.ParseDuration(t.Config.Controller.Timers.WaitAction)
+		return ctrl.Result{RequeueAfter: delta}
 	}
 }

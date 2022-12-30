@@ -1,6 +1,7 @@
 package terraformlayer
 
 import (
+	"fmt"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -8,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "IsPlanArtifactUpToDate",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -23,21 +24,21 @@ func IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition,
 		return condition, false
 	}
 	lastPlanDate, _ := time.Parse(time.UnixDate, value)
-	nextPlanDate := lastPlanDate.Add(20 * time.Minute)
-	now := time.Now()
-	if nextPlanDate.After(now) {
+	delta, _ := time.ParseDuration(r.Config.Controller.Timers.DriftDetection)
+	nextPlanDate := lastPlanDate.Add(delta)
+	if nextPlanDate.After(lastPlanDate) {
 		condition.Reason = "PlanIsRecent"
-		condition.Message = "The plan has been made less than 20 minutes ago."
+		condition.Message = fmt.Sprintf("The plan has been made less than %s ago.", r.Config.Controller.Timers.DriftDetection)
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
 	condition.Reason = "PlanIsTooOld"
-	condition.Message = "The plan has been made more than 20 minutes ago."
+	condition.Message = fmt.Sprintf("The plan has been made more than %s ago.", r.Config.Controller.Timers.DriftDetection)
 	condition.Status = metav1.ConditionFalse
 	return condition, false
 }
 
-func IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "IsApplyUpToDate",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -70,7 +71,7 @@ func IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) 
 	return condition, true
 }
 
-func HasFailed(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) HasFailed(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "HasFailed",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),

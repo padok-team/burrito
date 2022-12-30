@@ -29,9 +29,9 @@ type ControllerConfig struct {
 }
 
 type ControllerTimers struct {
-	DriftDetection int `yaml:"driftDetection"`
-	WaitAction     int `yaml:"waitAction"`
-	OnError        int `yaml:"onError"`
+	DriftDetection string `yaml:"driftDetection"`
+	WaitAction     string `yaml:"waitAction"`
+	OnError        string `yaml:"onError"`
 }
 
 type RepositoryConfig struct {
