@@ -136,7 +136,7 @@ func (r *Runner) init() error {
 		return err
 	}
 	log.Printf("Cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
-	cloneOptions, err := r.cloneOptions()
+	cloneOptions, err := r.getCloneOptions()
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (r *Runner) apply() (string, error) {
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
-func (r *Runner) cloneOptions() (*git.CloneOptions, error) {
+func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {
 	authMethod := "ssh"
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
