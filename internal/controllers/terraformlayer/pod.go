@@ -6,6 +6,8 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/imdario/mergo"
 )
 
 type Action string
@@ -16,25 +18,22 @@ const (
 )
 
 func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
-	pod := corev1.Pod{
-		Spec: defaultPodSpec(r.Config, layer, repository),
-	}
-	pod.SetNamespace(layer.Namespace)
-	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
+	defaultSpec := defaultPodSpec(r.Config, layer, repository)
+
 	switch action {
 	case PlanAction:
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "plan",
 		})
 	case ApplyAction:
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "apply",
 		})
 	}
 	if repository.Spec.Repository.SecretName != "" {
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -46,7 +45,7 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 				},
 			},
 		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -58,7 +57,7 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 				},
 			},
 		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name: "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
@@ -71,6 +70,18 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 			},
 		})
 	}
+
+	merged := corev1.PodSpec{}
+	mergo.Merge(&merged, repository.Spec.OverridePodSpec)
+	mergo.Merge(&merged, layer.Spec.OverridePodSpec)
+	mergo.Merge(&merged, defaultSpec)
+
+	pod := corev1.Pod{
+		Spec: merged,
+	}
+	pod.SetNamespace(layer.Namespace)
+	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
+
 	return pod
 }
 

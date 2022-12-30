@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,7 +29,8 @@ type TerraformRepositorySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Repository TerraformRepositoryRepository `json:"repository,omitempty"`
+	Repository      TerraformRepositoryRepository `json:"repository,omitempty"`
+	OverridePodSpec corev1.PodSpec                `json:"overridePodSpec,omitempty"`
 }
 
 type TerraformRepositoryRepository struct {
