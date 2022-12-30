@@ -26,7 +26,8 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	lastPlanDate, _ := time.Parse(time.UnixDate, value)
 	delta, _ := time.ParseDuration(r.Config.Controller.Timers.DriftDetection)
 	nextPlanDate := lastPlanDate.Add(delta)
-	if nextPlanDate.After(lastPlanDate) {
+	now := time.Now()
+	if nextPlanDate.After(now) {
 		condition.Reason = "PlanIsRecent"
 		condition.Message = fmt.Sprintf("The plan has been made less than %s ago.", r.Config.Controller.Timers.DriftDetection)
 		condition.Status = metav1.ConditionTrue
