@@ -106,7 +106,7 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						MountPath: "/repository",
 					},
 					{
-						MountPath: "/go/.ssh/",
+						MountPath: "/repository/.ssh/",
 						Name:      "ssh-known-hosts",
 					},
 				},
@@ -146,6 +146,10 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAMESPACE",
 						Value: layer.GetObjectMeta().GetNamespace(),
+					},
+					{
+						Name:  "SSH_KNOWN_HOSTS",
+						Value: "/repository/.ssh/known_hosts",
 					},
 				},
 			},
