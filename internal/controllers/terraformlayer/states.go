@@ -1,4 +1,4 @@
-package controllers
+package terraformlayer
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 )
 
 type State interface {
-	getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result
+	getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result
 }
 
 func GetState(ctx context.Context, r *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
@@ -39,16 +39,16 @@ func GetState(ctx context.Context, r *configv1alpha1.TerraformLayer) (State, []m
 
 type IdleState struct{}
 
-func (s *IdleState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *IdleState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		return ctrl.Result{RequeueAfter: time.Second * time.Duration(t.Config.Controller.Timers.DriftDetection)}
 	}
 }
 
 type PlanNeededState struct{}
 
-func (s *PlanNeededState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *PlanNeededState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
 		err := lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
@@ -68,8 +68,8 @@ func (s *PlanNeededState) getHandler() func(ctx context.Context, t *TerraformLay
 
 type ApplyNeededState struct{}
 
-func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-	return func(ctx context.Context, t *TerraformLayerReconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
 		err := lock.CreateLock(ctx, t.Client, r)
 		if err != nil {

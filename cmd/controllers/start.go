@@ -17,5 +17,8 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().StringsSliceVar(&app.Config.Controller.Types, []string{"layer", "repository"}, "list of controllers to start")
+
 	return cmd
 }

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package terraformlayer
 
 import (
 	"context"
@@ -32,8 +32,8 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
-// TerraformLayerReconciler reconciles a TerraformLayer object
-type TerraformLayerReconciler struct {
+// Reconciler reconciles a TerraformLayer object
+type Reconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	Config *config.Config
@@ -52,7 +52,7 @@ type TerraformLayerReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	log.Info("Starting reconciliation")
 	layer := &configv1alpha1.TerraformLayer{}
@@ -100,7 +100,7 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)

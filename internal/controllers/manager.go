@@ -31,6 +31,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
+
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	//+kubebuilder:scaffold:imports
@@ -41,8 +44,14 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+const ()
+
 type Controllers struct {
 	config *config.Config
+}
+
+type Reconciler interface {
+	SetupWithManager(mgr ctrl.Manager) error
 }
 
 func New(c *config.Config) *Controllers {
@@ -99,20 +108,30 @@ func (c *Controllers) Exec() {
 		os.Exit(1)
 	}
 
-	if err = (&TerraformRepositoryReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "TerraformRepository")
-		os.Exit(1)
-	}
-	if err = (&TerraformLayerReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Config: c.config,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "TerraformLayer")
-		os.Exit(1)
+	for _, ctrlType := range c.config.Controller.Types {
+		switch ctrlType {
+		case "layer":
+			if err = (&terraformlayer.Reconciler{
+				Client: mgr.GetClient(),
+				Scheme: mgr.GetScheme(),
+				Config: c.config,
+			}).SetupWithManager(mgr); err != nil {
+				setupLog.Error(err, "unable to create controller", "controller", "TerraformLayer")
+				os.Exit(1)
+			}
+			setupLog.Info("layer controller started")
+		case "repository":
+			if err = (&terraformrepository.Reconciler{
+				Client: mgr.GetClient(),
+				Scheme: mgr.GetScheme(),
+			}).SetupWithManager(mgr); err != nil {
+				setupLog.Error(err, "unable to create controller", "controller", "TerraformRepository")
+				os.Exit(1)
+			}
+			setupLog.Info("repository controller started")
+		default:
+			setupLog.Error(nil, "unrecognized controller type: %s", ctrlType)
+		}
 	}
 	//+kubebuilder:scaffold:builder
 

@@ -25,6 +25,7 @@ type WebhookConfig struct {
 type ControllerConfig struct {
 	WatchedNamespaces []string         `yaml:"namespaces"`
 	Timers            ControllerTimers `yaml:"timers"`
+	Types             []string         `yaml:"types"`
 }
 
 type ControllerTimers struct {
