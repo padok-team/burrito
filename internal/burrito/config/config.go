@@ -25,12 +25,13 @@ type WebhookConfig struct {
 type ControllerConfig struct {
 	WatchedNamespaces []string         `yaml:"namespaces"`
 	Timers            ControllerTimers `yaml:"timers"`
+	Types             []string         `yaml:"types"`
 }
 
 type ControllerTimers struct {
-	DriftDetection int `yaml:"driftDetection"`
-	WaitAction     int `yaml:"waitAction"`
-	OnError        int `yaml:"onError"`
+	DriftDetection string `yaml:"driftDetection"`
+	OnError        string `yaml:"waitAction"`
+	WaitAction     string `yaml:"onError"`
 }
 
 type RepositoryConfig struct {
@@ -41,12 +42,13 @@ type RepositoryConfig struct {
 }
 
 type RunnerConfig struct {
-	Path       string           `yaml:"path"`
-	Branch     string           `yaml:"branch"`
-	Version    string           `yaml:"version"`
-	Action     string           `yaml:"action"`
-	Repository RepositoryConfig `yaml:"repository"`
-	Layer      Layer            `yaml:"layer"`
+	Path                       string           `yaml:"path"`
+	Branch                     string           `yaml:"branch"`
+	Version                    string           `yaml:"version"`
+	Action                     string           `yaml:"action"`
+	Repository                 RepositoryConfig `yaml:"repository"`
+	Layer                      Layer            `yaml:"layer"`
+	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
 }
 
 type Layer struct {

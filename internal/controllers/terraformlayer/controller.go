@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package terraformlayer
 
 import (
 	"context"
 	"time"
 
-	"github.com/padok-team/burrito/burrito/config"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,8 +32,8 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
-// TerraformLayerReconciler reconciles a TerraformLayer object
-type TerraformLayerReconciler struct {
+// Reconciler reconciles a TerraformLayer object
+type Reconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	Config *config.Config
@@ -52,7 +52,7 @@ type TerraformLayerReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 	log.Info("Starting reconciliation")
 	layer := &configv1alpha1.TerraformLayer{}
@@ -68,11 +68,13 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	locked, err := lock.IsLocked(ctx, r.Client, layer)
 	if err != nil {
 		log.Error(err, "Failed to get Lease Resource.")
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
+		return ctrl.Result{RequeueAfter: delta}, err
 	}
 	if locked {
 		log.Info("Layer is locked, skipping reconciliation.")
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.WaitAction)}, nil
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
+		return ctrl.Result{RequeueAfter: delta}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Info("Getting Linked TerraformRepository")
@@ -82,13 +84,15 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}, repository)
 	if errors.IsNotFound(err) {
 		log.Info("TerraformRepository not found, ignoring layer until it's modified.")
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
+		return ctrl.Result{RequeueAfter: delta}, err
 	}
 	if err != nil {
 		log.Error(err, "Failed to get TerraformRepository")
-		return ctrl.Result{RequeueAfter: time.Second * time.Duration(r.Config.Controller.Timers.OnError)}, err
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
+		return ctrl.Result{RequeueAfter: delta}, err
 	}
-	state, conditions := GetState(ctx, layer)
+	state, conditions := r.GetState(ctx, layer)
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
 	result := state.getHandler()(ctx, r, layer, repository)
 	err = r.Client.Status().Update(ctx, layer)
@@ -100,7 +104,7 @@ func (r *TerraformLayerReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *TerraformLayerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)

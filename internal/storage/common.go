@@ -1,4 +1,4 @@
-package cache
+package storage
 
 import (
 	"fmt"
@@ -7,24 +7,24 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
-type CacheError struct {
+type StorageError struct {
 	Err error
 	Nil bool
 }
 
-func (c *CacheError) Error() string {
-	return c.Err.Error()
+func (s *StorageError) Error() string {
+	return s.Err.Error()
 }
 
 func NotFound(err error) bool {
-	ce, ok := err.(*CacheError)
+	ce, ok := err.(*StorageError)
 	if ok {
 		return ce.Nil
 	}
 	return false
 }
 
-func (c *CacheError) NotFound() bool {
+func (c *StorageError) NotFound() bool {
 	return c.Nil
 }
 
@@ -35,7 +35,7 @@ const (
 	RunMessage             Prefix = "runMessage"
 )
 
-type Cache interface {
+type Storage interface {
 	Get(key string) ([]byte, error)
 	Set(key string, value []byte, ttl int) error
 	Delete(key string) error

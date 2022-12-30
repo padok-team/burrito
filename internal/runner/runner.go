@@ -22,10 +22,11 @@ import (
 	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/terraform-exec/tfexec"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/burrito/config"
-	"github.com/padok-team/burrito/cache"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
+	"github.com/padok-team/burrito/internal/storage"
+	"github.com/padok-team/burrito/internal/storage/redis"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -41,7 +42,7 @@ const WorkingDir string = "/repository"
 type Runner struct {
 	config     *config.Config
 	terraform  *tfexec.Terraform
-	cache      cache.Cache
+	storage    storage.Storage
 	client     client.Client
 	layer      *configv1alpha1.TerraformLayer
 	repository *git.Repository
@@ -72,7 +73,7 @@ func (r *Runner) Exec() {
 	case "plan":
 		sum, err = r.plan()
 		if err == nil {
-			ann[annotations.LastPlanDate] = strconv.FormatInt(time.Now().Unix(), 10)
+			ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 			ann[annotations.LastPlanCommit] = commit
 		}
 		if sum != "" {
@@ -104,7 +105,7 @@ func (r *Runner) Exec() {
 }
 
 func (r *Runner) init() error {
-	r.cache = cache.NewRedisCache(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
+	r.storage = redis.New(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
@@ -179,9 +180,9 @@ func (r *Runner) plan() (string, error) {
 	}
 	log.Print("Terraform plan ran successfully")
 	sum := sha256.Sum256(plan)
-	planBinKey := cache.GenerateKey(cache.LastPlannedArtifactBin, r.layer)
-	log.Printf("Setting plan binary into cache at key %s", planBinKey)
-	err = r.cache.Set(planBinKey, plan, 3600)
+	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
+	log.Printf("Setting plan binary into storage at key %s", planBinKey)
+	err = r.storage.Set(planBinKey, plan, 3600)
 	if err != nil {
 		log.Printf("Could not put plan binary in cache: %s", err)
 	}
@@ -189,9 +190,9 @@ func (r *Runner) plan() (string, error) {
 }
 
 func (r *Runner) apply() (string, error) {
-	planBinKey := cache.GenerateKey(cache.LastPlannedArtifactBin, r.layer)
+	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
 	log.Printf("Getting plan binary in cache at key %s", planBinKey)
-	plan, err := r.cache.Get(planBinKey)
+	plan, err := r.storage.Get(planBinKey)
 	if err != nil {
 		log.Printf("Could not get plan artifact: %s", err)
 		return "", err

@@ -1,7 +1,7 @@
 package webhook
 
 import (
-	"github.com/padok-team/burrito/burrito/config"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

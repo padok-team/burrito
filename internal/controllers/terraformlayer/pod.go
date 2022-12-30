@@ -1,9 +1,10 @@
-package controllers
+package terraformlayer
 
 import (
 	"fmt"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -14,9 +15,9 @@ const (
 	ApplyAction Action = "apply"
 )
 
-func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
+func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
 	pod := corev1.Pod{
-		Spec: defaultPodSpec(layer, repository),
+		Spec: defaultPodSpec(r.Config, layer, repository),
 	}
 	pod.SetNamespace(layer.Namespace)
 	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
@@ -73,7 +74,7 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 	return pod
 }
 
-func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
+func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{
@@ -85,7 +86,7 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
 						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "burrito-ssh-known-hosts",
+							Name: config.Runner.SSHKnownHostsConfigMapName,
 						},
 						Optional: &[]bool{true}[0],
 					},

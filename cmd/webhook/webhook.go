@@ -1,7 +1,7 @@
 package webhook
 
 import (
-	"github.com/padok-team/burrito/burrito"
+	"github.com/padok-team/burrito/internal/burrito"
 	"github.com/spf13/cobra"
 )
 

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/padok-team/burrito/burrito"
 	"github.com/padok-team/burrito/cmd"
+	"github.com/padok-team/burrito/internal/burrito"
 )
 
 func main() {
