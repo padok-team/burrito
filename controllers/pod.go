@@ -106,7 +106,7 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						MountPath: "/repository",
 					},
 					{
-						MountPath: "/repository/.ssh/",
+						MountPath: "/go/.ssh/",
 						Name:      "ssh-known-hosts",
 					},
 				},
@@ -149,7 +149,7 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					},
 					{
 						Name:  "SSH_KNOWN_HOSTS",
-						Value: "/repository/.ssh/known_hosts",
+						Value: "/go/.ssh/known_hosts",
 					},
 				},
 			},
