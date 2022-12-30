@@ -54,11 +54,17 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() {
+	defer func() {
+		err := lock.DeleteLock(context.TODO(), r.client, r.layer)
+		if err != nil {
+			log.Fatalf("could not remove lease lock: %s", err)
+		}
+	}()
 	var sum string
 	err := r.init()
 	ann := map[string]string{}
 	if err != nil {
-		log.Fatalf("error initializing runner: %s", err)
+		log.Printf("error initializing runner: %s", err)
 	}
 	ref, _ := r.repository.Head()
 	commit := ref.Hash().String()
@@ -82,7 +88,7 @@ func (r *Runner) Exec() {
 		err = errors.New("Unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
 	}
 	if err != nil {
-		log.Fatalf("Error during runner execution: %s", err)
+		log.Printf("Error during runner execution: %s", err)
 		n, ok := r.layer.Annotations[annotations.Failure]
 		number := 0
 		if ok {
@@ -93,11 +99,7 @@ func (r *Runner) Exec() {
 	}
 	err = annotations.AddAnnotations(context.TODO(), r.client, *r.layer, ann)
 	if err != nil {
-		log.Fatalf("Could not update layer annotations: %s", err)
-	}
-	err = lock.DeleteLock(context.TODO(), r.client, r.layer)
-	if err != nil {
-		log.Fatalf("Could not delete Lease lock: %s", err)
+		log.Printf("Could not update layer annotations: %s", err)
 	}
 }
 
@@ -172,7 +174,7 @@ func (r *Runner) plan() (string, error) {
 	}
 	plan, err := os.ReadFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact))
 	if err != nil {
-		log.Fatalf("Could not read plan output: %s", err)
+		log.Printf("Could not read plan output: %s", err)
 		return "", err
 	}
 	log.Print("Terraform plan ran successfully")
@@ -181,7 +183,7 @@ func (r *Runner) plan() (string, error) {
 	log.Printf("Setting plan binary into cache at key %s", planBinKey)
 	err = r.cache.Set(planBinKey, plan, 3600)
 	if err != nil {
-		log.Fatalf("Could not put plan binary in cache: %s", err)
+		log.Printf("Could not put plan binary in cache: %s", err)
 	}
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
@@ -203,7 +205,7 @@ func (r *Runner) apply() (string, error) {
 	log.Print("Launching terraform apply")
 	err = r.terraform.Apply(context.Background(), tfexec.DirOrPlan(PlanArtifact))
 	if err != nil {
-		log.Fatalf("Terraform apply errored: %s", err)
+		log.Printf("Terraform apply errored: %s", err)
 		return "", err
 	}
 	log.Print("Terraform apply ran successfully")
