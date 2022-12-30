@@ -32,6 +32,44 @@ func getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.Ter
 			Value: "apply",
 		})
 	}
+	if repository.Spec.Repository.SecretName != "" {
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "username",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "password",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "sshPrivateKey",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+	}
 	return pod
 }
 
@@ -42,19 +80,34 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 				Name:         "repository",
 				VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
 			},
+			{
+				Name: "ssh-known-hosts",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "burrito-ssh-known-hosts",
+						},
+						Optional: &[]bool{true}[0],
+					},
+				},
+			},
 		},
 		RestartPolicy:      corev1.RestartPolicyNever,
 		ServiceAccountName: "burrito-runner",
 		Containers: []corev1.Container{
 			{
 				Name:       "runner",
-				Image:      fmt.Sprintf("ghcr.io/padok-team/burrito:%s", "latest"),
+				Image:      fmt.Sprintf("eu.gcr.io/padok-playground/burrito:%s", "latest"),
 				WorkingDir: "/repository",
 				Args:       []string{"runner", "start"},
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						Name:      "repository",
 						MountPath: "/repository",
+					},
+					{
+						MountPath: "/go/.ssh/",
+						Name:      "ssh-known-hosts",
 					},
 				},
 				Env: []corev1.EnvVar{
@@ -75,18 +128,6 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 						Value: repository.Spec.Repository.Url,
 					},
 					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_SSH",
-						Value: "",
-					},
-					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_USERNAME",
-						Value: "",
-					},
-					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_PASSWORD",
-						Value: "",
-					},
-					{
 						Name:  "BURRITO_RUNNER_PATH",
 						Value: layer.Spec.Path,
 					},
@@ -105,6 +146,10 @@ func defaultPodSpec(layer *configv1alpha1.TerraformLayer, repository *configv1al
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAMESPACE",
 						Value: layer.GetObjectMeta().GetNamespace(),
+					},
+					{
+						Name:  "SSH_KNOWN_HOSTS",
+						Value: "/go/.ssh/known_hosts",
 					},
 				},
 			},

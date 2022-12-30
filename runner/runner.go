@@ -8,12 +8,15 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	b64 "encoding/base64"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/releases"
@@ -51,11 +54,17 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() {
+	defer func() {
+		err := lock.DeleteLock(context.TODO(), r.client, r.layer)
+		if err != nil {
+			log.Fatalf("could not remove lease lock: %s", err)
+		}
+	}()
 	var sum string
 	err := r.init()
 	ann := map[string]string{}
 	if err != nil {
-		log.Fatalf("error initializing runner: %s", err)
+		log.Printf("error initializing runner: %s", err)
 	}
 	ref, _ := r.repository.Head()
 	commit := ref.Hash().String()
@@ -79,7 +88,7 @@ func (r *Runner) Exec() {
 		err = errors.New("Unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
 	}
 	if err != nil {
-		log.Fatalf("Error during runner execution: %s", err)
+		log.Printf("Error during runner execution: %s", err)
 		n, ok := r.layer.Annotations[annotations.Failure]
 		number := 0
 		if ok {
@@ -90,11 +99,7 @@ func (r *Runner) Exec() {
 	}
 	err = annotations.AddAnnotations(context.TODO(), r.client, *r.layer, ann)
 	if err != nil {
-		log.Fatalf("Could not update layer annotations: %s", err)
-	}
-	err = lock.DeleteLock(context.TODO(), r.client, r.layer)
-	if err != nil {
-		log.Fatalf("Could not delete Lease lock: %s", err)
+		log.Printf("Could not update layer annotations: %s", err)
 	}
 }
 
@@ -133,10 +138,11 @@ func (r *Runner) init() error {
 		return err
 	}
 	log.Printf("Cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
-	r.repository, err = git.PlainClone(WorkingDir, false, &git.CloneOptions{
-		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
-		URL:           r.config.Runner.Repository.URL,
-	})
+	cloneOptions, err := r.getCloneOptions()
+	if err != nil {
+		return err
+	}
+	r.repository, err = git.PlainClone(WorkingDir, false, cloneOptions)
 	if err != nil {
 		return err
 	}
@@ -168,7 +174,7 @@ func (r *Runner) plan() (string, error) {
 	}
 	plan, err := os.ReadFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact))
 	if err != nil {
-		log.Fatalf("Could not read plan output: %s", err)
+		log.Printf("Could not read plan output: %s", err)
 		return "", err
 	}
 	log.Print("Terraform plan ran successfully")
@@ -177,7 +183,7 @@ func (r *Runner) plan() (string, error) {
 	log.Printf("Setting plan binary into cache at key %s", planBinKey)
 	err = r.cache.Set(planBinKey, plan, 3600)
 	if err != nil {
-		log.Fatalf("Could not put plan binary in cache: %s", err)
+		log.Printf("Could not put plan binary in cache: %s", err)
 	}
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
@@ -199,9 +205,46 @@ func (r *Runner) apply() (string, error) {
 	log.Print("Launching terraform apply")
 	err = r.terraform.Apply(context.Background(), tfexec.DirOrPlan(PlanArtifact))
 	if err != nil {
-		log.Fatalf("Terraform apply errored: %s", err)
+		log.Printf("Terraform apply errored: %s", err)
 		return "", err
 	}
 	log.Print("Terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
+func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {
+	authMethod := "ssh"
+	cloneOptions := &git.CloneOptions{
+		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
+		URL:           r.config.Runner.Repository.URL,
+	}
+	if strings.Contains(r.config.Runner.Repository.URL, "https://") {
+		authMethod = "https"
+	}
+	log.Printf("clone method is %s", authMethod)
+	switch authMethod {
+	case "ssh":
+		if r.config.Runner.Repository.SSHPrivateKey == "" {
+			log.Printf("keyless authentication")
+			return cloneOptions, nil
+		}
+		log.Printf("private key found.")
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
+		if err != nil {
+			return cloneOptions, err
+		}
+		cloneOptions.Auth = publicKeys
+
+	case "https":
+		if r.config.Runner.Repository.Username != "" && r.config.Runner.Repository.Password != "" {
+			log.Printf("username and password found")
+			cloneOptions.Auth = &http.BasicAuth{
+				Username: r.config.Runner.Repository.Username,
+				Password: r.config.Runner.Repository.Password,
+			}
+		} else {
+			log.Printf("passwordless authentication")
+		}
+	}
+	return cloneOptions, nil
 }
