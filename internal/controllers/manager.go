@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/burrito/config"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	//+kubebuilder:scaffold:imports
 )
 

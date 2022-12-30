@@ -4,10 +4,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/padok-team/burrito/burrito/config"
-	"github.com/padok-team/burrito/controllers"
-	"github.com/padok-team/burrito/runner"
-	"github.com/padok-team/burrito/webhook"
+	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/controllers"
+	"github.com/padok-team/burrito/internal/runner"
+	"github.com/padok-team/burrito/internal/webhook"
 )
 
 type App struct {

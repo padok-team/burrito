@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/padok-team/burrito/burrito/config"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
