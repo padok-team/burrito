@@ -76,7 +76,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	if locked {
 		log.Info("Layer is locked, skipping reconciliation.")
-		delta, err := time.ParseDuration(r.Config.Controller.Timers.OnError)
+		delta, err := time.ParseDuration(r.Config.Controller.Timers.WaitAction)
 		if err != nil {
 			log.Error(err, "Failed requeuing")
 		}
