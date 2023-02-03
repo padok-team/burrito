@@ -185,6 +185,7 @@ func (r *Runner) plan() (string, error) {
 	err = r.storage.Set(planBinKey, plan, 3600)
 	if err != nil {
 		log.Printf("Could not put plan binary in cache: %s", err)
+		return "", err
 	}
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }

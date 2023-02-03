@@ -73,7 +73,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	if locked {
 		log.Info("Layer is locked, skipping reconciliation.")
-		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.WaitAction)
 		return ctrl.Result{RequeueAfter: delta}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
