@@ -18,8 +18,11 @@ type Config struct {
 }
 
 type WebhookConfig struct {
-	RepositoryProvider string `yaml:"provider"`
-	Secret             string `yaml:"secret"`
+	Github WebhookGithubConfig `yaml:"github"`
+}
+
+type WebhookGithubConfig struct {
+	Secret string `yaml:"secret"`
 }
 
 type ControllerConfig struct {
