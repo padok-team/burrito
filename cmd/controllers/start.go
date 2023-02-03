@@ -13,7 +13,10 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 		Use:   "start",
 		Short: "Start Burrito controllers",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			app.StartController()
+			err := app.StartController()
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 	}

@@ -68,18 +68,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	locked, err := lock.IsLocked(ctx, r.Client, layer)
 	if err != nil {
 		log.Error(err, "Failed to get Lease Resource.")
-		delta, err := time.ParseDuration(r.Config.Controller.Timers.OnError)
-		if err != nil {
-			log.Error(err, "Failed requeuing")
-		}
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
 		return ctrl.Result{RequeueAfter: delta}, err
 	}
 	if locked {
 		log.Info("Layer is locked, skipping reconciliation.")
-		delta, err := time.ParseDuration(r.Config.Controller.Timers.WaitAction)
-		if err != nil {
-			log.Error(err, "Failed requeuing")
-		}
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.WaitAction)
 		return ctrl.Result{RequeueAfter: delta}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
@@ -90,18 +84,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}, repository)
 	if errors.IsNotFound(err) {
 		log.Info("TerraformRepository not found, ignoring layer until it's modified.")
-		delta, err := time.ParseDuration(r.Config.Controller.Timers.OnError)
-		if err != nil {
-			log.Error(err, "Failed requeuing")
-		}
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
 		return ctrl.Result{RequeueAfter: delta}, err
 	}
 	if err != nil {
 		log.Error(err, "Failed to get TerraformRepository")
-		delta, err := time.ParseDuration(r.Config.Controller.Timers.OnError)
-		if err != nil {
-			log.Error(err, "Failed requeuing")
-		}
+		delta, _ := time.ParseDuration(r.Config.Controller.Timers.OnError)
 		return ctrl.Result{RequeueAfter: delta}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
