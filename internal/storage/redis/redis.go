@@ -54,10 +54,3 @@ func (s *Storage) Delete(key string) error {
 	}
 	return nil
 }
-
-func (s *Storage) TestPing() *redis.StatusCmd {
-	if err := s.Client.Ping(context.TODO()); err != nil {
-		return err
-	}
-	return nil
-}

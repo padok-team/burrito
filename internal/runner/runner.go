@@ -106,9 +106,6 @@ func (r *Runner) Exec() {
 
 func (r *Runner) init() error {
 	r.storage = redis.New(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
-	if err := r.storage.TestPing(); err != nil {
-		log.Printf("Could not ping redis: %s", err)
-	}
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
