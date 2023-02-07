@@ -23,8 +23,20 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	lastPlanDate, _ := time.Parse(time.UnixDate, value)
-	delta, _ := time.ParseDuration(r.Config.Controller.Timers.DriftDetection)
+	lastPlanDate, err := time.Parse(time.UnixDate, value)
+	if err != nil {
+		condition.Reason = "ParseError"
+		condition.Message = "Could not parse time from annotation"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+	delta, err := time.ParseDuration(r.Config.Controller.Timers.DriftDetection)
+	if err != nil {
+		condition.Reason = "ParseError"
+		condition.Message = "Could not parse timer drift detection period"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
 	nextPlanDate := lastPlanDate.Add(delta)
 	now := time.Now()
 	if nextPlanDate.After(now) {
