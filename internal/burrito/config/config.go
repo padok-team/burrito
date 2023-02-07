@@ -19,10 +19,16 @@ type Config struct {
 }
 
 type WebhookConfig struct {
-	Github WebhookGithubConfig `yaml:"github"`
+	Github    WebhookGithubConfig `yaml:"github"`
+	Gitlab    WebhookGitlabConfig `yaml:"gitlab"`
+	Namespace string              `yaml:"namespace"`
 }
 
 type WebhookGithubConfig struct {
+	Secret string `yaml:"secret"`
+}
+
+type WebhookGitlabConfig struct {
 	Secret string `yaml:"secret"`
 }
 
