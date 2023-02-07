@@ -41,7 +41,12 @@ type IdleState struct{}
 
 func (s *IdleState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-		delta, _ := time.ParseDuration(t.Config.Controller.Timers.DriftDetection)
+		log := log.FromContext(ctx)
+		delta, err := time.ParseDuration(t.Config.Controller.Timers.DriftDetection)
+		if err != nil {
+			log.Error(err, "could not parse timer drift detection period")
+			return ctrl.Result{}
+		}
 		return ctrl.Result{RequeueAfter: delta}
 	}
 }
@@ -51,21 +56,28 @@ type PlanNeededState struct{}
 func (s *PlanNeededState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
-		err := lock.CreateLock(ctx, t.Client, r)
+		deltaOnError, err := time.ParseDuration(t.Config.Controller.Timers.OnError)
+		if err != nil {
+			log.Error(err, "could not parse timer on error period")
+			return ctrl.Result{}
+		}
+		err = lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
 			log.Error(err, "Could not set lock on layer, requeing resource")
-			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
-			return ctrl.Result{RequeueAfter: delta}
+			return ctrl.Result{RequeueAfter: deltaOnError}
 		}
 		pod := t.getPod(r, repository, "plan")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "Failed to create pod for Plan action")
 			_ = lock.DeleteLock(ctx, t.Client, r)
-			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
-			return ctrl.Result{RequeueAfter: delta}
+			return ctrl.Result{RequeueAfter: deltaOnError}
 		}
-		delta, _ := time.ParseDuration(t.Config.Controller.Timers.WaitAction)
+		delta, err := time.ParseDuration(t.Config.Controller.Timers.WaitAction)
+		if err != nil {
+			log.Error(err, "could not parse timer wait action period")
+			return ctrl.Result{}
+		}
 		return ctrl.Result{RequeueAfter: delta}
 	}
 }
@@ -75,21 +87,28 @@ type ApplyNeededState struct{}
 func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
-		err := lock.CreateLock(ctx, t.Client, r)
+		deltaOnError, err := time.ParseDuration(t.Config.Controller.Timers.OnError)
+		if err != nil {
+			log.Error(err, "could not parse timer on error period")
+			return ctrl.Result{}
+		}
+		err = lock.CreateLock(ctx, t.Client, r)
 		if err != nil {
 			log.Error(err, "Could not set lock on layer, requeing resource")
-			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
-			return ctrl.Result{RequeueAfter: delta}
+			return ctrl.Result{RequeueAfter: deltaOnError}
 		}
 		pod := t.getPod(r, repository, "apply")
 		err = t.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Error(err, "[TerraformApplyNeeded] Failed to create pod for Apply action")
 			_ = lock.DeleteLock(ctx, t.Client, r)
-			delta, _ := time.ParseDuration(t.Config.Controller.Timers.OnError)
-			return ctrl.Result{RequeueAfter: delta}
+			return ctrl.Result{RequeueAfter: deltaOnError}
 		}
-		delta, _ := time.ParseDuration(t.Config.Controller.Timers.WaitAction)
+		delta, err := time.ParseDuration(t.Config.Controller.Timers.WaitAction)
+		if err != nil {
+			log.Error(err, "could not parse timer wait action period")
+			return ctrl.Result{}
+		}
 		return ctrl.Result{RequeueAfter: delta}
 	}
 }
