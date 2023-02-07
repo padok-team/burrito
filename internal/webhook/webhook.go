@@ -20,20 +20,20 @@ type Handler interface {
 	Handle()
 }
 
-type WebhookHandler struct {
+type Webhook struct {
 	client.Client
 	config *config.Config
 	github *github.Webhook
 	gitlab *gitlab.Webhook
 }
 
-func New(c *config.Config) *WebhookHandler {
-	return &WebhookHandler{
+func New(c *config.Config) *Webhook {
+	return &Webhook{
 		config: c,
 	}
 }
 
-func (w *WebhookHandler) Init() error {
+func (w *Webhook) Init() error {
 	githubWebhook, err := github.New(github.Options.Secret(w.config.Webhook.Github.Secret))
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (w *WebhookHandler) Init() error {
 	return nil
 }
 
-func (w *WebhookHandler) Handle(payload interface{}) {
+func (w *Webhook) Handle(payload interface{}) {
 	webUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
 	if len(webUrls) == 0 {
 		fmt.Println("Ignoring webhook event")

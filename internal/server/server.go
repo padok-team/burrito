@@ -14,6 +14,12 @@ type Server struct {
 	config *config.Config
 }
 
+func New(c *config.Config) *Server {
+	return &Server{
+		config: c,
+	}
+}
+
 func (s *Server) Exec() {
 	http.HandleFunc("/healthz", handleHealthz)
 	http.HandleFunc("/webhook", handleWebhook)
