@@ -2,7 +2,11 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"html"
+	"log"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -10,10 +14,14 @@ import (
 	"github.com/go-playground/webhooks/v6/gitlab"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"k8s.io/apimachinery/pkg/runtime"
 
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 type Handler interface {
@@ -34,6 +42,16 @@ func New(c *config.Config) *Webhook {
 }
 
 func (w *Webhook) Init() error {
+	scheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
+	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return err
+	}
+	w.Client = cl
 	githubWebhook, err := github.New(github.Options.Secret(w.config.Webhook.Github.Secret))
 	if err != nil {
 		return err
@@ -47,6 +65,42 @@ func (w *Webhook) Init() error {
 	return nil
 }
 
+func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
+	return func(writer http.ResponseWriter, r *http.Request) {
+		var payload interface{}
+		var err error
+
+		switch {
+		case r.Header.Get("X-GitHub-Event") != "":
+			payload, err = w.github.Parse(r, github.PushEvent, github.PingEvent)
+			if errors.Is(err, github.ErrHMACVerificationFailed) {
+				log.Println("GitHub webhook HMAC verification failed")
+			}
+		case r.Header.Get("X-Gitlab-Event") != "":
+			payload, err = w.gitlab.Parse(r, gitlab.PushEvents, gitlab.TagEvents)
+			if errors.Is(err, gitlab.ErrGitLabTokenVerificationFailed) {
+				log.Println("GitLab webhook token verification failed")
+			}
+		default:
+			log.Println("Ignoring unknown webhook event")
+			http.Error(writer, "Unknown webhook event", http.StatusBadRequest)
+			return
+		}
+
+		if err != nil {
+			log.Printf("Webhook processing failed: %s", err)
+			status := http.StatusBadRequest
+			if r.Method != "POST" {
+				status = http.StatusMethodNotAllowed
+			}
+			http.Error(writer, fmt.Sprintf("Webhook processing failed: %s", html.EscapeString(err.Error())), status)
+			return
+		}
+
+		w.Handle(payload)
+	}
+}
+
 func (w *Webhook) Handle(payload interface{}) {
 	webUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
 	if len(webUrls) == 0 {
@@ -54,7 +108,7 @@ func (w *Webhook) Handle(payload interface{}) {
 		return
 	}
 	for _, webURL := range webUrls {
-		fmt.Println("Received push event repo: %s, revision: %s, touchedHead: %v", webURL, revision, touchedHead)
+		fmt.Printf("Received push event repo: %s, revision: %s, touchedHead: %v", webURL, revision, touchedHead)
 	}
 	// The next 2 lines probably dont work, waiting for chat GPT to be up \o/
 	repositories := &configv1alpha1.TerraformRepositoryList{}
@@ -71,7 +125,7 @@ func (w *Webhook) Handle(payload interface{}) {
 			// The next 2 lines probably dont work, waiting for chat GPT to be up \o/
 			// Should we link lkayer and repositories by label to make this list easier?
 			layers := &configv1alpha1.TerraformLayerList{}
-			err := w.Client.List(context.TODO(), layers)
+			err := w.Client.List(context.TODO(), layers, &client.ListOptions{})
 			if err != nil {
 				fmt.Println("could not get layers")
 			}
