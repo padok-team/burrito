@@ -75,12 +75,12 @@ func (r *Reconciler) IsLastCommitPlanned(t *configv1alpha1.TerraformLayer) (meta
 	if lastPlannedCommit == lastBranchCommit {
 		condition.Reason = "LastCommitPlanned"
 		condition.Message = "The last commit has already been planned"
-		condition.Status = metav1.ConditionFalse
+		condition.Status = metav1.ConditionTrue
 		return condition, false
 	}
 	condition.Reason = "LastCommitNotPlanned"
 	condition.Message = "The last received commit has not been planned yet"
-	condition.Status = metav1.ConditionTrue
+	condition.Status = metav1.ConditionFalse
 	return condition, true
 }
 
