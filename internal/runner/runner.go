@@ -98,7 +98,7 @@ func (r *Runner) Exec() {
 		number++
 		ann[annotations.Failure] = strconv.Itoa(number)
 	}
-	err = annotations.AddAnnotations(context.TODO(), r.client, *r.layer, ann)
+	err = annotations.Add(context.TODO(), r.client, *r.layer, ann)
 	if err != nil {
 		log.Printf("Could not update layer annotations: %s", err)
 	}

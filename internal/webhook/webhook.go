@@ -133,7 +133,7 @@ func (w *Webhook) Handle(payload interface{}) {
 				if layerFilesHaveChanged(&layer, changedFiles) {
 					ann := map[string]string{}
 					ann[annotations.LastBranchCommit] = change.shaAfter
-					err = annotations.AddAnnotations(context.TODO(), w.Client, layer, ann)
+					err = annotations.Add(context.TODO(), w.Client, layer, ann)
 				}
 			}
 		}
