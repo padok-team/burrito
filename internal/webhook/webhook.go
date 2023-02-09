@@ -72,6 +72,7 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 
 		switch {
 		case r.Header.Get("X-GitHub-Event") != "":
+			log.Println("Detected a Github event")
 			payload, err = w.github.Parse(r, github.PushEvent, github.PingEvent)
 			if errors.Is(err, github.ErrHMACVerificationFailed) {
 				log.Println("GitHub webhook HMAC verification failed")
@@ -130,10 +131,14 @@ func (w *Webhook) Handle(payload interface{}) {
 				log.Println("could not get layers")
 			}
 			for _, layer := range layers.Items {
+				log.Printf("Evaluating %s", layer.Name)
 				if layerFilesHaveChanged(&layer, changedFiles) {
 					ann := map[string]string{}
 					ann[annotations.LastBranchCommit] = change.shaAfter
 					err = annotations.Add(context.TODO(), w.Client, layer, ann)
+					if err != nil {
+						log.Printf("Error adding annotation to layer %s", err)
+					}
 				}
 			}
 		}
