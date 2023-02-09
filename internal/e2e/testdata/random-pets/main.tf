@@ -9,3 +9,7 @@ resource "random_pet" "second" {
 resource "random_pet" "third" {
   length = 3
 }
+
+resource "random_pet" "fourth" {
+  length = 3
+}
