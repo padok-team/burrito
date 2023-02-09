@@ -15,11 +15,21 @@ type Config struct {
 	Controller ControllerConfig `yaml:"controller"`
 	Webhook    WebhookConfig    `yaml:"webhook"`
 	Redis      Redis            `yaml:"redis"`
+	Server     Server           `yaml:"server"`
 }
 
 type WebhookConfig struct {
-	RepositoryProvider string `yaml:"provider"`
-	Secret             string `yaml:"secret"`
+	Github    WebhookGithubConfig `yaml:"github"`
+	Gitlab    WebhookGitlabConfig `yaml:"gitlab"`
+	Namespace string              `yaml:"namespace"`
+}
+
+type WebhookGithubConfig struct {
+	Secret string `yaml:"secret"`
+}
+
+type WebhookGitlabConfig struct {
+	Secret string `yaml:"secret"`
 }
 
 type ControllerConfig struct {
@@ -60,6 +70,10 @@ type Redis struct {
 	URL      string `yaml:"url"`
 	Password string `yaml:"password"`
 	Database int    `yaml:"database"`
+}
+
+type Server struct {
+	Port string `yaml:"port"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {

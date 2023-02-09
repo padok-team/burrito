@@ -19,16 +19,17 @@ func (r *Reconciler) GetState(ctx context.Context, l *configv1alpha1.TerraformLa
 	log := log.FromContext(ctx)
 	c1, isPlanArtifactUpToDate := r.IsPlanArtifactUpToDate(l)
 	c2, isApplyUpToDate := r.IsApplyUpToDate(l)
+	c3, isLastCommitPlanned := r.IsLastCommitPlanned(l)
 	// c3, hasFailed := HasFailed(r)
-	conditions := []metav1.Condition{c1, c2}
+	conditions := []metav1.Condition{c1, c2, c3}
 	switch {
 	case isPlanArtifactUpToDate && isApplyUpToDate:
 		log.Info("Layer is up to date, waiting for a new drift detection cycle")
 		return &IdleState{}, conditions
-	case isPlanArtifactUpToDate && !isApplyUpToDate:
+	case isPlanArtifactUpToDate && !isApplyUpToDate && !isLastCommitPlanned:
 		log.Info("Layer needs to be applied, acquiring lock and creating a new runner")
 		return &ApplyNeededState{}, conditions
-	case !isPlanArtifactUpToDate:
+	case !isPlanArtifactUpToDate || !isLastCommitPlanned:
 		log.Info("Layer needs to be planned, acquiring lock and creating a new runner")
 		return &PlanNeededState{}, conditions
 	default:

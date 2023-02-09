@@ -6,7 +6,7 @@ package cmd
 import (
 	"github.com/padok-team/burrito/cmd/controllers"
 	"github.com/padok-team/burrito/cmd/runner"
-	"github.com/padok-team/burrito/cmd/webhook"
+	"github.com/padok-team/burrito/cmd/server"
 	"github.com/padok-team/burrito/internal/burrito"
 
 	"github.com/spf13/cobra"
@@ -27,6 +27,6 @@ func buildBurritoCmd(app *burrito.App) *cobra.Command {
 
 	cmd.AddCommand(controllers.BuildControllersCmd(app))
 	cmd.AddCommand(runner.BuildRunnerCmd(app))
-	cmd.AddCommand(webhook.BuildWebhookCmd(app))
+	cmd.AddCommand(server.BuildServerCmd(app))
 	return cmd
 }

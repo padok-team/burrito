@@ -51,6 +51,39 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	return condition, false
 }
 
+func (r *Reconciler) IsLastCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsLastCommitPlanned",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	lastPlannedCommit, ok := t.Annotations[annotations.LastPlanCommit]
+	if !ok {
+		condition.Reason = "NoPlanHasRunYet"
+		condition.Message = "No plan has run on this layer yet"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	lastBranchCommit, ok := t.Annotations[annotations.LastBranchCommit]
+	if !ok {
+		condition.Reason = "NoCommitReceived"
+		condition.Message = "No commit has been received from webhook"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if lastPlannedCommit == lastBranchCommit {
+		condition.Reason = "LastCommitPlanned"
+		condition.Message = "The last commit has already been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, false
+	}
+	condition.Reason = "LastCommitNotPlanned"
+	condition.Message = "The last received commit has not been planned yet"
+	condition.Status = metav1.ConditionFalse
+	return condition, true
+}
+
 func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "IsApplyUpToDate",

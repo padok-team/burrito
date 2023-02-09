@@ -22,7 +22,7 @@ const (
 	ForceApply       string = "notifications.terraform.padok.cloud/force-apply"
 )
 
-func AddAnnotations(ctx context.Context, c client.Client, obj configv1alpha1.TerraformLayer, annotations map[string]string) error {
+func Add(ctx context.Context, c client.Client, obj configv1alpha1.TerraformLayer, annotations map[string]string) error {
 	patch := client.MergeFrom(obj.DeepCopy())
 	currentAnnotations := obj.GetAnnotations()
 	for k, v := range annotations {
@@ -32,7 +32,7 @@ func AddAnnotations(ctx context.Context, c client.Client, obj configv1alpha1.Ter
 	return c.Patch(ctx, &obj, patch)
 }
 
-func RemoveAnnotation(ctx context.Context, c client.Client, obj configv1alpha1.TerraformLayer, annotation string) error {
+func Remove(ctx context.Context, c client.Client, obj configv1alpha1.TerraformLayer, annotation string) error {
 	patch := client.MergeFrom(obj.DeepCopy())
 	annotations := obj.GetAnnotations()
 	delete(annotations, annotation)

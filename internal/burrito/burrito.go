@@ -7,7 +7,7 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers"
 	"github.com/padok-team/burrito/internal/runner"
-	"github.com/padok-team/burrito/internal/webhook"
+	"github.com/padok-team/burrito/internal/server"
 )
 
 type App struct {
@@ -15,13 +15,13 @@ type App struct {
 
 	Runner      Runner
 	Controllers Controllers
-	Webhook     Webhook
+	Server      Server
 
 	Out io.Writer
 	Err io.Writer
 }
 
-type Webhook interface {
+type Server interface {
 	Exec()
 }
 
@@ -39,7 +39,7 @@ func New() (*App, error) {
 		Config:      c,
 		Runner:      runner.New(c),
 		Controllers: controllers.New(c),
-		Webhook:     webhook.New(c),
+		Server:      server.New(c),
 		Out:         os.Stdout,
 		Err:         os.Stderr,
 	}
