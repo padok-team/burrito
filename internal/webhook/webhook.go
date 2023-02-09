@@ -104,17 +104,17 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 func (w *Webhook) Handle(payload interface{}) {
 	webUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
 	if len(webUrls) == 0 {
-		fmt.Println("Ignoring webhook event")
+		log.Println("Ignoring webhook event")
 		return
 	}
 	for _, webURL := range webUrls {
-		fmt.Printf("Received push event repo: %s, revision: %s, touchedHead: %v", webURL, revision, touchedHead)
+		log.Printf("Received push event repo: %s, revision: %s, touchedHead: %v", webURL, revision, touchedHead)
 	}
 	// The next 2 lines probably dont work, waiting for chat GPT to be up \o/
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := w.Client.List(context.TODO(), repositories)
 	if err != nil {
-		fmt.Println("could not get repositories")
+		log.Println("could not get repositories")
 	}
 
 	for _, url := range webUrls {
@@ -127,7 +127,7 @@ func (w *Webhook) Handle(payload interface{}) {
 			layers := &configv1alpha1.TerraformLayerList{}
 			err := w.Client.List(context.TODO(), layers, &client.ListOptions{})
 			if err != nil {
-				fmt.Println("could not get layers")
+				log.Println("could not get layers")
 			}
 			for _, layer := range layers.Items {
 				if layerFilesHaveChanged(&layer, changedFiles) {
