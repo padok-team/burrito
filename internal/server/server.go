@@ -18,7 +18,10 @@ type Server struct {
 
 func New(c *config.Config) *Server {
 	webhook := webhook.New(c)
-	webhook.Init()
+	err := webhook.Init()
+	if err != nil {
+		log.Println(fmt.Sprintf("error initializing webhook: %s", err))
+	}
 	return &Server{
 		config:  c,
 		Webhook: webhook,
@@ -34,7 +37,7 @@ func (s *Server) Exec() {
 		log.Println("server is closed")
 	}
 	if err != nil {
-		log.Println("error starting server, exiting: %s", err)
+		log.Println(fmt.Sprintf("error starting server, exiting: %s", err))
 		os.Exit(1)
 	}
 }
