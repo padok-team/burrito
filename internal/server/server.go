@@ -20,7 +20,7 @@ func New(c *config.Config) *Server {
 	webhook := webhook.New(c)
 	err := webhook.Init()
 	if err != nil {
-		log.Println(fmt.Sprintf("error initializing webhook: %s", err))
+		log.Printf("error initializing webhook: %s", err)
 	}
 	return &Server{
 		config:  c,
@@ -37,7 +37,7 @@ func (s *Server) Exec() {
 		log.Println("server is closed")
 	}
 	if err != nil {
-		log.Println(fmt.Sprintf("error starting server, exiting: %s", err))
+		log.Printf("error starting server, exiting: %s", err)
 		os.Exit(1)
 	}
 }

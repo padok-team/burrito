@@ -181,7 +181,7 @@ func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, revision str
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 	default:
-		fmt.Println("event not handled")
+		log.Println("event not handled")
 	}
 	return webUrls, revision, change, touchedHead, changedFiles
 }
