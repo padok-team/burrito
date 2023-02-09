@@ -28,8 +28,9 @@ type TerraformRepositorySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Repository         TerraformRepositoryRepository `json:"repository,omitempty"`
-	OverrideRunnerSpec OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
+	Repository          TerraformRepositoryRepository          `json:"repository,omitempty"`
+	RemediationStrategy TerraformRepositoryRemediationStrategy `json:"remediationStrategy,omitempty"`
+	OverrideRunnerSpec  OverrideRunnerSpec                     `json:"overrideRunnerSpec,omitempty"`
 }
 
 type TerraformRepositoryRepository struct {
@@ -40,6 +41,13 @@ type TerraformRepositoryRepository struct {
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+}
+
+type TerraformRepositoryRemediationStrategy struct {
+	PlanOnDrift  bool `json:"planOnDrift,omitempty"`
+	ApplyOnDrift bool `json:"applyOnDrift,omitempty"`
+	PlanOnPush   bool `json:"planOnPush,omitempty"`
+	ApplyOnPush  bool `json:"applyOnPush,omitempty"`
 }
 
 //+kubebuilder:object:root=true

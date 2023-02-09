@@ -40,6 +40,7 @@ type TerraformLayerSpec struct {
 type TerraformLayerRemediationStrategy struct {
 	PlanOnDrift  bool `json:"planOnDrift,omitempty"`
 	ApplyOnDrift bool `json:"applyOnDrift,omitempty"`
+	PlanOnPush   bool `json:"planOnPush,omitempty"`
 	ApplyOnPush  bool `json:"applyOnPush,omitempty"`
 }
 
