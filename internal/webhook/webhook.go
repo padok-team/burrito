@@ -103,7 +103,7 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 }
 
 func (w *Webhook) Handle(payload interface{}) {
-	webUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
+	webUrls, sshUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
 	if len(webUrls) == 0 {
 		log.Println("Ignoring webhook event")
 		return
@@ -118,7 +118,9 @@ func (w *Webhook) Handle(payload interface{}) {
 		log.Println("could not get repositories")
 	}
 
-	for _, url := range webUrls {
+	allUrls := append(webUrls, sshUrls...)
+	for _, url := range allUrls {
+		log.Printf("%s", url)
 		for _, repo := range repositories.Items {
 			if repo.Spec.Repository.Url != url {
 				continue
@@ -156,10 +158,11 @@ func parseRevision(ref string) string {
 	return refParts[len(refParts)-1]
 }
 
-func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, revision string, change changeInfo, touchedHead bool, changedFiles []string) {
+func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, sshUrls []string, revision string, change changeInfo, touchedHead bool, changedFiles []string) {
 	switch payload := payloadIf.(type) {
 	case github.PushPayload:
 		webUrls = append(webUrls, payload.Repository.HTMLURL)
+		sshUrls = append(sshUrls, payload.Repository.SSHURL)
 		revision = parseRevision(payload.Ref)
 		change.shaAfter = parseRevision(payload.After)
 		change.shaBefore = parseRevision(payload.Before)
@@ -183,7 +186,7 @@ func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, revision str
 	default:
 		log.Println("event not handled")
 	}
-	return webUrls, revision, change, touchedHead, changedFiles
+	return webUrls, sshUrls, revision, change, touchedHead, changedFiles
 }
 
 func layerFilesHaveChanged(layer *configv1alpha1.TerraformLayer, changedFiles []string) bool {
