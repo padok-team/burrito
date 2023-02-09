@@ -28,20 +28,13 @@ type TerraformLayerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Path                string                            `json:"path,omitempty"`
-	Branch              string                            `json:"branch,omitempty"`
-	TerraformVersion    string                            `json:"terraformVersion,omitempty"`
-	Repository          TerraformLayerRepository          `json:"repository,omitempty"`
-	RemediationStrategy TerraformLayerRemediationStrategy `json:"remediationStrategy,omitempty"`
-	PlanOnPullRequest   bool                              `json:"planOnPullRequest,omitempty"`
-	OverrideRunnerSpec  OverrideRunnerSpec                `json:"overrideRunnerSpec,omitempty"`
-}
-
-type TerraformLayerRemediationStrategy struct {
-	PlanOnDrift  bool `json:"planOnDrift,omitempty"`
-	ApplyOnDrift bool `json:"applyOnDrift,omitempty"`
-	PlanOnPush   bool `json:"planOnPush,omitempty"`
-	ApplyOnPush  bool `json:"applyOnPush,omitempty"`
+	Path                string                   `json:"path,omitempty"`
+	Branch              string                   `json:"branch,omitempty"`
+	TerraformVersion    string                   `json:"terraformVersion,omitempty"`
+	Repository          TerraformLayerRepository `json:"repository,omitempty"`
+	RemediationStrategy RemediationStrategy      `json:"remediationStrategy,omitempty"`
+	PlanOnPullRequest   bool                     `json:"planOnPullRequest,omitempty"`
+	OverrideRunnerSpec  OverrideRunnerSpec       `json:"overrideRunnerSpec,omitempty"`
 }
 
 type TerraformLayerRepository struct {

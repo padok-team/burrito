@@ -10,3 +10,10 @@ type OverrideRunnerSpec struct {
 	NodeSelector       map[string]string             `json:"nodeSelector,omitempty"`
 	ServiceAccountName string                        `json:"serviceAccountName,omitempty"`
 }
+
+type RemediationStrategy struct {
+	PlanOnDrift  bool `json:"planOnDrift,omitempty"`
+	ApplyOnDrift bool `json:"applyOnDrift,omitempty"`
+	PlanOnPush   bool `json:"planOnPush,omitempty"`
+	ApplyOnPush  bool `json:"applyOnPush,omitempty"`
+}
