@@ -94,7 +94,7 @@ func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler,
 			return ctrl.Result{}
 		}
 		remediationStrategy := getRemediationStrategy(repository, r)
-		if remediationStrategy == configv1alpha1.DryRemediationStrategy {
+		if remediationStrategy != configv1alpha1.AutoApplyRemediationStrategy {
 			log.Info("layer is in dry mode, no action taken")
 			return ctrl.Result{RequeueAfter: deltaDriftDetection}
 		}
