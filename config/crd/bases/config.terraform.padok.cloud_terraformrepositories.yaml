@@ -97,6 +97,11 @@ spec:
                       type: object
                     type: array
                 type: object
+              remediationStrategy:
+                enum:
+                - dry
+                - autoApply
+                type: string
               repository:
                 properties:
                   secretName:

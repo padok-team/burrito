@@ -18,8 +18,10 @@ const (
 	Failure         string = "runner.terraform.padok.cloud/failure"
 	Lock            string = "runner.terraform.padok.cloud/lock"
 
-	LastBranchCommit string = "webhook.terraform.padok.cloud/branch-commit"
-	ForceApply       string = "notifications.terraform.padok.cloud/force-apply"
+	LastBranchCommit     string = "webhook.terraform.padok.cloud/branch-commit"
+	LastConcerningCommit string = "webhook.terraform.padok.cloud/concerning-commit"
+
+	ForceApply string = "notifications.terraform.padok.cloud/force-apply"
 )
 
 func Add(ctx context.Context, c client.Client, obj configv1alpha1.TerraformLayer, annotations map[string]string) error {

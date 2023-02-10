@@ -51,9 +51,9 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	return condition, false
 }
 
-func (r *Reconciler) IsLastCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsLastConcernginCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
-		Type:               "IsLastCommitPlanned",
+		Type:               "IsLastConcerningCommitPlanned",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
@@ -72,16 +72,29 @@ func (r *Reconciler) IsLastCommitPlanned(t *configv1alpha1.TerraformLayer) (meta
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
-	if lastPlannedCommit == lastBranchCommit {
-		condition.Reason = "LastCommitPlanned"
-		condition.Message = "The last commit has already been planned"
+	lastConcerningCommit, ok := t.Annotations[annotations.LastConcerningCommit]
+	if !ok {
+		condition.Reason = "NoCommitReceived"
+		condition.Message = "No commit has been received from webhook"
 		condition.Status = metav1.ConditionTrue
-		return condition, false
+		return condition, true
 	}
-	condition.Reason = "LastCommitNotPlanned"
-	condition.Message = "The last received commit has not been planned yet"
+	if lastBranchCommit != lastConcerningCommit {
+		condition.Reason = "CommitAlreadyHadnled"
+		condition.Message = "The last concerning commit should already have been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if lastPlannedCommit == lastBranchCommit {
+		condition.Reason = "LastConcerningCommitPlanned"
+		condition.Message = "The last concerngin commit has already been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	condition.Reason = "LastConcerningCommitNotPlanned"
+	condition.Message = "The last received concerning commit has not been planned yet"
 	condition.Status = metav1.ConditionFalse
-	return condition, true
+	return condition, false
 }
 
 func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {

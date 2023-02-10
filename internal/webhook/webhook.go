@@ -131,17 +131,18 @@ func (w *Webhook) Handle(payload interface{}) {
 				log.Println("could not get layers")
 			}
 			for _, layer := range layers.Items {
+				ann := map[string]string{}
 				if layer.Spec.Branch != revision {
 					continue
 				}
+				ann[annotations.LastBranchCommit] = change.shaAfter
 				log.Printf("Evaluating %s", layer.Name)
 				if layerFilesHaveChanged(&layer, changedFiles) {
-					ann := map[string]string{}
-					ann[annotations.LastBranchCommit] = change.shaAfter
-					err = annotations.Add(context.TODO(), w.Client, layer, ann)
-					if err != nil {
-						log.Printf("Error adding annotation to layer %s", err)
-					}
+					ann[annotations.LastConcerningCommit] = change.shaAfter
+				}
+				err = annotations.Add(context.TODO(), w.Client, layer, ann)
+				if err != nil {
+					log.Printf("Error adding annotation to layer %s", err)
 				}
 			}
 		}

@@ -11,9 +11,10 @@ type OverrideRunnerSpec struct {
 	ServiceAccountName string                        `json:"serviceAccountName,omitempty"`
 }
 
-type RemediationStrategy struct {
-	PlanOnDrift  bool `json:"planOnDrift,omitempty"`
-	ApplyOnDrift bool `json:"applyOnDrift,omitempty"`
-	PlanOnPush   bool `json:"planOnPush,omitempty"`
-	ApplyOnPush  bool `json:"applyOnPush,omitempty"`
-}
+// +kubebuilder:validation:Enum=dry;autoApply
+type RemediationStrategy string
+
+const (
+	DryRemediationStrategy       RemediationStrategy = "dry"
+	AutoApplyRemediationStrategy RemediationStrategy = "autoApply"
+)
