@@ -111,7 +111,7 @@ func (w *Webhook) Handle(payload interface{}) {
 	for _, webURL := range webUrls {
 		log.Printf("Received push event repo: %s, revision: %s, touchedHead: %v", webURL, revision, touchedHead)
 	}
-	// The next 2 lines probably dont work, waiting for chat GPT to be up \o/
+
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := w.Client.List(context.TODO(), repositories)
 	if err != nil {
@@ -125,14 +125,15 @@ func (w *Webhook) Handle(payload interface{}) {
 			if repo.Spec.Repository.Url != url {
 				continue
 			}
-			// The next 2 lines probably dont work, waiting for chat GPT to be up \o/
-			// Should we link lkayer and repositories by label to make this list easier?
 			layers := &configv1alpha1.TerraformLayerList{}
 			err := w.Client.List(context.TODO(), layers, &client.ListOptions{})
 			if err != nil {
 				log.Println("could not get layers")
 			}
 			for _, layer := range layers.Items {
+				if layer.Spec.Branch != revision {
+					continue
+				}
 				log.Printf("Evaluating %s", layer.Name)
 				if layerFilesHaveChanged(&layer, changedFiles) {
 					ann := map[string]string{}
@@ -190,8 +191,6 @@ func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, sshUrls []st
 }
 
 func layerFilesHaveChanged(layer *configv1alpha1.TerraformLayer, changedFiles []string) bool {
-	// an empty slice of changed files means that the payload didn't include a list
-	// of changed files and we have to assume that a refresh is required
 	if len(changedFiles) == 0 {
 		return true
 	}
