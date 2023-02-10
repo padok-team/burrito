@@ -5,6 +5,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/version"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -102,7 +103,7 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 		Containers: []corev1.Container{
 			{
 				Name:       "runner",
-				Image:      fmt.Sprintf("ghcr.io/padok-team/burrito:%s", "latest"),
+				Image:      fmt.Sprintf("ghcr.io/padok-team/burrito:%s", version.Version),
 				WorkingDir: "/repository",
 				Args:       []string{"runner", "start"},
 				VolumeMounts: []corev1.VolumeMount{

@@ -28,5 +28,6 @@ func buildBurritoCmd(app *burrito.App) *cobra.Command {
 	cmd.AddCommand(controllers.BuildControllersCmd(app))
 	cmd.AddCommand(runner.BuildRunnerCmd(app))
 	cmd.AddCommand(server.BuildServerCmd(app))
+	cmd.AddCommand(buildVersionCmd())
 	return cmd
 }
