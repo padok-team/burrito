@@ -53,7 +53,7 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 
 func (r *Reconciler) IsLastConcernginCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
-		Type:               "IsLastCommitPlanned",
+		Type:               "IsLastConcerningCommitPlanned",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
