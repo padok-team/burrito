@@ -26,12 +26,12 @@ func (r *Reconciler) GetState(ctx context.Context, l *configv1alpha1.TerraformLa
 	case isPlanArtifactUpToDate && isApplyUpToDate:
 		log.Info("Layer is up to date, waiting for a new drift detection cycle")
 		return &IdleState{}, conditions
-	case isPlanArtifactUpToDate && !isApplyUpToDate && !isLastCommitPlanned:
-		log.Info("Layer needs to be applied, acquiring lock and creating a new runner")
-		return &ApplyNeededState{}, conditions
 	case !isPlanArtifactUpToDate || !isLastCommitPlanned:
 		log.Info("Layer needs to be planned, acquiring lock and creating a new runner")
 		return &PlanNeededState{}, conditions
+	case isPlanArtifactUpToDate && !isApplyUpToDate && !isLastCommitPlanned:
+		log.Info("Layer needs to be applied, acquiring lock and creating a new runner")
+		return &ApplyNeededState{}, conditions
 	default:
 		log.Info("Layer is in an unknown state, defaulting to idle. If this happens please file an issue, this is an intended behavior.")
 		return &IdleState{}, conditions
@@ -88,6 +88,16 @@ type ApplyNeededState struct{}
 func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, t *Reconciler, r *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.FromContext(ctx)
+		deltaDriftDetection, err := time.ParseDuration(t.Config.Controller.Timers.DriftDetection)
+		if err != nil {
+			log.Error(err, "could not parse timer drift detection period")
+			return ctrl.Result{}
+		}
+		remediationStrategy := getRemediationStrategy(repository, r)
+		if remediationStrategy == configv1alpha1.DryRemediationStrategy {
+			log.Info("layer is in dry mode, no action taken")
+			return ctrl.Result{RequeueAfter: deltaDriftDetection}
+		}
 		deltaOnError, err := time.ParseDuration(t.Config.Controller.Timers.OnError)
 		if err != nil {
 			log.Error(err, "could not parse timer on error period")
@@ -112,4 +122,15 @@ func (s *ApplyNeededState) getHandler() func(ctx context.Context, t *Reconciler,
 		}
 		return ctrl.Result{RequeueAfter: delta}
 	}
+}
+
+func getRemediationStrategy(repo *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer) configv1alpha1.RemediationStrategy {
+	result := configv1alpha1.DryRemediationStrategy
+	if len(repo.Spec.RemediationStrategy) > 0 {
+		result = repo.Spec.RemediationStrategy
+	}
+	if len(layer.Spec.RemediationStrategy) > 0 {
+		result = layer.Spec.RemediationStrategy
+	}
+	return result
 }
