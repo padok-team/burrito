@@ -33,9 +33,17 @@ type WebhookGitlabConfig struct {
 }
 
 type ControllerConfig struct {
-	WatchedNamespaces []string         `yaml:"namespaces"`
-	Timers            ControllerTimers `yaml:"timers"`
-	Types             []string         `yaml:"types"`
+	WatchedNamespaces      []string             `yaml:"namespaces"`
+	Timers                 ControllerTimers     `yaml:"timers"`
+	Types                  []string             `yaml:"types"`
+	LeaderElection         LeaderElectionConfig `yaml:"leaderElection"`
+	MetricsBindAddress     string               `yaml:"metricsBindAddress"`
+	HealthProbeBindAddress string               `yaml:"healthProbeBindAddress"`
+}
+
+type LeaderElectionConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	ID      string `yaml:"id"`
 }
 
 type ControllerTimers struct {
