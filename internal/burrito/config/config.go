@@ -39,6 +39,7 @@ type ControllerConfig struct {
 	LeaderElection         LeaderElectionConfig `yaml:"leaderElection"`
 	MetricsBindAddress     string               `yaml:"metricsBindAddress"`
 	HealthProbeBindAddress string               `yaml:"healthProbeBindAddress"`
+	KubernetesWehbookPort  int
 }
 
 type LeaderElectionConfig struct {
