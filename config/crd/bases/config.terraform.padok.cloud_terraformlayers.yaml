@@ -103,14 +103,10 @@ spec:
               planOnPullRequest:
                 type: boolean
               remediationStrategy:
-                properties:
-                  applyOnDrift:
-                    type: boolean
-                  applyOnPush:
-                    type: boolean
-                  planOnDrift:
-                    type: boolean
-                type: object
+                enum:
+                - dry
+                - autoApply
+                type: string
               repository:
                 properties:
                   kind:
