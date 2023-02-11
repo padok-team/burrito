@@ -45,15 +45,21 @@ jobs:
       if: ${{ github.event_name == 'push' }}
       run: |
         echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
+
     - name: Get version from pull request
       if: ${{ github.event_name == 'pull_request' }}
       run: |
         echo "VERSION=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+    
+    - name: Get Build timestamp
+      run: |
+        echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
 
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
         push: true
+        build-args: VERSION=${{ env.VERSION }},BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }},COMMIT_HASH=${{ env.VERSION }}
         tags: |
           ghcr.io/${{ github.repository }}:latest
           ghcr.io/${{ github.repository }}:${{ env.VERSION }}
