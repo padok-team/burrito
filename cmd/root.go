@@ -27,7 +27,7 @@ func buildBurritoCmd(app *burrito.App) *cobra.Command {
 
 	cmd.Flags().StringVar(&app.Config.Redis.URL, "redis-url", "burrito-redis:6379", "the redis URL to connect to")
 	cmd.Flags().StringVar(&app.Config.Redis.Password, "redis-password", "", "the redis password")
-	cmd.Flags().IntVar(&app.Config.Redis.Database, "redis-password", 0, "the redis database")
+	cmd.Flags().IntVar(&app.Config.Redis.Database, "redis-database", 0, "the redis database")
 
 	cmd.AddCommand(controllers.BuildControllersCmd(app))
 	cmd.AddCommand(runner.BuildRunnerCmd(app))
