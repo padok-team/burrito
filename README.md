@@ -255,6 +255,10 @@ You can configure `burrito` with environment variables.
 
 Currently, runners' configuration is not exposed.
 
+## How it works
+
+See [Designer](docs/contents/design/README.md) for details ong how `burrito` works under the hood.
+
 ## License
 
 © 2022 [Padok](https://www.padok.fr/).
