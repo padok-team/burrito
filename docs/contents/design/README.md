@@ -1,5 +1,16 @@
 # Design <!-- omit in toc -->
 
+- [Architectural Overview](#architectural-overview)
+- [Components](#components)
+  - [The erver](#the-erver)
+  - [The repository Controller](#the-repository-controller)
+  - [The layer Controller](#the-layer-controller)
+  - [The redis instance](#the-redis-instance)
+- [Implementation](#implementation)
+  - [The layer Controller](#the-layer-controller-1)
+  - [The runners](#the-runners)
+
+
 ## Architectural Overview
 
 <p align="center"><img src="../../assets/design/architecture-overview.excalidraw.png" width="1000px" /></p>

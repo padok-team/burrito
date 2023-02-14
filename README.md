@@ -6,6 +6,23 @@
 
 **Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) implemented as Kubernetes Operator. 
 
+- [Why does this exists?](#why-does-this-exists)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Connect to a public repository](#connect-to-a-public-repository)
+  - [Connect to a private repository using username/password (or access token) authentication](#connect-to-a-private-repository-using-usernamepassword-or-access-token-authentication)
+  - [Connect to a private repository using SSH authentication](#connect-to-a-private-repository-using-ssh-authentication)
+  - [Synchronize a terraform layer](#synchronize-a-terraform-layer)
+  - [Override the runner pod spec](#override-the-runner-pod-spec)
+  - [Choose your remediation strategy](#choose-your-remediation-strategy)
+- [Configuration](#configuration)
+  - [Controllers' configuration](#controllers-configuration)
+  - [Server's configuration](#servers-configuration)
+  - [Runners' configuration](#runners-configuration)
+- [How it works](#how-it-works)
+- [License](#license)
+
+
 ## Why does this exists?
 
 [`terraform`](https://www.terraform.io/) is a tremendous tool to manage your infrastructure in IaC.
