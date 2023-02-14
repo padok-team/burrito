@@ -36,7 +36,7 @@ Finally, currently, there is no easy way to navigate your terraform state to tru
 `burrito` aims to tackle those issues by:
 - Planning continuously your terraform code and run applies if needed
 - Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for terraform ever again (not implemented yet)
-- Showing your state's modifications in a simple Web UI (not implemented UI)
+- Showing your state's modifications in a simple Web UI (not implemented yet)
 
 ## Installation
 
@@ -168,12 +168,12 @@ Add the webhook secret as an environment variable of the `burrito-server`. The v
 | Git provider |          Environment Variable          |
 | :----------: | :------------------------------------: |
 |    GitHub    | `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET` |
-|    GitLab    | `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET` |
+|    GitLab    | `BURRITO_SERVER_WEBHOOK_GITLAB_SECRET` |
 
 
 ### Override the runner pod spec
 
-Both `TerraformRepository` and `TerraformLayer` expose a `spec.OverrideRunnerSpec` map field.
+Both `TerraformRepository` and `TerraformLayer` expose a `spec.overrideRunnerSpec` map field.
 
 If the field is specified for a given `TerraformRepository` it will be applied by default to all `TerraformLayer` linked to it.
 
@@ -190,11 +190,11 @@ metadata:
 spec:
   repository:
     url: https://github.com/padok-team/burrito
-  overridePodSpec:
+  overrideRunnerSpec:
     imagePullSecrets:
     - name: ghcr-creds
     tolerations:
-    - effect: NoScehdule
+    - effect: NoSchedule
       key: burrito.io/production
       operator: Exists
     nodeSelector:
@@ -231,7 +231,7 @@ spec:
     imagePullSecrets:
     - name: ghcr-creds
     tolerations:
-    - effect: NoScehdule
+    - effect: NoSchedule
       key: burrito.io/production
       operator: Exists
     nodeSelector:
@@ -284,12 +284,12 @@ You can configure `burrito` with environment variables.
 |            Environment variable             |                              Description                               |             Default              |
 | :-----------------------------------------: | :--------------------------------------------------------------------: | :------------------------------: |
 |         `BURRITO_CONTROLLER_TYPES`          |                      list of controllers to start                      |        `layer,repository`        |
-| `BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION`  |              period between two plans for drfit detection              |              `20m`               |
+| `BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION`  |              period between two plans for drift detection              |              `20m`               |
 |     `BURRITO_CONTROLLER_TIMERS_ONERROR`     |        period between two runners launch when an error occured         |               `1m`               |
 |   `BURRITO_CONTROLLER_TIMERS_WAITACTION`    |        period between two runners launch when a layer is locked        |               `1m`               |
 | `BURRITO_CONTROLLER_LEADERELECTION_ENABLED` |               whether leader election is enabled or not                |              `true`              |
 |   `BURRITO_CONTROLLER_LEADERELECTION_ID`    |                   lease id used for leader election                    | `6d185457.terraform.padok.cloud` |
-| `BURRITO_CONTROLLER_HEALTHPROBEBINDADDRESS` |     address to bind the metrics server embedded in the controllers     |             `:8081`              |
+| `BURRITO_CONTROLLER_HEALTHPROBEBINDADDRESS` |     address to bind the health probe server embedded in the controllers     |             `:8081`              |
 |   `BURRITO_CONTROLLER_METRICSBINDADDRESS`   |     address to bind the metrics server embedded in the controllers     |             `:8080`              |
 | `BURRITO_CONTROLLER_KUBERNETESWEBHOOKPORT`  | port used by the validating webhook server embedded in the controllers |              `9443`              |
 
@@ -307,7 +307,7 @@ Currently, runners' configuration is not exposed.
 
 ## How it works
 
-See [Designer](docs/contents/design/README.md) for details ong how `burrito` works under the hood.
+See [Designer](docs/contents/design/README.md) for details on how `burrito` works under the hood.
 
 ## License
 

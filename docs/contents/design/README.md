@@ -2,7 +2,7 @@
 
 - [Architectural Overview](#architectural-overview)
 - [Components](#components)
-  - [The erver](#the-erver)
+  - [The server](#the-server)
   - [The repository Controller](#the-repository-controller)
   - [The layer Controller](#the-layer-controller)
   - [The redis instance](#the-redis-instance)
@@ -17,24 +17,24 @@
 
 ## Components
 
-### The erver
+### The server
 
 The server is a REST server which exposes the API consumed by the Web UI. It has the following responsibilities:
 - listener for Git webhook events
 
-Othter functionnalities will be implemented when the Web UI will be developped.
+Other features will be implemented when the Web UI will be in development.
 
 ### The repository Controller
 
-The repository controller is a Kubernetes Controller which is only used to resgister `TerraformRepository` ressources.
+The repository controller is a Kubernetes Controller which is only used to register `TerraformRepository` ressources.
 
 ### The layer Controller
 
 The layer controller is a Kubernetes Controller which continuously monitors declared `TerraformLayer` ressources.
-It regurlarly start runner pods which runs a `terraform plan` for each of your layer to check if a drift has been introduced.
+It regularly starts runner pods which runs a `terraform plan` for each of your layer to check if a drift has been introduced.
 If so, it has the possibility to run a `terraform apply`.
 
-It also is responsible for running your terraform `plan` and `apply` if there a new commit on your layer.
+It is also responsible for running your terraform `plan` and `apply` if there is a new commit on your layer.
 
 It also generates [`Leases`](https://kubernetes.io/docs/concepts/architecture/leases/) to make sure no concurrent terraform commands will be launched on the same layer at the same time.
 
@@ -57,7 +57,7 @@ The status of a `TerraformLayer` is defined using the [conditions standards defi
 - `IsApplyUpToDate`. This condition is used to check if an `apply` needs to run after the last `plan`. Comparison is made by comparing a checksum of the last planned binary and a checksum last applied binary stored in the annotations.
 - `IsLastConcerningCommitPlanned`. This condition is used to check if a new commit has been made to the layer and need to be applied. It is evaluated by comparing the commit used for the last `plan`, the last commit which intoduced changes to the layer and the last commit made to the same branch of the repository. Those commits are "stored" as annotations.
 
-> N.B. We use annotations to store information because we do not want to rely to heavily on the uptime of the redis instance.
+> N.B. We use annotations to store information because we do not want to rely too heavily on the uptime of the redis instance.
 
 With those 3 conditions, we defined 3 states:
 - `IdleState`. This is the state of a layer if no runner needs be started
