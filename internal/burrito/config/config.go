@@ -38,8 +38,8 @@ type ControllerConfig struct {
 	Timers                 ControllerTimers     `yaml:"timers"`
 	Types                  []string             `yaml:"types"`
 	LeaderElection         LeaderElectionConfig `yaml:"leaderElection"`
-	MetricsBindAddress     int                  `yaml:"metricsBindAddress"`
-	HealthProbeBindAddress int                  `yaml:"healthProbeBindAddress"`
+	MetricsBindAddress     string               `yaml:"metricsBindAddress"`
+	HealthProbeBindAddress string               `yaml:"healthProbeBindAddress"`
 	KubernetesWehbookPort  int                  `yaml:"kubernetesWebhookPort"`
 }
 
@@ -83,7 +83,7 @@ type Redis struct {
 }
 
 type Server struct {
-	Port int `yaml:"port"`
+	Port string `yaml:"port"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {

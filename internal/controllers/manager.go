@@ -78,9 +78,9 @@ func (c *Controllers) Exec() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		MetricsBindAddress:     fmt.Sprintf(":%d", c.config.Controller.MetricsBindAddress),
+		MetricsBindAddress:     fmt.Sprintf(":%s", c.config.Controller.MetricsBindAddress),
 		Port:                   c.config.Controller.KubernetesWehbookPort,
-		HealthProbeBindAddress: fmt.Sprintf(":%d", c.config.Controller.HealthProbeBindAddress),
+		HealthProbeBindAddress: fmt.Sprintf(":%s", c.config.Controller.HealthProbeBindAddress),
 		LeaderElection:         c.config.Controller.LeaderElection.Enabled,
 		LeaderElectionID:       c.config.Controller.LeaderElection.ID,
 	})
