@@ -14,7 +14,6 @@ import (
 type Config struct {
 	Runner     RunnerConfig     `yaml:"runner"`
 	Controller ControllerConfig `yaml:"controller"`
-	Webhook    WebhookConfig    `yaml:"webhook"`
 	Redis      Redis            `yaml:"redis"`
 	Server     Server           `yaml:"server"`
 }
@@ -83,7 +82,8 @@ type Redis struct {
 }
 
 type Server struct {
-	Port string `yaml:"port"`
+	Port    string        `yaml:"port"`
+	Webhook WebhookConfig `yaml:"webhook"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {

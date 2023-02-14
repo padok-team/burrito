@@ -52,12 +52,12 @@ func (w *Webhook) Init() error {
 		return err
 	}
 	w.Client = cl
-	githubWebhook, err := github.New(github.Options.Secret(w.config.Webhook.Github.Secret))
+	githubWebhook, err := github.New(github.Options.Secret(w.config.Server.Webhook.Github.Secret))
 	if err != nil {
 		return err
 	}
 	w.github = githubWebhook
-	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(w.config.Webhook.Gitlab.Secret))
+	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(w.config.Server.Webhook.Gitlab.Secret))
 	if err != nil {
 		return err
 	}

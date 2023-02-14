@@ -159,10 +159,10 @@ stringData:
 
 Then add an environment variable to `burrito-server` depending on your git provider.
 
-| Git provider |      Environment Variable       |
-| :----------: | :-----------------------------: |
-|    GitHub    | `BURRITO_WEBHOOK_GITHUB_SECRET` |
-|    GitLab    | `BURRITO_WEBHOOK_GITHUB_SECRET` |
+| Git provider |          Environment Variable          |
+| :----------: | :------------------------------------: |
+|    GitHub    | `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET` |
+|    GitLab    | `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET` |
 
 
 ### Override the runner pod spec
@@ -292,6 +292,8 @@ You can configure `burrito` with environment variables.
 | Environment variable  |        Description         | Default |
 | :-------------------: | :------------------------: | :-----: |
 | `BURRITO_SERVER_PORT` | port the server listens on | `8080`  |
+
+For webhook configuration see [Setup a git webhook](#setup-a-git-webhook).
 
 ### Runners' configuration
 
