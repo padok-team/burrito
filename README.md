@@ -33,7 +33,7 @@ Also, writing a CI/CD pipeline for terraform can be painful and depends on the t
 
 Finally, currently, there is no easy way to navigate your terraform state to truly understand the modifications your state undergoes when running `terraform apply`.
 
-`burrito` aims to tackl thos issues by:
+`burrito` aims to tackle those issues by:
 - Planning continuously your terraform code and run applies if needed
 - Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for terraform ever again (not implemented yet)
 - Showing your state's modifications in a simple Web UI (not implemented UI)
