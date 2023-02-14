@@ -13,6 +13,7 @@
   - [Connect to a private repository using username/password (or access token) authentication](#connect-to-a-private-repository-using-usernamepassword-or-access-token-authentication)
   - [Connect to a private repository using SSH authentication](#connect-to-a-private-repository-using-ssh-authentication)
   - [Synchronize a terraform layer](#synchronize-a-terraform-layer)
+  - [Setup a git webhook](#setup-a-git-webhook)
   - [Override the runner pod spec](#override-the-runner-pod-spec)
   - [Choose your remediation strategy](#choose-your-remediation-strategy)
 - [Configuration](#configuration)
@@ -139,6 +140,30 @@ spec:
     name: burrito
     namespace: burrito
 ```
+
+### Setup a git webhook
+
+Create a webhook (with a secret!) in the repository you want to receive events from.
+
+Then create a secret:
+
+```yaml
+kind: Secret
+metadata:
+  name: burrito-webhook-secret
+  namespace: burrito
+type: Opaque
+stringData:
+  burrito-webhook-secret: <my-webhook-secret>
+```
+
+Then add an environment variable to `burrito-server` depending on your git provider.
+
+| Git provider |      Environment Variable       |
+| :----------: | :-----------------------------: |
+|    GitHub    | `BURRITO_WEBHOOK_GITHUB_SECRET` |
+|    GitLab    | `BURRITO_WEBHOOK_GITHUB_SECRET` |
+
 
 ### Override the runner pod spec
 
