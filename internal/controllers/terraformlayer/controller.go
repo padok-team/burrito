@@ -18,7 +18,6 @@ package terraformlayer
 
 import (
 	"context"
-	"time"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
@@ -65,24 +64,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Error(err, "Failed to get TerraformLayer")
 		return ctrl.Result{}, err
 	}
-	deltaOnError, err := time.ParseDuration(r.Config.Controller.Timers.OnError)
-	if err != nil {
-		log.Error(err, "could not parse timer drift detection period")
-		return ctrl.Result{}, err
-	}
 	locked, err := lock.IsLocked(ctx, r.Client, layer)
 	if err != nil {
 		log.Error(err, "Failed to get Lease Resource.")
-		return ctrl.Result{RequeueAfter: deltaOnError}, err
-	}
-	deltaWaitAction, err := time.ParseDuration(r.Config.Controller.Timers.WaitAction)
-	if err != nil {
-		log.Error(err, "could not parse timer wait action period")
-		return ctrl.Result{}, err
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if locked {
 		log.Info("Layer is locked, skipping reconciliation.")
-		return ctrl.Result{RequeueAfter: deltaWaitAction}, nil
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Info("Getting Linked TerraformRepository")
@@ -92,11 +81,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}, repository)
 	if errors.IsNotFound(err) {
 		log.Info("TerraformRepository not found, ignoring layer until it's modified.")
-		return ctrl.Result{RequeueAfter: deltaOnError}, err
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if err != nil {
 		log.Error(err, "Failed to get TerraformRepository")
-		return ctrl.Result{RequeueAfter: deltaOnError}, err
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}

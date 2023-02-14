@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -48,9 +49,9 @@ type LeaderElectionConfig struct {
 }
 
 type ControllerTimers struct {
-	DriftDetection string `yaml:"driftDetection"`
-	OnError        string `yaml:"waitAction"`
-	WaitAction     string `yaml:"onError"`
+	DriftDetection time.Duration `yaml:"driftDetection"`
+	OnError        time.Duration `yaml:"waitAction"`
+	WaitAction     time.Duration `yaml:"onError"`
 }
 
 type RepositoryConfig struct {
