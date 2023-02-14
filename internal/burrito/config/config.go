@@ -82,7 +82,7 @@ type Redis struct {
 }
 
 type Server struct {
-	Port    string        `yaml:"port"`
+	Addr    string        `yaml:"port"`
 	Webhook WebhookConfig `yaml:"webhook"`
 }
 

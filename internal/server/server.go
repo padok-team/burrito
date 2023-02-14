@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -32,7 +31,7 @@ func (s *Server) Exec() {
 	http.HandleFunc("/healthz", handleHealthz)
 	http.HandleFunc("/webhook", s.Webhook.GetHttpHandler())
 
-	err := http.ListenAndServe(fmt.Sprintf(":%s", s.config.Server.Port), nil)
+	err := http.ListenAndServe(s.config.Server.Addr, nil)
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Println("server is closed")
 	}
