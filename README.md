@@ -40,6 +40,12 @@ Finally, currently, there is no easy way to navigate your terraform state to tru
 
 ## Installation
 
+You can just run the following:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/manifests/install.yaml
+```
+
 ## Usage
 
 ### Connect to a public repository
