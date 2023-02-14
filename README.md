@@ -231,7 +231,7 @@ You can configure `burrito` with environment variables.
 | :------------------: | :-------------------------: | :----------: |
 | `BURRITO_REDIS_URL`  | the redis URL to connect to | `redis:6379` |
 
-### Controllers configuration
+### Controllers' configuration
 
 |            Environment variable             |                              Description                               |             Default              |
 | :-----------------------------------------: | :--------------------------------------------------------------------: | :------------------------------: |
@@ -245,13 +245,13 @@ You can configure `burrito` with environment variables.
 |   `BURRITO_CONTROLLER_METRICSBINDADDRESS`   |     address to bind the metrics server embedded in the controllers     |              `8081`              |
 | `BURRITO_CONTROLLER_KUBERNETESWEBHOOKPORT`  | port used by the validating webhook server embedded in the controllers |              `9443`              |
 
-### Server configuration
+### Server's configuration
 
 | Environment variable  |        Description         | Default |
 | :-------------------: | :------------------------: | :-----: |
 | `BURRITO_SERVER_PORT` | port the server listens on | `8080`  |
 
-### Runner configuration
+### Runners' configuration
 
 Currently, runners' configuration is not exposed.
 
