@@ -32,7 +32,7 @@ func (s *Server) Exec() {
 	http.HandleFunc("/healthz", handleHealthz)
 	http.HandleFunc("/webhook", s.Webhook.GetHttpHandler())
 
-	err := http.ListenAndServe(fmt.Sprintf(":%s", s.config.Server.Port), nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", s.config.Server.Port), nil)
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Println("server is closed")
 	}
