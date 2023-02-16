@@ -17,7 +17,7 @@ const (
 )
 
 func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
-	defaultSpec := defaultPodSpec(r.Config, layer, repository)
+	defaultSpec := DefaultPodSpec(r.Config, layer, repository)
 
 	switch action {
 	case PlanAction:
@@ -79,7 +79,7 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 	return pod
 }
 
-func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
+func DefaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{
