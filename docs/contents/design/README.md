@@ -7,9 +7,8 @@
   - [The layer Controller](#the-layer-controller)
   - [The redis instance](#the-redis-instance)
 - [Implementation](#implementation)
-  - [The layer Controller](#the-layer-controller-1)
+  - [The TerraformLayer Controller](#the-terraformlayer-controller)
   - [The runners](#the-runners)
-
 
 ## Architectural Overview
 
@@ -20,6 +19,7 @@
 ### The server
 
 The server is a REST server which exposes the API consumed by the Web UI. It has the following responsibilities:
+
 - listener for Git webhook events
 
 Other features will be implemented when the Web UI will be in development.
@@ -48,11 +48,12 @@ The operator has been bootstrapped using the [`operator-sdk`](https://sdk.operat
 
 The CLI used to start the different components is implemented using [`cobra`](https://github.com/spf13/cobra).
 
-### The layer Controller
+### The TerraformLayer Controller
 
 The status of a `TerraformLayer` is defined using the [conditions standards defined by the community](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties).
 
 3 conditions are defined for a layer:
+
 - `IsPlanArtifactUpToDate`. This condition is used for drift detection. The evaluation is made by compraing the timestamp of the last `terraform plan` which ran and the current date. The timestamp of the last plan is "stored" using an annotation.
 - `IsApplyUpToDate`. This condition is used to check if an `apply` needs to run after the last `plan`. Comparison is made by comparing a checksum of the last planned binary and a checksum last applied binary stored in the annotations.
 - `IsLastConcerningCommitPlanned`. This condition is used to check if a new commit has been made to the layer and need to be applied. It is evaluated by comparing the commit used for the last `plan`, the last commit which intoduced changes to the layer and the last commit made to the same branch of the repository. Those commits are "stored" as annotations.
@@ -60,6 +61,7 @@ The status of a `TerraformLayer` is defined using the [conditions standards defi
 > N.B. We use annotations to store information because we do not want to rely too heavily on the uptime of the redis instance.
 
 With those 3 conditions, we defined 3 states:
+
 - `IdleState`. This is the state of a layer if no runner needs be started
 - `PlanNeededState`. This is the state of a layer if burrito needs to start a `plan` runner
 - `ApplyNeededState`. This is the state of a layer if burrito needs to start an `apply` runner

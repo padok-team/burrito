@@ -4,7 +4,7 @@
 
 <p align="center"><img src="./docs/assets/icon/burrito.png" width="200px" /></p>
 
-**Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) implemented as Kubernetes Operator. 
+**Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) implemented as Kubernetes Operator.
 
 - [Why does this exists?](#why-does-this-exists)
 - [Installation](#installation)
@@ -23,7 +23,6 @@
 - [How it works](#how-it-works)
 - [License](#license)
 
-
 ## Why does this exists?
 
 [`terraform`](https://www.terraform.io/) is a tremendous tool to manage your infrastructure in IaC.
@@ -31,9 +30,10 @@ But, it does not come up with an out-of the box solution for managing [state dri
 
 Also, writing a CI/CD pipeline for terraform can be painful and depends on the tool you are using.
 
-Finally, currently, there is no easy way to navigate your terraform state to truly understand the modifications your state undergoes when running `terraform apply`.
+Finally, currently, there is no easy way to navigate your terraform state to truly understand the modifications it undergoes when running `terraform apply`.
 
 `burrito` aims to tackle those issues by:
+
 - Planning continuously your terraform code and run applies if needed
 - Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for terraform ever again (not implemented yet)
 - Showing your state's modifications in a simple Web UI (not implemented yet)
@@ -169,7 +169,6 @@ Add the webhook secret as an environment variable of the `burrito-server`. The v
 | :----------: | :------------------------------------: |
 |    GitHub    | `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET` |
 |    GitLab    | `BURRITO_SERVER_WEBHOOK_GITLAB_SECRET` |
-
 
 ### Override the runner pod spec
 
@@ -307,7 +306,7 @@ Currently, runners' configuration is not exposed.
 
 ## How it works
 
-See [Designer](docs/contents/design/README.md) for details on how `burrito` works under the hood.
+See [Design](docs/contents/design/README.md) for details on how `burrito` works under the hood.
 
 ## License
 
