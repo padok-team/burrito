@@ -26,30 +26,30 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	switch {
 	case isPlanArtifactUpToDate && isApplyUpToDate:
 		log.Infof("layer %s is up to date, waiting for a new drift detection cycle", layer.Name)
-		return &IdleState{}, conditions
+		return &Idle{}, conditions
 	case !isPlanArtifactUpToDate || !isLastConcerningCommitPlanned:
 		log.Infof("layer %s needs to be planned, acquiring lock and creating a new runner", layer.Name)
-		return &PlanNeededState{}, conditions
+		return &PlanNeeded{}, conditions
 	case isPlanArtifactUpToDate && !isApplyUpToDate:
 		log.Infof("layer %s needs to be applied, acquiring lock and creating a new runner", layer.Name)
-		return &ApplyNeededState{}, conditions
+		return &ApplyNeeded{}, conditions
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is an intended behavior.", layer.Name)
-		return &IdleState{}, conditions
+		return &Idle{}, conditions
 	}
 }
 
-type IdleState struct{}
+type Idle struct{}
 
-func (s *IdleState) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *Idle) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
 	}
 }
 
-type PlanNeededState struct{}
+type PlanNeeded struct{}
 
-func (s *PlanNeededState) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *PlanNeeded) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
 		err := lock.CreateLock(ctx, r.Client, layer)
@@ -68,9 +68,9 @@ func (s *PlanNeededState) getHandler() func(ctx context.Context, r *Reconciler, 
 	}
 }
 
-type ApplyNeededState struct{}
+type ApplyNeeded struct{}
 
-func (s *ApplyNeededState) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *ApplyNeeded) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
 		remediationStrategy := getRemediationStrategy(repository, layer)
@@ -106,6 +106,6 @@ func getRemediationStrategy(repo *configv1alpha1.TerraformRepository, layer *con
 }
 
 func getStateString(state State) string {
-	t := strings.Split(fmt.Sprintf("%T", state), "/")
+	t := strings.Split(fmt.Sprintf("%T", state), ".")
 	return t[len(t)-1]
 }

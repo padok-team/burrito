@@ -62,11 +62,11 @@ The status of a `TerraformLayer` is defined using the [conditions standards defi
 
 With those 3 conditions, we defined 3 states:
 
-- `IdleState`. This is the state of a layer if no runner needs be started
-- `PlanNeededState`. This is the state of a layer if burrito needs to start a `plan` runner
-- `ApplyNeededState`. This is the state of a layer if burrito needs to start an `apply` runner
+- `Idle`. This is the state of a layer if no runner needs be started
+- `PlanNeeded`. This is the state of a layer if burrito needs to start a `plan` runner
+- `ApplyNeeded`. This is the state of a layer if burrito needs to start an `apply` runner
 
-> N.B. If you use [`dry` remediation strategy](../../../README.md#choose-your-remediation-strategy) and an apply is needed, the layer will stay in the `ApplyNeededState` as long as it does not need to enter the `PlanNeededState`.
+> N.B. If you use [`dry` remediation strategy](../../../README.md#choose-your-remediation-strategy) and an apply is needed, the layer will stay in the `ApplyNeeded` as long as it does not need to enter the `PlanNeeded`.
 
 The layer controller also generates the Kubernetes leases to avoid concurrent use of terraform on the same layer.
 
