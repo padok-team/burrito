@@ -5,11 +5,12 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	b64 "encoding/base64"
 
@@ -58,14 +59,14 @@ func (r *Runner) Exec() {
 	defer func() {
 		err := lock.DeleteLock(context.TODO(), r.client, r.layer)
 		if err != nil {
-			log.Fatalf("could not remove lease lock: %s", err)
+			log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
 		}
 	}()
 	var sum string
 	err := r.init()
 	ann := map[string]string{}
 	if err != nil {
-		log.Printf("error initializing runner: %s", err)
+		log.Errorf("error initializing runner: %s", err)
 	}
 	ref, _ := r.repository.Head()
 	commit := ref.Hash().String()
@@ -89,7 +90,7 @@ func (r *Runner) Exec() {
 		err = errors.New("Unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
 	}
 	if err != nil {
-		log.Printf("Error during runner execution: %s", err)
+		log.Errorf("error during runner execution: %s", err)
 		n, ok := r.layer.Annotations[annotations.Failure]
 		number := 0
 		if ok {
@@ -100,7 +101,7 @@ func (r *Runner) Exec() {
 	}
 	err = annotations.Add(context.TODO(), r.client, *r.layer, ann)
 	if err != nil {
-		log.Printf("Could not update layer annotations: %s", err)
+		log.Errorf("could not update terraform layer annotations: %s", err)
 	}
 }
 
@@ -125,7 +126,7 @@ func (r *Runner) init() error {
 		return err
 	}
 	r.layer = layer
-	log.Printf("Using Terraform version: %s", r.config.Runner.Version)
+	log.Infof("initializing runner with Terraform version: %s", r.config.Runner.Version)
 	terraformVersion, err := version.NewVersion(r.config.Runner.Version)
 	if err != nil {
 		return err
@@ -138,7 +139,7 @@ func (r *Runner) init() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
+	log.Infof("cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
 	cloneOptions, err := r.getCloneOptions()
 	if err != nil {
 		return err
@@ -154,7 +155,7 @@ func (r *Runner) init() error {
 	}
 	r.terraform.SetStdout(os.Stdout)
 	r.terraform.SetStderr(os.Stderr)
-	log.Printf("Launching terraform init in %s", workingDir)
+	log.Infof("Launching terraform init in %s", workingDir)
 	err = r.terraform.Init(context.Background(), tfexec.Upgrade(true))
 	if err != nil {
 		return err
@@ -163,54 +164,55 @@ func (r *Runner) init() error {
 }
 
 func (r *Runner) plan() (string, error) {
-	log.Print("Launching terraform plan")
+	log.Infof("starting terraform plan")
 	diff, err := r.terraform.Plan(context.Background(), tfexec.Out(PlanArtifact))
 	if err != nil {
-		log.Printf("Terraform plan errored: %s", err)
+		log.Errorf("an error occured during terraform plan: %s", err)
 		return "", err
 	}
 	if !diff {
-		log.Printf("Terraform plan diff empty, no subsequent apply should be launched")
+		log.Infof("terraform plan diff empty, no subsequent apply should be launched")
 		return "", nil
 	}
 	plan, err := os.ReadFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact))
 	if err != nil {
-		log.Printf("Could not read plan output: %s", err)
+		log.Errorf("could not read plan output: %s", err)
 		return "", err
 	}
-	log.Print("Terraform plan ran successfully")
+	log.Infof("terraform plan ran successfully")
 	sum := sha256.Sum256(plan)
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
-	log.Printf("Setting plan binary into storage at key %s", planBinKey)
+	log.Infof("setting plan binary into storage at key %s", planBinKey)
 	err = r.storage.Set(planBinKey, plan, 3600)
 	if err != nil {
-		log.Printf("Could not put plan binary in cache: %s", err)
+		log.Errorf("could not put plan binary in cache: %s", err)
 		return "", err
 	}
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
 func (r *Runner) apply() (string, error) {
+	log.Infof("starting terraform apply")
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
-	log.Printf("Getting plan binary in cache at key %s", planBinKey)
+	log.Infof("getting plan binary in cache at key %s", planBinKey)
 	plan, err := r.storage.Get(planBinKey)
 	if err != nil {
-		log.Printf("Could not get plan artifact: %s", err)
+		log.Errorf("could not get plan artifact: %s", err)
 		return "", err
 	}
 	sum := sha256.Sum256(plan)
 	err = os.WriteFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact), plan, 0644)
 	if err != nil {
-		log.Printf("Could not write plan artifact to disk: %s", err)
+		log.Errorf("could not write plan artifact to disk: %s", err)
 		return "", err
 	}
-	log.Print("Launching terraform apply")
+	log.Print("launching terraform apply")
 	err = r.terraform.Apply(context.Background(), tfexec.DirOrPlan(PlanArtifact))
 	if err != nil {
-		log.Printf("Terraform apply errored: %s", err)
+		log.Errorf("an error occured during terraform apply: %s", err)
 		return "", err
 	}
-	log.Print("Terraform apply ran successfully")
+	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
@@ -223,14 +225,14 @@ func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {
 	if strings.Contains(r.config.Runner.Repository.URL, "https://") {
 		authMethod = "https"
 	}
-	log.Printf("clone method is %s", authMethod)
+	log.Infof("clone method is %s", authMethod)
 	switch authMethod {
 	case "ssh":
 		if r.config.Runner.Repository.SSHPrivateKey == "" {
-			log.Printf("keyless authentication")
+			log.Infof("detected keyless authentication")
 			return cloneOptions, nil
 		}
-		log.Printf("private key found.")
+		log.Infof("private key found")
 		publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
 		if err != nil {
 			return cloneOptions, err
@@ -239,13 +241,13 @@ func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {
 
 	case "https":
 		if r.config.Runner.Repository.Username != "" && r.config.Runner.Repository.Password != "" {
-			log.Printf("username and password found")
+			log.Infof("username and password found")
 			cloneOptions.Auth = &http.BasicAuth{
 				Username: r.config.Runner.Repository.Username,
 				Password: r.config.Runner.Repository.Password,
 			}
 		} else {
-			log.Printf("passwordless authentication")
+			log.Infof("passwordless authentication detected")
 		}
 	}
 	return cloneOptions, nil

@@ -17,11 +17,8 @@ limitations under the License.
 package controllers
 
 import (
-	"flag"
-	"os"
+	"context"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,7 +26,8 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
@@ -40,8 +38,7 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 )
 
 const ()
@@ -67,13 +64,7 @@ func init() {
 }
 
 func (c *Controllers) Exec() {
-	opts := zap.Options{
-		Development: true,
-	}
-	opts.BindFlags(flag.CommandLine)
-	flag.Parse()
-
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	log := log.WithContext(context.TODO())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -84,8 +75,7 @@ func (c *Controllers) Exec() {
 		LeaderElectionID:       c.config.Controller.LeaderElection.ID,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
+		log.Fatalf("unable to start manager: %s", err)
 	}
 
 	for _, ctrlType := range c.config.Controller.Types {
@@ -96,37 +86,32 @@ func (c *Controllers) Exec() {
 				Scheme: mgr.GetScheme(),
 				Config: c.config,
 			}).SetupWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create controller", "controller", "TerraformLayer")
-				os.Exit(1)
+				log.Fatalf("unable to create layer controller: %s", err)
 			}
-			setupLog.Info("layer controller started")
+			log.Infof("layer controller started successfully")
 		case "repository":
 			if err = (&terraformrepository.Reconciler{
 				Client: mgr.GetClient(),
 				Scheme: mgr.GetScheme(),
 			}).SetupWithManager(mgr); err != nil {
-				setupLog.Error(err, "unable to create controller", "controller", "TerraformRepository")
-				os.Exit(1)
+				log.Fatalf("unable to create repository controller: %s", err)
 			}
-			setupLog.Info("repository controller started")
+			log.Infof("repository controller started successfully")
 		default:
-			setupLog.Error(nil, "unrecognized controller type: %s", ctrlType)
+			log.Infof("unrecognized controller type %s, ignoring", ctrlType)
 		}
 	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		os.Exit(1)
+		log.Fatalf("unable to set up health check: %s", err)
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
-		os.Exit(1)
+		log.Fatalf("unable to set up ready check: %s", err)
 	}
 
-	setupLog.Info("starting manager")
+	log.Infof("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
+		log.Fatalf("problem running manager: %s", err)
 	}
 }

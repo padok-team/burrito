@@ -15,7 +15,7 @@ func buildServerStartCmd(app *burrito.App) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&app.Config.Server.Port, "port", "8080", "port the server listens on")
+	cmd.Flags().StringVar(&app.Config.Server.Addr, "addr", ":8080", "addr the server listens on")
 
 	return cmd
 }

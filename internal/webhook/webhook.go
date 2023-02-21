@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"html"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-playground/webhooks/v6/github"
 	"github.com/go-playground/webhooks/v6/gitlab"
@@ -52,12 +53,12 @@ func (w *Webhook) Init() error {
 		return err
 	}
 	w.Client = cl
-	githubWebhook, err := github.New(github.Options.Secret(w.config.Webhook.Github.Secret))
+	githubWebhook, err := github.New(github.Options.Secret(w.config.Server.Webhook.Github.Secret))
 	if err != nil {
 		return err
 	}
 	w.github = githubWebhook
-	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(w.config.Webhook.Gitlab.Secret))
+	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(w.config.Server.Webhook.Gitlab.Secret))
 	if err != nil {
 		return err
 	}
@@ -66,30 +67,32 @@ func (w *Webhook) Init() error {
 }
 
 func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
+	log.Infof("webhook event received...")
 	return func(writer http.ResponseWriter, r *http.Request) {
 		var payload interface{}
 		var err error
 
 		switch {
 		case r.Header.Get("X-GitHub-Event") != "":
-			log.Println("Detected a Github event")
+			log.Infof("webhook has detected a GitHub event")
 			payload, err = w.github.Parse(r, github.PushEvent, github.PingEvent)
 			if errors.Is(err, github.ErrHMACVerificationFailed) {
-				log.Println("GitHub webhook HMAC verification failed")
+				log.Errorf("GitHub webhook HMAC verification failed: %s", err)
 			}
 		case r.Header.Get("X-Gitlab-Event") != "":
+			log.Infof("webhook has detected a GitLab event")
 			payload, err = w.gitlab.Parse(r, gitlab.PushEvents, gitlab.TagEvents)
 			if errors.Is(err, gitlab.ErrGitLabTokenVerificationFailed) {
-				log.Println("GitLab webhook token verification failed")
+				log.Errorf("GitLab webhook token verification failed: %s", err)
 			}
 		default:
-			log.Println("Ignoring unknown webhook event")
+			log.Infof("ignoring unknown webhook event")
 			http.Error(writer, "Unknown webhook event", http.StatusBadRequest)
 			return
 		}
 
 		if err != nil {
-			log.Printf("Webhook processing failed: %s", err)
+			log.Errorf("webhook processing failed: %s", err)
 			status := http.StatusBadRequest
 			if r.Method != "POST" {
 				status = http.StatusMethodNotAllowed
@@ -104,45 +107,48 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 
 func (w *Webhook) Handle(payload interface{}) {
 	webUrls, sshUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
-	if len(webUrls) == 0 {
-		log.Println("Ignoring webhook event")
+	allUrls := append(webUrls, sshUrls...)
+
+	if len(allUrls) == 0 {
+		log.Infof("ignoring webhook event")
 		return
 	}
-	for _, webURL := range webUrls {
-		log.Printf("Received push event repo: %s, revision: %s, touchedHead: %v", webURL, revision, touchedHead)
+	for _, url := range allUrls {
+		log.Infof("received event repo: %s, revision: %s, touchedHead: %v", url, revision, touchedHead)
 	}
 
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := w.Client.List(context.TODO(), repositories)
 	if err != nil {
-		log.Println("could not get repositories")
+		log.Errorf("could not get terraform repositories: %s", err)
 	}
 
-	allUrls := append(webUrls, sshUrls...)
 	for _, url := range allUrls {
-		log.Printf("%s", url)
 		for _, repo := range repositories.Items {
+			log.Infof("evaluating terraform repository %s for url %s", repo.Name, url)
 			if repo.Spec.Repository.Url != url {
+				log.Infof("evaluating terraform repository %s url %s not matching %s", repo.Name, repo.Spec.Repository.Url, url)
 				continue
 			}
 			layers := &configv1alpha1.TerraformLayerList{}
 			err := w.Client.List(context.TODO(), layers, &client.ListOptions{})
 			if err != nil {
-				log.Println("could not get layers")
+				log.Errorf("could not get terraform layers: %s", err)
 			}
 			for _, layer := range layers.Items {
 				ann := map[string]string{}
+				log.Printf("evaluating terraform layer %s for revision %s", layer.Name, revision)
 				if layer.Spec.Branch != revision {
+					log.Infof("branch %s for terraform layer %s not matching revision %s", layer.Spec.Branch, layer.Name, revision)
 					continue
 				}
 				ann[annotations.LastBranchCommit] = change.shaAfter
-				log.Printf("Evaluating %s", layer.Name)
 				if layerFilesHaveChanged(&layer, changedFiles) {
 					ann[annotations.LastConcerningCommit] = change.shaAfter
 				}
 				err = annotations.Add(context.TODO(), w.Client, layer, ann)
 				if err != nil {
-					log.Printf("Error adding annotation to layer %s", err)
+					log.Errorf("could not add annotation to terraform layer %s", err)
 				}
 			}
 		}
@@ -163,6 +169,7 @@ func parseRevision(ref string) string {
 func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, sshUrls []string, revision string, change changeInfo, touchedHead bool, changedFiles []string) {
 	switch payload := payloadIf.(type) {
 	case github.PushPayload:
+		log.Infof("parsing GitHub push event payload")
 		webUrls = append(webUrls, payload.Repository.HTMLURL)
 		sshUrls = append(sshUrls, payload.Repository.SSHURL)
 		revision = parseRevision(payload.Ref)
@@ -175,6 +182,7 @@ func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, sshUrls []st
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 	case gitlab.PushEventPayload:
+		log.Infof("parsing GitLab push event payload")
 		webUrls = append(webUrls, payload.Project.WebURL)
 		revision = parseRevision(payload.Ref)
 		change.shaAfter = parseRevision(payload.After)
@@ -186,7 +194,7 @@ func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, sshUrls []st
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 	default:
-		log.Println("event not handled")
+		log.Infof("event not handled")
 	}
 	return webUrls, sshUrls, revision, change, touchedHead, changedFiles
 }

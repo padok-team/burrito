@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -13,7 +14,6 @@ import (
 type Config struct {
 	Runner     RunnerConfig     `yaml:"runner"`
 	Controller ControllerConfig `yaml:"controller"`
-	Webhook    WebhookConfig    `yaml:"webhook"`
 	Redis      Redis            `yaml:"redis"`
 	Server     Server           `yaml:"server"`
 }
@@ -48,9 +48,9 @@ type LeaderElectionConfig struct {
 }
 
 type ControllerTimers struct {
-	DriftDetection string `yaml:"driftDetection"`
-	OnError        string `yaml:"waitAction"`
-	WaitAction     string `yaml:"onError"`
+	DriftDetection time.Duration `yaml:"driftDetection"`
+	OnError        time.Duration `yaml:"waitAction"`
+	WaitAction     time.Duration `yaml:"onError"`
 }
 
 type RepositoryConfig struct {
@@ -82,7 +82,8 @@ type Redis struct {
 }
 
 type Server struct {
-	Port string `yaml:"port"`
+	Addr    string        `yaml:"port"`
+	Webhook WebhookConfig `yaml:"webhook"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {

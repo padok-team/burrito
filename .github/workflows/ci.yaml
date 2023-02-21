@@ -59,7 +59,10 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        build-args: VERSION=${{ env.VERSION }},BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }},COMMIT_HASH=${{ env.VERSION }}
+        build-args: |
+          VERSION=${{ env.VERSION }}
+          BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
+          COMMIT_HASH=${{ env.VERSION }}
         tags: |
           ghcr.io/${{ github.repository }}:latest
           ghcr.io/${{ github.repository }}:${{ env.VERSION }}

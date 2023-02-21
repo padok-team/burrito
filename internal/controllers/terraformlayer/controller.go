@@ -18,7 +18,6 @@ package terraformlayer
 
 import (
 	"context"
-	"time"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
@@ -27,7 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	log "github.com/sirupsen/logrus"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
@@ -53,59 +53,49 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
-	log.Info("Starting reconciliation")
+	log := log.WithContext(ctx)
+	log.Infof("starting reconciliation...")
 	layer := &configv1alpha1.TerraformLayer{}
 	err := r.Client.Get(ctx, req.NamespacedName, layer)
 	if errors.IsNotFound(err) {
-		log.Info("Resource not found. Ignoring since object must be deleted.")
+		log.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Error(err, "Failed to get TerraformLayer")
-		return ctrl.Result{}, err
-	}
-	deltaOnError, err := time.ParseDuration(r.Config.Controller.Timers.OnError)
-	if err != nil {
-		log.Error(err, "could not parse timer drift detection period")
+		log.Errorf("failed to get TerraformLayer: %s", err)
 		return ctrl.Result{}, err
 	}
 	locked, err := lock.IsLocked(ctx, r.Client, layer)
 	if err != nil {
-		log.Error(err, "Failed to get Lease Resource.")
-		return ctrl.Result{RequeueAfter: deltaOnError}, err
-	}
-	deltaWaitAction, err := time.ParseDuration(r.Config.Controller.Timers.WaitAction)
-	if err != nil {
-		log.Error(err, "could not parse timer wait action period")
-		return ctrl.Result{}, err
+		log.Errorf("failed to get Lease Resource: %s", err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if locked {
-		log.Info("Layer is locked, skipping reconciliation.")
-		return ctrl.Result{RequeueAfter: deltaWaitAction}, nil
+		log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
-	log.Info("Getting Linked TerraformRepository")
+	log.Infof("getting Linked TerraformRepository to layer %s", layer.Name)
 	err = r.Client.Get(ctx, types.NamespacedName{
 		Namespace: layer.Spec.Repository.Namespace,
 		Name:      layer.Spec.Repository.Name,
 	}, repository)
 	if errors.IsNotFound(err) {
-		log.Info("TerraformRepository not found, ignoring layer until it's modified.")
-		return ctrl.Result{RequeueAfter: deltaOnError}, err
+		log.Infof("TerraformRepository linked to layer %s not found, ignoring layer until it's modified: %s", layer.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if err != nil {
-		log.Error(err, "Failed to get TerraformRepository")
-		return ctrl.Result{RequeueAfter: deltaOnError}, err
+		log.Errorf("failed to get TerraformRepository linked to layer %s: %s", layer.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
 	result := state.getHandler()(ctx, r, layer, repository)
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
-		log.Error(err, "Could not update resource status")
+		log.Errorf("could not update layer %s status: %s", layer.Name, err)
 	}
-	log.Info("Finished reconciliation cycle")
+	log.Infof("finished reconciliation cycle for layer %s", layer.Name)
 	return result, nil
 }
 

@@ -62,11 +62,12 @@ var _ = Describe("TerraformLayer", func() {
 			},
 		}
 		t.SetAnnotations(map[string]string{})
+		driftDetectionPeriod, _ := time.ParseDuration("20m")
 		r = &Reconciler{
 			Config: &config.Config{
 				Controller: config.ControllerConfig{
 					Timers: config.ControllerTimers{
-						DriftDetection: "20m",
+						DriftDetection: driftDetectionPeriod,
 					},
 				},
 			},
@@ -81,16 +82,14 @@ var _ = Describe("TerraformLayer", func() {
 		})
 		Context("with last timestamp < Timers.OnDriftDetection", func() {
 			It("should return true", func() {
-				delta, _ := time.ParseDuration(r.Config.Controller.Timers.DriftDetection)
-				t.Annotations[annotations.LastPlanDate] = time.Now().Add(delta / (-2)).Format(time.UnixDate)
+				t.Annotations[annotations.LastPlanDate] = time.Now().Add(r.Config.Controller.Timers.DriftDetection / (-2)).Format(time.UnixDate)
 				_, condition := r.IsPlanArtifactUpToDate(t)
 				Expect(condition).To(Equal(true))
 			})
 		})
 		Context("with last timestamp > Timers.OnDriftDetection", func() {
 			It("should return false", func() {
-				delta, _ := time.ParseDuration(r.Config.Controller.Timers.DriftDetection)
-				t.Annotations[annotations.LastPlanDate] = time.Now().Add(-2 * delta).Format(time.UnixDate)
+				t.Annotations[annotations.LastPlanDate] = time.Now().Add(-2 * r.Config.Controller.Timers.DriftDetection).Format(time.UnixDate)
 				_, condition := r.IsPlanArtifactUpToDate(t)
 				Expect(condition).To(Equal(false))
 			})

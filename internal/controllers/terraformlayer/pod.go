@@ -119,15 +119,15 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 				Env: []corev1.EnvVar{
 					{
 						Name:  "BURRITO_REDIS_URL",
-						Value: "burrito-redis-master:6379",
+						Value: config.Redis.URL,
 					},
 					{
 						Name:  "BURRITO_REDIS_PASSWORD",
-						Value: "",
+						Value: config.Redis.Password,
 					},
 					{
 						Name:  "BURRITO_REDIS_DATABASE",
-						Value: "0",
+						Value: fmt.Sprintf("%d", config.Redis.Database),
 					},
 					{
 						Name:  "BURRITO_RUNNER_REPOSITORY_URL",
