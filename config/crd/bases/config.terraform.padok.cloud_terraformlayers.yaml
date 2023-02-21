@@ -15,7 +15,14 @@ spec:
     singular: terraformlayer
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .status.lastResult
+      name: LastResult
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: TerraformLayer is the Schema for the terraformlayers API

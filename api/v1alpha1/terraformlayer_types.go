@@ -46,15 +46,14 @@ type TerraformLayerRepository struct {
 // TerraformLayerStatus defines the observed state of TerraformLayer
 type TerraformLayerStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	//+kubebuilder:printcolumn
-	State string `json:"state,omitempty"`
-	//+kubebuilder:printcolumn
-	LastResult string `json:"lastResult,omitempty"`
+	State      string             `json:"state,omitempty"`
+	LastResult string             `json:"lastResult,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="LastResult",type=string,JSONPath=`.status.lastResult`
 // TerraformLayer is the Schema for the terraformlayers API
 type TerraformLayer struct {
 	metav1.TypeMeta   `json:",inline"`
