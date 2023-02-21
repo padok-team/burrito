@@ -18,8 +18,6 @@ package terraformlayer
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
@@ -106,9 +104,4 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
-}
-
-func getStateString(state State) string {
-	t := strings.Split(fmt.Sprintf("%T", state), "/")
-	return t[len(t)]
 }

@@ -2,6 +2,8 @@ package terraformlayer
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/lock"
@@ -101,4 +103,9 @@ func getRemediationStrategy(repo *configv1alpha1.TerraformRepository, layer *con
 		result = layer.Spec.RemediationStrategy
 	}
 	return result
+}
+
+func getStateString(state State) string {
+	t := strings.Split(fmt.Sprintf("%T", state), "/")
+	return t[len(t)]
 }
