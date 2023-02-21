@@ -19,6 +19,15 @@ spec:
     - jsonPath: .status.state
       name: State
       type: string
+    - jsonPath: .spec.repository.name
+      name: Repository
+      type: string
+    - jsonPath: .spec.branch
+      name: Branch
+      type: string
+    - jsonPath: .spec.path
+      name: Path
+      type: string
     - jsonPath: .status.lastResult
       name: LastResult
       type: string
