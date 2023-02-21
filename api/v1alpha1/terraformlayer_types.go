@@ -53,6 +53,9 @@ type TerraformLayerStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="Repository",type=string,JSONPath=`.spec.repository.name`
+// +kubebuilder:printcolumn:name="Branch",type=string,JSONPath=`.spec.branch`
+// +kubebuilder:printcolumn:name="Path",type=string,JSONPath=`.spec.path`
 // +kubebuilder:printcolumn:name="LastResult",type=string,JSONPath=`.status.lastResult`
 // TerraformLayer is the Schema for the terraformlayers API
 type TerraformLayer struct {
