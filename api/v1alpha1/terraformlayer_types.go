@@ -46,6 +46,10 @@ type TerraformLayerRepository struct {
 // TerraformLayerStatus defines the observed state of TerraformLayer
 type TerraformLayerStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	//+kubebuilder:printcolumn
+	State string `json:"state,omitempty"`
+	//+kubebuilder:printcolumn
+	LastResult string `json:"lastResult,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -10,6 +10,12 @@ bin
 testbin/*
 Dockerfile.cross
 
+*.lock.hcl
+*.tfstate
+*.tfstate.backup
+
+.terraform/
+
 # Test binary, build with `go test -c`
 *.test
 

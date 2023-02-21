@@ -18,6 +18,8 @@ package terraformlayer
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
@@ -89,7 +91,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
-	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state)}
 	result := state.getHandler()(ctx, r, layer, repository)
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
@@ -104,4 +106,9 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		Complete(r)
+}
+
+func getStateString(state State) string {
+	t := strings.Split(fmt.Sprintf("%T", state), "/")
+	return t[len(t)]
 }
