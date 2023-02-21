@@ -4,7 +4,7 @@
 
 <p align="center"><img src="./docs/assets/icon/burrito.png" width="200px" /></p>
 
-**Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) implemented as Kubernetes Operator.
+**Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) Kubernetes Operator.
 
 - [Why does this exists?](#why-does-this-exists)
 - [Demo](#demo)
