@@ -7,6 +7,7 @@
 **Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) implemented as Kubernetes Operator.
 
 - [Why does this exists?](#why-does-this-exists)
+- [Demo](#demo)
 - [Installation](#installation)
 - [Getting started](#getting-started)
   - [Connect to a private repository](#connect-to-a-private-repository)
@@ -29,6 +30,10 @@ Finally, currently, there is no easy way to navigate your terraform state to tru
 - Planning continuously your terraform code and run applies if needed
 - Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for terraform ever again (not implemented yet)
 - Showing your state's modifications in a simple Web UI (not implemented yet)
+
+## Demo 
+
+![demo](./docs/assets/demo/demo.gif)
 
 ## Installation
 
