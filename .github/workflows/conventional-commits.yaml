@@ -1,7 +1,9 @@
 name: Conventional Commits check
 
 on:
-  workflow_call:
+  pull_request:
+    branches:
+    - main
 
 jobs:
   commitlint:
