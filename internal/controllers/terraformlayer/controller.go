@@ -89,7 +89,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
-	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions}
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state)}
 	result := state.getHandler()(ctx, r, layer, repository)
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
