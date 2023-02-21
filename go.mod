@@ -6,6 +6,7 @@ require (
 	github.com/go-playground/webhooks/v6 v6.0.1
 	github.com/onsi/ginkgo/v2 v2.6.0
 	github.com/onsi/gomega v1.24.1
+	github.com/sirupsen/logrus v1.8.1
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.26.0
 	sigs.k8s.io/controller-runtime v0.14.0
