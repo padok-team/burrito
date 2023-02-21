@@ -107,5 +107,5 @@ func getRemediationStrategy(repo *configv1alpha1.TerraformRepository, layer *con
 
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), "/")
-	return t[len(t)]
+	return t[len(t)-1]
 }
