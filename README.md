@@ -108,11 +108,11 @@ spec:
 
 ## Advanced usage
 
-See [Usage](docs/contents/usage/README.md) for more advanced configuration options.
+See [Usage](docs/contents/usage) for more advanced configuration options.
 
 ## How it works
 
-See [Design](docs/contents/design/README.md) for details on how `burrito` works under the hood.
+See [Design](docs/contents/design) for details on how `burrito` works under the hood.
 
 ## License
 
