@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	b64 "encoding/base64"
+	"encoding/json"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/releases"
 	"github.com/hashicorp/terraform-exec/tfexec"
+	tfjson "github.com/hashicorp/terraform-json"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -170,6 +172,24 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("an error occured during terraform plan: %s", err)
 		return "", err
 	}
+	planJson, err := r.terraform.ShowPlanFile(context.TODO(), PlanArtifact)
+	if err != nil {
+		log.Errorf("an error occured during terraform show: %s", err)
+	}
+	planJsonBytes, err := json.Marshal(planJson)
+	if err != nil {
+		log.Errorf("an error occured during json plan parsing: %s", err)
+	}
+	planJsonKey := storage.GenerateKey(storage.LastPlannedArtifactJson, r.layer)
+	log.Infof("setting plan json into storage at key %s", planJsonKey)
+	err = r.storage.Set(planJsonKey, planJsonBytes, 3600)
+	if err != nil {
+		log.Errorf("could not put plan json in cache: %s", err)
+	}
+	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(getShortPlanDiff(planJson)), 3600)
+	if err != nil {
+		log.Errorf("could not put short plan in cache: %s", err)
+	}
 	if !diff {
 		log.Infof("terraform plan diff empty, no subsequent apply should be launched")
 		return "", nil
@@ -214,6 +234,24 @@ func (r *Runner) apply() (string, error) {
 	}
 	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
+func getShortPlanDiff(plan *tfjson.Plan) string {
+	delete := 0
+	create := 0
+	update := 0
+	for _, res := range plan.ResourceChanges {
+		if res.Change.Actions.Create() {
+			create++
+		}
+		if res.Change.Actions.Delete() {
+			delete++
+		}
+		if res.Change.Actions.Update() {
+			update++
+		}
+	}
+	return fmt.Sprintf("Plan: %s to create, %s to update, %s to delete", create, update, delete)
 }
 
 func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {

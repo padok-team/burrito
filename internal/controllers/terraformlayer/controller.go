@@ -21,6 +21,7 @@ import (
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
+	"github.com/padok-team/burrito/internal/storage"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -35,8 +36,9 @@ import (
 // Reconciler reconciles a TerraformLayer object
 type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Config *config.Config
+	Scheme  *runtime.Scheme
+	Config  *config.Config
+	Storage storage.Storage
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformlayers,verbs=get;list;watch;create;update;patch;delete
@@ -89,7 +91,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
-	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state)}
+	lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, layer))
+	if err != nil {
+		lastResult = []byte("Error getting last Result")
+	}
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult)}
 	result := state.getHandler()(ctx, r, layer, repository)
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
