@@ -43,9 +43,9 @@ type TerraformRepositoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="URL",type=string,JSONPath=`.spec.repository.url`
 // TerraformRepository is the Schema for the terraformrepositories API
 type TerraformRepository struct {
 	metav1.TypeMeta   `json:",inline"`

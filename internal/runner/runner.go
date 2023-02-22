@@ -251,7 +251,7 @@ func getShortPlanDiff(plan *tfjson.Plan) string {
 			update++
 		}
 	}
-	return fmt.Sprintf("Plan: %s to create, %s to update, %s to delete", create, update, delete)
+	return fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
 }
 
 func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {
