@@ -235,6 +235,10 @@ func (r *Runner) apply() (string, error) {
 		log.Errorf("an error occured during terraform apply: %s", err)
 		return "", err
 	}
+	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(fmt.Sprintf("Apply: %s", time.Now())), 3600)
+	if err != nil {
+		log.Errorf("an error occured during apply result storage: %s", err)
+	}
 	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
