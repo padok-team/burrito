@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -172,6 +173,8 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("an error occured during terraform plan: %s", err)
 		return "", err
 	}
+	r.terraform.SetStdout(io.Discard)
+	r.terraform.SetStderr(io.Discard)
 	planJson, err := r.terraform.ShowPlanFile(context.TODO(), PlanArtifact)
 	if err != nil {
 		log.Errorf("an error occured during terraform show: %s", err)
