@@ -31,8 +31,10 @@ func (c *StorageError) NotFound() bool {
 type Prefix string
 
 const (
-	LastPlannedArtifactBin Prefix = "plannedArtifactBin"
-	RunMessage             Prefix = "runMessage"
+	LastPlannedArtifactBin  Prefix = "plannedArtifactBin"
+	RunMessage              Prefix = "runMessage"
+	LastPlannedArtifactJson Prefix = "plannedArtifactJson"
+	LastPlanResult          Prefix = "planResult"
 )
 
 type Storage interface {
@@ -45,6 +47,12 @@ func GenerateKey(prefix Prefix, layer *configv1alpha1.TerraformLayer) string {
 	var toHash string
 	switch prefix {
 	case LastPlannedArtifactBin:
+		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
+		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
+	case LastPlannedArtifactJson:
+		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
+		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
+	case LastPlanResult:
 		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
 		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
 	case RunMessage:

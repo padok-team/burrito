@@ -15,7 +15,11 @@ spec:
     singular: terraformrepository
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.repository.url
+      name: URL
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: TerraformRepository is the Schema for the terraformrepositories

@@ -31,6 +31,7 @@ import (
 
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
+	"github.com/padok-team/burrito/internal/storage/redis"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -82,9 +83,10 @@ func (c *Controllers) Exec() {
 		switch ctrlType {
 		case "layer":
 			if err = (&terraformlayer.Reconciler{
-				Client: mgr.GetClient(),
-				Scheme: mgr.GetScheme(),
-				Config: c.config,
+				Client:  mgr.GetClient(),
+				Scheme:  mgr.GetScheme(),
+				Config:  c.config,
+				Storage: redis.New(c.config.Redis.URL, c.config.Redis.Password, c.config.Redis.Database),
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create layer controller: %s", err)
 			}
