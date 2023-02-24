@@ -41,9 +41,10 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Get Build timestamp
+    - name: Get Build timestamp and branch name
       run: |
         echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+        echo "BRANCH_NAME=$( ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
     - name: Build and push
       uses: docker/build-push-action@v3
