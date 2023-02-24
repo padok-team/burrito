@@ -44,16 +44,16 @@ jobs:
     - name: Get Build timestamp and branch name
       run: |
         echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-        echo "BRANCH_NAME=$( ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+        echo "VERSION=$( ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
         push: true
         build-args: |
-          VERSION=${{ github.head_ref || github.ref_name }}
+          VERSION=${{ env.VERSION }}
           BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
           COMMIT_HASH=${{ github.sha }}
         tags: |
-          ghcr.io/${{ github.repository }}:${{ github.head_ref || github.ref_name }}
+          ghcr.io/${{ github.repository }}:${{ env.VERSION }}
           ghcr.io/${{ github.repository }}:${{ github.sha }}
