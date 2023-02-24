@@ -49,8 +49,6 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
         build-args: |
           VERSION=${{ github.head_ref || github.ref_name }}
           BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
