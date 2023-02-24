@@ -44,7 +44,7 @@ jobs:
     - name: Get Build timestamp and branch name
       run: |
         echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-        echo "VERSION=$( ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+        echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
     - name: Build and push
       uses: docker/build-push-action@v3
