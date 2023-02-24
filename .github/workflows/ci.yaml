@@ -4,6 +4,8 @@ on:
   push:
     branches:
     - main
+    tags:
+    - v*
   pull_request:
     branches:
     - main
@@ -29,10 +31,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       
-    # - name: Set up QEMU
-    #   uses: docker/setup-qemu-action@v2
-    # - name: Set up Docker Buildx
-    #   uses: docker/setup-buildx-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
     - name: Login to GHCR
       uses: docker/login-action@v2
@@ -40,20 +40,11 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Get version from main branch
-      if: ${{ github.event_name == 'push' }}
-      run: |
-        echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
-
-    - name: Get version from pull request
-      if: ${{ github.event_name == 'pull_request' }}
-      run: |
-        echo "VERSION=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
     
-    - name: Get Build timestamp
+    - name: Get Build timestamp and branch name
       run: |
         echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+        echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
     - name: Build and push
       uses: docker/build-push-action@v3
@@ -62,7 +53,7 @@ jobs:
         build-args: |
           VERSION=${{ env.VERSION }}
           BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
-          COMMIT_HASH=${{ env.VERSION }}
+          COMMIT_HASH=${{ github.sha }}
         tags: |
-          ghcr.io/${{ github.repository }}:latest
           ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          ghcr.io/${{ github.repository }}:${{ github.sha }}
