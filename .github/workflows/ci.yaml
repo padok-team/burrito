@@ -4,9 +4,11 @@ on:
   push:
     branches:
     - main
+    tags:
+    - w*
   pull_request:
     branches:
-    - main
+    - test-ci
 
 jobs:
   unit-tests:
@@ -40,16 +42,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Get version from main branch
-      if: ${{ github.event_name == 'push' }}
-      run: |
-        echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
-
-    - name: Get version from pull request
-      if: ${{ github.event_name == 'pull_request' }}
-      run: |
-        echo "VERSION=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
     
     - name: Get Build timestamp
       run: |
@@ -60,9 +52,9 @@ jobs:
       with:
         push: true
         build-args: |
-          VERSION=${{ env.VERSION }}
+          VERSION=${{ github.ref_name }}
           BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
-          COMMIT_HASH=${{ env.VERSION }}
+          COMMIT_HASH=${{ github.sha }}
         tags: |
-          ghcr.io/${{ github.repository }}:latest
-          ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+          ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          ghcr.io/${{ github.repository }}:${{ github.sha }}
