@@ -2,13 +2,58 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+    - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
-  release-please:
+  goreleaser:
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - uses: google-github-actions/release-please-action@v3
-        with:
-          release-type: go
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Fetch all tags
+      run: git fetch --force --tags
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - name: Get ldflags env values
+      run: |
+        echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
+        echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+        echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
+    
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v3
+      with:
+        distribution: goreleaser
+        version: latest
+        args: release --clean
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  version:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: main
+    - name: Bump version
+      run: |
+        echo ${{ github.ref_name }} > VERSION
+    - name: Commit version to repository
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "chore(release): bump version to ${{ github.ref_name }}"

@@ -1,0 +1,50 @@
+before:
+  hooks:
+  - go mod tidy
+builds:
+- env:
+  - CGO_ENABLED=0
+  - PACKAGE=github.com/padok-team/burrito
+  ldflags:
+  - -X ${PACKAGE}/internal/version.Version=${VERSION}
+  - -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH}
+  - -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}
+  goos:
+  - linux
+  - darwin
+  main: ./
+  binary: burrito
+archives:
+- replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  format_overrides:
+  - goos: windows
+    format: zip
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: '{{ .Tag }}-next'
+changelog:
+  sort: asc
+  use: github
+  groups:
+  - title: Features
+    regexp: "^.*(feat:|feat\\/|feat(\\([^\\)]*\\)):).*"
+    order: 0
+  - title: 'Bug fixes'
+    regexp: "^.*(fix:|fix\\/|fix(\\([^\\)]*\\)):).*"
+    order: 1
+  - title: Others
+    order: 999
+  filters:
+    exclude:
+    - '^docs'
+    - '^test'
+    - '^style'
+    - '^refactor'
+    - '^build'
+    - '^ci'
+    - '^chore(release)'
