@@ -12,6 +12,9 @@ spec:
     kind: TerraformLayer
     listKind: TerraformLayerList
     plural: terraformlayers
+    shortNames:
+      - tfl
+      - tfls
     singular: terraformlayer
   scope: Namespaced
   versions:
