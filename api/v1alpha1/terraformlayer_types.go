@@ -51,6 +51,7 @@ type TerraformLayerStatus struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:shortName=layer;tfl
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Repository",type=string,JSONPath=`.spec.repository.name`
