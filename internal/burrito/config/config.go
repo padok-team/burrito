@@ -68,6 +68,12 @@ type RunnerConfig struct {
 	Repository                 RepositoryConfig `yaml:"repository"`
 	Layer                      Layer            `yaml:"layer"`
 	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
+	Terragrunt                 TerragruntConfig `yaml:"terragrunt"`
+}
+
+type TerragruntConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	Version string `yaml:"version"`
 }
 
 type Layer struct {

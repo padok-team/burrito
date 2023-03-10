@@ -2,6 +2,7 @@ package terraformlayer
 
 import (
 	"fmt"
+	"strconv"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -146,6 +147,14 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 						Value: getTerraformVersion(layer, repository),
 					},
 					{
+						Name:  "BURRITO_RUNNER_TERRAGRUNT_ENABLED",
+						Value: strconv.FormatBool(getTerragruntEnabled(layer, repository)),
+					},
+					{
+						Name:  "BURRITO_RUNNER_TERRAGRUNT_VERSION",
+						Value: getTerragruntVersion(layer, repository),
+					},
+					{
 						Name:  "BURRITO_RUNNER_LAYER_NAME",
 						Value: layer.GetObjectMeta().GetName(),
 					},
@@ -200,4 +209,23 @@ func getTerraformVersion(layer *configv1alpha1.TerraformLayer, repository *confi
 		version = layer.Spec.TerraformConfig.Version
 	}
 	return version
+}
+
+func getTerragruntVersion(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) string {
+	version := repository.Spec.TerraformConfig.TerragruntConfig.Version
+	if len(layer.Spec.TerraformConfig.TerragruntConfig.Version) > 0 {
+		version = layer.Spec.TerraformConfig.TerragruntConfig.Version
+	}
+	return version
+}
+
+func getTerragruntEnabled(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) bool {
+	enabled := false
+	if repository.Spec.TerraformConfig.TerragruntConfig.Enabled != nil {
+		enabled = *repository.Spec.TerraformConfig.TerragruntConfig.Enabled
+	}
+	if layer.Spec.TerraformConfig.TerragruntConfig.Enabled != nil {
+		enabled = *layer.Spec.TerraformConfig.TerragruntConfig.Enabled
+	}
+	return enabled
 }

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -20,10 +19,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/hc-install/product"
-	"github.com/hashicorp/hc-install/releases"
-	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
@@ -40,16 +35,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const PlanArtifact string = "plan.out"
+const PlanArtifact string = "/tmp/plan.out"
 const WorkingDir string = "/repository"
 
 type Runner struct {
 	config     *config.Config
-	terraform  *tfexec.Terraform
+	exec       TerraformExec
 	storage    storage.Storage
 	client     client.Client
 	layer      *configv1alpha1.TerraformLayer
 	repository *git.Repository
+}
+
+type TerraformExec interface {
+	Install() error
+	Init(string) error
+	Plan() error
+	Apply() error
+	Show() ([]byte, error)
 }
 
 func New(c *config.Config) *Runner {
@@ -73,6 +76,11 @@ func (r *Runner) Exec() {
 	}
 	ref, _ := r.repository.Head()
 	commit := ref.Hash().String()
+
+	// if r.config.Runner.Terragrunt.Enabled {
+	// 	path, err := downloadTerragrunt(r.config.Runner.Terragrunt.Version)
+	// }
+
 	switch r.config.Runner.Action {
 	case "plan":
 		sum, err = r.plan()
@@ -90,7 +98,7 @@ func (r *Runner) Exec() {
 			ann[annotations.LastApplySum] = sum
 		}
 	default:
-		err = errors.New("Unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
+		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
 	}
 	if err != nil {
 		log.Errorf("error during runner execution: %s", err)
@@ -129,19 +137,6 @@ func (r *Runner) init() error {
 		return err
 	}
 	r.layer = layer
-	log.Infof("initializing runner with Terraform version: %s", r.config.Runner.Version)
-	terraformVersion, err := version.NewVersion(r.config.Runner.Version)
-	if err != nil {
-		return err
-	}
-	installer := &releases.ExactVersion{
-		Product: product.Terraform,
-		Version: version.Must(terraformVersion, nil),
-	}
-	execPath, err := installer.Install(context.Background())
-	if err != nil {
-		return err
-	}
 	log.Infof("cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
 	cloneOptions, err := r.getCloneOptions()
 	if err != nil {
@@ -151,15 +146,14 @@ func (r *Runner) init() error {
 	if err != nil {
 		return err
 	}
-	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.config.Runner.Path)
-	r.terraform, err = tfexec.NewTerraform(workingDir, execPath)
+	r.exec = NewTerraform(r.config.Runner.Version)
+	err = r.exec.Install()
 	if err != nil {
 		return err
 	}
-	r.terraform.SetStdout(os.Stdout)
-	r.terraform.SetStderr(os.Stderr)
+	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.config.Runner.Path)
 	log.Infof("Launching terraform init in %s", workingDir)
-	err = r.terraform.Init(context.Background(), tfexec.Upgrade(true))
+	err = r.exec.Init(workingDir)
 	if err != nil {
 		return err
 	}
@@ -168,28 +162,26 @@ func (r *Runner) init() error {
 
 func (r *Runner) plan() (string, error) {
 	log.Infof("starting terraform plan")
-	diff, err := r.terraform.Plan(context.Background(), tfexec.Out(PlanArtifact))
+	err := r.exec.Plan()
 	if err != nil {
-		log.Errorf("an error occured during terraform plan: %s", err)
+		log.Errorf("error executing terraform plan: %s", err)
 		return "", err
 	}
-	r.terraform.SetStdout(io.Discard)
-	r.terraform.SetStderr(io.Discard)
-	planJson, err := r.terraform.ShowPlanFile(context.TODO(), PlanArtifact)
+	planJsonBytes, err := r.exec.Show()
+	plan := &tfjson.Plan{}
+	err = json.Unmarshal(planJsonBytes, plan)
 	if err != nil {
-		log.Errorf("an error occured during terraform show: %s", err)
+		log.Errorf("error parsing terraform json plan: %s", err)
+		return "", err
 	}
-	planJsonBytes, err := json.Marshal(planJson)
-	if err != nil {
-		log.Errorf("an error occured during json plan parsing: %s", err)
-	}
+	diff, shortDiff := getDiff(plan)
 	planJsonKey := storage.GenerateKey(storage.LastPlannedArtifactJson, r.layer)
 	log.Infof("setting plan json into storage at key %s", planJsonKey)
 	err = r.storage.Set(planJsonKey, planJsonBytes, 3600)
 	if err != nil {
 		log.Errorf("could not put plan json in cache: %s", err)
 	}
-	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(getShortPlanDiff(planJson)), 3600)
+	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(shortDiff), 3600)
 	if err != nil {
 		log.Errorf("could not put short plan in cache: %s", err)
 	}
@@ -197,20 +189,20 @@ func (r *Runner) plan() (string, error) {
 		log.Infof("terraform plan diff empty, no subsequent apply should be launched")
 		return "", nil
 	}
-	plan, err := os.ReadFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact))
+	planBin, err := os.ReadFile(PlanArtifact)
 	if err != nil {
 		log.Errorf("could not read plan output: %s", err)
 		return "", err
 	}
-	log.Infof("terraform plan ran successfully")
-	sum := sha256.Sum256(plan)
+	sum := sha256.Sum256(planBin)
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
 	log.Infof("setting plan binary into storage at key %s", planBinKey)
-	err = r.storage.Set(planBinKey, plan, 3600)
+	err = r.storage.Set(planBinKey, planBin, 3600)
 	if err != nil {
 		log.Errorf("could not put plan binary in cache: %s", err)
 		return "", err
 	}
+	log.Infof("terraform plan ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
@@ -224,15 +216,15 @@ func (r *Runner) apply() (string, error) {
 		return "", err
 	}
 	sum := sha256.Sum256(plan)
-	err = os.WriteFile(fmt.Sprintf("%s/%s", r.terraform.WorkingDir(), PlanArtifact), plan, 0644)
+	err = os.WriteFile(PlanArtifact, plan, 0644)
 	if err != nil {
 		log.Errorf("could not write plan artifact to disk: %s", err)
 		return "", err
 	}
 	log.Print("launching terraform apply")
-	err = r.terraform.Apply(context.Background(), tfexec.DirOrPlan(PlanArtifact))
+	err = r.exec.Apply()
 	if err != nil {
-		log.Errorf("an error occured during terraform apply: %s", err)
+		log.Errorf("error executing terraform apply: %s", err)
 		return "", err
 	}
 	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(fmt.Sprintf("Apply: %s", time.Now())), 3600)
@@ -243,7 +235,7 @@ func (r *Runner) apply() (string, error) {
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
-func getShortPlanDiff(plan *tfjson.Plan) string {
+func getDiff(plan *tfjson.Plan) (bool, string) {
 	delete := 0
 	create := 0
 	update := 0
@@ -258,7 +250,11 @@ func getShortPlanDiff(plan *tfjson.Plan) string {
 			update++
 		}
 	}
-	return fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
+	diff := false
+	if create+delete+update > 0 {
+		diff = true
+	}
+	return diff, fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
 }
 
 func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {

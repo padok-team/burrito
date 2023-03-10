@@ -20,11 +20,11 @@ const (
 )
 
 type TerraformConfig struct {
-	Version    string           `json:"version,omitempty"`
-	Terragrunt TerragruntConfig `json:"terragrunt,omitempty"`
+	Version          string           `json:"version,omitempty"`
+	TerragruntConfig TerragruntConfig `json:"terragrunt,omitempty"`
 }
 
 type TerragruntConfig struct {
-	Enabled bool   `json:"enabled,omitempty"`
+	Enabled *bool  `json:"enabled,omitempty"`
 	Version string `json:"version,omitempty"`
 }
