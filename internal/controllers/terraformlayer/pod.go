@@ -143,7 +143,7 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 					},
 					{
 						Name:  "BURRITO_RUNNER_VERSION",
-						Value: layer.Spec.TerraformVersion,
+						Value: getTerraformVersion(layer, repository),
 					},
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAME",
@@ -192,4 +192,12 @@ func mergeSpecs(defaultSpec corev1.PodSpec, repositorySpec configv1alpha1.Overri
 		defaultSpec.ServiceAccountName = layerSpec.ServiceAccountName
 	}
 	return defaultSpec
+}
+
+func getTerraformVersion(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) string {
+	version := repository.Spec.TerraformConfig.Version
+	if len(layer.Spec.TerraformConfig.Version) > 0 {
+		version = layer.Spec.TerraformConfig.Version
+	}
+	return version
 }

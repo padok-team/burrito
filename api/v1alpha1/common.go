@@ -18,3 +18,13 @@ const (
 	DryRemediationStrategy       RemediationStrategy = "dry"
 	AutoApplyRemediationStrategy RemediationStrategy = "autoApply"
 )
+
+type TerraformConfig struct {
+	Version    string           `json:"version,omitempty"`
+	Terragrunt TerragruntConfig `json:"terragrunt,omitempty"`
+}
+
+type TerragruntConfig struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	Version string `json:"version,omitempty"`
+}
