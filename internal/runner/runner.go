@@ -146,6 +146,7 @@ func (r *Runner) init() error {
 	if err != nil {
 		return err
 	}
+	log.Infof("repository cloned successfully")
 	r.exec = NewTerraform(r.config.Runner.Version)
 	err = r.exec.Install()
 	if err != nil {
@@ -168,6 +169,10 @@ func (r *Runner) plan() (string, error) {
 		return "", err
 	}
 	planJsonBytes, err := r.exec.Show()
+	if err != nil {
+		log.Errorf("error getting terraform plan json: %s", err)
+		return "", err
+	}
 	plan := &tfjson.Plan{}
 	err = json.Unmarshal(planJsonBytes, plan)
 	if err != nil {

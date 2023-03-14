@@ -26,6 +26,9 @@ func NewTerraform(version string) *Terraform {
 
 func (t *Terraform) Install() error {
 	terraformVersion, err := version.NewVersion(t.version)
+	if err != nil {
+		return err
+	}
 	installer := &releases.ExactVersion{
 		Product: product.Terraform,
 		Version: version.Must(terraformVersion, nil),
