@@ -1,3 +1,3 @@
 terraform {
-  source = "../modules//random-pets"
+  source = "../../modules//random-pets"
 }
