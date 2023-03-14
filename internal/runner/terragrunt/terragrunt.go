@@ -28,6 +28,16 @@ func NewTerragrunt(terragruntVersion, terraformVersion, planArtifactPath string)
 	}
 }
 
+func silent(cmd *exec.Cmd) {
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+}
+
+func verbose(cmd *exec.Cmd) {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+}
+
 func (t *Terragrunt) Install() error {
 	err := t.terraform.Install()
 	if err != nil {
@@ -54,6 +64,7 @@ func (t *Terragrunt) getDefaultOptions(command string) []string {
 func (t *Terragrunt) Init(workingDir string) error {
 	t.workingDir = workingDir
 	cmd := exec.Command(t.execPath, t.getDefaultOptions("init")...)
+	verbose(cmd)
 	cmd.Dir = t.workingDir
 	if err := cmd.Run(); err != nil {
 		return err
@@ -64,6 +75,7 @@ func (t *Terragrunt) Init(workingDir string) error {
 func (t *Terragrunt) Plan() error {
 	options := append(t.getDefaultOptions("plan"), "-out", t.planArtifactPath)
 	cmd := exec.Command(t.execPath, options...)
+	verbose(cmd)
 	cmd.Dir = t.workingDir
 	if err := cmd.Run(); err != nil {
 		return err
@@ -74,6 +86,7 @@ func (t *Terragrunt) Plan() error {
 func (t *Terragrunt) Apply() error {
 	options := append(t.getDefaultOptions("apply"), t.planArtifactPath)
 	cmd := exec.Command(t.execPath, options...)
+	verbose(cmd)
 	cmd.Dir = t.workingDir
 	if err := cmd.Run(); err != nil {
 		return err
