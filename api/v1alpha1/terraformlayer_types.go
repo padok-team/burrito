@@ -30,7 +30,7 @@ type TerraformLayerSpec struct {
 
 	Path                string                   `json:"path,omitempty"`
 	Branch              string                   `json:"branch,omitempty"`
-	TerraformVersion    string                   `json:"terraformVersion,omitempty"`
+	TerraformConfig     TerraformConfig          `json:"terraform,omitempty"`
 	Repository          TerraformLayerRepository `json:"repository,omitempty"`
 	RemediationStrategy RemediationStrategy      `json:"remediationStrategy,omitempty"`
 	PlanOnPullRequest   bool                     `json:"planOnPullRequest,omitempty"`

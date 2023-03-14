@@ -30,7 +30,7 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 	cmd.Flags().StringSliceVar(&app.Config.Controller.Types, "types", []string{"layer", "repository"}, "list of controllers to start")
 
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.DriftDetection, "drift-detection-period", defaultDriftDetectionTimer, "period between two plans. Must end with s, m or h.")
-	cmd.Flags().DurationVar(&app.Config.Controller.Timers.OnError, "on-error-period", defaultOnErrorTimer, "period between two runners launch when an error occured. Must end with s, m or h.")
+	cmd.Flags().DurationVar(&app.Config.Controller.Timers.OnError, "on-error-period", defaultOnErrorTimer, "period between two runners launch when an error occurred. Must end with s, m or h.")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.WaitAction, "wait-action-period", defaultWaitActionTimer, "period between two runners when a layer is locked. Must end with s, m or h.")
 	cmd.Flags().BoolVar(&app.Config.Controller.LeaderElection.Enabled, "leader-election", true, "whether leader election is enabled or not, default to true")
 	cmd.Flags().StringVar(&app.Config.Controller.LeaderElection.ID, "leader-election-id", "6d185457.terraform.padok.cloud", "lease id used for leader election")

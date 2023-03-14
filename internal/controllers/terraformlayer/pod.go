@@ -130,22 +130,6 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 						Value: fmt.Sprintf("%d", config.Redis.Database),
 					},
 					{
-						Name:  "BURRITO_RUNNER_REPOSITORY_URL",
-						Value: repository.Spec.Repository.Url,
-					},
-					{
-						Name:  "BURRITO_RUNNER_PATH",
-						Value: layer.Spec.Path,
-					},
-					{
-						Name:  "BURRITO_RUNNER_BRANCH",
-						Value: layer.Spec.Branch,
-					},
-					{
-						Name:  "BURRITO_RUNNER_VERSION",
-						Value: layer.Spec.TerraformVersion,
-					},
-					{
 						Name:  "BURRITO_RUNNER_LAYER_NAME",
 						Value: layer.GetObjectMeta().GetName(),
 					},

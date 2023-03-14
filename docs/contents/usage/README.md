@@ -3,6 +3,8 @@
 - [User guide](#user-guide)
   - [Override the runner pod spec](#override-the-runner-pod-spec)
   - [Choose your remediation strategy](#choose-your-remediation-strategy)
+  - [Choose your terraform version](#choose-your-terraform-version)
+  - [Use Terragrunt](#use-terragrunt)
 - [Operator guide](#operator-guide)
   - [Setup a git webhook](#setup-a-git-webhook)
   - [Configuration](#configuration)
@@ -48,7 +50,8 @@ metadata:
   name: random-pets
   namespace: burrito
 spec:
-  terraformVersion: "1.3.1"
+  terraform:
+    version: "1.3.1"
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
@@ -85,7 +88,8 @@ metadata:
   name: random-pets
   namespace: burrito
 spec:
-  terraformVersion: "1.3.1"
+  terraform:
+    version: "1.3.1"
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
@@ -111,6 +115,40 @@ As for the [runner spec override](#override-the-runner-pod-spec), you can specif
 The configuration of the `TerraformLayer` will take precedence.
 
 > :warning: This operator is still experimental. Use `spec.remediationStrategy: "autoApply"` at your own risk.
+
+### Choose your terraform version
+
+Both `TerraformRepository` and `TerraformLayer` expose a `spec.terrafrom.version` map field.
+
+If the field is specified for a given `TerraformRepository` it will be applied by default to all `TerraformLayer` linked to it.
+
+If the field is specified for a given `TerraformLayer` it will take precedence over the `TerraformRepository` configuration.
+
+### Use Terragrunt
+
+You can specify usage of terragrunt as follow:
+
+```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: random-pets-terragrunt
+spec:
+  terraform:
+    version: "1.3.1"
+    terragrunt:
+      enabled: true
+      version: "0.44.5"
+  remediationStrategy: dry
+  path: "internal/e2e/testdata/terragrunt/random-pets/prod"
+  branch: "feat/handle-terragrunt"
+  repository:
+    kind: TerraformRepository
+    name: burrito
+    namespace: burrito
+```
+
+> This configuration can be specified at the `TerraformRepository` level to be enabled by default in each of its layers.
 
 ## Operator guide
 
@@ -151,7 +189,7 @@ You can configure `burrito` with environment variables.
 | :-----------------------------------------: | :--------------------------------------------------------------------: | :------------------------------: |
 |         `BURRITO_CONTROLLER_TYPES`          |                      list of controllers to start                      |        `layer,repository`        |
 | `BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION`  |              period between two plans for drift detection              |              `20m`               |
-|     `BURRITO_CONTROLLER_TIMERS_ONERROR`     |        period between two runners launch when an error occured         |               `1m`               |
+|     `BURRITO_CONTROLLER_TIMERS_ONERROR`     |        period between two runners launch when an error occurred         |               `1m`               |
 |   `BURRITO_CONTROLLER_TIMERS_WAITACTION`    |        period between two runners launch when a layer is locked        |               `1m`               |
 | `BURRITO_CONTROLLER_LEADERELECTION_ENABLED` |               whether leader election is enabled or not                |              `true`              |
 |   `BURRITO_CONTROLLER_LEADERELECTION_ID`    |                   lease id used for leader election                    | `6d185457.terraform.padok.cloud` |

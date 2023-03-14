@@ -97,7 +97,8 @@ metadata:
   name: random-pets
   namespace: burrito
 spec:
-  terraformVersion: "1.3.1"
+  terraform: 
+    version: "1.3.1"
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:

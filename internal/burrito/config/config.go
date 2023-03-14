@@ -54,20 +54,21 @@ type ControllerTimers struct {
 }
 
 type RepositoryConfig struct {
-	URL           string `yaml:"url"`
 	SSHPrivateKey string `yaml:"sshPrivateKey"`
 	Username      string `yaml:"username"`
 	Password      string `yaml:"password"`
 }
 
 type RunnerConfig struct {
-	Path                       string           `yaml:"path"`
-	Branch                     string           `yaml:"branch"`
-	Version                    string           `yaml:"version"`
 	Action                     string           `yaml:"action"`
-	Repository                 RepositoryConfig `yaml:"repository"`
 	Layer                      Layer            `yaml:"layer"`
+	Repository                 RepositoryConfig `yaml:"repository"`
 	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
+}
+
+type TerragruntConfig struct {
+	Enabled bool   `yaml:"enabled"`
+	Version string `yaml:"version"`
 }
 
 type Layer struct {

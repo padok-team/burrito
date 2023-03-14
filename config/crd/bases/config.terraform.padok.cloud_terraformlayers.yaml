@@ -132,8 +132,18 @@ spec:
                   namespace:
                     type: string
                 type: object
-              terraformVersion:
-                type: string
+              terraform:
+                properties:
+                  terragrunt:
+                    properties:
+                      enabled:
+                        type: boolean
+                      version:
+                        type: string
+                    type: object
+                  version:
+                    type: string
+                type: object
             type: object
           status:
             description: TerraformLayerStatus defines the observed state of TerraformLayer

@@ -113,6 +113,18 @@ spec:
                   url:
                     type: string
                 type: object
+              terraform:
+                properties:
+                  terragrunt:
+                    properties:
+                      enabled:
+                        type: boolean
+                      version:
+                        type: string
+                    type: object
+                  version:
+                    type: string
+                type: object
             type: object
           status:
             description: TerraformRepositoryStatus defines the observed state of TerraformRepository
@@ -325,8 +337,18 @@ spec:
                   namespace:
                     type: string
                 type: object
-              terraformVersion:
-                type: string
+              terraform:
+                properties:
+                  terragrunt:
+                    properties:
+                      enabled:
+                        type: boolean
+                      version:
+                        type: string
+                    type: object
+                  version:
+                    type: string
+                type: object
             type: object
           status:
             description: TerraformLayerStatus defines the observed state of TerraformLayer
@@ -601,6 +623,12 @@ metadata:
     app.kubernetes.io/name: burrito-controllers
     app.kubernetes.io/part-of: burrito
 rules:
+- apiGroups: ["events.k8s.io"]
+  resources: ["events"]
+  verbs: ["create", "update"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "update"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs:
@@ -611,9 +639,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups: ["events.k8s.io"]
-  resources: ["events"]
-  verbs: ["create", "update"]
 - apiGroups:
   - config.terraform.padok.cloud
   resources:
@@ -700,6 +725,9 @@ spec:
       labels:
         app.kubernetes.io/name: burrito-controllers
     spec:
+      # only for testing purposes
+      imagePullSecrets:
+      - name: ghcr-creds
       securityContext:
         runAsNonRoot: true
       containers:
@@ -708,9 +736,12 @@ spec:
         args:
         - controllers
         - start
-        image: ghcr.io/padok-team/burrito:v0.1.0
+        image: ghcr.io/padok-team/burrito:main
         name: burrito
         imagePullPolicy: Always
+        env:
+        - name: BURRITO_CONTROLLER_TIMERS_WAITACTION
+          value: 5s
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -752,6 +783,9 @@ spec:
       labels:
         app.kubernetes.io/name: burrito-server
     spec:
+      # only for testing purposes
+      imagePullSecrets:
+      - name: ghcr-creds
       securityContext:
         runAsNonRoot: true
       containers:
@@ -763,7 +797,16 @@ spec:
         ports:
         - containerPort: 8080
           name: http
-        image: ghcr.io/padok-team/burrito:v0.1.0
+        env:
+        # - name: BURRITO_SERVER_PORT
+        #   value: "8080"
+        # for testing purposes
+        - name: BURRITO_SERVER_WEBHOOK_GITHUB_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: burrito-webhook-secret
+              key: burrito-webhook-secret
+        image: ghcr.io/padok-team/burrito:main
         name: burrito
         imagePullPolicy: Always
         securityContext:
