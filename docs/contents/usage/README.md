@@ -118,7 +118,11 @@ The configuration of the `TerraformLayer` will take precedence.
 
 ### Choose your terraform version
 
-You can specify `.spec.terraform.version` at the `TerraformRepository` and `TerraformLayer` level. The configuration in the `TerraformLayer` takes precedence over the configuration in the `TerraformRepository`
+Both `TerraformRepository` and `TerraformLayer` expose a `spec.terrafrom.version` map field.
+
+If the field is specified for a given `TerraformRepository` it will be applied by default to all `TerraformLayer` linked to it.
+
+If the field is specified for a given `TerraformLayer` it will take precedence over the `TerraformRepository` configuration.
 
 ### Use Terragrunt
 
