@@ -1,4 +1,4 @@
-package runner
+package terraform
 
 import (
 	"context"
@@ -13,14 +13,16 @@ import (
 )
 
 type Terraform struct {
-	exec    *tfexec.Terraform
-	version string
-	path    string
+	exec             *tfexec.Terraform
+	version          string
+	execPath         string
+	planArtifactPath string
 }
 
-func NewTerraform(version string) *Terraform {
+func NewTerraform(version, planArtifactPath string) *Terraform {
 	return &Terraform{
-		version: version,
+		version:          version,
+		planArtifactPath: planArtifactPath,
 	}
 }
 
@@ -37,12 +39,12 @@ func (t *Terraform) Install() error {
 	if err != nil {
 		return err
 	}
-	t.path = execPath
+	t.execPath = execPath
 	return nil
 }
 
 func (t *Terraform) Init(workingDir string) error {
-	exec, err := tfexec.NewTerraform(workingDir, t.path)
+	exec, err := tfexec.NewTerraform(workingDir, t.execPath)
 	if err != nil {
 		return err
 	}
@@ -51,13 +53,12 @@ func (t *Terraform) Init(workingDir string) error {
 	if err != nil {
 		return err
 	}
-	t.exec.SetStdout(os.Stdout)
-	t.exec.SetStderr(os.Stderr)
 	return nil
 }
 
 func (t *Terraform) Plan() error {
-	_, err := t.exec.Plan(context.Background(), tfexec.Out(PlanArtifact))
+	t.verbose()
+	_, err := t.exec.Plan(context.Background(), tfexec.Out(t.planArtifactPath))
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,8 @@ func (t *Terraform) Plan() error {
 }
 
 func (t *Terraform) Apply() error {
-	err := t.exec.Apply(context.Background(), tfexec.DirOrPlan(PlanArtifact))
+	t.verbose()
+	err := t.exec.Apply(context.Background(), tfexec.DirOrPlan(t.planArtifactPath))
 	if err != nil {
 		return err
 	}
@@ -73,9 +75,8 @@ func (t *Terraform) Apply() error {
 }
 
 func (t *Terraform) Show() ([]byte, error) {
-	t.exec.SetStdout(io.Discard)
-	t.exec.SetStderr(io.Discard)
-	planJson, err := t.exec.ShowPlanFile(context.TODO(), PlanArtifact)
+	t.silent()
+	planJson, err := t.exec.ShowPlanFile(context.TODO(), t.planArtifactPath)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,15 @@ func (t *Terraform) Show() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	return planJsonBytes, nil
+}
+
+func (t *Terraform) silent() {
+	t.exec.SetStdout(io.Discard)
+	t.exec.SetStderr(io.Discard)
+}
+
+func (t *Terraform) verbose() {
 	t.exec.SetStdout(os.Stdout)
 	t.exec.SetStderr(os.Stderr)
-	return planJsonBytes, nil
 }

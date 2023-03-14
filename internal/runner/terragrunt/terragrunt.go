@@ -1,4 +1,4 @@
-package runner
+package terragrunt
 
 import (
 	"errors"
@@ -8,20 +8,22 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/padok-team/burrito/internal/runner/terraform"
 )
 
 type Terragrunt struct {
-	path       string
-	workingDir string
-	version    string
-	terraform  *Terraform
+	execPath         string
+	planArtifactPath string
+	version          string
+	terraform        *terraform.Terraform
 }
 
-func NewTerragrunt(terragruntVersion string, terraformVersion string, workingDir string) *Terragrunt {
+func NewTerragrunt(terragruntVersion, terraformVersion, planArtifactPath string) *Terragrunt {
 	return &Terragrunt{
-		version:    terragruntVersion,
-		terraform:  NewTerraform(terraformVersion),
-		workingDir: workingDir,
+		version:          terragruntVersion,
+		terraform:        terraform.NewTerraform(terraformVersion, planArtifactPath),
+		planArtifactPath: planArtifactPath,
 	}
 }
 
@@ -34,7 +36,7 @@ func (t *Terragrunt) Install() error {
 	if err != nil {
 		return err
 	}
-	t.path = path
+	t.execPath = path
 	return nil
 }
 

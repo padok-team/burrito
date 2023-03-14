@@ -33,6 +33,8 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/padok-team/burrito/internal/runner/terraform"
 )
 
 const PlanArtifact string = "/tmp/plan.out"
@@ -147,7 +149,7 @@ func (r *Runner) init() error {
 		return err
 	}
 	log.Infof("repository cloned successfully")
-	r.exec = NewTerraform(r.config.Runner.Version)
+	r.exec = terraform.NewTerraform(r.config.Runner.Version, PlanArtifact)
 	err = r.exec.Install()
 	if err != nil {
 		return err
