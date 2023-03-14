@@ -54,7 +54,6 @@ type ControllerTimers struct {
 }
 
 type RepositoryConfig struct {
-	URL           string `yaml:"url"`
 	SSHPrivateKey string `yaml:"sshPrivateKey"`
 	Username      string `yaml:"username"`
 	Password      string `yaml:"password"`

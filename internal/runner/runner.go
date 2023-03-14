@@ -186,7 +186,7 @@ func (r *Runner) init() error {
 	log.Infof("kubernetes resources successfully retrieved")
 
 	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
-	r.gitRepository, err = clone(r.config.Runner.Repository, r.layer.Spec.Branch, r.layer.Spec.Path)
+	r.gitRepository, err = clone(r.config.Runner.Repository, r.repository.Spec.Repository.Url, r.layer.Spec.Branch, r.layer.Spec.Path)
 	if err != nil {
 		return err
 	}
