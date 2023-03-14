@@ -15,7 +15,7 @@ import (
 type Terraform struct {
 	exec             *tfexec.Terraform
 	version          string
-	execPath         string
+	ExecPath         string
 	planArtifactPath string
 }
 
@@ -39,12 +39,12 @@ func (t *Terraform) Install() error {
 	if err != nil {
 		return err
 	}
-	t.execPath = execPath
+	t.ExecPath = execPath
 	return nil
 }
 
 func (t *Terraform) Init(workingDir string) error {
-	exec, err := tfexec.NewTerraform(workingDir, t.execPath)
+	exec, err := tfexec.NewTerraform(workingDir, t.ExecPath)
 	if err != nil {
 		return err
 	}

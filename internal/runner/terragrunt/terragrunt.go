@@ -1,11 +1,11 @@
 package terragrunt
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -16,6 +16,7 @@ type Terragrunt struct {
 	execPath         string
 	planArtifactPath string
 	version          string
+	workingDir       string
 	terraform        *terraform.Terraform
 }
 
@@ -40,20 +41,55 @@ func (t *Terragrunt) Install() error {
 	return nil
 }
 
+func (t *Terragrunt) getDefaultOptions(command string) []string {
+	return []string{
+		command,
+		"--terragrunt-tfpath",
+		t.terraform.ExecPath,
+		"--terragrunt-working-dir",
+		t.workingDir,
+	}
+}
+
 func (t *Terragrunt) Init(workingDir string) error {
+	t.workingDir = workingDir
+	cmd := exec.Command(t.execPath, t.getDefaultOptions("init")...)
+	cmd.Dir = t.workingDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (t *Terragrunt) Plan() (string, error) {
-	return "", errors.New("Placeholder")
+func (t *Terragrunt) Plan() error {
+	options := append(t.getDefaultOptions("plan"), "-out", t.planArtifactPath)
+	cmd := exec.Command(t.execPath, options...)
+	cmd.Dir = t.workingDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (t *Terragrunt) Apply() error {
-	return errors.New("Placeholder")
+	options := append(t.getDefaultOptions("apply"), t.planArtifactPath)
+	cmd := exec.Command(t.execPath, options...)
+	cmd.Dir = t.workingDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (t *Terragrunt) Show() ([]byte, error) {
-	return nil, nil
+	options := append(t.getDefaultOptions("show"), "-json", t.planArtifactPath)
+	cmd := exec.Command(t.execPath, options...)
+	cmd.Dir = t.workingDir
+	jsonBytes, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	return jsonBytes, nil
 }
 
 func downloadTerragrunt(version string) (string, error) {

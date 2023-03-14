@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/padok-team/burrito/internal/runner/terraform"
+	"github.com/padok-team/burrito/internal/runner/terragrunt"
 )
 
 const PlanArtifact string = "/tmp/plan.out"
@@ -78,10 +79,6 @@ func (r *Runner) Exec() {
 	}
 	ref, _ := r.repository.Head()
 	commit := ref.Hash().String()
-
-	// if r.config.Runner.Terragrunt.Enabled {
-	// 	path, err := downloadTerragrunt(r.config.Runner.Terragrunt.Version)
-	// }
 
 	switch r.config.Runner.Action {
 	case "plan":
@@ -149,7 +146,12 @@ func (r *Runner) init() error {
 		return err
 	}
 	log.Infof("repository cloned successfully")
+
 	r.exec = terraform.NewTerraform(r.config.Runner.Version, PlanArtifact)
+	if r.config.Runner.Terragrunt.Enabled {
+		log.Info("using terragrunt")
+		r.exec = terragrunt.NewTerragrunt(r.config.Runner.Terragrunt.Version, r.config.Runner.Version, PlanArtifact)
+	}
 	err = r.exec.Install()
 	if err != nil {
 		return err
