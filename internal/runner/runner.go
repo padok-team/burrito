@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -16,9 +15,6 @@ import (
 	"encoding/json"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	tfjson "github.com/hashicorp/terraform-json"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
@@ -42,12 +38,13 @@ const PlanArtifact string = "/tmp/plan.out"
 const WorkingDir string = "/repository"
 
 type Runner struct {
-	config     *config.Config
-	exec       TerraformExec
-	storage    storage.Storage
-	client     client.Client
-	layer      *configv1alpha1.TerraformLayer
-	repository *git.Repository
+	config        *config.Config
+	exec          TerraformExec
+	storage       storage.Storage
+	client        client.Client
+	layer         *configv1alpha1.TerraformLayer
+	repository    *configv1alpha1.TerraformRepository
+	gitRepository *git.Repository
 }
 
 type TerraformExec interface {
@@ -77,7 +74,7 @@ func (r *Runner) Exec() {
 	if err != nil {
 		log.Errorf("error initializing runner: %s", err)
 	}
-	ref, _ := r.repository.Head()
+	ref, _ := r.gitRepository.Head()
 	commit := ref.Hash().String()
 
 	switch r.config.Runner.Action {
@@ -115,20 +112,9 @@ func (r *Runner) Exec() {
 	}
 }
 
-func (r *Runner) init() error {
-	r.storage = redis.New(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
-	scheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
-	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{
-		Scheme: scheme,
-	})
-	if err != nil {
-		return err
-	}
-	r.client = cl
+func (r *Runner) getLayerAndRepository() error {
 	layer := &configv1alpha1.TerraformLayer{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{
+	err := r.client.Get(context.TODO(), types.NamespacedName{
 		Namespace: r.config.Runner.Layer.Namespace,
 		Name:      r.config.Runner.Layer.Name,
 	}, layer)
@@ -136,30 +122,89 @@ func (r *Runner) init() error {
 		return err
 	}
 	r.layer = layer
-	log.Infof("cloning repository %s %s branch", r.config.Runner.Repository.URL, r.config.Runner.Branch)
-	cloneOptions, err := r.getCloneOptions()
+	repository := &configv1alpha1.TerraformRepository{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{
+		Namespace: layer.Spec.Repository.Namespace,
+		Name:      layer.Spec.Repository.Name,
+	}, repository)
 	if err != nil {
 		return err
 	}
-	r.repository, err = git.PlainClone(WorkingDir, false, cloneOptions)
+	r.repository = repository
+	return nil
+}
+
+func newK8SClient() (client.Client, error) {
+	scheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
+	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return cl, err
+}
+
+func (r *Runner) install() error {
+	terraformVersion := configv1alpha1.GetTerraformVersion(r.repository, r.layer)
+	terraformExec := terraform.NewTerraform(terraformVersion, PlanArtifact)
+	terraformRuntime := "terraform"
+	if configv1alpha1.GetTerragruntEnabled(r.repository, r.layer) {
+		terraformRuntime = "terragrunt"
+	}
+	switch terraformRuntime {
+	case "terraform":
+		log.Infof("using terraform")
+		r.exec = terraformExec
+	case "terragrunt":
+		log.Infof("using terragrunt")
+		r.exec = terragrunt.NewTerragrunt(terraformExec, configv1alpha1.GetTerragruntVersion(r.repository, r.layer), PlanArtifact)
+	}
+	err := r.exec.Install()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Runner) init() error {
+	r.storage = redis.New(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
+	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
+	cl, err := newK8SClient()
+	if err != nil {
+		log.Errorf("error creating kubernetes client: %s", err)
+		return err
+	}
+	r.client = cl
+	err = r.getLayerAndRepository()
+	if err != nil {
+		log.Errorf("error getting kubernetes resources: %s", err)
+		return err
+	}
+	log.Infof("kubernetes resources successfully retrieved")
+
+	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
+	r.gitRepository, err = clone(r.config.Runner.Repository, r.layer.Spec.Branch, r.layer.Spec.Path)
 	if err != nil {
 		return err
 	}
 	log.Infof("repository cloned successfully")
 
-	r.exec = terraform.NewTerraform(r.config.Runner.Version, PlanArtifact)
-	if r.config.Runner.Terragrunt.Enabled {
-		log.Info("using terragrunt")
-		r.exec = terragrunt.NewTerragrunt(r.config.Runner.Terragrunt.Version, r.config.Runner.Version, PlanArtifact)
-	}
-	err = r.exec.Install()
+	log.Infof("installing binaries...")
+	err = r.install()
 	if err != nil {
+		log.Errorf("error installing binaries: %s", err)
 		return err
 	}
-	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.config.Runner.Path)
+	log.Infof("binaries successfully installed")
+
+	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.layer.Spec.Path)
 	log.Infof("Launching terraform init in %s", workingDir)
 	err = r.exec.Init(workingDir)
 	if err != nil {
+		log.Errorf("")
 		return err
 	}
 	return nil
@@ -238,7 +283,7 @@ func (r *Runner) apply() (string, error) {
 	}
 	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(fmt.Sprintf("Apply: %s", time.Now())), 3600)
 	if err != nil {
-		log.Errorf("an error occured during apply result storage: %s", err)
+		log.Errorf("an error occurred during apply result storage: %s", err)
 	}
 	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
@@ -264,41 +309,4 @@ func getDiff(plan *tfjson.Plan) (bool, string) {
 		diff = true
 	}
 	return diff, fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
-}
-
-func (r *Runner) getCloneOptions() (*git.CloneOptions, error) {
-	authMethod := "ssh"
-	cloneOptions := &git.CloneOptions{
-		ReferenceName: plumbing.NewBranchReferenceName(r.config.Runner.Branch),
-		URL:           r.config.Runner.Repository.URL,
-	}
-	if strings.Contains(r.config.Runner.Repository.URL, "https://") {
-		authMethod = "https"
-	}
-	log.Infof("clone method is %s", authMethod)
-	switch authMethod {
-	case "ssh":
-		if r.config.Runner.Repository.SSHPrivateKey == "" {
-			log.Infof("detected keyless authentication")
-			return cloneOptions, nil
-		}
-		log.Infof("private key found")
-		publicKeys, err := ssh.NewPublicKeys("git", []byte(r.config.Runner.Repository.SSHPrivateKey), "")
-		if err != nil {
-			return cloneOptions, err
-		}
-		cloneOptions.Auth = publicKeys
-
-	case "https":
-		if r.config.Runner.Repository.Username != "" && r.config.Runner.Repository.Password != "" {
-			log.Infof("username and password found")
-			cloneOptions.Auth = &http.BasicAuth{
-				Username: r.config.Runner.Repository.Username,
-				Password: r.config.Runner.Repository.Password,
-			}
-		} else {
-			log.Infof("passwordless authentication detected")
-		}
-	}
-	return cloneOptions, nil
 }

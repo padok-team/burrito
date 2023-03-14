@@ -61,14 +61,10 @@ type RepositoryConfig struct {
 }
 
 type RunnerConfig struct {
-	Path                       string           `yaml:"path"`
-	Branch                     string           `yaml:"branch"`
-	Version                    string           `yaml:"version"`
 	Action                     string           `yaml:"action"`
-	Repository                 RepositoryConfig `yaml:"repository"`
 	Layer                      Layer            `yaml:"layer"`
+	Repository                 RepositoryConfig `yaml:"repository"`
 	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
-	Terragrunt                 TerragruntConfig `yaml:"terragrunt"`
 }
 
 type TerragruntConfig struct {

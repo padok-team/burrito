@@ -28,3 +28,30 @@ type TerragruntConfig struct {
 	Enabled *bool  `json:"enabled,omitempty"`
 	Version string `json:"version,omitempty"`
 }
+
+func GetTerraformVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	version := repository.Spec.TerraformConfig.Version
+	if len(layer.Spec.TerraformConfig.Version) > 0 {
+		version = layer.Spec.TerraformConfig.Version
+	}
+	return version
+}
+
+func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	version := repository.Spec.TerraformConfig.TerragruntConfig.Version
+	if len(layer.Spec.TerraformConfig.TerragruntConfig.Version) > 0 {
+		version = layer.Spec.TerraformConfig.TerragruntConfig.Version
+	}
+	return version
+}
+
+func GetTerragruntEnabled(repository *TerraformRepository, layer *TerraformLayer) bool {
+	enabled := false
+	if repository.Spec.TerraformConfig.TerragruntConfig.Enabled != nil {
+		enabled = *repository.Spec.TerraformConfig.TerragruntConfig.Enabled
+	}
+	if layer.Spec.TerraformConfig.TerragruntConfig.Enabled != nil {
+		enabled = *layer.Spec.TerraformConfig.TerragruntConfig.Enabled
+	}
+	return enabled
+}

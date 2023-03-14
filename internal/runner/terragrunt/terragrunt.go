@@ -20,17 +20,12 @@ type Terragrunt struct {
 	terraform        *terraform.Terraform
 }
 
-func NewTerragrunt(terragruntVersion, terraformVersion, planArtifactPath string) *Terragrunt {
+func NewTerragrunt(terraformExec *terraform.Terraform, terragruntVersion, planArtifactPath string) *Terragrunt {
 	return &Terragrunt{
 		version:          terragruntVersion,
-		terraform:        terraform.NewTerraform(terraformVersion, planArtifactPath),
+		terraform:        terraformExec,
 		planArtifactPath: planArtifactPath,
 	}
-}
-
-func silent(cmd *exec.Cmd) {
-	cmd.Stdout = nil
-	cmd.Stderr = nil
 }
 
 func verbose(cmd *exec.Cmd) {
