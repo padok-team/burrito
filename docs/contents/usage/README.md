@@ -3,6 +3,8 @@
 - [User guide](#user-guide)
   - [Override the runner pod spec](#override-the-runner-pod-spec)
   - [Choose your remediation strategy](#choose-your-remediation-strategy)
+  - [Choose your terraform version](#choose-your-terraform-version)
+  - [Use Terragrunt](#use-terragrunt)
 - [Operator guide](#operator-guide)
   - [Setup a git webhook](#setup-a-git-webhook)
   - [Configuration](#configuration)
@@ -48,7 +50,8 @@ metadata:
   name: random-pets
   namespace: burrito
 spec:
-  terraformVersion: "1.3.1"
+  terraform:
+    version: "1.3.1"
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
@@ -85,7 +88,8 @@ metadata:
   name: random-pets
   namespace: burrito
 spec:
-  terraformVersion: "1.3.1"
+  terraform:
+    version: "1.3.1"
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
@@ -111,6 +115,36 @@ As for the [runner spec override](#override-the-runner-pod-spec), you can specif
 The configuration of the `TerraformLayer` will take precedence.
 
 > :warning: This operator is still experimental. Use `spec.remediationStrategy: "autoApply"` at your own risk.
+
+### Choose your terraform version
+
+You can specify `.spec.terraform.version` at the `TerraformRepository` and `TerraformLayer` level. The configuration in the `TerraformLayer` takes precedence over the configuration in the `TerraformRepository`
+
+### Use Terragrunt
+
+You can specify usage of terragrunt as follow:
+
+```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: random-pets-terragrunt
+spec:
+  terraform:
+    version: "1.3.1"
+    terragrunt:
+      enabled: true
+      version: "0.44.5"
+  remediationStrategy: dry
+  path: "internal/e2e/testdata/terragrunt/random-pets/prod"
+  branch: "feat/handle-terragrunt"
+  repository:
+    kind: TerraformRepository
+    name: burrito
+    namespace: burrito
+```
+
+> This configuration can be specified at the `TerraformRepository` level to be enabled by default in each of its layers.
 
 ## Operator guide
 
