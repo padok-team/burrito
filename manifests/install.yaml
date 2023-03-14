@@ -12,6 +12,9 @@ spec:
     kind: TerraformRepository
     listKind: TerraformRepositoryList
     plural: terraformrepositories
+    shortNames:
+    - tfrs
+    - tfr
     singular: terraformrepository
   scope: Namespaced
   versions:
@@ -217,6 +220,9 @@ spec:
     kind: TerraformLayer
     listKind: TerraformLayerList
     plural: terraformlayers
+    shortNames:
+    - tfls
+    - tfl
     singular: terraformlayer
   scope: Namespaced
   versions:
