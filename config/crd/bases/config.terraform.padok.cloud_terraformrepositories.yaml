@@ -113,6 +113,18 @@ spec:
                   url:
                     type: string
                 type: object
+              terraform:
+                properties:
+                  terragrunt:
+                    properties:
+                      enabled:
+                        type: boolean
+                      version:
+                        type: string
+                    type: object
+                  version:
+                    type: string
+                type: object
             type: object
           status:
             description: TerraformRepositoryStatus defines the observed state of TerraformRepository
