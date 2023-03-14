@@ -95,7 +95,7 @@ func (t *Terragrunt) Show() ([]byte, error) {
 func downloadTerragrunt(version string) (string, error) {
 	cpuArch := runtime.GOARCH
 
-	url := fmt.Sprintf("https://github.com/gruntwork-io/terragrunt/releases/download/v%s/terragrunt_%s", version, cpuArch)
+	url := fmt.Sprintf("https://github.com/gruntwork-io/terragrunt/releases/download/v%s/terragrunt_linux_%s", version, cpuArch)
 
 	response, err := http.Get(url)
 	if err != nil {
