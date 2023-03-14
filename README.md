@@ -1,6 +1,7 @@
 # burrito <!-- omit in toc -->
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Go Report Card](https://goreportcard.com/badge/github.com/padok-team/burrito)](https://goreportcard.com/report/github.com/padok-team/burrito)
 
 <p align="center"><img src="./docs/assets/icon/burrito.png" width="200px" /></p>
 
