@@ -45,6 +45,7 @@ type TerraformRepositoryStatus struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:shortName=tfrs;tfr
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="URL",type=string,JSONPath=`.spec.repository.url`
 // TerraformRepository is the Schema for the terraformrepositories API
