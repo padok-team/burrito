@@ -129,30 +129,6 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 						Name:  "BURRITO_REDIS_DATABASE",
 						Value: fmt.Sprintf("%d", config.Redis.Database),
 					},
-					// {
-					// 	Name:  "BURRITO_RUNNER_REPOSITORY_URL",
-					// 	Value: repository.Spec.Repository.Url,
-					// },
-					// {
-					// 	Name:  "BURRITO_RUNNER_PATH",
-					// 	Value: layer.Spec.Path,
-					// },
-					// {
-					// 	Name:  "BURRITO_RUNNER_BRANCH",
-					// 	Value: layer.Spec.Branch,
-					// },
-					// {
-					// 	Name:  "BURRITO_RUNNER_VERSION",
-					// 	Value: getTerraformVersion(layer, repository),
-					// },
-					// {
-					// 	Name:  "BURRITO_RUNNER_TERRAGRUNT_ENABLED",
-					// 	Value: strconv.FormatBool(getTerragruntEnabled(layer, repository)),
-					// },
-					// {
-					// 	Name:  "BURRITO_RUNNER_TERRAGRUNT_VERSION",
-					// 	Value: getTerragruntVersion(layer, repository),
-					// },
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAME",
 						Value: layer.GetObjectMeta().GetName(),
@@ -201,30 +177,3 @@ func mergeSpecs(defaultSpec corev1.PodSpec, repositorySpec configv1alpha1.Overri
 	}
 	return defaultSpec
 }
-
-// func getTerraformVersion(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) string {
-// 	version := repository.Spec.TerraformConfig.Version
-// 	if len(layer.Spec.TerraformConfig.Version) > 0 {
-// 		version = layer.Spec.TerraformConfig.Version
-// 	}
-// 	return version
-// }
-
-// func getTerragruntVersion(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) string {
-// 	version := repository.Spec.TerraformConfig.TerragruntConfig.Version
-// 	if len(layer.Spec.TerraformConfig.TerragruntConfig.Version) > 0 {
-// 		version = layer.Spec.TerraformConfig.TerragruntConfig.Version
-// 	}
-// 	return version
-// }
-
-// func getTerragruntEnabled(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) bool {
-// 	enabled := false
-// 	if repository.Spec.TerraformConfig.TerragruntConfig.Enabled != nil {
-// 		enabled = *repository.Spec.TerraformConfig.TerragruntConfig.Enabled
-// 	}
-// 	if layer.Spec.TerraformConfig.TerragruntConfig.Enabled != nil {
-// 		enabled = *layer.Spec.TerraformConfig.TerragruntConfig.Enabled
-// 	}
-// 	return enabled
-// }
