@@ -736,7 +736,7 @@ spec:
         args:
         - controllers
         - start
-        image: ghcr.io/padok-team/burrito:feat-handle-terragrunt
+        image: ghcr.io/padok-team/burrito:main
         name: burrito
         imagePullPolicy: Always
         env:
@@ -806,7 +806,7 @@ spec:
             secretKeyRef:
               name: burrito-webhook-secret
               key: burrito-webhook-secret
-        image: ghcr.io/padok-team/burrito:feat-handle-terragrunt
+        image: ghcr.io/padok-team/burrito:main
         name: burrito
         imagePullPolicy: Always
         securityContext:
