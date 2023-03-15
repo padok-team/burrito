@@ -13,6 +13,9 @@ spec:
     listKind: TerraformRepositoryList
     plural: terraformrepositories
     shortNames:
+    - repositories
+    - repository
+    - repo
     - tfrs
     - tfr
     singular: terraformrepository
@@ -221,6 +224,8 @@ spec:
     listKind: TerraformLayerList
     plural: terraformlayers
     shortNames:
+    - layers
+    - layer
     - tfls
     - tfl
     singular: terraformlayer

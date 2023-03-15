@@ -13,6 +13,8 @@ spec:
     listKind: TerraformLayerList
     plural: terraformlayers
     shortNames:
+    - layers
+    - layer
     - tfls
     - tfl
     singular: terraformlayer
