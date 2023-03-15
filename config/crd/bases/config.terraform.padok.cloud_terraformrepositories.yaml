@@ -12,6 +12,12 @@ spec:
     kind: TerraformRepository
     listKind: TerraformRepositoryList
     plural: terraformrepositories
+    shortNames:
+    - repositories
+    - repository
+    - repo
+    - tfrs
+    - tfr
     singular: terraformrepository
   scope: Namespaced
   versions:
