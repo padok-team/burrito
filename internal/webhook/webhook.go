@@ -144,7 +144,7 @@ func (w *Webhook) Handle(payload interface{}) {
 				}
 				ann[annotations.LastBranchCommit] = change.shaAfter
 				if layerFilesHaveChanged(&layer, changedFiles) {
-					ann[annotations.LastConcerningCommit] = change.shaAfter
+					ann[annotations.LastRelevantCommit] = change.shaAfter
 				}
 				err = annotations.Add(context.TODO(), w.Client, layer, ann)
 				if err != nil {

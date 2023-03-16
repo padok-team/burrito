@@ -44,9 +44,9 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	return condition, false
 }
 
-func (r *Reconciler) IsLastConcernginCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsLastRelevantCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
-		Type:               "IsLastConcerningCommitPlanned",
+		Type:               "IsLastRelevantCommitPlanned",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
@@ -65,27 +65,27 @@ func (r *Reconciler) IsLastConcernginCommitPlanned(t *configv1alpha1.TerraformLa
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
-	lastConcerningCommit, ok := t.Annotations[annotations.LastConcerningCommit]
+	lastRelevantCommit, ok := t.Annotations[annotations.LastRelevantCommit]
 	if !ok {
 		condition.Reason = "NoCommitReceived"
 		condition.Message = "No commit has been received from webhook"
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
-	if lastBranchCommit != lastConcerningCommit {
+	if lastBranchCommit != lastRelevantCommit {
 		condition.Reason = "CommitAlreadyHadnled"
-		condition.Message = "The last concerning commit should already have been planned"
+		condition.Message = "The last relevant commit should already have been planned"
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
 	if lastPlannedCommit == lastBranchCommit {
-		condition.Reason = "LastConcerningCommitPlanned"
-		condition.Message = "The last concerngin commit has already been planned"
+		condition.Reason = "LastRelevantCommitPlanned"
+		condition.Message = "The last relevant commit has already been planned"
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
-	condition.Reason = "LastConcerningCommitNotPlanned"
-	condition.Message = "The last received concerning commit has not been planned yet"
+	condition.Reason = "LastRelevantCommitNotPlanned"
+	condition.Message = "The last received relevant commit has not been planned yet"
 	condition.Status = metav1.ConditionFalse
 	return condition, false
 }
