@@ -1238,8 +1238,6 @@ spec:
                 type: object
               path:
                 type: string
-              planOnPullRequest:
-                type: boolean
               remediationStrategy:
                 enum:
                 - dry
@@ -1247,8 +1245,6 @@ spec:
                 type: string
               repository:
                 properties:
-                  kind:
-                    type: string
                   name:
                     type: string
                   namespace:

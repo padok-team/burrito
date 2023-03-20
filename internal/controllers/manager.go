@@ -30,6 +30,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	"github.com/padok-team/burrito/internal/storage/redis"
 
@@ -99,6 +100,15 @@ func (c *Controllers) Exec() {
 				log.Fatalf("unable to create repository controller: %s", err)
 			}
 			log.Infof("repository controller started successfully")
+		case "pullrequest":
+			if err = (&terraformpullrequest.Reconciler{
+				Client: mgr.GetClient(),
+				Scheme: mgr.GetScheme(),
+				Config: c.config,
+			}).SetupWithManager(mgr); err != nil {
+				log.Fatalf("unable to create pullrequest controller: %s", err)
+			}
+			log.Infof("pullrequest controller started successfully")
 		default:
 			log.Infof("unrecognized controller type %s, ignoring", ctrlType)
 		}

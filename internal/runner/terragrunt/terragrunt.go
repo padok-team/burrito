@@ -1,6 +1,7 @@
 package terragrunt
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -53,6 +54,7 @@ func (t *Terragrunt) getDefaultOptions(command string) []string {
 		t.terraform.ExecPath,
 		"--terragrunt-working-dir",
 		t.workingDir,
+		"-no-color",
 	}
 }
 
@@ -89,15 +91,24 @@ func (t *Terragrunt) Apply() error {
 	return nil
 }
 
-func (t *Terragrunt) Show() ([]byte, error) {
-	options := append(t.getDefaultOptions("show"), "-json", t.planArtifactPath)
+func (t *Terragrunt) Show(mode string) ([]byte, error) {
+	options := t.getDefaultOptions("show")
+	switch mode {
+	case "json":
+		options = append(options, "-json", t.planArtifactPath)
+	case "pretty":
+		options = append(options, t.planArtifactPath)
+	default:
+		return nil, errors.New("invalid mode")
+	}
 	cmd := exec.Command(t.execPath, options...)
 	cmd.Dir = t.workingDir
-	jsonBytes, err := cmd.Output()
+	output, err := cmd.Output()
+
 	if err != nil {
 		return nil, err
 	}
-	return jsonBytes, nil
+	return output, nil
 }
 
 func downloadTerragrunt(version string) (string, error) {

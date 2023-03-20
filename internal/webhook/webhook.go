@@ -1,28 +1,24 @@
 package webhook
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"html"
 	"net/http"
-	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/go-playground/webhooks/v6/github"
-	"github.com/go-playground/webhooks/v6/gitlab"
-	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/padok-team/burrito/internal/webhook/event"
+	"github.com/padok-team/burrito/internal/webhook/github"
+	"github.com/padok-team/burrito/internal/webhook/gitlab"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Handler interface {
@@ -31,15 +27,20 @@ type Handler interface {
 
 type Webhook struct {
 	client.Client
-	config *config.Config
-	github *github.Webhook
-	gitlab *gitlab.Webhook
+	config    *config.Config
+	providers []Provider
 }
 
 func New(c *config.Config) *Webhook {
 	return &Webhook{
 		config: c,
 	}
+}
+
+type Provider interface {
+	Init(*config.Config) error
+	IsFromProvider(*http.Request) bool
+	GetEvent(*http.Request) (event.Event, error)
 }
 
 func (w *Webhook) Init() error {
@@ -53,171 +54,58 @@ func (w *Webhook) Init() error {
 		return err
 	}
 	w.Client = cl
-	githubWebhook, err := github.New(github.Options.Secret(w.config.Server.Webhook.Github.Secret))
-	if err != nil {
-		return err
+	providers := []Provider{}
+	for _, p := range []Provider{&github.Github{}, &gitlab.Gitlab{}} {
+		err = p.Init(w.config)
+		if err != nil {
+			log.Warnf("failed to initialize webhook provider: %s", err)
+			continue
+		}
+		providers = append(providers, p)
 	}
-	w.github = githubWebhook
-	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(w.config.Server.Webhook.Gitlab.Secret))
-	if err != nil {
-		return err
+	if len(providers) == 0 {
+		log.Warnf("no webhook provider initialized, every event will be considered as unknown")
 	}
-	w.gitlab = gitlabWebhook
+	w.providers = providers
 	return nil
 }
 
 func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 	log.Infof("webhook event received...")
 	return func(writer http.ResponseWriter, r *http.Request) {
-		var payload interface{}
 		var err error
-
-		switch {
-		case r.Header.Get("X-GitHub-Event") != "":
-			log.Infof("webhook has detected a GitHub event")
-			payload, err = w.github.Parse(r, github.PushEvent, github.PingEvent)
-			if errors.Is(err, github.ErrHMACVerificationFailed) {
-				log.Errorf("GitHub webhook HMAC verification failed: %s", err)
+		var event event.Event
+		for _, p := range w.providers {
+			if p.IsFromProvider(r) {
+				event, err = p.GetEvent(r)
+				break
 			}
-		case r.Header.Get("X-Gitlab-Event") != "":
-			log.Infof("webhook has detected a GitLab event")
-			payload, err = w.gitlab.Parse(r, gitlab.PushEvents, gitlab.TagEvents)
-			if errors.Is(err, gitlab.ErrGitLabTokenVerificationFailed) {
-				log.Errorf("GitLab webhook token verification failed: %s", err)
-			}
-		default:
-			log.Infof("ignoring unknown webhook event")
-			http.Error(writer, "Unknown webhook event", http.StatusBadRequest)
-			return
 		}
-
 		if err != nil {
 			log.Errorf("webhook processing failed: %s", err)
 			status := http.StatusBadRequest
 			if r.Method != "POST" {
 				status = http.StatusMethodNotAllowed
 			}
-			http.Error(writer, fmt.Sprintf("Webhook processing failed: %s", html.EscapeString(err.Error())), status)
+			http.Error(writer, fmt.Sprintf("webhook processing failed: %s", html.EscapeString(err.Error())), status)
 			return
 		}
+		if event == nil {
+			log.Infof("ignoring unknown webhook event")
+			http.Error(writer, "Unknown webhook event", http.StatusBadRequest)
+		}
 
-		w.Handle(payload)
+		err = w.Handle(event)
+		if err != nil {
+			log.Errorf("webhook processing worked but errored during event handling: %s", err)
+		}
 	}
 }
 
-func (w *Webhook) Handle(payload interface{}) {
-	webUrls, sshUrls, revision, change, touchedHead, changedFiles := affectedRevisionInfo(payload)
-	allUrls := append(webUrls, sshUrls...)
-
-	if len(allUrls) == 0 {
-		log.Infof("ignoring webhook event")
-		return
-	}
-	for _, url := range allUrls {
-		log.Infof("received event repo: %s, revision: %s, touchedHead: %v", url, revision, touchedHead)
-	}
-
-	repositories := &configv1alpha1.TerraformRepositoryList{}
-	err := w.Client.List(context.TODO(), repositories)
+func (w *Webhook) Handle(e event.Event) error {
+	err := e.Handle(w.Client)
 	if err != nil {
-		log.Errorf("could not get terraform repositories: %s", err)
+		return err
 	}
-
-	for _, url := range allUrls {
-		for _, repo := range repositories.Items {
-			log.Infof("evaluating terraform repository %s for url %s", repo.Name, url)
-			if repo.Spec.Repository.Url != url {
-				log.Infof("evaluating terraform repository %s url %s not matching %s", repo.Name, repo.Spec.Repository.Url, url)
-				continue
-			}
-			layers := &configv1alpha1.TerraformLayerList{}
-			err := w.Client.List(context.TODO(), layers, &client.ListOptions{})
-			if err != nil {
-				log.Errorf("could not get terraform layers: %s", err)
-			}
-			for _, layer := range layers.Items {
-				ann := map[string]string{}
-				log.Printf("evaluating terraform layer %s for revision %s", layer.Name, revision)
-				if layer.Spec.Branch != revision {
-					log.Infof("branch %s for terraform layer %s not matching revision %s", layer.Spec.Branch, layer.Name, revision)
-					continue
-				}
-				ann[annotations.LastBranchCommit] = change.shaAfter
-				if layerFilesHaveChanged(&layer, changedFiles) {
-					ann[annotations.LastRelevantCommit] = change.shaAfter
-				}
-				err = annotations.Add(context.TODO(), w.Client, layer, ann)
-				if err != nil {
-					log.Errorf("could not add annotation to terraform layer %s", err)
-				}
-			}
-		}
-	}
-	return
-}
-
-type changeInfo struct {
-	shaBefore string
-	shaAfter  string
-}
-
-func parseRevision(ref string) string {
-	refParts := strings.SplitN(ref, "/", 3)
-	return refParts[len(refParts)-1]
-}
-
-func affectedRevisionInfo(payloadIf interface{}) (webUrls []string, sshUrls []string, revision string, change changeInfo, touchedHead bool, changedFiles []string) {
-	switch payload := payloadIf.(type) {
-	case github.PushPayload:
-		log.Infof("parsing GitHub push event payload")
-		webUrls = append(webUrls, payload.Repository.HTMLURL)
-		sshUrls = append(sshUrls, payload.Repository.SSHURL)
-		revision = parseRevision(payload.Ref)
-		change.shaAfter = parseRevision(payload.After)
-		change.shaBefore = parseRevision(payload.Before)
-		touchedHead = bool(payload.Repository.DefaultBranch == revision)
-		for _, commit := range payload.Commits {
-			changedFiles = append(changedFiles, commit.Added...)
-			changedFiles = append(changedFiles, commit.Modified...)
-			changedFiles = append(changedFiles, commit.Removed...)
-		}
-	case gitlab.PushEventPayload:
-		log.Infof("parsing GitLab push event payload")
-		webUrls = append(webUrls, payload.Project.WebURL)
-		revision = parseRevision(payload.Ref)
-		change.shaAfter = parseRevision(payload.After)
-		change.shaBefore = parseRevision(payload.Before)
-		touchedHead = bool(payload.Project.DefaultBranch == revision)
-		for _, commit := range payload.Commits {
-			changedFiles = append(changedFiles, commit.Added...)
-			changedFiles = append(changedFiles, commit.Modified...)
-			changedFiles = append(changedFiles, commit.Removed...)
-		}
-	default:
-		log.Infof("event not handled")
-	}
-	return webUrls, sshUrls, revision, change, touchedHead, changedFiles
-}
-
-func layerFilesHaveChanged(layer *configv1alpha1.TerraformLayer, changedFiles []string) bool {
-	if len(changedFiles) == 0 {
-		return true
-	}
-
-	// At last one changed file must be under refresh path
-	for _, f := range changedFiles {
-		f = ensureAbsPath(f)
-		if strings.Contains(f, layer.Spec.Path) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func ensureAbsPath(input string) string {
-	if !filepath.IsAbs(input) {
-		return string(filepath.Separator) + input
-	}
-	return input
+	return nil
 }

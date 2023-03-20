@@ -12,8 +12,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+type Handler func(context.Context, *Reconciler, *configv1alpha1.TerraformLayer, *configv1alpha1.TerraformRepository) ctrl.Result
+
 type State interface {
-	getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result
+	getHandler() Handler
 }
 
 func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
@@ -24,7 +26,7 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	// c3, hasFailed := HasFailed(r)
 	conditions := []metav1.Condition{c1, c2, c3}
 	switch {
-	case isPlanArtifactUpToDate && isApplyUpToDate:
+	case isPlanArtifactUpToDate && isApplyUpToDate && isLastRelevantCommitPlanned:
 		log.Infof("layer %s is up to date, waiting for a new drift detection cycle", layer.Name)
 		return &Idle{}, conditions
 	case !isPlanArtifactUpToDate || !isLastRelevantCommitPlanned:
@@ -41,7 +43,7 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 
 type Idle struct{}
 
-func (s *Idle) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *Idle) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
 	}
@@ -49,7 +51,7 @@ func (s *Idle) getHandler() func(ctx context.Context, r *Reconciler, layer *conf
 
 type PlanNeeded struct{}
 
-func (s *PlanNeeded) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *PlanNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
 		err := lock.CreateLock(ctx, r.Client, layer)
@@ -70,7 +72,7 @@ func (s *PlanNeeded) getHandler() func(ctx context.Context, r *Reconciler, layer
 
 type ApplyNeeded struct{}
 
-func (s *ApplyNeeded) getHandler() func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
 		remediationStrategy := getRemediationStrategy(repository, layer)

@@ -33,12 +33,10 @@ type TerraformLayerSpec struct {
 	TerraformConfig     TerraformConfig          `json:"terraform,omitempty"`
 	Repository          TerraformLayerRepository `json:"repository,omitempty"`
 	RemediationStrategy RemediationStrategy      `json:"remediationStrategy,omitempty"`
-	PlanOnPullRequest   bool                     `json:"planOnPullRequest,omitempty"`
 	OverrideRunnerSpec  OverrideRunnerSpec       `json:"overrideRunnerSpec,omitempty"`
 }
 
 type TerraformLayerRepository struct {
-	Kind      string `json:"kind,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
 }

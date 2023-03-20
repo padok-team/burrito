@@ -11,7 +11,6 @@ builds:
   - -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}
   goos:
   - linux
-  - darwin
   main: ./
   binary: burrito
 archives:

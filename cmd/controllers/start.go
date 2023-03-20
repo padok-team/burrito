@@ -27,7 +27,7 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 	defaultOnErrorTimer, _ := time.ParseDuration("1m")
 	defaultWaitActionTimer, _ := time.ParseDuration("1m")
 
-	cmd.Flags().StringSliceVar(&app.Config.Controller.Types, "types", []string{"layer", "repository"}, "list of controllers to start")
+	cmd.Flags().StringSliceVar(&app.Config.Controller.Types, "types", []string{"layer", "repository", "pullrequest"}, "list of controllers to start")
 
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.DriftDetection, "drift-detection-period", defaultDriftDetectionTimer, "period between two plans. Must end with s, m or h.")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.OnError, "on-error-period", defaultOnErrorTimer, "period between two runners launch when an error occurred. Must end with s, m or h.")
