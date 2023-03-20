@@ -20,14 +20,14 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	log := log.WithContext(ctx)
 	c1, isPlanArtifactUpToDate := r.IsPlanArtifactUpToDate(layer)
 	c2, isApplyUpToDate := r.IsApplyUpToDate(layer)
-	c3, isLastConcerningCommitPlanned := r.IsLastConcernginCommitPlanned(layer)
+	c3, isLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
 	// c3, hasFailed := HasFailed(r)
 	conditions := []metav1.Condition{c1, c2, c3}
 	switch {
 	case isPlanArtifactUpToDate && isApplyUpToDate:
 		log.Infof("layer %s is up to date, waiting for a new drift detection cycle", layer.Name)
 		return &Idle{}, conditions
-	case !isPlanArtifactUpToDate || !isLastConcerningCommitPlanned:
+	case !isPlanArtifactUpToDate || !isLastRelevantCommitPlanned:
 		log.Infof("layer %s needs to be planned, acquiring lock and creating a new runner", layer.Name)
 		return &PlanNeeded{}, conditions
 	case isPlanArtifactUpToDate && !isApplyUpToDate:

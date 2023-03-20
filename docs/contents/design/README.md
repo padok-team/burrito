@@ -56,7 +56,7 @@ The status of a `TerraformLayer` is defined using the [conditions standards defi
 
 - `IsPlanArtifactUpToDate`. This condition is used for drift detection. The evaluation is made by compraing the timestamp of the last `terraform plan` which ran and the current date. The timestamp of the last plan is "stored" using an annotation.
 - `IsApplyUpToDate`. This condition is used to check if an `apply` needs to run after the last `plan`. Comparison is made by comparing a checksum of the last planned binary and a checksum last applied binary stored in the annotations.
-- `IsLastConcerningCommitPlanned`. This condition is used to check if a new commit has been made to the layer and need to be applied. It is evaluated by comparing the commit used for the last `plan`, the last commit which intoduced changes to the layer and the last commit made to the same branch of the repository. Those commits are "stored" as annotations.
+- `IsLastRelevantCommitPlanned`. This condition is used to check if a new commit has been made to the layer and need to be applied. It is evaluated by comparing the commit used for the last `plan`, the last commit which intoduced changes to the layer and the last commit made to the same branch of the repository. Those commits are "stored" as annotations.
 
 > N.B. We use annotations to store information because we do not want to rely too heavily on the uptime of the redis instance.
 
