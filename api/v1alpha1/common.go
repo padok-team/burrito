@@ -70,6 +70,7 @@ func GetTerragruntEnabled(repository *TerraformRepository, layer *TerraformLayer
 
 func getOverrideRunenrSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
 	return OverrideRunnerSpec{
+		Tolerations:  mergeTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
 		NodeSelector: mergeMaps(repository.Spec.OverrideRunnerSpec.NodeSelector, layer.Spec.OverrideRunnerSpec.NodeSelector),
 		Metadata: MetadataOverride{
 			Annotations: mergeMaps(repository.Spec.OverrideRunnerSpec.Metadata.Annotations, layer.Spec.OverrideRunnerSpec.Metadata.Annotations),
@@ -78,6 +79,23 @@ func getOverrideRunenrSpec(repository *TerraformRepository, layer *TerraformLaye
 		Env: mergeEnvVars(repository.Spec.OverrideRunnerSpec.Env, layer.Spec.OverrideRunnerSpec.Env),
 	}
 
+}
+
+func mergeTolerations(a, b []corev1.Toleration) []corev1.Toleration {
+	result := []corev1.Toleration{}
+	tempMap := map[string]corev1.Toleration{}
+
+	for _, elt := range a {
+		tempMap[elt.Key] = elt
+	}
+	for _, elt := range b {
+		tempMap[elt.Key] = elt
+	}
+
+	for _, v := range tempMap {
+		result = append(result, v)
+	}
+	return result
 }
 
 func mergeEnvVars(a, b []corev1.EnvVar) []corev1.EnvVar {
