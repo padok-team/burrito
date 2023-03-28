@@ -68,7 +68,7 @@ func GetTerragruntEnabled(repository *TerraformRepository, layer *TerraformLayer
 	return enabled
 }
 
-func getOverrideRunenrSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
+func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
 	return OverrideRunnerSpec{
 		Tolerations:  mergeTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
 		NodeSelector: mergeMaps(repository.Spec.OverrideRunnerSpec.NodeSelector, layer.Spec.OverrideRunnerSpec.NodeSelector),
