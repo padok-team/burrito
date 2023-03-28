@@ -208,6 +208,8 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     type: array
+                  image:
+                    type: string
                   imagePullSecrets:
                     items:
                       description: LocalObjectReference contains enough information
@@ -226,8 +228,6 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
-                      generateName:
-                        type: string
                       labels:
                         additionalProperties:
                           type: string
