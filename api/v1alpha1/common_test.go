@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
@@ -582,6 +583,98 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				ServiceAccountName: "overrdie",
 			},
 		},
+		{
+			"ChooseRepositoryResources",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu":    *resource.NewQuantity(1, resource.DecimalSI),
+								"memory": *resource.NewQuantity(2, resource.DecimalSI),
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				Resources: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu":    *resource.NewQuantity(1, resource.DecimalSI),
+						"memory": *resource.NewQuantity(2, resource.DecimalSI),
+					},
+				},
+			},
+		},
+		{
+			"ChooseLayerResources",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu":    *resource.NewQuantity(1, resource.DecimalSI),
+								"memory": *resource.NewQuantity(2, resource.DecimalSI),
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Resources: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu":    *resource.NewQuantity(1, resource.DecimalSI),
+						"memory": *resource.NewQuantity(2, resource.DecimalSI),
+					},
+				},
+			},
+		},
+		{
+			"OverrideRepositoryResourcesLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu":    *resource.NewQuantity(2, resource.DecimalSI),
+								"memory": *resource.NewQuantity(2, resource.DecimalSI),
+							},
+							Requests: corev1.ResourceList{
+								"cpu": *resource.NewQuantity(1, resource.DecimalSI),
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Resources: corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								"cpu": *resource.NewQuantity(3, resource.DecimalSI),
+							},
+							Requests: corev1.ResourceList{
+								"memory": *resource.NewQuantity(1, resource.DecimalSI),
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Resources: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						"cpu":    *resource.NewQuantity(3, resource.DecimalSI),
+						"memory": *resource.NewQuantity(2, resource.DecimalSI),
+					},
+					Requests: corev1.ResourceList{
+						"cpu":    *resource.NewQuantity(1, resource.DecimalSI),
+						"memory": *resource.NewQuantity(1, resource.DecimalSI),
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -640,6 +733,17 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				t.Errorf("different serivce account names: got %s expect %s", result.ServiceAccountName, tc.expectedSpec.ServiceAccountName)
 			}
 
+			// Check Resources
+			for k, v := range result.Resources.Limits {
+				if v != tc.expectedSpec.Resources.Limits[k] {
+					t.Errorf("different limit value for %s: got %v expected %v", k, v, tc.expectedSpec.Resources.Limits[k])
+				}
+			}
+			for k, v := range result.Resources.Requests {
+				if v != tc.expectedSpec.Resources.Requests[k] {
+					t.Errorf("different request value for %s: got %v expected %v", k, v, tc.expectedSpec.Resources.Requests[k])
+				}
+			}
 		})
 	}
 }
