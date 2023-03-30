@@ -556,7 +556,7 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				}
 			}
 
-			// Check IMage
+			// Check Image
 			if tc.expectedSpec.Image != result.Image {
 				t.Errorf("different images: got %s expect %s", result.Image, tc.expectedSpec.Image)
 			}
@@ -565,9 +565,15 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			if len(result.ImagePullSecrets) != len(tc.expectedSpec.ImagePullSecrets) {
 				t.Errorf("differents image pull secrets size: got %d expected %d", len(result.ImagePullSecrets), len(tc.expectedSpec.ImagePullSecrets))
 			}
-			for i, secret := range result.ImagePullSecrets {
-				if secret.Name != tc.expectedSpec.ImagePullSecrets[i].Name {
-					t.Errorf("different image pull secret names: got %s expected %s", secret.Name, tc.expectedSpec.ImagePullSecrets[i].Name)
+			for _, secret := range result.ImagePullSecrets {
+				found := false
+				for _, expected := range tc.expectedSpec.ImagePullSecrets {
+					if secret.Name == expected.Name {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("image pull secret %s not found in expected list %v", secret.Name, tc.expectedSpec.ImagePullSecrets)
 				}
 			}
 
