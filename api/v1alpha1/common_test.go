@@ -534,6 +534,54 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				NodeSelector: map[string]string{"exists-in-both": "true", "only-in-layer": "true"},
 			},
 		},
+		{
+			"ChooseRepositoryServiceAccount",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						ServiceAccountName: "test",
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				ServiceAccountName: "test",
+			},
+		},
+		{
+			"ChooseLayerServiceAccount",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						ServiceAccountName: "test",
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				ServiceAccountName: "test",
+			},
+		},
+		{
+			"OverrideRepositoryServiceAccountInLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						ServiceAccountName: "test",
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						ServiceAccountName: "overrdie",
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				ServiceAccountName: "overrdie",
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -586,6 +634,12 @@ func TestOverrideRunnerSpec(t *testing.T) {
 					t.Errorf("different node selector value for label %s: got %s expected %s", k, v, tc.expectedSpec.NodeSelector[k])
 				}
 			}
+
+			// Check ServiceAccountName
+			if tc.expectedSpec.ServiceAccountName != result.ServiceAccountName {
+				t.Errorf("different serivce account names: got %s expect %s", result.ServiceAccountName, tc.expectedSpec.ServiceAccountName)
+			}
+
 		})
 	}
 }
