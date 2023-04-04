@@ -939,6 +939,93 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"VolumesOnlyInRepo",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Volumes: []corev1.Volume{
+							{Name: "only-repo"},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				Volumes: []corev1.Volume{
+					{Name: "only-repo"},
+				},
+			},
+		},
+		{
+			"VolumesOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Volumes: []corev1.Volume{
+							{Name: "only-layer"},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Volumes: []corev1.Volume{
+					{Name: "only-layer"},
+				},
+			},
+		},
+		{
+			"VolumesInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Volumes: []corev1.Volume{
+							{Name: "only-repo"},
+							{
+								Name: "both",
+								VolumeSource: corev1.VolumeSource{
+									HostPath: &corev1.HostPathVolumeSource{
+										Path: "/repo/path",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Volumes: []corev1.Volume{
+							{Name: "only-layer"},
+							{
+								Name: "both",
+								VolumeSource: corev1.VolumeSource{
+									HostPath: &corev1.HostPathVolumeSource{
+										Path: "/layer/path",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Volumes: []corev1.Volume{
+					{Name: "only-repo"},
+					{
+						Name: "both",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/layer/path",
+							},
+						},
+					},
+					{Name: "only-layer"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -1046,6 +1133,22 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				}
 				if !found {
 					t.Errorf("env from %v not found in expected list %v", envFrom, tc.expectedSpec.EnvFrom)
+				}
+			}
+
+			// Check Volumes
+			if len(result.Volumes) != len(tc.expectedSpec.Volumes) {
+				t.Errorf("differents volumes size: got %d expected %d", len(result.Volumes), len(tc.expectedSpec.Volumes))
+			}
+			for _, vol := range result.Volumes {
+				found := false
+				for _, expected := range tc.expectedSpec.Volumes {
+					if vol.Name == expected.Name {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("volume %v not found in expected list %v", vol, tc.expectedSpec.Volumes)
 				}
 			}
 		})
