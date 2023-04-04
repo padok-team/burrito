@@ -1101,6 +1101,111 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"MetadataOnlyInRepo",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Metadata: configv1alpha1.MetadataOverride{
+							Annotations: map[string]string{
+								"only-repo": "1",
+							},
+							Labels: map[string]string{
+								"only-repo": "1",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				Metadata: configv1alpha1.MetadataOverride{
+					Annotations: map[string]string{
+						"only-repo": "1",
+					},
+					Labels: map[string]string{
+						"only-repo": "1",
+					},
+				},
+			},
+		},
+		{
+			"MetadataOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Metadata: configv1alpha1.MetadataOverride{
+							Annotations: map[string]string{
+								"only-layer": "1",
+							},
+							Labels: map[string]string{
+								"only-layer": "1",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Metadata: configv1alpha1.MetadataOverride{
+					Annotations: map[string]string{
+						"only-layer": "1",
+					},
+					Labels: map[string]string{
+						"only-layer": "1",
+					},
+				},
+			},
+		},
+		{
+			"MetadataInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Metadata: configv1alpha1.MetadataOverride{
+							Annotations: map[string]string{
+								"only-repo": "1",
+								"in-both":   "0",
+							},
+							Labels: map[string]string{
+								"only-repo": "1",
+								"in-both":   "0",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Metadata: configv1alpha1.MetadataOverride{
+							Annotations: map[string]string{
+								"only-layer": "1",
+								"in-both":    "1",
+							},
+							Labels: map[string]string{
+								"only-layer": "1",
+								"in-both":    "1",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Metadata: configv1alpha1.MetadataOverride{
+					Annotations: map[string]string{
+						"only-repo":  "1",
+						"in-both":    "1",
+						"only-layer": "1",
+					},
+					Labels: map[string]string{
+						"only-repo":  "1",
+						"in-both":    "1",
+						"only-layer": "1",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -1241,6 +1346,26 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				}
 				if !found {
 					t.Errorf("volume mount %v not found in expected list %v", vol, tc.expectedSpec.VolumeMounts)
+				}
+			}
+
+			// Check Metadata.Annotations
+			if len(result.Metadata.Annotations) != len(tc.expectedSpec.Metadata.Annotations) {
+				t.Errorf("differents annotations size: got %d expected %d", len(result.Metadata.Annotations), len(tc.expectedSpec.Metadata.Annotations))
+			}
+			for k, v := range result.Metadata.Annotations {
+				if tc.expectedSpec.Metadata.Annotations[k] != v {
+					t.Errorf("different annotation value for key %s: expected %s got %s", k, tc.expectedSpec.Metadata.Annotations[k], v)
+				}
+			}
+
+			// Check Metadata.v
+			if len(result.Metadata.Labels) != len(tc.expectedSpec.Metadata.Labels) {
+				t.Errorf("differents labels size: got %d expected %d", len(result.Metadata.Labels), len(tc.expectedSpec.Metadata.Labels))
+			}
+			for k, v := range result.Metadata.Labels {
+				if tc.expectedSpec.Metadata.Labels[k] != v {
+					t.Errorf("different label value for key %s: expected %s got %s", k, tc.expectedSpec.Metadata.Labels[k], v)
 				}
 			}
 		})
