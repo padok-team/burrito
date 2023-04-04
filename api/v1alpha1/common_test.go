@@ -1026,6 +1026,81 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"VolumeMountsOnlyInRepo",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						VolumeMounts: []corev1.VolumeMount{
+							{Name: "only-repo"},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				VolumeMounts: []corev1.VolumeMount{
+					{Name: "only-repo"},
+				},
+			},
+		},
+		{
+			"VolumeMountsOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						VolumeMounts: []corev1.VolumeMount{
+							{Name: "only-layer"},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				VolumeMounts: []corev1.VolumeMount{
+					{Name: "only-layer"},
+				},
+			},
+		},
+		{
+			"VolumeMountsInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						VolumeMounts: []corev1.VolumeMount{
+							{Name: "only-repo"},
+							{
+								Name:      "both",
+								MountPath: "/repo/path",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						VolumeMounts: []corev1.VolumeMount{
+							{Name: "only-layer"},
+							{
+								Name:      "both",
+								MountPath: "/layer/path",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				VolumeMounts: []corev1.VolumeMount{
+					{Name: "only-layer"},
+					{
+						Name:      "both",
+						MountPath: "/layer/path",
+					},
+					{Name: "only-repo"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -1149,6 +1224,23 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				}
 				if !found {
 					t.Errorf("volume %v not found in expected list %v", vol, tc.expectedSpec.Volumes)
+				}
+			}
+
+			// Check VolumeMounts
+			if len(result.VolumeMounts) != len(tc.expectedSpec.VolumeMounts) {
+				t.Errorf("differents volume mounts size: got %d expected %d", len(result.VolumeMounts), len(tc.expectedSpec.VolumeMounts))
+			}
+			for _, vol := range result.VolumeMounts {
+				found := false
+				for _, expected := range tc.expectedSpec.VolumeMounts {
+					// We only check for MountPath as it is enough to validate that layer config overrides the repo one
+					if vol.Name == expected.Name && vol.MountPath == expected.MountPath {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("volume mount %v not found in expected list %v", vol, tc.expectedSpec.VolumeMounts)
 				}
 			}
 		})
