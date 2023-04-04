@@ -118,14 +118,14 @@ func mergeEnvFrom(a, b []corev1.EnvFromSource) []corev1.EnvFromSource {
 	tempConfigMap := map[string]string{}
 
 	for _, elt := range a {
-		if len(elt.ConfigMapRef.LocalObjectReference.Name) > 0 {
+		if elt.ConfigMapRef != nil {
 			tempConfigMap[elt.ConfigMapRef.LocalObjectReference.Name] = elt.Prefix
 		} else {
 			tempSecret[elt.SecretRef.LocalObjectReference.Name] = elt.Prefix
 		}
 	}
 	for _, elt := range b {
-		if len(elt.ConfigMapRef.LocalObjectReference.Name) > 0 {
+		if elt.ConfigMapRef != nil {
 			tempConfigMap[elt.ConfigMapRef.LocalObjectReference.Name] = elt.Prefix
 		} else {
 			tempSecret[elt.SecretRef.LocalObjectReference.Name] = elt.Prefix
@@ -146,7 +146,7 @@ func mergeEnvFrom(a, b []corev1.EnvFromSource) []corev1.EnvFromSource {
 	for k, v := range tempSecret {
 		result = append(result, corev1.EnvFromSource{
 			Prefix: v,
-			ConfigMapRef: &corev1.ConfigMapEnvSource{
+			SecretRef: &corev1.SecretEnvSource{
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: k,
 				},

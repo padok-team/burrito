@@ -774,6 +774,171 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"EnvFromOnlyInRepo",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						EnvFrom: []corev1.EnvFromSource{
+							{
+								ConfigMapRef: &corev1.ConfigMapEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "repo-cm"},
+								},
+							},
+							{
+								SecretRef: &corev1.SecretEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "repo-secret"},
+								},
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				EnvFrom: []corev1.EnvFromSource{
+					{
+						ConfigMapRef: &corev1.ConfigMapEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "repo-cm"},
+						},
+					},
+					{
+						SecretRef: &corev1.SecretEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "repo-secret"},
+						},
+					},
+				},
+			},
+		},
+		{
+			"EnvFromOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						EnvFrom: []corev1.EnvFromSource{
+							{
+								ConfigMapRef: &corev1.ConfigMapEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "layer-cm"},
+								},
+							},
+							{
+								SecretRef: &corev1.SecretEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "layer-secret"},
+								},
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				EnvFrom: []corev1.EnvFromSource{
+					{
+						ConfigMapRef: &corev1.ConfigMapEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "layer-cm"},
+						},
+					},
+					{
+						SecretRef: &corev1.SecretEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "layer-secret"},
+						},
+					},
+				},
+			},
+		},
+		{
+			"EnvFromInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						EnvFrom: []corev1.EnvFromSource{
+							{
+								ConfigMapRef: &corev1.ConfigMapEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "repo-cm"},
+								},
+							},
+							{
+								SecretRef: &corev1.SecretEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "repo-secret"},
+								},
+							},
+							{
+								ConfigMapRef: &corev1.ConfigMapEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "both-cm"},
+								},
+							},
+							{
+								SecretRef: &corev1.SecretEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "both-secret"},
+								},
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						EnvFrom: []corev1.EnvFromSource{
+							{
+								ConfigMapRef: &corev1.ConfigMapEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "layer-cm"},
+								},
+							},
+							{
+								SecretRef: &corev1.SecretEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "layer-secret"},
+								},
+							},
+							{
+								ConfigMapRef: &corev1.ConfigMapEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "both-cm"},
+								},
+							},
+							{
+								SecretRef: &corev1.SecretEnvSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "both-secret"},
+								},
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				EnvFrom: []corev1.EnvFromSource{
+					{
+						ConfigMapRef: &corev1.ConfigMapEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "repo-cm"},
+						},
+					},
+					{
+						SecretRef: &corev1.SecretEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "repo-secret"},
+						},
+					},
+					{
+						ConfigMapRef: &corev1.ConfigMapEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "layer-cm"},
+						},
+					},
+					{
+						SecretRef: &corev1.SecretEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "layer-secret"},
+						},
+					},
+					{
+						ConfigMapRef: &corev1.ConfigMapEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "both-cm"},
+						},
+					},
+					{
+						SecretRef: &corev1.SecretEnvSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "both-secret"},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -846,7 +1011,7 @@ func TestOverrideRunnerSpec(t *testing.T) {
 
 			// Check Env
 			if len(result.Env) != len(tc.expectedSpec.Env) {
-				t.Errorf("differents ev size: got %d expected %d", len(result.Env), len(tc.expectedSpec.Env))
+				t.Errorf("differents env size: got %d expected %d", len(result.Env), len(tc.expectedSpec.Env))
 			}
 			for _, env := range result.Env {
 				found := false
@@ -857,6 +1022,30 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				}
 				if !found {
 					t.Errorf("env %v not found in expected list %v", env, tc.expectedSpec.Env)
+				}
+			}
+
+			// Check EnvFrom
+			if len(result.EnvFrom) != len(tc.expectedSpec.EnvFrom) {
+				t.Errorf("differents env from size: got %d expected %d", len(result.EnvFrom), len(tc.expectedSpec.EnvFrom))
+			}
+			for _, envFrom := range result.EnvFrom {
+				found := false
+				for _, expected := range tc.expectedSpec.EnvFrom {
+					// We use two different if statements because, if we don't there might ba a nil pointer dereference
+					if envFrom.ConfigMapRef != nil && expected.ConfigMapRef != nil {
+						if envFrom.ConfigMapRef.LocalObjectReference.Name == expected.ConfigMapRef.LocalObjectReference.Name {
+							found = true
+						}
+					}
+					if envFrom.SecretRef != nil && expected.SecretRef != nil {
+						if envFrom.SecretRef.LocalObjectReference.Name == expected.SecretRef.LocalObjectReference.Name {
+							found = true
+						}
+					}
+				}
+				if !found {
+					t.Errorf("env from %v not found in expected list %v", envFrom, tc.expectedSpec.EnvFrom)
 				}
 			}
 		})
