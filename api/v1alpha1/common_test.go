@@ -675,6 +675,105 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"EnvOnlyInRepo",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "ONLY_REPO",
+								Value: "1",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ONLY_REPO",
+						Value: "1",
+					},
+				},
+			},
+		},
+		{
+			"EnvOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "ONLY_LAYER",
+								Value: "1",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ONLY_LAYER",
+						Value: "1",
+					},
+				},
+			},
+		},
+		{
+			"EnvInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "ONLY_REPO",
+								Value: "1",
+							},
+							{
+								Name:  "IN_BOTH",
+								Value: "0",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "ONLY_LAYER",
+								Value: "1",
+							},
+							{
+								Name:  "IN_BOTH",
+								Value: "1",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "ONLY_REPO",
+						Value: "1",
+					},
+					{
+						Name:  "IN_BOTH",
+						Value: "1",
+					},
+					{
+						Name:  "ONLY_LAYER",
+						Value: "1",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -742,6 +841,22 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			for k, v := range result.Resources.Requests {
 				if v != tc.expectedSpec.Resources.Requests[k] {
 					t.Errorf("different request value for %s: got %v expected %v", k, v, tc.expectedSpec.Resources.Requests[k])
+				}
+			}
+
+			// Check Env
+			if len(result.Env) != len(tc.expectedSpec.Env) {
+				t.Errorf("differents ev size: got %d expected %d", len(result.Env), len(tc.expectedSpec.Env))
+			}
+			for _, env := range result.Env {
+				found := false
+				for _, expected := range tc.expectedSpec.Env {
+					if env.Name == expected.Name && env.Value == expected.Value {
+						found = true
+					}
+				}
+				if !found {
+					t.Errorf("env %v not found in expected list %v", env, tc.expectedSpec.Env)
 				}
 			}
 		})
