@@ -22,6 +22,24 @@ If the field is specified for a given `TerraformRepository` it will be applied b
 
 If the field is specified for a given `TerraformLayer` it will take precedence over the `TerraformRepository` configuration.
 
+Available overrides are:
+
+|         Fields         |
+| :--------------------: |
+|   `ImagePullSecrets`   |
+|        `Image`         |
+|     `Tolerations`      |
+|     `NodeSelector`     |
+|  `ServiceAccountName`  |
+|      `Resources`       |
+|         `Env`          |
+|       `EnvFrom`        |
+|       `Volumes`        |
+|     `VolumeMounts`     |
+| `Metadata.Annotations` |
+|   `Metadata.Labels`    |
+
+
 For instance with the following configuration, all the runner pods will have the specifications described inside the `TerraformRepository`:
 
 ```yaml
@@ -60,7 +78,7 @@ spec:
     namespace: burrito
 ```
 
-But in the following case, no `tolerations` or `nodeSelector` will be used for the runner pods:
+In the following case, `tolerations` and `nodeSelector` will be merged:
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -75,7 +93,7 @@ spec:
     imagePullSecrets:
     - name: ghcr-creds
     tolerations:
-    - effect: NoSchedule
+    - effect: NoExecute
       key: burrito.io/production
       operator: Exists
     nodeSelector:
@@ -97,8 +115,22 @@ spec:
     name: burrito
     namespace: burrito
   overrideRunnerSpec:
-    tolerations: []
+    tolerations:
+    - effect: NoSchedule
+      key: burrito.io/production
+      operator: Exists
     nodeSelector: {}
+```
+
+Resulting in the following `podSpec`:
+
+```yaml
+tolerations:
+- effect: NoSchedule
+  key: burrito.io/production
+  operator: Exists
+nodeSelector:
+  production: "true"
 ```
 
 ### Choose your remediation strategy
@@ -189,7 +221,7 @@ You can configure `burrito` with environment variables.
 | :-----------------------------------------: | :--------------------------------------------------------------------: | :------------------------------: |
 |         `BURRITO_CONTROLLER_TYPES`          |                      list of controllers to start                      |        `layer,repository`        |
 | `BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION`  |              period between two plans for drift detection              |              `20m`               |
-|     `BURRITO_CONTROLLER_TIMERS_ONERROR`     |        period between two runners launch when an error occurred         |               `1m`               |
+|     `BURRITO_CONTROLLER_TIMERS_ONERROR`     |        period between two runners launch when an error occurred        |               `1m`               |
 |   `BURRITO_CONTROLLER_TIMERS_WAITACTION`    |        period between two runners launch when a layer is locked        |               `1m`               |
 | `BURRITO_CONTROLLER_LEADERELECTION_ENABLED` |               whether leader election is enabled or not                |              `true`              |
 |   `BURRITO_CONTROLLER_LEADERELECTION_ID`    |                   lease id used for leader election                    | `6d185457.terraform.padok.cloud` |

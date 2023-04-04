@@ -7,6 +7,7 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/version"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Action string
@@ -70,8 +71,24 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 		})
 	}
 
+	overrideSpec := configv1alpha1.GetOverrideRunnerSpec(repository, layer)
+	defaultSpec.Tolerations = overrideSpec.Tolerations
+	defaultSpec.NodeSelector = overrideSpec.NodeSelector
+	defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, overrideSpec.Env...)
+	defaultSpec.Volumes = append(defaultSpec.Volumes, overrideSpec.Volumes...)
+	defaultSpec.Containers[0].VolumeMounts = append(defaultSpec.Containers[0].VolumeMounts, overrideSpec.VolumeMounts...)
+	defaultSpec.Containers[0].Resources = overrideSpec.Resources
+	defaultSpec.Containers[0].EnvFrom = append(defaultSpec.Containers[0].EnvFrom, overrideSpec.EnvFrom...)
+	defaultSpec.Containers[0].Image = overrideSpec.Image
+	defaultSpec.ServiceAccountName = overrideSpec.ServiceAccountName
+	defaultSpec.ImagePullSecrets = append(defaultSpec.ImagePullSecrets, overrideSpec.ImagePullSecrets...)
+
 	pod := corev1.Pod{
-		Spec: mergeSpecs(defaultSpec, repository.Spec.OverrideRunnerSpec, layer.Spec.OverrideRunnerSpec),
+		Spec: defaultSpec,
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      overrideSpec.Metadata.Labels,
+			Annotations: overrideSpec.Metadata.Annotations,
+		},
 	}
 	pod.SetNamespace(layer.Namespace)
 	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
@@ -145,35 +162,4 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 			},
 		},
 	}
-}
-
-func mergeSpecs(defaultSpec corev1.PodSpec, repositorySpec configv1alpha1.OverrideRunnerSpec, layerSpec configv1alpha1.OverrideRunnerSpec) corev1.PodSpec {
-	if len(repositorySpec.ImagePullSecrets) > 0 {
-		defaultSpec.ImagePullSecrets = repositorySpec.ImagePullSecrets
-	}
-	if len(layerSpec.ImagePullSecrets) > 0 {
-		defaultSpec.ImagePullSecrets = layerSpec.ImagePullSecrets
-	}
-
-	if len(repositorySpec.Tolerations) > 0 {
-		defaultSpec.Tolerations = repositorySpec.Tolerations
-	}
-	if len(layerSpec.Tolerations) > 0 {
-		defaultSpec.Tolerations = layerSpec.Tolerations
-	}
-
-	if len(repositorySpec.NodeSelector) > 0 {
-		defaultSpec.NodeSelector = repositorySpec.NodeSelector
-	}
-	if len(layerSpec.NodeSelector) > 0 {
-		defaultSpec.NodeSelector = layerSpec.NodeSelector
-	}
-
-	if len(repositorySpec.ServiceAccountName) > 0 {
-		defaultSpec.ServiceAccountName = repositorySpec.ServiceAccountName
-	}
-	if len(layerSpec.ServiceAccountName) > 0 {
-		defaultSpec.ServiceAccountName = layerSpec.ServiceAccountName
-	}
-	return defaultSpec
 }
