@@ -48,7 +48,7 @@ kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/manif
 
 `burrito` uses two [CRDs](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/):
 - `TerraformRepository` which defines the way to connect to a public or private repository containing some `terraform` code
-- `TerraformLayer` which defines a `terraform` layer insidea given `TerraformRepository`
+- `TerraformLayer` which defines a `terraform` layer inside a given `TerraformRepository`
 
 ### Connect to a private repository
 
