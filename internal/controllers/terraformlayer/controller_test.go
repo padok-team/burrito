@@ -16,6 +16,7 @@ import (
 	utils "github.com/padok-team/burrito/internal/controllers/testing"
 	storage "github.com/padok-team/burrito/internal/storage/mock"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
@@ -372,3 +373,140 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func TestGetLayerExponentialBackOffTime(t *testing.T) {
+	tt := []struct {
+		name         string
+		defaultTime  time.Duration
+		layer        *configv1alpha1.TerraformLayer
+		expectedTime time.Duration
+	}{
+		{
+			"Exponential backoff : No retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			time.Minute,
+		},
+		{
+			"Exponential backoff : Success",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "0"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			time.Minute,
+		},
+		{
+			"Exponential backoff : 1 retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "1"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			2 * time.Minute,
+		},
+		{
+			"Exponential backoff : 2 retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "2"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			7 * time.Minute,
+		},
+		{
+			"Exponential backoff : 3 retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "3"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			20 * time.Minute,
+		},
+		{
+			"Exponential backoff : 5 retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "5"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			148 * time.Minute,
+		},
+		{
+			"Exponential backoff : 10 retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "10"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			22026 * time.Minute,
+		},
+		{
+			"Exponential backoff : 17 retry",
+			time.Minute,
+			&configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "17"},
+				},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			24154952 * time.Minute,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := controller.GetLayerExponentialBackOffTime(tc.defaultTime, tc.layer)
+			// var n, _ = tc.layer.Annotations["runner.terraform.padok.cloud/failure"]
+			if tc.expectedTime != result {
+				t.Errorf("different version computed: expected %s go %s", tc.expectedTime, result)
+			}
+		})
+	}
+}

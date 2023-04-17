@@ -1,6 +1,7 @@
 package terraformlayer
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,7 +17,16 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	value, ok := t.Annotations[annotations.LastPlanDate]
+	value, ok := t.Annotations[annotations.LastPlanSum]
+	// If the annotation exists and the value is "", an issue occured during plan.
+	// If the annotation is empty, no plan has ever ran. We can fallback to other conditions.
+	if value == "" && ok {
+		condition.Reason = "LastPlanFailed"
+		condition.Message = "Last plan run has failed"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+	value, ok = t.Annotations[annotations.LastPlanDate]
 	if !ok {
 		condition.Reason = "NoPlanHasRunYet"
 		condition.Message = "No plan has run on this layer yet"
@@ -105,6 +115,12 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
+	if applyHash == "" {
+		condition.Reason = "LastApplyFailed"
+		condition.Message = "Last apply run has failed."
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
 	if applyHash != planHash {
 		condition.Reason = "NewPlanAvailable"
 		condition.Message = "Apply will run."
@@ -115,6 +131,41 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 	condition.Message = "Last planned artifact is the same as the last applied one"
 	condition.Status = metav1.ConditionTrue
 	return condition, true
+}
+
+func (r *Reconciler) IsInFailureGracePeriod(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsInFailureGracePeriod",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	if failure, ok := t.Annotations[annotations.Failure]; !ok || failure == "0" {
+		condition.Reason = "NoFailureYet"
+		condition.Message = "No failure has been detected yet"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+	lastFailureDate, err := GetLastActionTime(t)
+	if err != nil {
+		condition.Reason = "CouldNotGetLastActionTime"
+		condition.Message = "Could not get last action time from layer annotations"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	nextFailure := lastFailureDate.Add(GetLayerExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, t))
+	now := time.Now()
+	if nextFailure.After(now) {
+		condition.Reason = "InFailureGracePeriod"
+		condition.Message = fmt.Sprintf("The failure grace period is still active (until %s).", nextFailure)
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	condition.Reason = "FailureGracePeriodOver"
+	condition.Message = fmt.Sprintf("The failure grace period is over (since %s).", now.Sub(nextFailure))
+	condition.Status = metav1.ConditionFalse
+	return condition, false
 }
 
 func (r *Reconciler) HasFailed(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
@@ -141,4 +192,30 @@ func (r *Reconciler) HasFailed(t *configv1alpha1.TerraformLayer) (metav1.Conditi
 	condition.Reason = "TerraformRunFailure"
 	condition.Message = "Terraform has failed, look at the runner logs"
 	return condition, true
+}
+
+func GetLastActionTime(layer *configv1alpha1.TerraformLayer) (time.Time, error) {
+	var lastActionTime time.Time
+	lastPlanTimeAnnotation, ok := layer.Annotations[annotations.LastPlanDate]
+	if !ok {
+		return time.Now(), errors.New("never ran a plan on this layer")
+	}
+	lastActionTime, err := time.Parse(time.UnixDate, lastPlanTimeAnnotation)
+	if err != nil {
+		return time.Now(), err
+	}
+
+	lastApplyTimeAnnotation, ok := layer.Annotations[annotations.LastApplyDate]
+	if !ok {
+		return lastActionTime, nil
+	}
+	lastApplyTime, err := time.Parse(time.UnixDate, lastApplyTimeAnnotation)
+	if err != nil {
+		return time.Now(), err
+	}
+
+	if lastApplyTime.After(lastActionTime) {
+		lastActionTime = lastApplyTime
+	}
+	return lastActionTime, nil
 }
