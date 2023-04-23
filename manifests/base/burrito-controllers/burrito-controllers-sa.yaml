@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: burrito-controllers
+  namespace: burrito
+  labels:
+    app.kubernetes.io/component: controllers
+    app.kubernetes.io/name: burrito-controllers
+    app.kubernetes.io/part-of: burrito

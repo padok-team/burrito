@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: burrito-runner
+  namespace: burrito
+  labels:
+    app.kubernetes.io/component: runner
+    app.kubernetes.io/name: burrito-runner
+    app.kubernetes.io/part-of: burrito

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: burrito-server
+  namespace: burrito
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: burrito-server
+    app.kubernetes.io/part-of: burrito

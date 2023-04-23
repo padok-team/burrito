@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burrito-controllers
+  labels:
+    app.kubernetes.io/component: controllers
+    app.kubernetes.io/name: burrito-controllers
+    app.kubernetes.io/part-of: burrito
+  namespace: burrito
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: burrito-controllers
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: burrito
+      labels:
+        app.kubernetes.io/name: burrito-controllers
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - command:
+            - /burrito
+          args:
+            - controllers
+            - start
+          image: ghcr.io/padok-team/burrito:main
+          name: burrito
+          imagePullPolicy: Always
+          env:
+            - name: BURRITO_CONTROLLER_TIMERS_WAITACTION
+              value: 5s
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - "ALL"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      serviceAccountName: burrito-controllers
+      terminationGracePeriodSeconds: 10
