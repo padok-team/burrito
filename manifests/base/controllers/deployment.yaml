@@ -30,9 +30,10 @@ spec:
           image: ghcr.io/padok-team/burrito:main
           name: burrito
           imagePullPolicy: Always
-          env:
-            - name: BURRITO_CONTROLLER_TIMERS_WAITACTION
-              value: 5s
+          envFrom:
+            - configMapRef:
+                name: burrito-controllers-cm
+                optional: true
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

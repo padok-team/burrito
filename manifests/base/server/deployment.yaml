@@ -35,7 +35,18 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: burrito-webhook-secret
-                  key: burrito-webhook-secret
+                  key: github-webhook-secret
+                  optional: true
+            - name: BURRITO_SERVER_WEBHOOK_GITLAB_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: burrito-webhook-secret
+                  key: gitlab-webhook-secret
+                  optional: true
+          envFrom:
+            - configMapRef:
+                name: burrito-server-cm
+                optional: true
           image: ghcr.io/padok-team/burrito:main
           name: burrito
           imagePullPolicy: Always

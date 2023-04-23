@@ -2909,6 +2909,22 @@ subjects:
   namespace: burrito
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/part-of: burrito
+  name: burrito-controllers-cm
+  namespace: burrito
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/part-of: burrito
+  name: burrito-server-cm
+  namespace: burrito
+---
+apiVersion: v1
 data:
   known_hosts: |-
     bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==
@@ -2926,6 +2942,15 @@ metadata:
     app.kubernetes.io/part-of: burrito
   name: burrito-ssh-known-hosts
   namespace: burrito
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/part-of: burrito
+  name: burrito-webhook-secret
+  namespace: burrito
+type: Opaque
 ---
 apiVersion: v1
 kind: Service
@@ -2989,9 +3014,10 @@ spec:
         - start
         command:
         - /burrito
-        env:
-        - name: BURRITO_CONTROLLER_TIMERS_WAITACTION
-          value: 5s
+        envFrom:
+        - configMapRef:
+            name: burrito-controllers-cm
+            optional: true
         image: ghcr.io/padok-team/burrito:main
         imagePullPolicy: Always
         livenessProbe:
@@ -3085,8 +3111,19 @@ spec:
         - name: BURRITO_SERVER_WEBHOOK_GITHUB_SECRET
           valueFrom:
             secretKeyRef:
-              key: burrito-webhook-secret
+              key: github-webhook-secret
               name: burrito-webhook-secret
+              optional: true
+        - name: BURRITO_SERVER_WEBHOOK_GITLAB_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: gitlab-webhook-secret
+              name: burrito-webhook-secret
+              optional: true
+        envFrom:
+        - configMapRef:
+            name: burrito-server-cm
+            optional: true
         image: ghcr.io/padok-team/burrito:main
         imagePullPolicy: Always
         livenessProbe:
