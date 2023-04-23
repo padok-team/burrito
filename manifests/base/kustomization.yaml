@@ -7,8 +7,8 @@ images:
     newTag: main
 
 resources:
-  - ./burrito-controllers
-  - ./burrito-server
-  - ./burrito-runner
+  - ./controllers
+  - ./server
+  - ./runner
   - ./redis
   - ./config
