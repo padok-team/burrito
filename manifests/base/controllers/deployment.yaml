@@ -32,7 +32,7 @@ spec:
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
-                name: burrito-controllers-cm
+                name: burrito-controllers
                 optional: true
           securityContext:
             allowPrivilegeEscalation: false

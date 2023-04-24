@@ -45,7 +45,7 @@ spec:
                   optional: true
           envFrom:
             - configMapRef:
-                name: burrito-server-cm
+                name: burrito-server
                 optional: true
           image: ghcr.io/padok-team/burrito:main
           name: burrito

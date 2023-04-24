@@ -2912,16 +2912,20 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
+    app.kubernetes.io/component: controllers
+    app.kubernetes.io/name: burrito-controllers
     app.kubernetes.io/part-of: burrito
-  name: burrito-controllers-cm
+  name: burrito-controllers
   namespace: burrito
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
-  name: burrito-server-cm
+  name: burrito-server
   namespace: burrito
 ---
 apiVersion: v1
@@ -2947,6 +2951,8 @@ apiVersion: v1
 kind: Secret
 metadata:
   labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
   name: burrito-webhook-secret
   namespace: burrito
@@ -3016,7 +3022,7 @@ spec:
         - /burrito
         envFrom:
         - configMapRef:
-            name: burrito-controllers-cm
+            name: burrito-controllers
             optional: true
         image: ghcr.io/padok-team/burrito:main
         imagePullPolicy: Always
@@ -3122,7 +3128,7 @@ spec:
               optional: true
         envFrom:
         - configMapRef:
-            name: burrito-server-cm
+            name: burrito-server
             optional: true
         image: ghcr.io/padok-team/burrito:main
         imagePullPolicy: Always
