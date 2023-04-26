@@ -3113,22 +3113,12 @@ spec:
         - start
         command:
         - /burrito
-        env:
-        - name: BURRITO_SERVER_WEBHOOK_GITHUB_SECRET
-          valueFrom:
-            secretKeyRef:
-              key: github-webhook-secret
-              name: burrito-webhook-secret
-              optional: true
-        - name: BURRITO_SERVER_WEBHOOK_GITLAB_SECRET
-          valueFrom:
-            secretKeyRef:
-              key: gitlab-webhook-secret
-              name: burrito-webhook-secret
-              optional: true
         envFrom:
         - configMapRef:
             name: burrito-server
+            optional: true
+        - secretRef:
+            name: burrito-webhook-secret
             optional: true
         image: ghcr.io/padok-team/burrito:main
         imagePullPolicy: Always
