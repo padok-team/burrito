@@ -52,7 +52,7 @@ type TerraformExec interface {
 	Init(string) error
 	Plan() error
 	Apply() error
-	Show() ([]byte, error)
+	Show(string) ([]byte, error)
 }
 
 func New(c *config.Config) *Runner {
@@ -61,13 +61,15 @@ func New(c *config.Config) *Runner {
 	}
 }
 
+func (r *Runner) unlock() {
+	err := lock.DeleteLock(context.TODO(), r.client, r.layer)
+	if err != nil {
+		log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
+	}
+}
+
 func (r *Runner) Exec() {
-	defer func() {
-		err := lock.DeleteLock(context.TODO(), r.client, r.layer)
-		if err != nil {
-			log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
-		}
-	}()
+	defer r.unlock()
 	var sum string
 	err := r.init()
 	ann := map[string]string{}
@@ -106,7 +108,7 @@ func (r *Runner) Exec() {
 		number++
 		ann[annotations.Failure] = strconv.Itoa(number)
 	}
-	err = annotations.Add(context.TODO(), r.client, *r.layer, ann)
+	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
 	if err != nil {
 		log.Errorf("could not update terraform layer annotations: %s", err)
 	}
@@ -217,10 +219,21 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("error executing terraform plan: %s", err)
 		return "", err
 	}
-	planJsonBytes, err := r.exec.Show()
+	planJsonBytes, err := r.exec.Show("json")
 	if err != nil {
 		log.Errorf("error getting terraform plan json: %s", err)
 		return "", err
+	}
+	prettyPlan, err := r.exec.Show("pretty")
+	if err != nil {
+		log.Errorf("error getting terraform pretty plan: %s", err)
+		return "", err
+	}
+	prettyPlanKey := storage.GenerateKey(storage.LastPrettyPlan, r.layer)
+	log.Infof("setting pretty plan into storage at key %s", prettyPlanKey)
+	err = r.storage.Set(prettyPlanKey, prettyPlan, 3600)
+	if err != nil {
+		log.Errorf("could not put pretty plan in cache: %s", err)
 	}
 	plan := &tfjson.Plan{}
 	err = json.Unmarshal(planJsonBytes, plan)

@@ -35,6 +35,7 @@ const (
 	RunMessage              Prefix = "runMessage"
 	LastPlannedArtifactJson Prefix = "plannedArtifactJson"
 	LastPlanResult          Prefix = "planResult"
+	LastPrettyPlan          Prefix = "prettyPlan"
 )
 
 type Storage interface {
@@ -44,23 +45,8 @@ type Storage interface {
 }
 
 func GenerateKey(prefix Prefix, layer *configv1alpha1.TerraformLayer) string {
-	var toHash string
-	switch prefix {
-	case LastPlannedArtifactBin:
-		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
-		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
-	case LastPlannedArtifactJson:
-		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
-		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
-	case LastPlanResult:
-		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
-		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
-	case RunMessage:
-		toHash = layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
-		return fmt.Sprintf("%s-%d", prefix, hash(toHash))
-	default:
-		return ""
-	}
+	toHash := layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
+	return fmt.Sprintf("%s-%d", prefix, hash(toHash))
 }
 
 func hash(s string) uint32 {

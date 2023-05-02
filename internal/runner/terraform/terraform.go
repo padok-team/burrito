@@ -3,6 +3,7 @@ package terraform
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 
@@ -74,17 +75,28 @@ func (t *Terraform) Apply() error {
 	return nil
 }
 
-func (t *Terraform) Show() ([]byte, error) {
+func (t *Terraform) Show(mode string) ([]byte, error) {
 	t.silent()
-	planJson, err := t.exec.ShowPlanFile(context.TODO(), t.planArtifactPath)
-	if err != nil {
-		return nil, err
+	switch mode {
+	case "json":
+		planJson, err := t.exec.ShowPlanFile(context.TODO(), t.planArtifactPath)
+		if err != nil {
+			return nil, err
+		}
+		planJsonBytes, err := json.Marshal(planJson)
+		if err != nil {
+			return nil, err
+		}
+		return planJsonBytes, nil
+	case "pretty":
+		plan, err := t.exec.ShowPlanFileRaw(context.TODO(), t.planArtifactPath)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(plan), nil
+	default:
+		return nil, errors.New("invalid mode")
 	}
-	planJsonBytes, err := json.Marshal(planJson)
-	if err != nil {
-		return nil, err
-	}
-	return planJsonBytes, nil
 }
 
 func (t *Terraform) silent() {

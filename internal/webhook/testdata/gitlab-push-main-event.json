@@ -1,0 +1,77 @@
+{
+    "object_kind": "push",
+    "before": "95790bf891e76fee5e1747ab589903a6a1f80f22",
+    "after": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+    "ref": "refs/heads/main",
+    "checkout_sha": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+    "user_id": 4,
+    "user_name": "spoukke",
+    "user_username": "spoukke",
+    "user_email": "sachab@padok.fr",
+    "user_avatar": "https://www.gravatar.com/avatar/123",
+    "project_id": 15,
+    "project": {
+        "id": 15,
+        "name": "Burrito examples",
+        "description": "",
+        "web_url": "https://gitlab.com/burrito/examples",
+        "git_ssh_url": "git@gitlab.com:burrito/examples.git",
+        "git_http_url": "https://gitlab.com/burrito/examples.git",
+        "namespace": "burrito",
+        "visibility_level": 0,
+        "avatar_url": null,
+        "star_count": 0,
+        "forks_count": 0,
+        "last_activity_at": "2021-09-22T14:15:22.000Z",
+        "namespace_id": 3,
+        "namespace_name": "burrito",
+        "path_with_namespace": "burrito/examples",
+        "default_branch": "main",
+        "homepage": "https://gitlab.com/burrito/examples",
+        "url": "git@gitlab.com:burrito/examples.git",
+        "ssh_url": "git@example.com:example-project.git",
+        "http_url": "https://gitlab.com/burrito/examples.git"
+    },
+    "commits": [
+        {
+            "id": "b6568db..",
+            "message": "changed file",
+            "timestamp": "2021-09-22T14:15:22-07:00",
+            "url": "http://example.com/example-project/commit/b6568db...",
+            "author": {
+                "name": "spoukke",
+                "email": "sachab@padok.fr"
+            },
+            "added": [
+                "test.hcl"
+            ]
+        },
+        {
+            "id": "6dcb09b...",
+            "message": "Add new file",
+            "timestamp": "2021-09-22T14:15:22-07:00",
+            "url": "http://example.com/example-project/commit/6dcb09b...",
+            "author": {
+                "name": "spoukke",
+                "email": "sachab@padok.fr"
+            },
+            "modified": [
+                "layer-1/prod.hcl"
+            ]
+        },
+        {
+            "id": "6dcb09b...",
+            "message": "Add new file",
+            "timestamp": "2021-09-22T14:15:22-07:00",
+            "url": "http://example.com/example-project/commit/6dcb09b...",
+            "author": {
+                "name": "spoukke",
+                "email": "sachab@padok.fr"
+            },
+            "removed": [
+                "layer-2/staging.hcl"
+            ]
+        }
+    ],
+    "total_commits_count": 3
+}
