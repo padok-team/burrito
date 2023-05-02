@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burrito-server
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: burrito-server
+    app.kubernetes.io/part-of: burrito
+  namespace: burrito
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: burrito-server
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: burrito
+      labels:
+        app.kubernetes.io/name: burrito-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - command:
+            - /burrito
+          args:
+            - server
+            - start
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: burrito-config
+                optional: true
+            - secretRef:
+                name: burrito-config
+                optional: true
+          image: ghcr.io/padok-team/burrito:main
+          name: burrito
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - "ALL"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      serviceAccountName: burrito-server
+      terminationGracePeriodSeconds: 10

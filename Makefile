@@ -86,8 +86,10 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: controller-gen kustomize ## Generate CustomResourceDefinition objects and plain manifest for installing Burrito. For generating Webhook and ClusterRole, add `rbac:roleName=manager-role crd` to the controller-gen command.
+	$(CONTROLLER_GEN) crd paths="./..." output:crd:dir=manifests/crds
+	echo "# This is an auto-generated file. DO NOT EDIT" > manifests/install.yaml
+	$(KUSTOMIZE) build manifests/cluster-install >> manifests/install.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

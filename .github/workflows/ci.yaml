@@ -23,14 +23,30 @@ jobs:
         go-version: "1.19"
     - name: Run tests
       run: make test
-  
+
+  check-codegen:
+    name: Check Codegen
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Setup Golang
+      uses: actions/setup-go@v3
+      with:
+        go-version: "1.19"
+    - name: Generate manifests
+      run: make manifests
+    - name: Check nothing has changed
+      run: |
+        git diff --exit-code ./manifests
+
   build-and-push:
     name: Build & Push
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-      
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
@@ -40,7 +56,7 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Get Build timestamp and branch name
       run: |
         echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV

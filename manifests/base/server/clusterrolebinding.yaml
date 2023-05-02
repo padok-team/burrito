@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: burrito-server
+    app.kubernetes.io/part-of: burrito
+  name: burrito-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-server
+subjects:
+  - kind: ServiceAccount
+    name: burrito-server
+    namespace: burrito

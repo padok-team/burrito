@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: redis
+    app.kubernetes.io/name: burrito-redis
+    app.kubernetes.io/part-of: burrito
+  name: burrito-redis
+  namespace: burrito
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: burrito-redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: burrito-redis
+    spec:
+      containers:
+        - args: []
+          image: redis:7.0.7-alpine
+          imagePullPolicy: Always
+          name: redis
+          ports:
+            - containerPort: 6379
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: burrito-redis

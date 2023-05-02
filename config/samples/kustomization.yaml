@@ -1,5 +1,0 @@
-## Append samples you want in your CSV to this file as resources ##
-resources:
-- config_v1alpha1_terraformrepository.yaml
-- config_v1alpha1_terraformlayer.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
