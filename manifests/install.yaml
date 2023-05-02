@@ -2888,7 +2888,7 @@ rules:
 - apiGroups:
   - config.terraform.padok.cloud
   resources:
-  - terraformrepositories/finalizers
+  - terraformpullrequests/finalizers
   verbs:
   - update
 - apiGroups:
