@@ -79,9 +79,14 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 	defaultSpec.Containers[0].VolumeMounts = append(defaultSpec.Containers[0].VolumeMounts, overrideSpec.VolumeMounts...)
 	defaultSpec.Containers[0].Resources = overrideSpec.Resources
 	defaultSpec.Containers[0].EnvFrom = append(defaultSpec.Containers[0].EnvFrom, overrideSpec.EnvFrom...)
-	defaultSpec.Containers[0].Image = overrideSpec.Image
-	defaultSpec.ServiceAccountName = overrideSpec.ServiceAccountName
 	defaultSpec.ImagePullSecrets = append(defaultSpec.ImagePullSecrets, overrideSpec.ImagePullSecrets...)
+
+	if len(overrideSpec.ServiceAccountName) > 0 {
+		defaultSpec.ServiceAccountName = overrideSpec.ServiceAccountName
+	}
+	if len(overrideSpec.Image) > 0 {
+		defaultSpec.Containers[0].Image = overrideSpec.Image
+	}
 
 	pod := corev1.Pod{
 		Spec: defaultSpec,
