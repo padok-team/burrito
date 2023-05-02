@@ -32,10 +32,10 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: burrito-server
+                name: burrito-config
                 optional: true
             - secretRef:
-                name: burrito-webhook-secret
+                name: burrito-config
                 optional: true
           image: ghcr.io/padok-team/burrito:main
           name: burrito

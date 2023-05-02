@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   labels:
     app.kubernetes.io/part-of: burrito
+    app.kubernetes.io/name: burrito-ssh-known-hosts
   name: burrito-ssh-known-hosts
   namespace: burrito
 data:
