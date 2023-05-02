@@ -1,0 +1,18 @@
+site_name: burrito
+repo_url: https://github.com/padok-team/burrito
+theme:
+  name: material
+  favicon: assets/icon/burrito.png
+  logo: assets/icon/burrito.png
+markdown_extensions:
+- codehilite
+- admonition
+- toc:
+    permalink: true
+nav:
+- Overview: index.md
+- getting_started.md
+- Operator Manual:
+  - operator-manual/index.md
+- User Guide:
+  - user-guide/index.md
