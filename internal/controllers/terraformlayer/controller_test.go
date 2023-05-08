@@ -135,10 +135,10 @@ var _ = Describe("Layer", func() {
 			It("should be locked", func() {
 				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
 			})
-			It("should set RequeueAfter to DriftCheckInterval", func() {
+			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 			})
-			It("should have created a pod", func() {
+			It("should have created a plan pod", func() {
 				pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods.Items)).To(Equal(1))
@@ -167,7 +167,7 @@ var _ = Describe("Layer", func() {
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 			})
-			It("should have created a pod", func() {
+			It("should have created an apply pod", func() {
 				pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods.Items)).To(Equal(1))
@@ -196,7 +196,7 @@ var _ = Describe("Layer", func() {
 			It("should set RequeueAfter to DriftDetection", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
 			})
-			It("should not have created a pod", func() {
+			It("should not have created an apply pod", func() {
 				pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods.Items)).To(Equal(0))
@@ -225,7 +225,12 @@ var _ = Describe("Layer", func() {
 			It("should set RequeueAfter to DriftDetection", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
 			})
-			It("should not have created a pod", func() {
+			It("should not have created a plan pod", func() {
+				pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(0))
+			})
+			It("should not have created an apply pod", func() {
 				pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods.Items)).To(Equal(0))
