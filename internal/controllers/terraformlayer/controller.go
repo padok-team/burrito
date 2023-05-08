@@ -18,6 +18,7 @@ package terraformlayer
 
 import (
 	"context"
+	"time"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
@@ -35,12 +36,23 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
+type Clock interface {
+	Now() time.Time
+}
+
+type RealClock struct{}
+
+func (c RealClock) Now() time.Time {
+	return time.Now()
+}
+
 // Reconciler reconciles a TerraformLayer object
 type Reconciler struct {
 	client.Client
 	Scheme  *runtime.Scheme
 	Config  *config.Config
 	Storage storage.Storage
+	Clock
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformlayers,verbs=get;list;watch;create;update;patch;delete
@@ -109,6 +121,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Clock = RealClock{}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformLayer{}).
 		WithEventFilter(ignorePredicate()).

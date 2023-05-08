@@ -17,6 +17,13 @@ const (
 	ApplyAction Action = "apply"
 )
 
+func GetDefaultLabels(layer *configv1alpha1.TerraformLayer, action Action) map[string]string {
+	return map[string]string{
+		"burrito/layer":  layer.Name,
+		"burrito/action": string(action),
+	}
+}
+
 func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
 	defaultSpec := defaultPodSpec(r.Config, layer, repository)
 
@@ -88,11 +95,10 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 	if len(overrideSpec.Image) > 0 {
 		defaultSpec.Containers[0].Image = overrideSpec.Image
 	}
-
 	pod := corev1.Pod{
 		Spec: defaultSpec,
 		ObjectMeta: metav1.ObjectMeta{
-			Labels:      overrideSpec.Metadata.Labels,
+			Labels:      mergeMaps(overrideSpec.Metadata.Labels, GetDefaultLabels(layer, action)),
 			Annotations: overrideSpec.Metadata.Annotations,
 		},
 	}
@@ -100,6 +106,17 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
 
 	return pod
+}
+
+func mergeMaps(a, b map[string]string) map[string]string {
+	result := map[string]string{}
+	for k, v := range a {
+		result[k] = v
+	}
+	for k, v := range b {
+		result[k] = v
+	}
+	return result
 }
 
 func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
