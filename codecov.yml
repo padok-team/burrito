@@ -1,0 +1,4 @@
+ignore:
+  - "api/zz_generated_deepcopy.go"
+  - "main.go"
+  - "cmd"
