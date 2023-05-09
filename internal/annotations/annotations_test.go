@@ -3,6 +3,7 @@ package annotations_test
 import (
 	"context"
 	"path/filepath"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,6 +23,12 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+
+func TestAnnotations(t *testing.T) {
+	RegisterFailHandler(Fail)
+
+	RunSpecs(t, "Annotations Controller Suite")
+}
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
