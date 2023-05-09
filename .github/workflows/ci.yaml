@@ -21,6 +21,10 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: "1.19"
+    - name: Install envtest
+      run: make envtest
+    - name: Setup envtest
+      run: ./bin/setup-envtest use
     - name: Run tests
       run: make test
 

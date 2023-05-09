@@ -160,3 +160,22 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 		}
 	}
 }
+
+func TestConfig() *Config {
+	return &Config{
+		Redis: Redis{
+			URL:      "redis://localhost:6379",
+			Password: "",
+			Database: 0,
+		},
+		Controller: ControllerConfig{
+			Timers: ControllerTimers{
+				DriftDetection: 20 * time.Minute,
+				WaitAction:     5 * time.Minute,
+			},
+		},
+		Runner: RunnerConfig{
+			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
+		},
+	}
+}
