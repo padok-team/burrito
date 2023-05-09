@@ -171,8 +171,9 @@ func TestConfig() *Config {
 		},
 		Controller: ControllerConfig{
 			Timers: ControllerTimers{
-				DriftDetection: 20 * time.Minute,
-				WaitAction:     5 * time.Minute,
+				DriftDetection:     20 * time.Minute,
+				WaitAction:         5 * time.Minute,
+				FailureGracePeriod: 15 * time.Second,
 			},
 		},
 		Runner: RunnerConfig{

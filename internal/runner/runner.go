@@ -90,9 +90,9 @@ func (r *Runner) Exec() {
 	case "apply":
 		sum, err = r.apply()
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
-		ann[annotations.LastApplyCommit] = commit
+		ann[annotations.LastApplySum] = sum
 		if err == nil {
-			ann[annotations.LastApplySum] = sum
+			ann[annotations.LastApplyCommit] = commit
 		}
 	default:
 		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")

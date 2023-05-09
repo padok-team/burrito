@@ -17,16 +17,7 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	value, ok := t.Annotations[annotations.LastPlanSum]
-	// If the annotation exists and the value is "", an issue occured during plan.
-	// If the annotation is empty, no plan has ever ran. We can fallback to other conditions.
-	if value == "" && ok {
-		condition.Reason = "LastPlanFailed"
-		condition.Message = "Last plan run has failed"
-		condition.Status = metav1.ConditionFalse
-		return condition, false
-	}
-	value, ok = t.Annotations[annotations.LastPlanDate]
+	value, ok := t.Annotations[annotations.LastPlanDate]
 	if !ok {
 		condition.Reason = "NoPlanHasRunYet"
 		condition.Message = "No plan has run on this layer yet"
@@ -146,7 +137,7 @@ func (r *Reconciler) IsInFailureGracePeriod(t *configv1alpha1.TerraformLayer) (m
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	lastFailureDate, err := GetLastActionTime(t)
+	lastFailureDate, err := GetLastActionTime(r, t)
 	if err != nil {
 		condition.Reason = "CouldNotGetLastActionTime"
 		condition.Message = "Could not get last action time from layer annotations"
@@ -155,7 +146,7 @@ func (r *Reconciler) IsInFailureGracePeriod(t *configv1alpha1.TerraformLayer) (m
 	}
 
 	nextFailure := lastFailureDate.Add(GetLayerExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, t))
-	now := time.Now()
+	now := r.Clock.Now()
 	if nextFailure.After(now) {
 		condition.Reason = "InFailureGracePeriod"
 		condition.Message = fmt.Sprintf("The failure grace period is still active (until %s).", nextFailure)
@@ -168,41 +159,41 @@ func (r *Reconciler) IsInFailureGracePeriod(t *configv1alpha1.TerraformLayer) (m
 	return condition, false
 }
 
-func (r *Reconciler) HasFailed(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
-	condition := metav1.Condition{
-		Type:               "HasFailed",
-		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
-		Status:             metav1.ConditionUnknown,
-		LastTransitionTime: metav1.NewTime(time.Now()),
-	}
-	result, ok := t.Annotations[annotations.Failure]
-	if !ok {
-		condition.Reason = "NoRunYet"
-		condition.Message = "Terraform has not ran yet"
-		condition.Status = metav1.ConditionFalse
-		return condition, false
-	}
-	if string(result) == "0" {
-		condition.Reason = "RunExitedGracefully"
-		condition.Message = "Last run exited gracefully"
-		condition.Status = metav1.ConditionFalse
-		return condition, false
-	}
-	condition.Status = metav1.ConditionTrue
-	condition.Reason = "TerraformRunFailure"
-	condition.Message = "Terraform has failed, look at the runner logs"
-	return condition, true
-}
+// func (r *Reconciler) HasFailed(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+// 	condition := metav1.Condition{
+// 		Type:               "HasFailed",
+// 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+// 		Status:             metav1.ConditionUnknown,
+// 		LastTransitionTime: metav1.NewTime(time.Now()),
+// 	}
+// 	result, ok := t.Annotations[annotations.Failure]
+// 	if !ok {
+// 		condition.Reason = "NoRunYet"
+// 		condition.Message = "Terraform has not ran yet"
+// 		condition.Status = metav1.ConditionFalse
+// 		return condition, false
+// 	}
+// 	if string(result) == "0" {
+// 		condition.Reason = "RunExitedGracefully"
+// 		condition.Message = "Last run exited gracefully"
+// 		condition.Status = metav1.ConditionFalse
+// 		return condition, false
+// 	}
+// 	condition.Status = metav1.ConditionTrue
+// 	condition.Reason = "TerraformRunFailure"
+// 	condition.Message = "Terraform has failed, look at the runner logs"
+// 	return condition, true
+// }
 
-func GetLastActionTime(layer *configv1alpha1.TerraformLayer) (time.Time, error) {
+func GetLastActionTime(r *Reconciler, layer *configv1alpha1.TerraformLayer) (time.Time, error) {
 	var lastActionTime time.Time
 	lastPlanTimeAnnotation, ok := layer.Annotations[annotations.LastPlanDate]
 	if !ok {
-		return time.Now(), errors.New("never ran a plan on this layer")
+		return r.Clock.Now(), errors.New("never ran a plan on this layer")
 	}
 	lastActionTime, err := time.Parse(time.UnixDate, lastPlanTimeAnnotation)
 	if err != nil {
-		return time.Now(), err
+		return r.Clock.Now(), err
 	}
 
 	lastApplyTimeAnnotation, ok := layer.Annotations[annotations.LastApplyDate]
@@ -211,7 +202,7 @@ func GetLastActionTime(layer *configv1alpha1.TerraformLayer) (time.Time, error) 
 	}
 	lastApplyTime, err := time.Parse(time.UnixDate, lastApplyTimeAnnotation)
 	if err != nil {
-		return time.Now(), err
+		return r.Clock.Now(), err
 	}
 
 	if lastApplyTime.After(lastActionTime) {

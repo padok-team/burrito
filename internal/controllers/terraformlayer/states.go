@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/lock"
@@ -49,14 +48,14 @@ type FailureGracePeriod struct{}
 
 func (s *FailureGracePeriod) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-		lastActionTime, ok := GetLastActionTime(layer)
+		lastActionTime, ok := GetLastActionTime(r, layer)
 		if ok != nil {
 			log.Errorf("could not get lastActionTime on layer %s,: %s", layer.Name, ok)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 		}
 		expTime := GetLayerExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, layer)
 		endIdleTime := lastActionTime.Add(expTime)
-		now := time.Now()
+		now := r.Clock.Now()
 		if endIdleTime.After(now) {
 			log.Infof("the grace period is over for layer %v, new retry", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
