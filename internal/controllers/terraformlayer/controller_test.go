@@ -81,13 +81,13 @@ var _ = BeforeSuite(func() {
 
 })
 
-func getResult(name types.NamespacedName) (reconcile.Result, error, error, *configv1alpha1.TerraformLayer) {
+func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.TerraformLayer, error, error) {
 	result, reconcileError := reconciler.Reconcile(context.TODO(), reconcile.Request{
 		NamespacedName: name,
 	})
 	layer := &configv1alpha1.TerraformLayer{}
 	err := k8sClient.Get(context.TODO(), name, layer)
-	return result, reconcileError, err, layer
+	return result, layer, reconcileError, err
 }
 
 func getLinkedPods(cl client.Client, layer *configv1alpha1.TerraformLayer, action controller.Action, namespace string) (*corev1.PodList, error) {
@@ -122,7 +122,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-1",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -151,7 +151,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-2",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -180,7 +180,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-3",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -209,7 +209,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-4",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -243,7 +243,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-5",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -277,7 +277,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-6",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -313,7 +313,7 @@ var _ = Describe("Layer", func() {
 					Name:      "error-case-1",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -334,7 +334,7 @@ var _ = Describe("Layer", func() {
 					Name:      "error-case-2",
 					Namespace: "default",
 				}
-				result, reconcileError, err, layer = getResult(name)
+				result, layer, reconcileError, err = getResult(name)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -356,7 +356,7 @@ var _ = Describe("Layer", func() {
 				Name:      "error-case-3",
 				Namespace: "default",
 			}
-			result, reconcileError, err, layer = getResult(name)
+			result, layer, reconcileError, err = getResult(name)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -385,7 +385,7 @@ var _ = Describe("Layer", func() {
 				Name:      "error-case-4",
 				Namespace: "default",
 			}
-			result, reconcileError, err, layer = getResult(name)
+			result, layer, reconcileError, err = getResult(name)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -402,7 +402,7 @@ var _ = Describe("Layer", func() {
 		It("should be locked", func() {
 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
 		})
-		It("should have created a plan pod", func() {
+		It("should have created an apply pod", func() {
 			pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(pods.Items)).To(Equal(1))
