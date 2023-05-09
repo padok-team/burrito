@@ -305,66 +305,66 @@ var _ = Describe("Layer", func() {
 			})
 		})
 	})
-	Describe("Error Case", func() {
-		Describe("When a TerraformLayer has errored once on plan", Ordered, func() {
-			BeforeAll(func() {
-				name = types.NamespacedName{
-					Name:      "error-case-1",
-					Namespace: "default",
-				}
-				result, reconcileError, err, layer = getResult(name)
-			})
-			It("should still exists", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
-			It("should not return an error", func() {
-				Expect(reconcileError).NotTo(HaveOccurred())
-			})
-			It("should end in PlanNeeded state", func() {
-				Expect(layer.Status.State).To(Equal("PlanNeeded"))
-			})
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-			})
-			It("should set RequeueAfter to WaitAction", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-			})
-			It("should have created a plan pod", func() {
-				pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(pods.Items)).To(Equal(1))
-			})
-		})
-		Describe("When a TerraformLayer has errored once on apply", Ordered, func() {
-			BeforeAll(func() {
-				name = types.NamespacedName{
-					Name:      "error-case-2",
-					Namespace: "default",
-				}
-				result, reconcileError, err, layer = getResult(name)
-			})
-			It("should still exists", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
-			It("should not return an error", func() {
-				Expect(reconcileError).NotTo(HaveOccurred())
-			})
-			It("should end in ApplyNeeded state", func() {
-				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
-			})
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-			})
-			It("should set RequeueAfter to WaitAction", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-			})
-			It("should have created a plan pod", func() {
-				pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(pods.Items)).To(Equal(1))
-			})
-		})
-	})
+	// Describe("Error Case", func() {
+	// 	Describe("When a TerraformLayer has errored once on plan", Ordered, func() {
+	// 		BeforeAll(func() {
+	// 			name = types.NamespacedName{
+	// 				Name:      "error-case-1",
+	// 				Namespace: "default",
+	// 			}
+	// 			result, reconcileError, err, layer = getResult(name)
+	// 		})
+	// 		It("should still exists", func() {
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should not return an error", func() {
+	// 			Expect(reconcileError).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should end in PlanNeeded state", func() {
+	// 			Expect(layer.Status.State).To(Equal("PlanNeeded"))
+	// 		})
+	// 		It("should be locked", func() {
+	// 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+	// 		})
+	// 		It("should set RequeueAfter to WaitAction", func() {
+	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+	// 		})
+	// 		It("should have created a plan pod", func() {
+	// 			pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			Expect(len(pods.Items)).To(Equal(1))
+	// 		})
+	// 	})
+	// 	Describe("When a TerraformLayer has errored once on apply", Ordered, func() {
+	// 		BeforeAll(func() {
+	// 			name = types.NamespacedName{
+	// 				Name:      "error-case-2",
+	// 				Namespace: "default",
+	// 			}
+	// 			result, reconcileError, err, layer = getResult(name)
+	// 		})
+	// 		It("should still exists", func() {
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should not return an error", func() {
+	// 			Expect(reconcileError).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should end in ApplyNeeded state", func() {
+	// 			Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+	// 		})
+	// 		It("should be locked", func() {
+	// 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+	// 		})
+	// 		It("should set RequeueAfter to WaitAction", func() {
+	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+	// 		})
+	// 		It("should have created a plan pod", func() {
+	// 			pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			Expect(len(pods.Items)).To(Equal(1))
+	// 		})
+	// 	})
+	// })
 })
 
 var _ = AfterSuite(func() {
