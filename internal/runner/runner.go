@@ -82,18 +82,17 @@ func (r *Runner) Exec() {
 	switch r.config.Runner.Action {
 	case "plan":
 		sum, err = r.plan()
+		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 		if err == nil {
-			ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 			ann[annotations.LastPlanCommit] = commit
 		}
-		if sum != "" {
-			ann[annotations.LastPlanSum] = sum
-		}
+		ann[annotations.LastPlanSum] = sum
 	case "apply":
 		sum, err = r.apply()
+		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
+		ann[annotations.LastApplySum] = sum
 		if err == nil {
 			ann[annotations.LastApplyCommit] = commit
-			ann[annotations.LastApplySum] = sum
 		}
 	default:
 		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
@@ -107,6 +106,8 @@ func (r *Runner) Exec() {
 		}
 		number++
 		ann[annotations.Failure] = strconv.Itoa(number)
+	} else {
+		ann[annotations.Failure] = "0"
 	}
 	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
 	if err != nil {

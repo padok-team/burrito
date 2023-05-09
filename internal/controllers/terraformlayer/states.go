@@ -23,9 +23,12 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	c1, isPlanArtifactUpToDate := r.IsPlanArtifactUpToDate(layer)
 	c2, isApplyUpToDate := r.IsApplyUpToDate(layer)
 	c3, isLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
-	// c3, hasFailed := HasFailed(r)
-	conditions := []metav1.Condition{c1, c2, c3}
+	c4, isInFailureGracePeriod := r.IsInFailureGracePeriod(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4}
 	switch {
+	case isInFailureGracePeriod:
+		log.Infof("layer %s is in failure grace period", layer.Name)
+		return &FailureGracePeriod{}, conditions
 	case isPlanArtifactUpToDate && isApplyUpToDate && isLastRelevantCommitPlanned:
 		log.Infof("layer %s is up to date, waiting for a new drift detection cycle", layer.Name)
 		return &Idle{}, conditions
@@ -38,6 +41,26 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is an intended behavior.", layer.Name)
 		return &Idle{}, conditions
+	}
+}
+
+type FailureGracePeriod struct{}
+
+func (s *FailureGracePeriod) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+		lastActionTime, ok := GetLastActionTime(r, layer)
+		if ok != nil {
+			log.Errorf("could not get lastActionTime on layer %s,: %s", layer.Name, ok)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+		}
+		expTime := GetLayerExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, layer)
+		endIdleTime := lastActionTime.Add(expTime)
+		now := r.Clock.Now()
+		if endIdleTime.After(now) {
+			log.Infof("the grace period is over for layer %v, new retry", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+		}
+		return ctrl.Result{RequeueAfter: now.Sub(endIdleTime)}
 	}
 }
 

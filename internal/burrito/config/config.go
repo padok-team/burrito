@@ -61,9 +61,10 @@ type LeaderElectionConfig struct {
 }
 
 type ControllerTimers struct {
-	DriftDetection time.Duration `yaml:"driftDetection"`
-	OnError        time.Duration `yaml:"onError"`
-	WaitAction     time.Duration `yaml:"waitAction"`
+	DriftDetection     time.Duration `yaml:"driftDetection"`
+	OnError            time.Duration `yaml:"waitAction"`
+	WaitAction         time.Duration `yaml:"onError"`
+	FailureGracePeriod time.Duration `yaml:"failureGracePeriod"`
 }
 
 type RepositoryConfig struct {
@@ -170,8 +171,9 @@ func TestConfig() *Config {
 		},
 		Controller: ControllerConfig{
 			Timers: ControllerTimers{
-				DriftDetection: 20 * time.Minute,
-				WaitAction:     5 * time.Minute,
+				DriftDetection:     20 * time.Minute,
+				WaitAction:         5 * time.Minute,
+				FailureGracePeriod: 15 * time.Second,
 			},
 		},
 		Runner: RunnerConfig{
