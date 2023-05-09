@@ -408,6 +408,37 @@ var _ = Describe("Layer", func() {
 			Expect(len(pods.Items)).To(Equal(1))
 		})
 	})
+	Describe("Merge case", func() {
+		Describe("When a TerraformLayer is created", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "merge-case-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+			It("should be locked", func() {
+				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should have created a plan pod", func() {
+				pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(1))
+			})
+		})
+	})
 })
 
 var _ = AfterSuite(func() {
