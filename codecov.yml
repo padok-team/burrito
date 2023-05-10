@@ -1,4 +1,4 @@
 ignore:
-  - "api/v1alpha1/zz_generated_deepcopy.go"
+  - "api/v1alpha1/zz_generated.deepcopy.go"
   - "main.go"
   - "cmd"
