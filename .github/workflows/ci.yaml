@@ -74,7 +74,7 @@ jobs:
         echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
     - name: Build and push
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v4
       with:
         push: true
         build-args: |
