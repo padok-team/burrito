@@ -1,0 +1,25 @@
+annotations: {}
+labels: {}
+additionalBindings: 
+- role: cluster-admin
+  kind: ClusterRole
+tenants:
+  tenant1: 
+    namespace: burrito-tenant1
+    serviceAccounts:
+      runner1:
+        annotations: {}
+        labels: {}
+  tenant2:
+    namespace: burrito-tenant2
+    serviceAccounts:
+      runner1:
+        annotations: {}
+        labels: {}
+        additionalBindings:
+        - role: cluster-admin
+          kind: ClusterRole
+      runner2:
+        annotations: {}
+        labels: {}
+

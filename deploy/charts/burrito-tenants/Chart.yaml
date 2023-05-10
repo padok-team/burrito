@@ -1,0 +1,6 @@
+apiVersion: v2
+name: burrito-tenants
+description: A Helm chart used for deploying common resources linked to a tenant
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
