@@ -5,7 +5,7 @@
 - Installed [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) command-line tool.
 - Have a [kubeconfig](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) file (default location is `~/.kube/config`).
 
-1. Install burrito
+## 1. Install burrito
 
 ```bash
 kubectl create namespace burrito
@@ -17,7 +17,7 @@ This will create a new namespace, `burrito`, where burrito services will live.
 !!! warning
     The installation manifests include `ClusterRoleBinding` resources that reference `burrito` namespace. If you are installing burrito into a different namespace then make sure to update the namespace reference.
 
-2. Create a connection to a private repository
+## 2. Create a connection to a private repository
 
 Create a Kubernetes `Secret` which looks like:
 
@@ -53,7 +53,7 @@ spec:
 !!! info
     You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformLayer` definition.
 
-3. Synchronize a terraform layer
+## 3. Synchronize a terraform layer
 
 After creating a `TerraformRepository` you can create a `TerraformLayer` ressource which looks like:
 
