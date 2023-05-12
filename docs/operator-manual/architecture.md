@@ -50,7 +50,7 @@ The status of a `TerraformLayer` is defined using the [conditions standards defi
 !!! info 
     We use annotations to store information because we do not want to rely too heavily on the uptime of the redis instance.
 
-With those 3 conditions, we defined 3 states:
+With those 4 conditions, we defined 4 states:
 
 - `Idle`. This is the state of a layer if no runner needs be started
 - `PlanNeeded`. This is the state of a layer if burrito needs to start a `plan` runner
