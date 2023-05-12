@@ -37,6 +37,7 @@ The status of a `TerraformPulLRequest` is defined using the [conditions standard
     We use annotations to store information.
 
 With those 3 conditions, we defined 3 states:
+
 - `Idle`. This is the state of a pull request if nothing needs to be done.
 - `DiscoveryNeeded`. This is the state of a pull request if the controller needs to check which layers are affected on the given pull request.
 - `CommentNeeded`.  This is the state of a pull request if the controller needs to send a comment to the git provider's API.
