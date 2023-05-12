@@ -31,6 +31,19 @@ Finally, currently, there is no easy way to navigate your terraform state to tru
 
 To learn more about burrito [go to the complete documentation](https://padok-team.github.io/burrito/).
 
+## Community
+
+### Contibution, Discussion and Support
+
+You can reach burrito's maintainers on Twitter:
+
+- [@spoukke](https://twitter.com/spoukke)
+- [@LonguetAlan](https://twitter.com/LonguetAlan)
+
+### Blogs and Presentations
+
+1. [Our burrito is a TACoS](https://www.padok.fr/en/blog/burrito-tacos)
+
 ## License
 
 © 2022 [Padok](https://www.padok.fr/).
