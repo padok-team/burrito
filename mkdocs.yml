@@ -11,8 +11,15 @@ markdown_extensions:
     permalink: true
 nav:
 - Overview: index.md
-- getting_started.md
+- Getting Started: getting-started.md
 - Operator Manual:
   - operator-manual/index.md
+  - operator-manual/architecture.md
+  - operator-manual/git-webhook.md
+  - operator-manual/advanced-configuration.md
+  - operator-manual/pr-mr-workflow.md
 - User Guide:
   - user-guide/index.md
+  - user-guide/override-runner.md
+  - user-guide/remediation-strategy.md
+  - user-guide/terraform-version.md
