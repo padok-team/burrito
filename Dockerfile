@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.19 as builder
+FROM docker.io/library/golang:1.19.9@sha256:9613596d7405705447f36440a59a3a2a1d22384c7568ae1838d0129964c5ba13 as builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
@@ -31,9 +31,9 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
           -X ${PACKAGE}/internal/version.Version=${VERSION} \
           -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
           -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
-        -o bin/burrito main.go 
+        -o bin/burrito main.go
 
-FROM golang:alpine
+FROM docker.io/library/alpine:3.18.0@sha256:02bb6f428431fbc2809c5d1b41eab5a68350194fb508869a33cb1af4444c9b11
 
 RUN apk add --update git bash openssh
 
