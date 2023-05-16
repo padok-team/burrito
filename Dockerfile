@@ -35,10 +35,28 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 
 FROM docker.io/library/alpine:3.18.0@sha256:02bb6f428431fbc2809c5d1b41eab5a68350194fb508869a33cb1af4444c9b11
 
+WORKDIR /home/burrito
+
+ENV UID=65532
+ENV GID=65532
+ENV USER=burrito
+ENV GROUP=burrito
+
 RUN apk add --update --no-cache git bash openssh
 
-WORKDIR /
-COPY --from=builder /workspace/bin/burrito .
+RUN addgroup \
+      -g $GID \
+      $GROUP && \
+    adduser \
+      --shell /sbin/nologin \
+      --disabled-password \
+      --no-create-home \
+      --home $(pwd) \
+      --uid $UID \
+      --ingroup $GROUP \
+      $USER
+
+COPY --from=builder /workspace/bin/burrito /usr/bin/local/burrito
 USER 65532:65532
 
-ENTRYPOINT ["/burrito"]
+ENTRYPOINT ["/usr/bin/local/burrito"]
