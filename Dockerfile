@@ -48,7 +48,6 @@ RUN addgroup \
       -g $GID \
       $GROUP && \
     adduser \
-      --shell /sbin/nologin \
       --disabled-password \
       --no-create-home \
       --home $(pwd) \
