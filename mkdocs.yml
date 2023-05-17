@@ -1,0 +1,25 @@
+site_name: burrito
+repo_url: https://github.com/padok-team/burrito
+theme:
+  name: material
+  favicon: assets/icon/burrito.png
+  logo: assets/icon/burrito.png
+markdown_extensions:
+- codehilite
+- admonition
+- toc:
+    permalink: true
+nav:
+- Overview: index.md
+- Getting Started: getting-started.md
+- Operator Manual:
+  - operator-manual/index.md
+  - operator-manual/architecture.md
+  - operator-manual/git-webhook.md
+  - operator-manual/advanced-configuration.md
+  - operator-manual/pr-mr-workflow.md
+- User Guide:
+  - user-guide/index.md
+  - user-guide/override-runner.md
+  - user-guide/remediation-strategy.md
+  - user-guide/terraform-version.md

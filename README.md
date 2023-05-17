@@ -8,16 +8,6 @@
 
 **Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) Kubernetes Operator.
 
-- [Why does this exists?](#why-does-this-exists)
-- [Demo](#demo)
-- [Installation](#installation)
-- [Getting started](#getting-started)
-  - [Connect to a private repository](#connect-to-a-private-repository)
-  - [Synchronize a terraform layer](#synchronize-a-terraform-layer)
-- [Advanced usage](#advanced-usage)
-- [How it works](#how-it-works)
-- [License](#license)
-
 ## Why does this exists?
 
 [`terraform`](https://www.terraform.io/) is a tremendous tool to manage your infrastructure in IaC.
@@ -37,85 +27,22 @@ Finally, currently, there is no easy way to navigate your terraform state to tru
 
 ![demo](./docs/assets/demo/demo.gif)
 
-## Installation
+## Documenation
 
-You can just run the following:
+To learn more about burrito [go to the complete documentation](https://padok-team.github.io/burrito/).
 
-```bash
-kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/manifests/install.yaml
-```
+## Community
 
-## Getting started
+### Contibution, Discussion and Support
 
-`burrito` uses two [CRDs](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/):
-- `TerraformRepository` which defines the way to connect to a public or private repository containing some `terraform` code
-- `TerraformLayer` which defines a `terraform` layer inside a given `TerraformRepository`
+You can reach burrito's maintainers on Twitter:
 
-### Connect to a private repository
+- [@spoukke](https://twitter.com/spoukke)
+- [@LonguetAlan](https://twitter.com/LonguetAlan)
 
-Create a Kubernetes `Secret` which looks like:
+### Blogs and Presentations
 
-```yaml
-kind: Secret
-metadata:
-  name: burrito-repo
-  namespace: burrito
-type: Opaque
-stringData:
-  username: <my-username>
-  password: <my-password | my-access-token>
-  sshPrivateKey: |
-    -----BEGIN OPENSSH PRIVATE KEY-----
-    ...
-    -----END OPENSSH PRIVATE KEY-----
-```
-
-Then, create a `TerraformRepository` Kubernetes resource:
-
-```yaml
-apiVersion: config.terraform.padok.cloud/v1alpha1
-kind: TerraformRepository
-metadata:
-  name: burrito
-  namespace: burrito
-spec:
-  repository:
-    url: <https_or_ssh_repository_url>
-    secretName: burrito-repo
-```
-
-> N.B. You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformLayer` definition.
-
-### Synchronize a terraform layer
-
-First, you need to create a `TerraformRepository`.
-
-Then, create a `TerraformLayer` ressource which looks like:
-
-```yaml
-apiVersion: config.terraform.padok.cloud/v1alpha1
-kind: TerraformLayer
-metadata:
-  name: random-pets
-  namespace: burrito
-spec:
-  terraform: 
-    version: "1.3.1"
-  path: "internal/e2e/testdata/random-pets"
-  branch: "main"
-  repository:
-    kind: TerraformRepository
-    name: burrito
-    namespace: burrito
-```
-
-## Advanced usage
-
-See [Usage](docs/contents/usage) for more advanced configuration options.
-
-## How it works
-
-See [Design](docs/contents/design) for details on how `burrito` works under the hood.
+1. [Our burrito is a TACoS](https://www.padok.fr/en/blog/burrito-tacos)
 
 ## License
 
