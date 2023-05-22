@@ -35,7 +35,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 
 FROM docker.io/library/alpine:3.18.0@sha256:02bb6f428431fbc2809c5d1b41eab5a68350194fb508869a33cb1af4444c9b11
 
-WORKDIR /home/burrito
+WORKDIR /app
 
 ENV UID=65532
 ENV GID=65532
@@ -55,7 +55,11 @@ RUN addgroup \
   --ingroup $GROUP \
   $USER
 
-COPY --from=builder /workspace/bin/burrito /usr/local/bin/burrito
+COPY --from=builder /workspace/bin/burrito .
+
+RUN chown burrito:burrito burrito
+RUN chmod +x burrito
+
 USER 65532:65532
 
-ENTRYPOINT ["/usr/local/bin/burrito"]
+ENTRYPOINT ["/app/burrito"]
