@@ -154,6 +154,7 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 					{
 						MountPath: "/app/know_hosts",
 						Name:      "ssh-known-hosts",
+						SubPath:   "known_hosts",
 					},
 				},
 				Env: []corev1.EnvVar{
