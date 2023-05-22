@@ -152,7 +152,7 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 						MountPath: "/repository",
 					},
 					{
-						MountPath: "/app/.ssh/",
+						MountPath: "/app/.ssh/know_hosts",
 						Name:      "ssh-known-hosts",
 					},
 				},
