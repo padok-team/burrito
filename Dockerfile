@@ -35,15 +35,17 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 
 FROM docker.io/library/alpine:3.18.0@sha256:02bb6f428431fbc2809c5d1b41eab5a68350194fb508869a33cb1af4444c9b11
 
-WORKDIR /app
+WORKDIR /home/burrito
+
+# Install required packages
+RUN apk add --update --no-cache git bash openssh
 
 ENV UID=65532
 ENV GID=65532
 ENV USER=burrito
 ENV GROUP=burrito
 
-RUN apk add --update --no-cache git bash openssh
-
+# Create a non-root user to run the app
 RUN addgroup \
   -g $GID \
   $GROUP && \
@@ -55,11 +57,13 @@ RUN addgroup \
   --ingroup $GROUP \
   $USER
 
-COPY --from=builder /workspace/bin/burrito .
+# Copy the binary to the production image from the builder stage
+COPY --from=builder /workspace/bin/burrito /usr/local/bin/burrito
 
-RUN chown burrito:burrito burrito
-RUN chmod +x burrito
+RUN chmod +x /usr/local/bin/burrito
 
+# Use an unprivileged user
 USER 65532:65532
 
-ENTRYPOINT ["/app/burrito"]
+# Run Burrito on container startup
+ENTRYPOINT ["burrito"]
