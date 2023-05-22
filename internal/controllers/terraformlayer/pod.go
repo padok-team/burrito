@@ -153,7 +153,7 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 					},
 					{
 						MountPath: "/app/.ssh/",
-						Name:      "burrito-ssh-known-hosts",
+						Name:      "ssh-known-hosts",
 					},
 				},
 				Env: []corev1.EnvVar{
