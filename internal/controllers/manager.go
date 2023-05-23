@@ -25,6 +25,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	log "github.com/sirupsen/logrus"
@@ -75,6 +76,7 @@ func (c *Controllers) Exec() {
 		HealthProbeBindAddress: c.config.Controller.HealthProbeBindAddress,
 		LeaderElection:         c.config.Controller.LeaderElection.Enabled,
 		LeaderElectionID:       c.config.Controller.LeaderElection.ID,
+		NewCache:               cache.MultiNamespacedCacheBuilder(c.config.Controller.WatchedNamespaces),
 	})
 	if err != nil {
 		log.Fatalf("unable to start manager: %s", err)
