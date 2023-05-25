@@ -23,3 +23,4 @@ nav:
   - user-guide/override-runner.md
   - user-guide/remediation-strategy.md
   - user-guide/terraform-version.md
+  - user-guide/private-modules.md
