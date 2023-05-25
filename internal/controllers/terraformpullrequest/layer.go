@@ -106,6 +106,15 @@ func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 		if strings.Contains(f, layer.Spec.Path) {
 			return true
 		}
+		// Check if the file is under an additionnal trigger path
+		if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
+			for _, p := range strings.Split(val, ",") {
+				p = ensureAbsPath(p)
+				if strings.Contains(f, p) {
+					return true
+				}
+			}
+		}
 	}
 
 	return false
