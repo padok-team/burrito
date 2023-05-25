@@ -57,21 +57,24 @@ func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 		return true
 	}
 
-	// Check if the layer has the AdditionnalTriggerPaths annotation
-	additionnalTriggerPaths, exists := layer.Annotations[annotations.AdditionnalTriggerPaths]
-
 	// At last one changed file must be under refresh path
 	for _, f := range changedFiles {
 		f = ensureAbsPath(f)
 		if strings.Contains(f, layer.Spec.Path) {
 			return true
 		}
-		if exists {
-			for _, p := range strings.Split(additionnalTriggerPaths, ",") {
+		fmt.Println("Do I have additionnals trigger paths ?")
+		if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
+			fmt.Println("Yes")
+			for _, p := range strings.Split(val, ",") {
+				fmt.Println("Checking", p)
 				p = ensureAbsPath(p)
+				fmt.Println("Is", p, "in", f, "?")
 				if strings.Contains(f, p) {
+					fmt.Println("Yes")
 					return true
 				}
+				fmt.Println("No")
 			}
 		}
 	}
