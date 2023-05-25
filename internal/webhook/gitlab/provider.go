@@ -63,7 +63,7 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 			Provider: "gitlab",
 			ID:       strconv.Itoa(int(payload.ObjectAttributes.ID)),
 			URL:      event.NormalizeUrl(payload.Project.WebURL),
-			Revision: event.ParseRevision(payload.ObjectAttributes.SourceBranch),
+			Revision: payload.ObjectAttributes.SourceBranch,
 			Action:   getNormalizedAction(payload.ObjectAttributes.Action),
 			Base:     payload.ObjectAttributes.TargetBranch,
 			Commit:   payload.ObjectAttributes.LastCommit.ID,

@@ -69,7 +69,7 @@ func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
 			Provider: "github",
 			ID:       strconv.FormatInt(payload.PullRequest.Number, 10),
 			URL:      event.NormalizeUrl(payload.Repository.HTMLURL),
-			Revision: event.ParseRevision(payload.PullRequest.Head.Ref),
+			Revision: payload.PullRequest.Head.Ref,
 			Action:   payload.Action,
 			Base:     payload.PullRequest.Base.Ref,
 			Commit:   payload.PullRequest.Head.Sha,
