@@ -16,8 +16,9 @@ const (
 	Failure         string = "runner.terraform.padok.cloud/failure"
 	Lock            string = "runner.terraform.padok.cloud/lock"
 
-	LastBranchCommit   string = "webhook.terraform.padok.cloud/branch-commit"
-	LastRelevantCommit string = "webhook.terraform.padok.cloud/relevant-commit"
+	LastBranchCommit        string = "webhook.terraform.padok.cloud/branch-commit"
+	LastRelevantCommit      string = "webhook.terraform.padok.cloud/relevant-commit"
+	AdditionnalTriggerPaths string = "webhook.terraform.padok.cloud/additionnal-trigger-paths"
 
 	ForceApply string = "notifications.terraform.padok.cloud/force-apply"
 

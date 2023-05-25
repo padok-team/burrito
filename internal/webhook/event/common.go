@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -56,11 +57,22 @@ func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 		return true
 	}
 
+	// Check if the layer has the AdditionnalTriggerPaths annotation
+	additionnalTriggerPaths, exists := layer.Annotations[annotations.AdditionnalTriggerPaths]
+
 	// At last one changed file must be under refresh path
 	for _, f := range changedFiles {
 		f = ensureAbsPath(f)
 		if strings.Contains(f, layer.Spec.Path) {
 			return true
+		}
+		if exists {
+			for _, p := range strings.Split(additionnalTriggerPaths, ",") {
+				p = ensureAbsPath(p)
+				if strings.Contains(f, p) {
+					return true
+				}
+			}
 		}
 	}
 

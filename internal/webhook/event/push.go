@@ -54,6 +54,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 			continue
 		}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
+
 		if layerFilesHaveChanged(layer, e.Changes) {
 			ann[annotations.LastRelevantCommit] = e.ChangeInfo.ShaAfter
 		}
