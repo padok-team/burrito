@@ -1,82 +1,87 @@
-# Default values for burrito-base.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+redis:
+  enabled: true
 
-replicaCount: 1
+config:
+  webhook_secret: "my-secret"
 
-image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+global:
+  metadata:
+    labels:
+      app.kubernetes.io/part-of: burrito
+    annotations: {}      
+  deployment:
+    autoscaling:
+      enabled: false
+    replicas: 1
+    image:
+      repository: ghcr.io/padok-team/burrito
+      tag: "v0.1.0"
+      pullPolicy: Always
+    command: ["burrito"]
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources: {}
+    ports: []
+    envFrom: []
+  service:
+    enabled: true
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+  webhook_secret: ""
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+controller:
+  metadata:
+    labels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/name: burrito-controller
+  deployment:
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8081
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    readinessProbe:
+      httpGet:
+        path: /readyz
+        port: 8081
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    args: ["controllers", "start"]
+    envFrom: []
+  service:
+    enabled: false
 
-podAnnotations: {}
+server:
+  metadata:
+    labels:
+      app.kubernetes.io/component: server
+      app.kubernetes.io/name: burrito-server
+  deployment:
+    args: ["server", "start"]
+    ports:
+    - name: http
+      containerPort: 8080
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    envFrom: []
+  service:
+    ports:
+    - name: http
+      port: 80
+      targetPort: http
+  ingress: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+tenants: {}
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
 
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}

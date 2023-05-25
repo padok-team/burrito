@@ -1,6 +1,0 @@
-apiVersion: v2
-name: burrito-common
-description: A library Helm chart containing common templates for burrito
-type: library
-version: 0.2.0
-appVersion: "0.2.0"

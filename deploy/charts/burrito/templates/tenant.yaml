@@ -1,0 +1,59 @@
+{{- range $tenant := .Values.tenants }}
+{{- if $tenant.namespace.create }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    {{- toYaml $tenant.namespace.labels | nindent 4 }}
+  annotations:
+    {{- toYaml $tenant.namespace.annotations | nindent 4 }}
+  name: {{ $tenant.namespace.name }}
+spec:
+  finalizers:
+  - kubernetes
+---
+{{- end }}
+{{- range $serviceAccount := .serviceAccounts }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $serviceAccount.name }}
+  labels:
+    {{- toYaml $serviceAccount.labels | nindent 4 }}
+  annotations:
+    {{- toYaml $serviceAccount.annotations | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $serviceAccount.name }}-burrito-runner
+  labels:
+    {{- toYaml $serviceAccount.labels | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-runner
+subjects:
+- kind: ServiceAccount
+  name: {{ $serviceAccount.name }}
+  namespace: {{ $tenant.namespace.name }}
+---
+{{- range $additionalRoleBinding := $serviceAccount.additionalRoleBindings }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $additionalRoleBinding.name }}
+  labels:
+    {{- toYaml $serviceAccount.labels | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ $additionalRoleBinding.role.kind }}
+  name: {{ $additionalRoleBinding.role.name }}
+subjects:
+- kind: ServiceAccount
+  name: {{ $serviceAccount.name }}
+  namespace: {{ $tenant.namespace.name }}
+---
+{{- end }}
+{{- end }}
+{{- end }}

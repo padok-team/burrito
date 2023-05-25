@@ -1,0 +1,31 @@
+redis:
+  enabled: true
+global:
+  metadata: {}
+  deployment: {}
+config: {}
+controller:
+  metadata: {}
+  deployment: {}
+  service: {}
+server:
+  metadata: {}
+  deployment: {}
+  service: {}
+  ingress: {}
+
+tenants:
+- namespace: 
+    create: true
+    name: "tenant-1"
+    labels: {}
+    annotations: {}
+  serviceAccounts: 
+  - name: runner-1
+    additionalRoleBindings:
+    - name: test
+      role:
+        kind: ClusterRole
+        name: cluster-admin
+    annotations: {}
+    labels: {}

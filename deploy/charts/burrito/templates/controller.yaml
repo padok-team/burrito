@@ -1,0 +1,95 @@
+{{- with mergeOverwrite (deepCopy .Values.global) .Values.controller }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burrito-controller
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+spec:
+  {{- if not .deployment.autoscaling.enabled }}
+  replicas: {{ .deployment.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- toYaml .metadata.labels | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .deployment.podAnnotations | nindent 8 }}
+      labels:
+        {{- toYaml .metadata.labels | nindent 8 }}
+    spec:
+      {{- with .deployment.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: burrito-controller
+      securityContext:
+        {{- toYaml .deployment.podSecurityContext | nindent 8 }}
+      containers:
+        - name: controller
+          command: 
+            {{- toYaml .deployment.command | nindent 12 }}
+          args:
+            {{- toYaml .deployment.args | nindent 12 }}
+          securityContext:
+            {{- toYaml .deployment.securityContext | nindent 12 }}
+          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag }}"
+          imagePullPolicy: {{ .deployment.image.pullPolicy }}
+          ports:
+            {{- toYaml .deployment.ports | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .deployment.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .deployment.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .deployment.resources | nindent 12 }}
+          env: ## TODO: Env var
+          - name: BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION
+            valueFrom:
+              configMapRef: burrito
+              optional: true
+              key: test
+          envFrom:
+            {{- toYaml .deployment.envFrom | nindent 12 }}
+      {{- with .deployment.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .deployment.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- if .service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: burrito-controller
+  labels:
+    {{- toYaml .metadata.labels | nindent 4}}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4}}
+spec:
+  type: {{ .type }}
+  ports:
+    {{- toYaml .service.ports | nindent 4 }}
+  selector:
+    {{- toYaml .metadata.labels | nindent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: burrito-controller
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+{{- end }}
