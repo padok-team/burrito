@@ -7,6 +7,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -63,18 +64,18 @@ func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 		if strings.Contains(f, layer.Spec.Path) {
 			return true
 		}
-		fmt.Println("Do I have additionnals trigger paths ?")
+		log.Infof("Do I have additionnals trigger paths ?")
 		if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
-			fmt.Println("Yes")
+			log.Infof("Yes")
 			for _, p := range strings.Split(val, ",") {
-				fmt.Println("Checking", p)
+				log.Infof("Checking %s", p)
 				p = ensureAbsPath(p)
-				fmt.Println("Is", p, "in", f, "?")
+				log.Infof("Is %s in %s ?", p, f)
 				if strings.Contains(f, p) {
-					fmt.Println("Yes")
+					log.Infof("Yes")
 					return true
 				}
-				fmt.Println("No")
+				log.Infof("No")
 			}
 		}
 	}
