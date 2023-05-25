@@ -16,14 +16,15 @@ const (
 	Failure         string = "runner.terraform.padok.cloud/failure"
 	Lock            string = "runner.terraform.padok.cloud/lock"
 
-	LastBranchCommit        string = "webhook.terraform.padok.cloud/branch-commit"
-	LastRelevantCommit      string = "webhook.terraform.padok.cloud/relevant-commit"
-	AdditionnalTriggerPaths string = "webhook.terraform.padok.cloud/additionnal-trigger-paths"
+	LastBranchCommit   string = "webhook.terraform.padok.cloud/branch-commit"
+	LastRelevantCommit string = "webhook.terraform.padok.cloud/relevant-commit"
 
 	ForceApply string = "notifications.terraform.padok.cloud/force-apply"
 
 	LastDiscoveredCommit string = "pullrequest.terraform.padok.cloud/last-discovered-commit"
 	LastCommentedCommit  string = "pullrequest.terraform.padok.cloud/last-commented-commit"
+
+	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 )
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {
