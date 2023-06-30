@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { getSpacing, shadows } from 'stylesheet.ts';
+import { colors, getSpacing } from 'stylesheet.ts';
 
 export const Container = styled.div`
   padding: ${getSpacing(2)} ${getSpacing(4)};
@@ -10,5 +10,6 @@ export const Container = styled.div`
 
 export const Card = styled.div`
   padding: ${getSpacing(2)};
-  box-shadow: ${shadows.main};
+  border: 1px solid ${colors.gray0};
+  border-radius: 4px;
 `;
