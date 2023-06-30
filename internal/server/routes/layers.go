@@ -9,10 +9,6 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -22,65 +18,57 @@ func hashLayerId(l configv1alpha1.TerraformLayer) string {
 	return hex.EncodeToString(hash[:])
 }
 
-type Layer struct {
-	Id      string `json:"id"`
-	Name    string `json:"name"`
-	RepoUrl string `json:"repoUrl"`
-	Branch  string `json:"branch"`
-	Path    string `json:"path"`
-	Status  string `json:"status"`
+func getRepoForLayer(l *configv1alpha1.TerraformLayer, c client.Client) (*configv1alpha1.TerraformRepository, error) {
+	repo := &configv1alpha1.TerraformRepository{}
+	err := c.Get(context.Background(), client.ObjectKey{
+		Namespace: l.Spec.Repository.Namespace,
+		Name:      l.Spec.Repository.Name,
+	}, repo)
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
 }
 
-func GetAllLayers(w http.ResponseWriter, r *http.Request) {
-	log.Infof("request received on /layers")
-	scheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
-	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{
-		Scheme: scheme,
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+func (lc *LayerClient) GetAllLayersHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Infof("request received on /layers")
 
-	layers := &configv1alpha1.TerraformLayerList{}
-	err = cl.List(context.Background(), layers)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	layerResponse := []Layer{}
-	for _, layer := range layers.Items {
-		// Get the repo associated to the layer
-		repo := &configv1alpha1.TerraformRepository{}
-		err = cl.Get(context.Background(), client.ObjectKey{
-			Namespace: layer.Spec.Repository.Namespace,
-			Name:      layer.Spec.Repository.Name,
-		}, repo)
+		layers := &configv1alpha1.TerraformLayerList{}
+		err := lc.client.List(context.Background(), layers)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Construct the object
-		layerResponse = append(layerResponse, Layer{
-			Id:      hashLayerId(layer),
-			Name:    layer.Name,
-			RepoUrl: repo.Spec.Repository.Url,
-			Branch:  layer.Spec.Branch,
-			Path:    layer.Spec.Path,
-			Status:  layer.Status.State,
-		})
-	}
+		layerResponse := []Layer{}
+		for _, layer := range layers.Items {
+			// Get the repo associated to the layer
+			repo, err := getRepoForLayer(&layer, lc.client)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 
-	w.Header().Set("Content-Type", "application/json")
-	jsonResponse, err := json.Marshal(layerResponse)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+			// Construct the object
+			layerResponse = append(layerResponse, Layer{
+				Id:        hashLayerId(layer),
+				Name:      layer.Name,
+				Namespace: layer.Namespace,
+				RepoUrl:   repo.Spec.Repository.Url,
+				Branch:    layer.Spec.Branch,
+				Path:      layer.Spec.Path,
+				Status:    layer.Status.State,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		jsonResponse, err := json.Marshal(layerResponse)
+		if err != nil {
+			log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(jsonResponse)
 	}
-	w.Write(jsonResponse)
 }

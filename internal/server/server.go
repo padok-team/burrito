@@ -14,6 +14,7 @@ import (
 type Server struct {
 	config  *config.Config
 	Webhook *webhook.Webhook
+	Layer   *routes.LayerClient
 }
 
 func New(c *config.Config) *Server {
@@ -22,9 +23,16 @@ func New(c *config.Config) *Server {
 	if err != nil {
 		log.Printf("error initializing webhook: %s", err)
 	}
+
+	lclient := routes.NewLayerClient(c)
+	err = lclient.Init()
+	if err != nil {
+		log.Printf("error initializing layer client: %s", err)
+	}
 	return &Server{
 		config:  c,
 		Webhook: webhook,
+		Layer:   lclient,
 	}
 }
 
@@ -32,7 +40,8 @@ func (s *Server) Exec() {
 	log.Infof("starting burrito server...")
 	http.HandleFunc("/healthz", handleHealthz)
 	http.HandleFunc("/webhook", s.Webhook.GetHttpHandler())
-	http.HandleFunc("/layers", CORS(routes.GetAllLayers))
+	http.HandleFunc("/layers", CORS(s.Layer.GetAllLayersHandler()))
+	http.HandleFunc("/layer", CORS(s.Layer.GetSpecificLayerHandler()))
 
 	err := http.ListenAndServe(s.config.Server.Addr, nil)
 	if errors.Is(err, http.ErrServerClosed) {
