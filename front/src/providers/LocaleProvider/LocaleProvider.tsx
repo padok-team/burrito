@@ -20,7 +20,7 @@ const locales = {
 };
 
 const LocaleProvider: React.FC<Props> = ({ children }) => {
-  const locale = Locales.FR
+  const locale = Locales.FR;
   return (
     <IntlProvider locale={locale} messages={locales[locale]}>
       {children}

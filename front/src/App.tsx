@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider } from '@chakra-ui/react';
 
 import LocaleProvider from 'providers/LocaleProvider';
 import Router from 'Router';
@@ -14,7 +14,7 @@ function App() {
           <Router />
         </QueryClientProvider>
       </LocaleProvider>
-  </ChakraProvider>
+    </ChakraProvider>
   );
 }
 

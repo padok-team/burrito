@@ -6,7 +6,7 @@ import Layer from 'pages/Layer';
 
 export const PATHS = {
   HOME: '/home',
-  LAYER: '/layers/:namespace/:name'
+  LAYER: '/layers/:namespace/:name',
 };
 const Router: React.FC = () => {
   return (
