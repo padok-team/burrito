@@ -5,6 +5,7 @@ import Home from 'pages/Home';
 
 export const PATHS = {
   HOME: '/home',
+  Layer: '/Layers/:id',
 };
 const Router: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ const Router: React.FC = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path={PATHS.HOME} element={<Home />} />
+        <Route path={PATHS.Layer} element={<div />} />
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </BrowserRouter>

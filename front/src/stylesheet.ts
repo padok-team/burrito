@@ -10,8 +10,8 @@ export const getSpacing = (multiplier: number): string =>
 
 export const colors = {
   black: '#2A2A2A',
+  gray1: '#9A9A9A',
   gray0: '#DEDEDE',
-  gray_1: 'rgba(0, 0, 0, 0.16)',
 };
 
 export const font = {
