@@ -1,7 +1,12 @@
 import LocaleProvider from 'providers/LocaleProvider';
+import { FormattedMessage } from 'react-intl';
 
 function App() {
-  return <LocaleProvider>Burrito</LocaleProvider>;
+  return (
+    <LocaleProvider>
+      <FormattedMessage id="title" />
+    </LocaleProvider>
+  );
 }
 
 export default App;
