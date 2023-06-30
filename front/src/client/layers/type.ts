@@ -11,5 +11,5 @@ export type LayerSummary = {
   repoURL: string;
   path: string;
   branch: string;
-  status: string;
+  status: LayerStatus;
 };
