@@ -92,6 +92,13 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
+	forceApply, ok := t.Annotations[annotations.ForceApply]
+	if ok && forceApply == "1" {
+		condition.Reason = "ForceApply"
+		condition.Message = "Apply will run because force apply annotation is set"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
 	planHash, ok := t.Annotations[annotations.LastPlanSum]
 	if !ok {
 		condition.Reason = "NoPlanHasRunYet"

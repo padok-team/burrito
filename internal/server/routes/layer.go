@@ -113,3 +113,44 @@ func (lc *LayerClient) GetSpecificLayerHandler() func(http.ResponseWriter, *http
 		w.Write(jsonResponse)
 	}
 }
+
+func (lc *LayerClient) ForceApplyHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		layerName, present := query["name"] //name=["XXXXXX"]
+		if !present || len(layerName) == 0 {
+			log.Errorf("layer name query param not present")
+			http.Error(w, "name query parameter not present", http.StatusBadRequest)
+			return
+		}
+		layerNamespace, present := query["namespace"] //namespace=["XXXXXX"]
+		if !present || len(layerNamespace) == 0 {
+			log.Errorf("layer NS query param not present")
+			http.Error(w, "namespace query parameter not present", http.StatusBadRequest)
+			return
+		}
+
+		log.Infof("force apply layer %s/%s", layerNamespace[0], layerName[0])
+
+		layer := &configv1alpha1.TerraformLayer{}
+		err := lc.client.Get(context.Background(), client.ObjectKey{
+			Namespace: layerNamespace[0],
+			Name:      layerName[0],
+		}, layer)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		ann := map[string]string{}
+		ann[annotations.ForceApply] = "1"
+		err = annotations.Add(context.Background(), lc.client, layer, ann)
+		if err != nil {
+			log.Errorf("could not update terraform layer annotations to force apply: %s", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Else, it worked !
+	}
+}

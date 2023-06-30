@@ -42,6 +42,7 @@ func (s *Server) Exec() {
 	http.HandleFunc("/webhook", s.Webhook.GetHttpHandler())
 	http.HandleFunc("/layers", CORS(s.Layer.GetAllLayersHandler()))
 	http.HandleFunc("/layer", CORS(s.Layer.GetSpecificLayerHandler()))
+	http.HandleFunc("/forceApply", CORS(s.Layer.ForceApplyHandler()))
 
 	err := http.ListenAndServe(s.config.Server.Addr, nil)
 	if errors.Is(err, http.ErrServerClosed) {

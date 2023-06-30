@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/lock"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,7 +100,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
 		remediationStrategy := getRemediationStrategy(repository, layer)
-		if remediationStrategy != configv1alpha1.AutoApplyRemediationStrategy {
+		if remediationStrategy != configv1alpha1.AutoApplyRemediationStrategy && !isForcedApply(layer) {
 			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
 		}
@@ -128,6 +129,13 @@ func getRemediationStrategy(repo *configv1alpha1.TerraformRepository, layer *con
 		result = layer.Spec.RemediationStrategy
 	}
 	return result
+}
+
+func isForcedApply(layer *configv1alpha1.TerraformLayer) bool {
+	if val, ok := layer.Annotations[annotations.ForceApply]; ok {
+		return val == "1"
+	}
+	return false
 }
 
 func getStateString(state State) string {

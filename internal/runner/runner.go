@@ -89,6 +89,7 @@ func (r *Runner) Exec() {
 		ann[annotations.LastPlanSum] = sum
 	case "apply":
 		sum, err = r.apply()
+		ann[annotations.ForceApply] = "0"
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
 		ann[annotations.LastApplySum] = sum
 		if err == nil {
@@ -276,6 +277,7 @@ func (r *Runner) plan() (string, error) {
 
 func (r *Runner) apply() (string, error) {
 	log.Infof("starting terraform apply")
+
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
 	log.Infof("getting plan binary in cache at key %s", planBinKey)
 	plan, err := r.storage.Get(planBinKey)
