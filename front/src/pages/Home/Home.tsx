@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import BaseLayout from 'layouts/BaseLayout';
 import { fetchLayerSummaries } from 'client/layers/client.ts';
 
-import { Container } from './Home.style';
+import { Card, Container } from './Home.style';
 
 const Home: React.FC = () => {
   const query = useQuery({
@@ -16,7 +16,7 @@ const Home: React.FC = () => {
       <Container>
         {query.isSuccess &&
           query.data.map((layerSummary) => (
-            <div key={layerSummary.id}>{layerSummary.name}</div>
+            <Card key={layerSummary.id}>{layerSummary.name}</Card>
           ))}
       </Container>
     </BaseLayout>

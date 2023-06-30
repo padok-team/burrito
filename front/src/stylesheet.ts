@@ -11,7 +11,13 @@ export const getSpacing = (multiplier: number): string =>
 export const colors = {
   black: '#2A2A2A',
   gray0: '#DEDEDE',
+  gray_1: 'rgba(0, 0, 0, 0.16)',
 };
+
+export const shadows = {
+  main: css`${colors.gray_1} 0px 1px 4px`,
+}
+
 export const font = {
   size14: css`
     font-size: 14px;
