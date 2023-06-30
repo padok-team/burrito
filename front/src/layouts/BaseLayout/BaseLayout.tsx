@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 
-import { Container, Header, Title, Content } from './BaseLayout.style';
+import { Container, Header, Title, Content, Gutter } from './BaseLayout.style';
 import { FormattedMessage } from 'react-intl';
 
 interface Props {
@@ -15,7 +15,9 @@ const BaseLayout: React.FC<Props> = ({ children }) => {
           <FormattedMessage id="title" />
         </Title>
       </Header>
-      <Content>{children}</Content>
+      <Gutter>
+        <Content>{children}</Content>
+      </Gutter>
     </Container>
   );
 };

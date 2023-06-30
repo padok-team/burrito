@@ -29,3 +29,11 @@ export const Title = styled.h1`
 export const Content = styled.div`
   flex-grow: 1;
 `;
+
+export const Gutter = styled.div`
+  margin: auto;
+  max-width: ${getSpacing(192)};
+  flex-grow: 1;
+  width: 100%;
+  box-sizing: border-box;
+`;
