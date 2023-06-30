@@ -38,7 +38,7 @@ func (l *LayerClient) Init() error {
 	l.client = cl
 
 	// TODO: Fix configuration
-	// l.config.Redis.URL = "burrito-redis:6379"
+	l.config.Redis.URL = "burrito-redis:6379"
 	log.Infof("Connecting to redis at %s", l.config.Redis.URL)
 	l.storage = redis.New(l.config.Redis.URL, l.config.Redis.Password, l.config.Redis.Database)
 	return nil
