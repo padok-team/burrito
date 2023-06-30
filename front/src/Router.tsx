@@ -2,10 +2,11 @@ import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import Home from 'pages/Home';
+import Layer from 'pages/Layer';
 
 export const PATHS = {
   HOME: '/home',
-  Layer: '/Layers/:id',
+  LAYER: '/layers/:id'
 };
 const Router: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ const Router: React.FC = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path={PATHS.HOME} element={<Home />} />
-        <Route path={PATHS.Layer} element={<div />} />
+        <Route path={PATHS.LAYER} element={<Layer />} />
         <Route path="*" element={<Navigate replace to="/" />} />
       </Routes>
     </BrowserRouter>
