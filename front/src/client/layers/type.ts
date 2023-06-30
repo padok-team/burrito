@@ -8,7 +8,7 @@ export enum LayerStatus {
 export type LayerSummary = {
   id: string;
   name: string;
-  repoURL: string;
+  repoUrl: string;
   path: string;
   branch: string;
   status: LayerStatus;
@@ -18,7 +18,7 @@ export type Layer = {
   id: string;
   name: string;
   namespace: string;
-  repoURL: string;
+  repoUrl: string;
   path: string;
   branch: string;
   status: LayerStatus;

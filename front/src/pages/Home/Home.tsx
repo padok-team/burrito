@@ -26,7 +26,7 @@ const Home: React.FC = () => {
               <Name>{layerSummary.name}</Name>
               <Detail>
                 <span>URL: </span>
-                <span>{layerSummary.repoURL}</span>
+                <span>{layerSummary.repoUrl}</span>
               </Detail>
               <Detail>
                 <span>Path: </span>

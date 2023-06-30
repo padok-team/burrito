@@ -37,7 +37,7 @@ export async function fetchMocLayer(namespace: string, name: string): Promise<La
     id: "id_layer_1",
     name: "layer_name",
     namespace: "mynamespace",
-    repoURL: "layer_url",
+    repoUrl: "layer_url",
     path: "layer_path",
     branch: "branch",
     status: LayerStatus.Idle,

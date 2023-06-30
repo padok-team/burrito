@@ -48,7 +48,7 @@ const Layer: React.FC = () => {
           </div>
           <div>
             <Name>Repo URL: </Name>
-            <span>{queryLayer.data.repoURL}</span>
+            <span>{queryLayer.data.repoUrl}</span>
           </div>
           <div>
             <Name>Nombres de resources: </Name>
