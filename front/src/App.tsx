@@ -1,7 +1,8 @@
+import { Container } from './App.style';
 
 function App() {
   return (
-    <div>Burrito</div>
+    <Container>Burrito</Container>
   )
 }
 
