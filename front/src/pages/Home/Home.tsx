@@ -1,18 +1,58 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { generatePath } from 'react-router-dom';
 
 import BaseLayout from 'layouts/BaseLayout';
 import { fetchLayerSummaries } from 'client/layers/client.ts';
-
-import { Card, Container, Name, Detail } from './Home.style';
-import { generatePath } from 'react-router-dom';
+import { LayerStatus } from 'client/layers/type.ts';
 import { PATHS } from 'Router.tsx';
+
+import {
+  Card,
+  CheckboxIcon,
+  Container,
+  Detail,
+  Name,
+  StatusContainer,
+  Status,
+} from './Home.style';
 
 const Home: React.FC = () => {
   const query = useQuery({
     queryKey: ['layers'],
     queryFn: fetchLayerSummaries,
   });
+
+  const getStatus = (status: LayerStatus) => {
+    switch (status) {
+      case LayerStatus.PlanNeeded:
+        return (
+          <Status>
+            <CheckboxIcon />
+            <span>{LayerStatus.PlanNeeded}</span>
+          </Status>
+        );
+      case LayerStatus.Idle:
+        return (
+          <Status>
+            <CheckboxIcon />
+            <span>{LayerStatus.Idle}</span>
+          </Status>
+        );
+      case LayerStatus.ApplyNeeded:
+        return (
+          <Status>
+            <span>{LayerStatus.ApplyNeeded}</span>
+          </Status>
+        );
+      case LayerStatus.FailureGracePeriod:
+        return (
+          <Status>
+            <span>{LayerStatus.FailureGracePeriod}</span>
+          </Status>
+        );
+    }
+  };
 
   return (
     <BaseLayout>
@@ -23,19 +63,20 @@ const Home: React.FC = () => {
               key={layerSummary.id}
               to={generatePath(PATHS.LAYER, { id: layerSummary.id })}
             >
-              <Name>{layerSummary.name}</Name>
-              <Detail>
-                <span>URL: </span>
-                <span>{layerSummary.repoUrl}</span>
-              </Detail>
-              <Detail>
-                <span>Path: </span>
-                <span>{layerSummary.path}</span>
-              </Detail>
-              <Detail>
-                <span>Branche: </span>
-                <span>{layerSummary.branch}</span>
-              </Detail>
+              <div>
+                <Name>{layerSummary.name}</Name>
+                <Detail>
+                  <span>URL: </span>
+                  <span>{layerSummary.repoUrl}</span>
+                </Detail>
+                <Detail>
+                  <span>Path: </span>
+                  <span>{layerSummary.path}</span>
+                </Detail>
+              </div>
+              <StatusContainer>
+                {getStatus(layerSummary.status)}
+              </StatusContainer>
             </Card>
           ))}
       </Container>

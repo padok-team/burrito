@@ -1,6 +1,8 @@
 import styled from 'styled-components';
-import { colors, font, getSpacing } from 'stylesheet.ts';
 import { Link } from 'react-router-dom';
+
+import { colors, font, getSpacing } from 'stylesheet.ts';
+import { ReactComponent as Checkbox } from 'assets/checkbox.svg';
 
 export const Container = styled.div`
   padding: ${getSpacing(2)} ${getSpacing(4)};
@@ -14,6 +16,11 @@ export const Card = styled(Link)`
   border: 1px solid ${colors.gray0};
   border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  row-gap: ${getSpacing(2)};
 `;
 
 export const Name = styled.div`
@@ -24,4 +31,19 @@ export const Name = styled.div`
 export const Detail = styled.div`
   color: ${colors.gray1};
   ${font.size14};
+`;
+
+export const StatusContainer = styled.div``;
+
+export const Status = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: ${getSpacing(1)};
+  ${font.size16};
+`;
+
+export const CheckboxIcon = styled(Checkbox)`
+  height: ${getSpacing(2.5)};
+  color: ${colors.green};
 `;

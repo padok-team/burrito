@@ -12,6 +12,7 @@ export const colors = {
   black: '#2A2A2A',
   gray1: '#9A9A9A',
   gray0: '#c5c5c5',
+  green: '#37af0c',
 };
 
 export const font = {
