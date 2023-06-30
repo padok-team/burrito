@@ -6,7 +6,7 @@ function Card(props : GridItemProps){
         <GridItem 
             d="flex" 
             borderRadius={10} 
-            p={10} 
+            p={5} 
             boxShadow="md" 
             {...props} 
         />

@@ -21,7 +21,7 @@ const Home: React.FC = () => {
           query.data.map((layerSummary) => (
             <Card
               key={layerSummary.id}
-              to={generatePath(PATHS.Layer, { id: layerSummary.id })}
+              to={generatePath(PATHS.LAYER, { id: layerSummary.id })}
             >
               <Name>{layerSummary.name}</Name>
               <Detail>

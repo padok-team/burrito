@@ -17,6 +17,7 @@ export type LayerSummary = {
 export type Layer = {
   id: string;
   name: string;
+  namespace: string;
   repoURL: string;
   path: string;
   branch: string;
@@ -24,7 +25,7 @@ export type Layer = {
   lastPlanCommit: string;
   lastApplyCommit: string;
   lastRelevantCommit: string;
-  Resources: Resource[];
+  resources: Resource[];
 };
 
 export type Resource = {
