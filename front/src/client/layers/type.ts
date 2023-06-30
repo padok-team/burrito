@@ -12,6 +12,7 @@ export type LayerSummary = {
   path: string;
   branch: string;
   status: LayerStatus;
+  namespace: string;
 };
 
 export type Layer = {
