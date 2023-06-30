@@ -1,7 +1,7 @@
-import { Container } from './App.style';
+import LocaleProvider from 'providers/LocaleProvider';
 
 function App() {
-  return <Container>Burrito</Container>;
+  return <LocaleProvider>Burrito</LocaleProvider>;
 }
 
 export default App;
