@@ -6,6 +6,7 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  flex-shrink: 0;
 `;
 
 export const Header = styled.div`
@@ -27,15 +28,15 @@ export const Title = styled.h1`
   column-gap: ${getSpacing(1)};
 `;
 
-export const Content = styled.div`
-  flex-grow: 1;
-  overflow-y: scroll;
-`;
-
 export const Gutter = styled.div`
+  width: 100%;
+  flex-grow: 1;
   margin: auto;
   max-width: ${getSpacing(192)};
-  flex-grow: 1;
-  width: 100%;
   box-sizing: border-box;
+`;
+
+export const Content = styled.div`
+  height: 100%;
+  overflow-y: scroll;
 `;
