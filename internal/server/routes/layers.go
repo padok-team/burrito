@@ -32,6 +32,7 @@ type Layer struct {
 }
 
 func GetAllLayers(w http.ResponseWriter, r *http.Request) {
+	log.Infof("request received on /layers")
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
