@@ -1,9 +1,7 @@
 import { Container } from './App.style';
 
 function App() {
-  return (
-    <Container>Burrito</Container>
-  )
+  return <Container>Burrito</Container>;
 }
 
-export default App
+export default App;
