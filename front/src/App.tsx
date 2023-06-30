@@ -1,10 +1,11 @@
 import LocaleProvider from 'providers/LocaleProvider';
-import { FormattedMessage } from 'react-intl';
+
+import Router from 'Router';
 
 function App() {
   return (
     <LocaleProvider>
-      <FormattedMessage id="title" />
+      <Router />
     </LocaleProvider>
   );
 }
