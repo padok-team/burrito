@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 
 import { colors, font, getSpacing } from 'stylesheet.ts';
 import { ReactComponent as Checkbox } from 'assets/checkbox.svg';
+import { ReactComponent as CrossMark } from 'assets/crossmark.svg';
+import { ReactComponent as Hourglass } from 'assets/hourglass.svg';
 
 export const Container = styled.div`
   padding: ${getSpacing(2)} ${getSpacing(4)};
@@ -46,4 +48,14 @@ export const Status = styled.div`
 export const CheckboxIcon = styled(Checkbox)`
   height: ${getSpacing(2.5)};
   color: ${colors.green};
+`;
+
+export const CrossMarkIcon = styled(CrossMark)`
+  height: ${getSpacing(2.5)};
+  color: ${colors.red};
+`;
+
+export const HourglassIcon = styled(Hourglass)`
+  height: ${getSpacing(2.25)};
+  color: ${colors.gray1};
 `;

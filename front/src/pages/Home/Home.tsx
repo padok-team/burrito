@@ -15,6 +15,8 @@ import {
   Name,
   StatusContainer,
   Status,
+  CrossMarkIcon,
+  HourglassIcon,
 } from './Home.style';
 
 const Home: React.FC = () => {
@@ -42,12 +44,14 @@ const Home: React.FC = () => {
       case LayerStatus.ApplyNeeded:
         return (
           <Status>
+            <HourglassIcon />
             <span>{LayerStatus.ApplyNeeded}</span>
           </Status>
         );
       case LayerStatus.FailureGracePeriod:
         return (
           <Status>
+            <CrossMarkIcon />
             <span>{LayerStatus.FailureGracePeriod}</span>
           </Status>
         );
