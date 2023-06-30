@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { colors, getSpacing } from 'stylesheet';
 
 export const Container = styled.div`
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -28,6 +29,7 @@ export const Title = styled.h1`
 
 export const Content = styled.div`
   flex-grow: 1;
+  overflow-y: scroll;
 `;
 
 export const Gutter = styled.div`
