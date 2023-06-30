@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/server/routes"
 	"github.com/padok-team/burrito/internal/webhook"
 )
 
@@ -31,6 +32,7 @@ func (s *Server) Exec() {
 	log.Infof("starting burrito server...")
 	http.HandleFunc("/healthz", handleHealthz)
 	http.HandleFunc("/webhook", s.Webhook.GetHttpHandler())
+	http.HandleFunc("/layers", routes.GetAllLayers)
 
 	err := http.ListenAndServe(s.config.Server.Addr, nil)
 	if errors.Is(err, http.ErrServerClosed) {
