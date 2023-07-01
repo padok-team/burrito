@@ -1,8 +1,8 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 import BaseLayout from 'layouts/BaseLayout';
-import { fetchLayer } from 'client/layers/client.ts';
+import { fetchLayer, forceApply } from 'client/layers/client.ts';
 
 import { Container } from './Layer.style';
 import ResourceCard from '../../components/ResourceCard';
@@ -13,7 +13,12 @@ import { Grid } from '@chakra-ui/react';
 import { Name } from './Layer.style';
 
 const Layer: React.FC = () => {
-  const { namespace, name } = useParams() as any;
+  const { namespace, name } = useParams() as {
+    namespace: string;
+    name: string;
+  };
+
+  const mutation = useMutation(() => forceApply(name, namespace));
 
   if (!namespace || !name) {
     return (
@@ -54,6 +59,13 @@ const Layer: React.FC = () => {
             <Name>Nombres de resources: </Name>
             <span>{queryLayer.data.resources.length}</span>
           </div>
+          <button
+            onClick={() => {
+              mutation.mutate();
+            }}
+          >
+            Button
+          </button>
         </div>
         <Grid
           templateRows="repeat(2, 1fr)"

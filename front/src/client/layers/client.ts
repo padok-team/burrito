@@ -1,5 +1,6 @@
 import { LayerSummary } from 'client/layers/type.ts';
-import { get } from 'client/client.ts';
+import { get, post } from 'client/client.ts';
+import { Layer } from 'client/layers/type.ts';
 
 export async function fetchLayerSummaries(): Promise<LayerSummary[]> {
   const response = await get<LayerSummary[]>(
@@ -8,8 +9,6 @@ export async function fetchLayerSummaries(): Promise<LayerSummary[]> {
 
   return response.data;
 }
-
-import { Layer, Resource, LayerStatus } from 'client/layers/type.ts';
 
 export async function fetchLayer(
   name: string,
@@ -22,6 +21,17 @@ export async function fetchLayer(
   );
 
   return response.data;
+}
+
+export async function forceApply(
+  name: string,
+  namespace: string,
+): Promise<void> {
+  await post<Layer>(
+    `${
+      import.meta.env.VITE_BACKEND_URL
+    }/forceApply?name=${name}&namespace=${namespace}`,
+  );
 }
 
 // export async function fetchMocLayer(
