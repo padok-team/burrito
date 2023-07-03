@@ -34,18 +34,28 @@ func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepos
 	}
 	affectedLayers := []configv1alpha1.TerraformLayer{}
 	for _, layer := range layers.Items {
-		if layer.Spec.Repository != pr.Spec.Repository {
-			continue
-		}
-		if layer.Spec.Branch != pr.Spec.Base {
-			continue
-		}
-		if layerFilesHaveChanged(layer, changes) {
+		if isLayerAffected(layer, *pr, changes) {
 			affectedLayers = append(affectedLayers, layer)
 		}
 	}
 
 	return affectedLayers, nil
+}
+
+func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.TerraformPullRequest, changes []string) bool {
+	if layer.Spec.Repository.Name != pr.Spec.Repository.Name {
+		return false
+	}
+	if layer.Spec.Repository.Namespace != pr.Spec.Repository.Namespace {
+		return false
+	}
+	if layer.Spec.Branch != pr.Spec.Base {
+		return false
+	}
+	if layerFilesHaveChanged(layer, changes) {
+		return true
+	}
+	return false
 }
 
 func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []configv1alpha1.TerraformLayer) []configv1alpha1.TerraformLayer {
