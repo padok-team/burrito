@@ -7,7 +7,7 @@ require (
 	github.com/hashicorp/terraform-json v0.17.1
 	github.com/onsi/ginkgo/v2 v2.9.4
 	github.com/onsi/gomega v1.27.6
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
