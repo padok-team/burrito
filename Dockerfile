@@ -27,18 +27,43 @@ COPY cmd/ cmd/
 # the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
-        -ldflags="\
-          -X ${PACKAGE}/internal/version.Version=${VERSION} \
-          -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
-          -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
-        -o bin/burrito main.go
+  -ldflags="\
+  -X ${PACKAGE}/internal/version.Version=${VERSION} \
+  -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
+  -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
+  -o bin/burrito main.go
 
 FROM docker.io/library/alpine:3.18.0@sha256:02bb6f428431fbc2809c5d1b41eab5a68350194fb508869a33cb1af4444c9b11
 
+WORKDIR /home/burrito
+
+# Install required packages
 RUN apk add --update --no-cache git bash openssh
 
-WORKDIR /
-COPY --from=builder /workspace/bin/burrito .
+ENV UID=65532
+ENV GID=65532
+ENV USER=burrito
+ENV GROUP=burrito
+
+# Create a non-root user to run the app
+RUN addgroup \
+  -g $GID \
+  $GROUP && \
+  adduser \
+  --disabled-password \
+  --no-create-home \
+  --home $(pwd) \
+  --uid $UID \
+  --ingroup $GROUP \
+  $USER
+
+# Copy the binary to the production image from the builder stage
+COPY --from=builder /workspace/bin/burrito /usr/local/bin/burrito
+
+RUN chmod +x /usr/local/bin/burrito
+
+# Use an unprivileged user
 USER 65532:65532
 
-ENTRYPOINT ["/burrito"]
+# Run Burrito on container startup
+ENTRYPOINT ["burrito"]
