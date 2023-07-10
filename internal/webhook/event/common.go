@@ -67,6 +67,8 @@ func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 		if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
 			for _, p := range strings.Split(val, ",") {
 				p = ensureAbsPath(p)
+				// Handle relative parent paths (like "../")
+				p = filepath.Clean(filepath.Join(layer.Spec.Path, p))
 				if strings.Contains(f, p) {
 					return true
 				}

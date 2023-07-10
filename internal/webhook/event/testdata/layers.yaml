@@ -117,7 +117,7 @@ metadata:
   name: layer-additional-paths-2
   namespace: default
   annotations:
-    config.terraform.padok.cloud/additionnal-trigger-paths: "../module.hcl"
+    config.terraform.padok.cloud/additionnal-trigger-paths: "../../terragrunt.hcl,../module.hcl"
 spec:
   branch: main
   path: terragrunt/layer-path-changed/prod/

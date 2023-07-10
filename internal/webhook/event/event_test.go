@@ -200,17 +200,17 @@ var _ = Describe("Webhook", func() {
 					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
 				})
 				// TODO: make this test pass
-				// It("should have updated commit annotations for a relative change path", func() {
-				// 	layer := &configv1alpha1.TerraformLayer{}
-				// 	err := k8sClient.Get(context.TODO(), types.NamespacedName{
-				// 		Namespace: "default",
-				// 		Name:      "layer-additional-paths-2",
-				// 	}, layer)
-				// 	Expect(err).NotTo(HaveOccurred())
-				// 	Expect(handleErr).NotTo(HaveOccurred())
-				// 	Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
-				// 	Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
-				// })
+				It("should have updated commit annotations for a relative change path", func() {
+					layer := &configv1alpha1.TerraformLayer{}
+					err := k8sClient.Get(context.TODO(), types.NamespacedName{
+						Namespace: "default",
+						Name:      "layer-additional-paths-2",
+					}, layer)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(handleErr).NotTo(HaveOccurred())
+					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
+					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
+				})
 			})
 			Describe("Multiple paths have been modified", Ordered, func() {
 				BeforeAll(func() {
