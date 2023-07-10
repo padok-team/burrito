@@ -5,6 +5,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -55,7 +56,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
 
-		if layerFilesHaveChanged(layer, e.Changes) {
+		if controller.LayerFilesHaveChanged(layer, e.Changes) {
 			ann[annotations.LastRelevantCommit] = e.ChangeInfo.ShaAfter
 		}
 

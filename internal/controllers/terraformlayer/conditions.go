@@ -3,6 +3,8 @@ package terraformlayer
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -209,4 +211,38 @@ func GetLastActionTime(r *Reconciler, layer *configv1alpha1.TerraformLayer) (tim
 		lastActionTime = lastApplyTime
 	}
 	return lastActionTime, nil
+}
+
+func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {
+	if len(changedFiles) == 0 {
+		return true
+	}
+
+	// At last one changed file must be under refresh path
+	for _, f := range changedFiles {
+		f = ensureAbsPath(f)
+		if strings.Contains(f, layer.Spec.Path) {
+			return true
+		}
+		// Check if the file is under an additionnal trigger path
+		if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
+			for _, p := range strings.Split(val, ",") {
+				p = ensureAbsPath(p)
+				// Handle relative parent paths (like "../")
+				p = filepath.Clean(filepath.Join(layer.Spec.Path, p))
+				if strings.Contains(f, p) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func ensureAbsPath(input string) string {
+	if !filepath.IsAbs(input) {
+		return string(filepath.Separator) + input
+	}
+	return input
 }
