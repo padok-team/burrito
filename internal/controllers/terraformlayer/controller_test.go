@@ -13,8 +13,8 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
-	utils "github.com/padok-team/burrito/internal/controllers/testing"
 	storage "github.com/padok-team/burrito/internal/storage/mock"
+	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"

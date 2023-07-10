@@ -27,13 +27,13 @@ type Handler interface {
 
 type Webhook struct {
 	client.Client
-	config    *config.Config
-	providers []Provider
+	Config    *config.Config
+	Providers []Provider
 }
 
 func New(c *config.Config) *Webhook {
 	return &Webhook{
-		config: c,
+		Config: c,
 	}
 }
 
@@ -56,7 +56,7 @@ func (w *Webhook) Init() error {
 	w.Client = cl
 	providers := []Provider{}
 	for _, p := range []Provider{&github.Github{}, &gitlab.Gitlab{}} {
-		err = p.Init(w.config)
+		err = p.Init(w.Config)
 		if err != nil {
 			log.Warnf("failed to initialize webhook provider: %s", err)
 			continue
@@ -66,7 +66,7 @@ func (w *Webhook) Init() error {
 	if len(providers) == 0 {
 		log.Warnf("no webhook provider initialized, every event will be considered as unknown")
 	}
-	w.providers = providers
+	w.Providers = providers
 	return nil
 }
 
@@ -75,7 +75,7 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, r *http.Request) {
 		var err error
 		var event event.Event
-		for _, p := range w.providers {
+		for _, p := range w.Providers {
 			if p.IsFromProvider(r) {
 				event, err = p.GetEvent(r)
 				break
@@ -95,17 +95,17 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 			http.Error(writer, "Unknown webhook event", http.StatusBadRequest)
 		}
 
-		err = w.Handle(event)
+		err = event.Handle(w.Client)
 		if err != nil {
 			log.Errorf("webhook processing worked but errored during event handling: %s", err)
 		}
 	}
 }
 
-func (w *Webhook) Handle(e event.Event) error {
-	err := e.Handle(w.Client)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func (w *Webhook) Handle(e event.Event) error {
+// 	err := e.Handle(w.Client)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

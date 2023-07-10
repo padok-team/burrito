@@ -10,7 +10,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	utils "github.com/padok-team/burrito/internal/controllers/testing"
+	utils "github.com/padok-team/burrito/internal/testing"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"

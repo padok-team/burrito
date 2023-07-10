@@ -36,7 +36,7 @@ func TestGithub_IsFromProvider(t *testing.T) {
 }
 
 func TestGithub_GetEvent_PushEvent(t *testing.T) {
-	payloadFile, err := os.Open("../testdata/github-push-main-event.json")
+	payloadFile, err := os.Open("testdata/github-push-main-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 }
 
 func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
-	payloadFile, err := os.Open("../testdata/github-open-pull-request-event.json")
+	payloadFile, err := os.Open("testdata/github-open-pull-request-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
 	}
