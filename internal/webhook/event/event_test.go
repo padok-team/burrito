@@ -13,6 +13,7 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	utils "github.com/padok-team/burrito/internal/testing"
 	"github.com/padok-team/burrito/internal/webhook/event"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -106,17 +107,27 @@ var PushEventMultiplePathChanges = event.PushEvent{
 	},
 }
 
-// var PullRequestEventNotAffected = event.PullRequestEvent{
-// 	Provider: "github",
-// 	URL:      "https://github.com/example/repo",
-// 	Revision: "feature/branch",
-// 	Base:     "main",
-// 	Action:   "opened",
-// 	ID:       "42",
-// 	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
-// }
+var PullRequestOpenedEventNotAffected = event.PullRequestEvent{
+	Provider: "github",
+	URL:      "https://github.com/example/repo",
+	Revision: "feature/branch",
+	Base:     "main",
+	Action:   "opened",
+	ID:       "42",
+	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+}
 
-var PullRequestEventSingleAffected = event.PullRequestEvent{
+var PullRequestClosedEventNotAffected = event.PullRequestEvent{
+	Provider: "github",
+	URL:      "https://github.com/example/repo",
+	Revision: "feature/branch",
+	Base:     "main",
+	Action:   "closed",
+	ID:       "42",
+	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+}
+
+var PullRequestOpenedEventSingleAffected = event.PullRequestEvent{
 	Provider: "github",
 	URL:      "https://github.com/padok-team/burrito-examples",
 	Revision: "feature/branch",
@@ -126,7 +137,17 @@ var PullRequestEventSingleAffected = event.PullRequestEvent{
 	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
-var PullRequestEventMultipleAffected = event.PullRequestEvent{
+var PullRequestClosedEventSingleAffected = event.PullRequestEvent{
+	Provider: "github",
+	URL:      "https://github.com/padok-team/burrito-closed-single-pr",
+	Revision: "feature/branch",
+	Base:     "main",
+	Action:   "closed",
+	ID:       "42",
+	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+}
+
+var PullRequestOpenedEventMultipleAffected = event.PullRequestEvent{
 	Provider: "github",
 	URL:      "https://github.com/example/other-repo",
 	Revision: "feature/branch",
@@ -136,151 +157,226 @@ var PullRequestEventMultipleAffected = event.PullRequestEvent{
 	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
+var PullRequestClosedEventMultipleAffected = event.PullRequestEvent{
+	Provider: "github",
+	URL:      "https://github.com/padok-team/burrito-closed-multi-pr",
+	Revision: "feature/branch",
+	Base:     "main",
+	Action:   "closed",
+	ID:       "42",
+	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+}
+
 var _ = Describe("Webhook", func() {
 	var handleErr error
 	Describe("Push Event", func() {
-		Describe("Layer", func() {
-			Describe("No paths are relevant to layer", Ordered, func() {
-				BeforeAll(func() {
-					handleErr = PushEventNoChanges.Handle(k8sClient)
-				})
-				It("should have only set the LastBranchCommit annotation", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "no-path-changed-1",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					_, ok := layer.Annotations[annotations.LastRelevantCommit]
-					Expect(ok).To(BeFalse())
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventNoChanges.ChangeInfo.ShaAfter))
-				})
-				It("should not have changed the LastRelevantCommit annotation", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "no-path-changed-2",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Not(Equal(PushEventNoChanges.ChangeInfo.ShaAfter)))
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventNoChanges.ChangeInfo.ShaAfter))
-				})
+		Describe("No paths are relevant to layer", Ordered, func() {
+			BeforeAll(func() {
+				handleErr = PushEventNoChanges.Handle(k8sClient)
 			})
-			Describe("Layer path has been modified", Ordered, func() {
-				BeforeAll(func() {
-					handleErr = PushEventLayerPathChanges.Handle(k8sClient)
-				})
-				It("should have updated the LastBranchCommit and LastRelevantCommit annotations", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "layer-path-changed-1",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventLayerPathChanges.ChangeInfo.ShaAfter))
-					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventLayerPathChanges.ChangeInfo.ShaAfter))
-				})
+			It("should have only set the LastBranchCommit annotation", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "no-path-changed-1",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				_, ok := layer.Annotations[annotations.LastRelevantCommit]
+				Expect(ok).To(BeFalse())
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventNoChanges.ChangeInfo.ShaAfter))
 			})
-			Describe("Additional path has been modified", Ordered, func() {
-				BeforeAll(func() {
-					handleErr = PushEventAdditionalPathChanges.Handle(k8sClient)
-				})
-				It("should have updated commit annotations for a absolute change path", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "layer-additional-paths-1",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
-					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
-				})
-				// TODO: make this test pass
-				It("should have updated commit annotations for a relative change path", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "layer-additional-paths-2",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
-					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
-				})
-			})
-			Describe("Multiple paths have been modified", Ordered, func() {
-				BeforeAll(func() {
-					handleErr = PushEventMultiplePathChanges.Handle(k8sClient)
-				})
-				It("should have updated commit annotations for layer-path-changed-2", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "layer-path-changed-2",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
-					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
-				})
-				It("should have updated commit annotations for layer-path-changed-3", func() {
-					layer := &configv1alpha1.TerraformLayer{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      "layer-path-changed-3",
-					}, layer)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
-					Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
-				})
+			It("should not have changed the LastRelevantCommit annotation", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "no-path-changed-2",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Not(Equal(PushEventNoChanges.ChangeInfo.ShaAfter)))
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventNoChanges.ChangeInfo.ShaAfter))
 			})
 		})
-		Describe("PullRequest", func() {
-			// TODO
-			// Describe("No pull request have been created", Ordered, func() {})
-			Describe("A single pull request have been affected", Ordered, func() {
-				BeforeAll(func() {
-					handleErr = PullRequestEventSingleAffected.Handle(k8sClient)
+		Describe("Layer path has been modified", Ordered, func() {
+			BeforeAll(func() {
+				handleErr = PushEventLayerPathChanges.Handle(k8sClient)
+			})
+			It("should have updated the LastBranchCommit and LastRelevantCommit annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "layer-path-changed-1",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventLayerPathChanges.ChangeInfo.ShaAfter))
+				Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventLayerPathChanges.ChangeInfo.ShaAfter))
+			})
+		})
+		Describe("Additional path has been modified", Ordered, func() {
+			BeforeAll(func() {
+				handleErr = PushEventAdditionalPathChanges.Handle(k8sClient)
+			})
+			It("should have updated commit annotations for a absolute change path", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "layer-additional-paths-1",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
+				Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
+			})
+			It("should have updated commit annotations for a relative change path", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "layer-additional-paths-2",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
+				Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventAdditionalPathChanges.ChangeInfo.ShaAfter))
+			})
+		})
+		Describe("Multiple paths have been modified", Ordered, func() {
+			BeforeAll(func() {
+				handleErr = PushEventMultiplePathChanges.Handle(k8sClient)
+			})
+			It("should have updated commit annotations for layer-path-changed-2", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "layer-path-changed-2",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
+				Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
+			})
+			It("should have updated commit annotations for layer-path-changed-3", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "layer-path-changed-3",
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(handleErr).NotTo(HaveOccurred())
+				Expect(layer.Annotations[annotations.LastBranchCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
+				Expect(layer.Annotations[annotations.LastRelevantCommit]).To(Equal(PushEventMultiplePathChanges.ChangeInfo.ShaAfter))
+			})
+		})
+		Describe("PullRequest Event", func() {
+			Describe("Opened", func() {
+				Describe("No pull request have been created", Ordered, func() {
+					It("should not have created any TerraformPullRequest", func() {
+						pullRequestBefore := &configv1alpha1.TerraformPullRequestList{}
+						beforeErr := k8sClient.List(context.TODO(), pullRequestBefore)
+						Expect(beforeErr).NotTo(HaveOccurred())
+						handleErr = PullRequestOpenedEventNotAffected.Handle(k8sClient)
+						Expect(handleErr).NotTo(HaveOccurred())
+						pullRequestAfter := &configv1alpha1.TerraformPullRequestList{}
+						afterErr := k8sClient.List(context.TODO(), pullRequestAfter)
+						Expect(afterErr).NotTo(HaveOccurred())
+						Expect(len(pullRequestBefore.Items)).To(Equal(len(pullRequestAfter.Items)))
+					})
 				})
-				It("should have created a TerraformPullRequest", func() {
-					pr := &configv1alpha1.TerraformPullRequest{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      fmt.Sprintf("%s-%s", "burrito", PullRequestEventSingleAffected.ID),
-					}, pr)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(pr.Annotations[annotations.LastBranchCommit]).To(Equal(PullRequestEventSingleAffected.Commit))
+				Describe("A single pull request has been affected", Ordered, func() {
+					BeforeAll(func() {
+						handleErr = PullRequestOpenedEventSingleAffected.Handle(k8sClient)
+					})
+					It("should have created a TerraformPullRequest", func() {
+						pr := &configv1alpha1.TerraformPullRequest{}
+						err := k8sClient.Get(context.TODO(), types.NamespacedName{
+							Namespace: "default",
+							Name:      fmt.Sprintf("%s-%s", "burrito", PullRequestOpenedEventSingleAffected.ID),
+						}, pr)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(handleErr).NotTo(HaveOccurred())
+						Expect(pr.Annotations[annotations.LastBranchCommit]).To(Equal(PullRequestOpenedEventSingleAffected.Commit))
+					})
+				})
+				Describe("Multiple pull request have been affected", Ordered, func() {
+					BeforeAll(func() {
+						handleErr = PullRequestOpenedEventMultipleAffected.Handle(k8sClient)
+					})
+					It("should have created a TerraformPullRequest for other-repo-1", func() {
+						pr := &configv1alpha1.TerraformPullRequest{}
+						err := k8sClient.Get(context.TODO(), types.NamespacedName{
+							Namespace: "default",
+							Name:      fmt.Sprintf("%s-%s", "other-repo-1", PullRequestOpenedEventMultipleAffected.ID),
+						}, pr)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(handleErr).NotTo(HaveOccurred())
+						Expect(pr.Annotations[annotations.LastBranchCommit]).To(Equal(PullRequestOpenedEventMultipleAffected.Commit))
+					})
+					It("should have created a TerraformPullRequest for other-repo-2", func() {
+						pr := &configv1alpha1.TerraformPullRequest{}
+						err := k8sClient.Get(context.TODO(), types.NamespacedName{
+							Namespace: "default",
+							Name:      fmt.Sprintf("%s-%s", "other-repo-2", PullRequestOpenedEventMultipleAffected.ID),
+						}, pr)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(handleErr).NotTo(HaveOccurred())
+						Expect(pr.Annotations[annotations.LastBranchCommit]).To(Equal(PullRequestOpenedEventMultipleAffected.Commit))
+					})
 				})
 			})
-			Describe("Multiple pull request have been affected", Ordered, func() {
-				BeforeAll(func() {
-					handleErr = PullRequestEventMultipleAffected.Handle(k8sClient)
+			Describe("Closed", func() {
+				Describe("No pull request have been closed", Ordered, func() {
+					It("should not have deleted any TerraformPullRequest", func() {
+						pullRequestBefore := &configv1alpha1.TerraformPullRequestList{}
+						beforeErr := k8sClient.List(context.TODO(), pullRequestBefore)
+						Expect(beforeErr).NotTo(HaveOccurred())
+						handleErr = PullRequestClosedEventNotAffected.Handle(k8sClient)
+						Expect(handleErr).NotTo(HaveOccurred())
+						pullRequestAfter := &configv1alpha1.TerraformPullRequestList{}
+						afterErr := k8sClient.List(context.TODO(), pullRequestAfter)
+						Expect(afterErr).NotTo(HaveOccurred())
+						Expect(len(pullRequestBefore.Items)).To(Equal(len(pullRequestAfter.Items)))
+					})
 				})
-				It("should have created a TerraformPullRequest for other-repo-1", func() {
-					pr := &configv1alpha1.TerraformPullRequest{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      fmt.Sprintf("%s-%s", "other-repo-1", PullRequestEventMultipleAffected.ID),
-					}, pr)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(pr.Annotations[annotations.LastBranchCommit]).To(Equal(PullRequestEventMultipleAffected.Commit))
+				Describe("A single pull request has been affected", Ordered, func() {
+					BeforeAll(func() {
+						handleErr = PullRequestClosedEventSingleAffected.Handle(k8sClient)
+					})
+					It("should have deleted a TerraformPullRequest", func() {
+						pr := &configv1alpha1.TerraformPullRequest{}
+						err := k8sClient.Get(context.TODO(), types.NamespacedName{
+							Namespace: "default",
+							Name:      fmt.Sprintf("%s-%s", "burrito-closed-single-pr", PullRequestClosedEventSingleAffected.ID),
+						}, pr)
+						Expect(handleErr).NotTo(HaveOccurred())
+						Expect(err).To(HaveOccurred())
+						Expect(errors.IsNotFound(err)).To(BeTrue())
+					})
 				})
-				It("should have created a TerraformPullRequest for other-repo-2", func() {
-					pr := &configv1alpha1.TerraformPullRequest{}
-					err := k8sClient.Get(context.TODO(), types.NamespacedName{
-						Namespace: "default",
-						Name:      fmt.Sprintf("%s-%s", "other-repo-2", PullRequestEventMultipleAffected.ID),
-					}, pr)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(handleErr).NotTo(HaveOccurred())
-					Expect(pr.Annotations[annotations.LastBranchCommit]).To(Equal(PullRequestEventMultipleAffected.Commit))
+				Describe("Multiple pull request have been affected", Ordered, func() {
+					BeforeAll(func() {
+						handleErr = PullRequestClosedEventMultipleAffected.Handle(k8sClient)
+					})
+					It("should have deleted a TerraformPullRequest for burrito-closed-multi-pr-1", func() {
+						pr := &configv1alpha1.TerraformPullRequest{}
+						err := k8sClient.Get(context.TODO(), types.NamespacedName{
+							Namespace: "default",
+							Name:      fmt.Sprintf("%s-%s", "burrito-closed-multi-pr-1", PullRequestClosedEventMultipleAffected.ID),
+						}, pr)
+						Expect(handleErr).NotTo(HaveOccurred())
+						Expect(err).To(HaveOccurred())
+						Expect(errors.IsNotFound(err)).To(BeTrue())
+					})
+					It("should have deleted a TerraformPullRequest for burrito-closed-multi-pr-2", func() {
+						pr := &configv1alpha1.TerraformPullRequest{}
+						err := k8sClient.Get(context.TODO(), types.NamespacedName{
+							Namespace: "default",
+							Name:      fmt.Sprintf("%s-%s", "burrito-closed-multi-pr-2", PullRequestClosedEventMultipleAffected.ID),
+						}, pr)
+						Expect(handleErr).NotTo(HaveOccurred())
+						Expect(err).To(HaveOccurred())
+						Expect(errors.IsNotFound(err)).To(BeTrue())
+					})
 				})
 			})
 		})

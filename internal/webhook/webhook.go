@@ -101,11 +101,3 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 		}
 	}
 }
-
-// func (w *Webhook) Handle(e event.Event) error {
-// 	err := e.Handle(w.Client)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

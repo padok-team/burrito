@@ -62,6 +62,7 @@ func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv
 func batchDeletePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
+		log.Info(fmt.Sprintf("deleting pull request %s", pr.Name))
 		err := c.Delete(ctx, &pr)
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
