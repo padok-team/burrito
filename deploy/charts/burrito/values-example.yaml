@@ -12,20 +12,27 @@ server:
   metadata: {}
   deployment: {}
   service: {}
-  ingress: {}
+  ingress:
+    enabled: true
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: "true"
+    ingressClassName: nginx
+    host: burrito.example.com
+    tls:
+      - secretName: wildcard-example-tls
 
 tenants:
-- namespace: 
-    create: true
-    name: "tenant-1"
-    labels: {}
-    annotations: {}
-  serviceAccounts: 
-  - name: runner-1
-    additionalRoleBindings:
-    - name: test
-      role:
-        kind: ClusterRole
-        name: cluster-admin
-    annotations: {}
-    labels: {}
+  - namespace:
+      create: true
+      name: "tenant-1"
+      labels: {}
+      annotations: {}
+    serviceAccounts:
+      - name: runner-1
+        additionalRoleBindings:
+          - name: test
+            role:
+              kind: ClusterRole
+              name: cluster-admin
+        annotations: {}
+        labels: {}

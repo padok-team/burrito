@@ -1,14 +1,93 @@
+# TODO: Make CRD install optional? or use --skip-crds Helm flag
+# Custom Resource Definitions
+# crds:
+# install: true
+
+# Burrito configuration
+## Ref: https://padok-team.github.io/burrito/operator-manual/advanced-configuration/
+config:
+  # -- Create ConfigMap with Burrito configuration
+  create: true
+  # -- Annotations to be added to the ConfigMap
+  annotations: {}
+
+  # -- Burrito configuration in YAML format
+  burritoConfig:
+    # -- Redis connection configuration
+    redis:
+      url: "burrito-redis:6379"
+      database: 0
+      # -- Prefer override with the BURRITO_REDIS_PASSWORD environment variable
+      password: ""
+
+    # Burrito controller configuration
+    controller:
+      namespaces: []
+      timers:
+        driftDetection: 20m
+        onError: 1m
+        waitAction: 1m
+        failureGracePeriod: 15s
+      types: ["layer", "repository", "pullrequest"]
+      leaderElection:
+        enabled: true
+        id: 6d185457.terraform.padok.cloud
+      metricsBindAddress: ":8080"
+      healthProbeBindAddress: ":8081"
+      kubernetesWebhookPort: 9443
+      githubConfig:
+        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable
+        apiToken: ""
+      gitlabConfig:
+        # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
+        token: ""
+        url: ""
+
+    # Burrito server configuration
+    server:
+      addr: ":8080"
+      webhook:
+        github:
+          # -- Prefer override with the BURRITO_SERVER_WEBHOOK_GITHUB_SECRET environment variable
+          secret: ""
+        gitlab:
+          # -- Prefer override with the BURRITO_SERVER_WEBHOOK_GITLAB_SECRET environment variable
+          secret: ""
+          url: ""
+          token: ""
+
+    # Burrito runners configuration
+    runner:
+      sshKnowHostsConfigMapName: burrito-ssh-known-hosts
+
 redis:
   enabled: true
-
-config:
-  webhook_secret: "my-secret"
+  metadata:
+    labels:
+      app.kubernetes.io/component: redis
+      app.kubernetes.io/name: burrito-redis
+  deployment:
+    image:
+      repository: redis
+      tag: "7.0.7-alpine"
+      pullPolicy: Always
+    args: []
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+      seccompProfile:
+        type: RuntimeDefault
+  service:
+    ports:
+      - name: tcp-redis
+        port: 6379
+        targetPort: 6379
 
 global:
   metadata:
     labels:
       app.kubernetes.io/part-of: burrito
-    annotations: {}      
+    annotations: {}
   deployment:
     autoscaling:
       enabled: false
@@ -17,17 +96,19 @@ global:
       repository: ghcr.io/padok-team/burrito
       tag: "v0.1.0"
       pullPolicy: Always
-    command: ["burrito"]
     podAnnotations: {}
-    podSecurityContext: {}
-    securityContext: {}
+    podSecurityContext:
+      runAsNonRoot: true
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - "ALL"
     resources: {}
     ports: []
     envFrom: []
   service:
     enabled: true
-
-  webhook_secret: ""
 
 controller:
   metadata:
@@ -35,6 +116,10 @@ controller:
       app.kubernetes.io/component: controller
       app.kubernetes.io/name: burrito-controller
   deployment:
+    podAnnotations:
+      kubectl.kubernetes.io/default-container: burrito
+    command: ["burrito"]
+    args: ["controllers", "start"]
     livenessProbe:
       httpGet:
         path: /healthz
@@ -47,7 +132,6 @@ controller:
         port: 8081
       initialDelaySeconds: 15
       periodSeconds: 20
-    args: ["controllers", "start"]
     envFrom: []
   service:
     enabled: false
@@ -58,10 +142,13 @@ server:
       app.kubernetes.io/component: server
       app.kubernetes.io/name: burrito-server
   deployment:
+    podAnnotations:
+      kubectl.kubernetes.io/default-container: burrito
+    command: ["burrito"]
     args: ["server", "start"]
     ports:
-    - name: http
-      containerPort: 8080
+      - name: http
+        containerPort: 8080
     livenessProbe:
       httpGet:
         path: /healthz
@@ -74,14 +161,22 @@ server:
         port: 8080
       initialDelaySeconds: 15
       periodSeconds: 20
-    envFrom: []
+    envFrom:
+      # -- Reference the webhook secret here
+      ## It should define a BURRITO_SERVER_WEBHOOK_GITHUB_SECRET and/or BURRITO_SERVER_WEBHOOK_GITLAB_SECRET key
+      - secretRef:
+          name: burrito-webhook-secret
+          optional: true
   service:
     ports:
-    - name: http
-      port: 80
-      targetPort: http
-  ingress: {}
+      - name: http
+        port: 80
+        targetPort: http
+  ingress:
+    enabled: false
+    annotations: {}
+    ingressClassName: nginx
+    host: burrito.example.com
+    tls: []
 
 tenants: {}
-
-

@@ -29,8 +29,8 @@ spec:
       securityContext:
         {{- toYaml .deployment.podSecurityContext | nindent 8 }}
       containers:
-        - name: controller
-          command: 
+        - name: burrito
+          command:
             {{- toYaml .deployment.command | nindent 12 }}
           args:
             {{- toYaml .deployment.args | nindent 12 }}
@@ -46,14 +46,14 @@ spec:
             {{- toYaml .deployment.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .deployment.resources | nindent 12 }}
-          env: ## TODO: Env var
-          - name: BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION
-            valueFrom:
-              configMapRef: burrito
-              optional: true
-              key: test
+          env:
+            {{- toYaml .deployment.env | nindent 12 }}
           envFrom:
             {{- toYaml .deployment.envFrom | nindent 12 }}
+          volumeMounts:
+            - name: burrito-config
+              mountPath: /etc/burrito
+              readOnly: true
       {{- with .deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -66,6 +66,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: burrito-config
+          configMap:
+            name: burrito-config
 {{- if .service.enabled }}
 ---
 apiVersion: v1
@@ -92,4 +96,21 @@ metadata:
     {{- toYaml .metadata.labels | nindent 4 }}
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: burrito-controllers
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-controllers
+subjects:
+  - kind: ServiceAccount
+    name: burrito-controllers
+    namespace: {{ $.Release.Namespace }}
 {{- end }}
