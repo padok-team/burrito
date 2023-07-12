@@ -32,7 +32,7 @@ func TestGilab_IsFromProvider(t *testing.T) {
 }
 
 func TestGitlab_GetEvent_PushEvent(t *testing.T) {
-	payloadFile, err := os.Open("../testdata/gitlab-push-main-event.json")
+	payloadFile, err := os.Open("testdata/gitlab-push-main-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 }
 
 func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
-	payloadFile, err := os.Open("../testdata/gitlab-open-merge-request-event.json")
+	payloadFile, err := os.Open("testdata/gitlab-open-merge-request-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
 	}

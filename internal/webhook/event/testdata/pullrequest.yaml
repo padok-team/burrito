@@ -1,0 +1,41 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: burrito-closed-single-pr-42
+  namespace: default
+spec:
+  provider: github
+  branch: feature/branch
+  id: "42"
+  base: main
+  repository:
+    name: burrito-closed-single-pr
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: burrito-closed-multi-pr-1-42
+  namespace: default
+spec:
+  provider: github
+  branch: feature/branch
+  id: "42"
+  base: main
+  repository:
+    name: burrito-closed-multi-pr-1
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: burrito-closed-multi-pr-2-42
+  namespace: default
+spec:
+  provider: github
+  branch: feature/branch
+  id: "42"
+  base: main
+  repository:
+    name: burrito-closed-multi-pr-2
+    namespace: default

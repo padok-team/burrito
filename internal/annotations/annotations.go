@@ -23,6 +23,8 @@ const (
 
 	LastDiscoveredCommit string = "pullrequest.terraform.padok.cloud/last-discovered-commit"
 	LastCommentedCommit  string = "pullrequest.terraform.padok.cloud/last-commented-commit"
+
+	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 )
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {

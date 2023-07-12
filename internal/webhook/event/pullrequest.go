@@ -62,6 +62,7 @@ func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv
 func batchDeletePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
+		log.Info(fmt.Sprintf("deleting pull request %s", pr.Name))
 		err := c.Delete(ctx, &pr)
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
@@ -102,7 +103,7 @@ func (e *PullRequestEvent) getAffectedRepositories(repositories []configv1alpha1
 	affectedRepositories := []configv1alpha1.TerraformRepository{}
 	for _, repo := range repositories {
 		log.Infof("evaluating terraform repository %s for url %s", repo.Name, repo.Spec.Repository.Url)
-		log.Infof("comparing noramlized url %s with received URL from paylaod %s", NormalizeUrl(repo.Spec.Repository.Url), e.URL)
+		log.Infof("comparing normalized url %s with received URL from payload %s", NormalizeUrl(repo.Spec.Repository.Url), e.URL)
 		if e.URL == NormalizeUrl(repo.Spec.Repository.Url) {
 			affectedRepositories = append(affectedRepositories, repo)
 		}

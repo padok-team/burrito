@@ -1,0 +1,89 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: burrito
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:padok-team/burrito-examples.git
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: other-repo-1
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:example/other-repo.git
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: other-repo-2
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:example/other-repo.git
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: burrito-closed-single-pr
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:padok-team/burrito-closed-single-pr.git
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: burrito-closed-multi-pr-1
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:padok-team/burrito-closed-multi-pr.git
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: burrito-closed-multi-pr-2
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:padok-team/burrito-closed-multi-pr.git

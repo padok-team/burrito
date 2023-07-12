@@ -1,0 +1,132 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: no-path-changed-1
+  namespace: default
+spec:
+  branch: main
+  path: no-path-changed/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: no-path-changed-2
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/relevant-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    webhook.terraform.padok.cloud/branch-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+spec:
+  branch: main
+  path: no-path-changed/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-path-changed-1
+  namespace: default
+spec:
+  branch: main
+  path: layer-path-changed/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-path-changed-2
+  namespace: default
+spec:
+  branch: main
+  path: layer-path-changed-2/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-path-changed-3
+  namespace: default
+spec:
+  branch: main
+  path: layer-path-changed-3/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-additional-paths-1
+  namespace: default
+  annotations:
+    config.terraform.padok.cloud/additionnal-trigger-paths: "modules/module-changed"
+spec:
+  branch: main
+  path: layer-path-changed/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-additional-paths-2
+  namespace: default
+  annotations:
+    config.terraform.padok.cloud/additionnal-trigger-paths: "../../terragrunt.hcl,../module.hcl"
+spec:
+  branch: main
+  path: terragrunt/layer-path-changed/prod/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1

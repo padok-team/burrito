@@ -11,6 +11,7 @@ rules:
       - config.terraform.padok.cloud
     resources:
       - terraformlayers
+      - terraformpullrequests
     verbs:
       - create
       - delete

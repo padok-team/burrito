@@ -3,13 +3,12 @@ package terraformpullrequest
 import (
 	"context"
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 )
 
 func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
@@ -52,7 +51,7 @@ func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.Terr
 	if layer.Spec.Branch != pr.Spec.Base {
 		return false
 	}
-	if layerFilesHaveChanged(layer, changes) {
+	if controller.LayerFilesHaveChanged(layer, changes) {
 		return true
 	}
 	return false
@@ -93,27 +92,4 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 		list = append(list, new)
 	}
 	return list
-}
-
-func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {
-	if len(changedFiles) == 0 {
-		return true
-	}
-
-	// At last one changed file must be under refresh path
-	for _, f := range changedFiles {
-		f = ensureAbsPath(f)
-		if strings.Contains(f, layer.Spec.Path) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func ensureAbsPath(input string) string {
-	if !filepath.IsAbs(input) {
-		return string(filepath.Separator) + input
-	}
-	return input
 }

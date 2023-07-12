@@ -2,7 +2,6 @@ package event
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -51,22 +50,6 @@ func isLayerLinkedToAnyRepositories(repositories []configv1alpha1.TerraformRepos
 	return false
 }
 
-func layerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {
-	if len(changedFiles) == 0 {
-		return true
-	}
-
-	// At last one changed file must be under refresh path
-	for _, f := range changedFiles {
-		f = ensureAbsPath(f)
-		if strings.Contains(f, layer.Spec.Path) {
-			return true
-		}
-	}
-
-	return false
-}
-
 func isPRLinkedToAnyRepositories(pr configv1alpha1.TerraformPullRequest, repos []configv1alpha1.TerraformRepository) bool {
 	for _, r := range repos {
 		if r.Name == pr.Spec.Repository.Name && r.Namespace == pr.Spec.Repository.Namespace {
@@ -74,11 +57,4 @@ func isPRLinkedToAnyRepositories(pr configv1alpha1.TerraformPullRequest, repos [
 		}
 	}
 	return false
-}
-
-func ensureAbsPath(input string) string {
-	if !filepath.IsAbs(input) {
-		return string(filepath.Separator) + input
-	}
-	return input
 }

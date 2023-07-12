@@ -9,8 +9,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	utils "github.com/padok-team/burrito/internal/controllers/testing"
 	"github.com/padok-team/burrito/internal/lock"
+	utils "github.com/padok-team/burrito/internal/testing"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
