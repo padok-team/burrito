@@ -57,7 +57,7 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 	secret := "test-secret"
 	gitlab := gitlab.Gitlab{}
 	config := &config.Config{
-		Server: config.Server{
+		Server: config.ServerConfig{
 			Webhook: config.WebhookConfig{
 				Gitlab: config.WebhookGitlabConfig{
 					Secret: secret,
@@ -109,7 +109,7 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 	secret := "test-secret"
 	gitlab := gitlab.Gitlab{}
 	config := &config.Config{
-		Server: config.Server{
+		Server: config.ServerConfig{
 			Webhook: config.WebhookConfig{
 				Gitlab: config.WebhookGitlabConfig{
 					Secret: secret,

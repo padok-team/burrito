@@ -15,7 +15,7 @@ type Config struct {
 	Runner     RunnerConfig     `yaml:"runner"`
 	Controller ControllerConfig `yaml:"controller"`
 	Redis      Redis            `yaml:"redis"`
-	Server     Server           `yaml:"server"`
+	Server     ServerConfig     `yaml:"server"`
 }
 
 type WebhookConfig struct {
@@ -88,7 +88,7 @@ type Redis struct {
 	Database int    `yaml:"database"`
 }
 
-type Server struct {
+type ServerConfig struct {
 	Addr    string        `yaml:"port"`
 	Webhook WebhookConfig `yaml:"webhook"`
 }
@@ -101,9 +101,10 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 	v.SetConfigName("config")
 
 	// burrito looks for configuration files in the common configuration
-	// directories.
+	// directories, as well as in the current directory.
 	v.AddConfigPath("/etc/burrito/")
 	v.AddConfigPath("$HOME/.burrito/")
+	v.AddConfigPath(".")
 
 	// Viper logs the configuration file it uses, if any.
 	if err := v.ReadInConfig(); err == nil {
