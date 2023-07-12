@@ -61,8 +61,8 @@ type LeaderElectionConfig struct {
 
 type ControllerTimers struct {
 	DriftDetection     time.Duration `yaml:"driftDetection"`
-	OnError            time.Duration `yaml:"waitAction"`
-	WaitAction         time.Duration `yaml:"onError"`
+	OnError            time.Duration `yaml:"onError"`
+	WaitAction         time.Duration `yaml:"waitAction"`
 	FailureGracePeriod time.Duration `yaml:"failureGracePeriod"`
 }
 
