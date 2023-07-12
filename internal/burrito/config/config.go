@@ -28,9 +28,7 @@ type WebhookGithubConfig struct {
 }
 
 type WebhookGitlabConfig struct {
-	URL      string `yaml:"url"`
-	Secret   string `yaml:"secret"`
-	APIToken string `yaml:"token"`
+	Secret string `yaml:"secret"`
 }
 
 type ControllerConfig struct {
@@ -50,7 +48,7 @@ type GithubConfig struct {
 }
 
 type GitlabConfig struct {
-	APIToken string `yaml:"token"`
+	APIToken string `yaml:"apiToken"`
 	URL      string `yaml:"url"`
 }
 
@@ -77,11 +75,6 @@ type RunnerConfig struct {
 	Layer                      Layer            `yaml:"layer"`
 	Repository                 RepositoryConfig `yaml:"repository"`
 	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
-}
-
-type TerragruntConfig struct {
-	Enabled bool   `yaml:"enabled"`
-	Version string `yaml:"version"`
 }
 
 type Layer struct {
