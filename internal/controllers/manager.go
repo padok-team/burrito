@@ -72,12 +72,12 @@ func (c *Controllers) Exec() {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     c.config.Controller.MetricsBindAddress,
-		Port:                   c.config.Controller.KubernetesWehbookPort,
+		Port:                   c.config.Controller.KubernetesWebhookPort,
 		HealthProbeBindAddress: c.config.Controller.HealthProbeBindAddress,
 		LeaderElection:         c.config.Controller.LeaderElection.Enabled,
 		LeaderElectionID:       c.config.Controller.LeaderElection.ID,
 		Cache: cache.Options{
-			Namespaces: c.config.Controller.WatchedNamespaces,
+			Namespaces: c.config.Controller.Namespaces,
 		},
 	})
 	if err != nil {

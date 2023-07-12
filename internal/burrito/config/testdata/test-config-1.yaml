@@ -6,8 +6,8 @@ runner:
   repository:
     sshPrivateKey: "private-key"
     username: "test"
-    password: "test"
-  sshKnowHostsConfigMapName: burrito-ssh-known-hosts
+    password: "password"
+  sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
 controller:
   namespaces:

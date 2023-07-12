@@ -32,13 +32,13 @@ type WebhookGitlabConfig struct {
 }
 
 type ControllerConfig struct {
-	WatchedNamespaces      []string             `yaml:"namespaces"`
+	Namespaces             []string             `yaml:"namespaces"`
 	Timers                 ControllerTimers     `yaml:"timers"`
 	Types                  []string             `yaml:"types"`
 	LeaderElection         LeaderElectionConfig `yaml:"leaderElection"`
 	MetricsBindAddress     string               `yaml:"metricsBindAddress"`
 	HealthProbeBindAddress string               `yaml:"healthProbeBindAddress"`
-	KubernetesWehbookPort  int                  `yaml:"kubernetesWebhookPort"`
+	KubernetesWebhookPort  int                  `yaml:"kubernetesWebhookPort"`
 	GithubConfig           GithubConfig         `yaml:"githubConfig"`
 	GitlabConfig           GitlabConfig         `yaml:"gitlabConfig"`
 }
@@ -74,7 +74,7 @@ type RunnerConfig struct {
 	Action                     string           `yaml:"action"`
 	Layer                      Layer            `yaml:"layer"`
 	Repository                 RepositoryConfig `yaml:"repository"`
-	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
+	SSHKnownHostsConfigMapName string           `yaml:"sshKnownHostsConfigMapName"`
 }
 
 type Layer struct {
