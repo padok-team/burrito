@@ -1,8 +1,8 @@
-{{- with mergeOverwrite (deepCopy .Values.global) .Values.controller }}
+{{- with mergeOverwrite (deepCopy .Values.global) .Values.controllers }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: burrito-controller
+  name: burrito-controllers
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
   labels:
@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: burrito-controller
+      serviceAccountName: burrito-controllers
       securityContext:
         {{- toYaml .deployment.podSecurityContext | nindent 8 }}
       containers:
@@ -75,7 +75,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: burrito-controller
+  name: burrito-controllers
   labels:
     {{- toYaml .metadata.labels | nindent 4}}
   annotations:
@@ -91,7 +91,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: burrito-controller
+  name: burrito-controllers
   labels:
     {{- toYaml .metadata.labels | nindent 4 }}
   annotations:

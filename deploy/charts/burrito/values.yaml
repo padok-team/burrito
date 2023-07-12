@@ -12,7 +12,7 @@ config:
   annotations: {}
 
   # -- Burrito configuration in YAML format
-  burritoConfig:
+  burrito:
     # -- Redis connection configuration
     redis:
       url: "burrito-redis:6379"
@@ -22,6 +22,7 @@ config:
 
     # Burrito controller configuration
     controller:
+      # -- By default, the controller will watch all namespaces
       namespaces: []
       timers:
         driftDetection: 20m
@@ -94,7 +95,8 @@ global:
     replicas: 1
     image:
       repository: ghcr.io/padok-team/burrito
-      tag: "v0.1.0"
+      # tag: "v0.1.0"
+      tag: "6f83cfb8773650d54678b310970643b4d451514d"
       pullPolicy: Always
     podAnnotations: {}
     podSecurityContext:
@@ -110,11 +112,11 @@ global:
   service:
     enabled: true
 
-controller:
+controllers:
   metadata:
     labels:
-      app.kubernetes.io/component: controller
-      app.kubernetes.io/name: burrito-controller
+      app.kubernetes.io/component: controllers
+      app.kubernetes.io/name: burrito-controllers
   deployment:
     podAnnotations:
       kubectl.kubernetes.io/default-container: burrito
