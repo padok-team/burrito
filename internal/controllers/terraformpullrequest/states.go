@@ -89,7 +89,7 @@ type CommentNeeded struct{}
 
 func (s *CommentNeeded) getHandler() func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
-		layers, err := getLinkedLayers(r.Client, pr)
+		layers, err := GetLinkedLayers(r.Client, pr)
 		if err != nil {
 			log.Errorf("failed to get linked layers for pull request %s: %s", pr.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
