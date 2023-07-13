@@ -82,12 +82,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 	state, conditions := r.GetState(ctx, pr)
-	pr.Status = configv1alpha1.TerraformPullRequestStatus{Conditions: conditions, State: getStateString(state)}
-
-	log.Infof("reconciliation state before annotation patch: %s", pr.Status.State)
 	result := state.getHandler()(ctx, r, repository, pr)
-	log.Infof("reconciliation state after: %s", pr.Status.State)
 
+	pr.Status = configv1alpha1.TerraformPullRequestStatus{Conditions: conditions, State: getStateString(state)}
 	err = r.Client.Status().Update(ctx, pr)
 	if err != nil {
 		log.Errorf("could not update pull request %s status: %s", pr.Name, err)

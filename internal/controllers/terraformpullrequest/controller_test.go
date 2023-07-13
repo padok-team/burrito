@@ -294,10 +294,9 @@ var _ = Describe("TerraformPullRequest controller", func() {
 				It("should not return an error", func() {
 					Expect(reconcileError).NotTo(HaveOccurred())
 				})
-				// TODO
-				// It("should end in DiscoveryNeeded state", func() {
-				// 	Expect(pr.Status.State).To(Equal("DiscoveryNeeded"))
-				// })
+				It("should end in DiscoveryNeeded state", func() {
+					Expect(pr.Status.State).To(Equal("DiscoveryNeeded"))
+				})
 				It("should set RequeueAfter to WaitAction", func() {
 					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 				})
@@ -308,6 +307,51 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					layers, err := controller.GetLinkedLayers(k8sClient, pr)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(layers)).To(Equal(2))
+				})
+			})
+			Describe("When a TerraformPullRequest has all its layers planned", Ordered, func() {
+				BeforeAll(func() {
+					name = types.NamespacedName{
+						Name:      "pr-nominal-case-2",
+						Namespace: "default",
+					}
+					result, pr, reconcileError, err = getResult(name)
+				})
+				It("should still exist", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("should not return an error", func() {
+					Expect(reconcileError).NotTo(HaveOccurred())
+				})
+				It("should end in CommentNeeded state", func() {
+					Expect(pr.Status.State).To(Equal("CommentNeeded"))
+				})
+				It("should set RequeueAfter to WaitAction", func() {
+					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+				})
+				It("should have a LastCommentedCommit annotation", func() {
+					Expect(pr.Annotations[annotations.LastCommentedCommit]).To(Equal(pr.Annotations[annotations.LastDiscoveredCommit]))
+				})
+			})
+			Describe("When a TerraformPullRequest has all its comment up to date", Ordered, func() {
+				BeforeAll(func() {
+					name = types.NamespacedName{
+						Name:      "pr-nominal-case-3",
+						Namespace: "default",
+					}
+					result, pr, reconcileError, err = getResult(name)
+				})
+				It("should still exist", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("should not return an error", func() {
+					Expect(reconcileError).NotTo(HaveOccurred())
+				})
+				It("should end in Idle state", func() {
+					Expect(pr.Status.State).To(Equal("Idle"))
+				})
+				It("should set RequeueAfter to WaitAction", func() {
+					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 				})
 			})
 		})

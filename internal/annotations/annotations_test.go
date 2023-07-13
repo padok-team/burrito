@@ -71,14 +71,17 @@ var _ = Describe("Annotations", func() {
 		It("should not return an error when adding first annotation", func() {
 			err := annotations.Add(context.TODO(), k8sClient, layer, map[string]string{annotations.LastPlanSum: "AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I"})
 			Expect(err).NotTo(HaveOccurred())
+			Expect(layer.Annotations[annotations.LastPlanSum]).To(Equal("AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I"))
 		})
 		It("should not return an error when adding second annotation", func() {
 			err := annotations.Add(context.TODO(), k8sClient, layer, map[string]string{annotations.LastApplySum: "AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I"})
 			Expect(err).NotTo(HaveOccurred())
+			Expect(layer.Annotations[annotations.LastPlanSum]).To(Equal("AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I"))
 		})
 		It("should not return an error when removing second annotation", func() {
 			err := annotations.Remove(context.TODO(), k8sClient, layer, annotations.LastApplySum)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(layer.Annotations).NotTo(HaveKey(annotations.LastApplySum))
 		})
 	})
 })
