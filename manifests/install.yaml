@@ -3154,8 +3154,6 @@ spec:
       - args:
         - controllers
         - start
-        command:
-        - /burrito
         envFrom:
         - configMapRef:
             name: burrito-config
@@ -3250,8 +3248,6 @@ spec:
       - args:
         - server
         - start
-        command:
-        - /burrito
         envFrom:
         - configMapRef:
             name: burrito-config
