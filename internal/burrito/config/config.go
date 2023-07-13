@@ -173,6 +173,7 @@ func TestConfig() *Config {
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,
 				FailureGracePeriod: 15 * time.Second,
+				OnError:            1 * time.Minute,
 			},
 		},
 		Runner: RunnerConfig{

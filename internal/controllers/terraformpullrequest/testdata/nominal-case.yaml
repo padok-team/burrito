@@ -1,0 +1,156 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: pr-nominal-case-1
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+spec:
+  provider: mock
+  branch: feature-branch
+  id: "42"
+  base: main
+  repository:
+    name: burrito
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-nominal-case-1
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-nominal-case-2
+  namespace: default
+spec:
+  branch: main
+  path: terragrunt/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: pr-nominal-case-2
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+    pullrequest.terraform.padok.cloud/last-discovered-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+spec:
+  provider: mock
+  branch: feature-branch-2
+  id: "84"
+  base: main
+  repository:
+    name: burrito
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-nominal-case-3
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/relevant-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+    runner.terraform.padok.cloud/plan-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+  labels:
+    burrito/managed-by: pr-nominal-case-2
+spec:
+  branch: feature-branch-2
+  path: terraform/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: pr-nominal-case-3
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+    pullrequest.terraform.padok.cloud/last-discovered-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+    pullrequest.terraform.padok.cloud/last-commented-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+spec:
+  provider: mock
+  branch: feature-branch-3
+  id: "48"
+  base: main
+  repository:
+    name: burrito
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-nominal-case-4
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/relevant-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+    runner.terraform.padok.cloud/plan-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+  labels:
+    burrito/managed-by: pr-nominal-case-3
+spec:
+  branch: feature-branch-3
+  path: terraform/
+  remediationStrategy: autoApply
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: pr-nominal-case-4
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+spec:
+  provider: mock
+  branch: update-readme
+  id: "100"
+  base: main
+  repository:
+    name: burrito
+    namespace: default

@@ -19,7 +19,7 @@ func (r *Reconciler) IsLastCommitDiscovered(pr *configv1alpha1.TerraformPullRequ
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	lastDiscorveredCommit, ok := pr.Annotations[annotations.LastDiscoveredCommit]
+	lastDiscoveredCommit, ok := pr.Annotations[annotations.LastDiscoveredCommit]
 	if !ok {
 		condition.Reason = "NoCommitDiscovered"
 		condition.Message = "Controller hasn't discovered any commit yet."
@@ -33,7 +33,7 @@ func (r *Reconciler) IsLastCommitDiscovered(pr *configv1alpha1.TerraformPullRequ
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	if lastDiscorveredCommit == lastBranchCommit {
+	if lastDiscoveredCommit == lastBranchCommit {
 		condition.Reason = "LastCommitDiscovered"
 		condition.Message = "The last commit has been discovered."
 		condition.Status = metav1.ConditionTrue
@@ -52,7 +52,7 @@ func (r *Reconciler) AreLayersStillPlanning(pr *configv1alpha1.TerraformPullRequ
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	layers, err := getLinkedLayers(r.Client, pr)
+	layers, err := GetLinkedLayers(r.Client, pr)
 
 	lastDiscoveredCommit, okDiscoveredCommit := pr.Annotations[annotations.LastDiscoveredCommit]
 	prLastBranchCommit, okPRBranchCommit := pr.Annotations[annotations.LastBranchCommit]
@@ -118,21 +118,21 @@ func (r *Reconciler) IsCommentUpToDate(pr *configv1alpha1.TerraformPullRequest) 
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	lasCommentedCommit, ok := pr.Annotations[annotations.LastCommentedCommit]
-	if !ok {
-		condition.Reason = "NoCommentSent"
-		condition.Message = "No comment has ever been sent"
-		condition.Status = metav1.ConditionFalse
-		return condition, false
-	}
-	lastDiscorveredCommit, ok := pr.Annotations[annotations.LastDiscoveredCommit]
+	lastDiscoveredCommit, ok := pr.Annotations[annotations.LastDiscoveredCommit]
 	if !ok {
 		condition.Reason = "Unknown"
 		condition.Message = "This should not have happened"
 		condition.Status = metav1.ConditionUnknown
 		return condition, true
 	}
-	if lasCommentedCommit != lastDiscorveredCommit {
+	lastCommentedCommit, ok := pr.Annotations[annotations.LastCommentedCommit]
+	if !ok {
+		condition.Reason = "NoCommentSent"
+		condition.Message = "No comment has ever been sent"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+	if lastCommentedCommit != lastDiscoveredCommit {
 		condition.Reason = "CommentOutdated"
 		condition.Message = "The comment is outdated."
 		condition.Status = metav1.ConditionFalse
@@ -144,7 +144,7 @@ func (r *Reconciler) IsCommentUpToDate(pr *configv1alpha1.TerraformPullRequest) 
 	return condition, true
 }
 
-func getLinkedLayers(cl client.Client, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
+func GetLinkedLayers(cl client.Client, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
 	layers := configv1alpha1.TerraformLayerList{}
 	requirement, err := labels.NewRequirement("burrito/managed-by", selection.Equals, []string{pr.Name})
 	if err != nil {

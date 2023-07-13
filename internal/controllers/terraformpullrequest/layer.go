@@ -70,8 +70,8 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 				},
 				OwnerReferences: []metav1.OwnerReference{
 					{
-						APIVersion: pr.APIVersion,
-						Kind:       pr.Kind,
+						APIVersion: pr.GetAPIVersion(),
+						Kind:       pr.GetKind(),
 						Name:       pr.Name,
 						UID:        pr.UID,
 					},

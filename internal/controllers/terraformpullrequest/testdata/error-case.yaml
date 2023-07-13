@@ -1,0 +1,35 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: pr-error-case-1
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+spec:
+  provider: mock
+  branch: feature-branch
+  id: "42"
+  base: main
+  repository:
+    name: no-exist
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformPullRequest
+metadata:
+  name: pr-error-case-2
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
+spec:
+  provider: no-exist
+  branch: feature-branch
+  id: "42"
+  base: main
+  repository:
+    name: burrito
+    namespace: default

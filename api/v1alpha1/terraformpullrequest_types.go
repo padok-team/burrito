@@ -67,3 +67,22 @@ type TerraformPullRequestList struct {
 func init() {
 	SchemeBuilder.Register(&TerraformPullRequest{}, &TerraformPullRequestList{})
 }
+
+// Associated functions
+
+// Workaround needed for envtest which does not populate the TypeMeta structure
+// See https://github.com/kubernetes-sigs/controller-runtime/issues/1870
+func (pr *TerraformPullRequest) GetAPIVersion() string {
+	if pr.APIVersion == "" {
+		return "config.terraform.padok.cloud/v1alpha1"
+	}
+	return pr.APIVersion
+}
+
+// Same as above
+func (pr *TerraformPullRequest) GetKind() string {
+	if pr.Kind == "" {
+		return "TerraformPullRequest"
+	}
+	return pr.Kind
+}
