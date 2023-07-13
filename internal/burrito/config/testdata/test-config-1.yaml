@@ -1,0 +1,45 @@
+runner:
+  action: "apply"
+  layer:
+    name: test
+    namespace: default
+  repository:
+    sshPrivateKey: "private-key"
+    username: "test"
+    password: "password"
+  sshKnownHostsConfigMapName: burrito-ssh-known-hosts
+
+controller:
+  namespaces:
+    - default
+    - burrito
+  timers:
+    driftDetection: 20m
+    onError: 1m
+    waitAction: 1m
+    failureGracePeriod: 15s
+  types: ["layer", "repository", "pullrequest"]
+  leaderElection:
+    enabled: true
+    id: 6d185457.terraform.padok.cloud
+  metricsBindAddress: ":8080"
+  healthProbeBindAddress: ":8081"
+  kubernetesWebhookPort: 9443
+  githubConfig:
+    apiToken: "github-token"
+  gitlabConfig:
+    apiToken: "gitlab-token"
+    url: "https://gitlab.example.com"
+
+redis:
+  url: "burrito-redis:6379"
+  database: 0
+  password: "testPassword"
+
+server:
+  addr: ":8080"
+  webhook:
+    github:
+      secret: "github-secret"
+    gitlab:
+      secret: "gitlab-secret"

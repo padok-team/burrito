@@ -61,7 +61,7 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	secret := "test-secret"
 	github := github.Github{}
 	config := &config.Config{
-		Server: config.Server{
+		Server: config.ServerConfig{
 			Webhook: config.WebhookConfig{
 				Github: config.WebhookGithubConfig{
 					Secret: secret,
@@ -118,7 +118,7 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	secret := "test-secret"
 	github := github.Github{}
 	config := &config.Config{
-		Server: config.Server{
+		Server: config.ServerConfig{
 			Webhook: config.WebhookConfig{
 				Github: config.WebhookGithubConfig{
 					Secret: secret,

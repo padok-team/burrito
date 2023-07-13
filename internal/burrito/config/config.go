@@ -15,7 +15,7 @@ type Config struct {
 	Runner     RunnerConfig     `yaml:"runner"`
 	Controller ControllerConfig `yaml:"controller"`
 	Redis      Redis            `yaml:"redis"`
-	Server     Server           `yaml:"server"`
+	Server     ServerConfig     `yaml:"server"`
 }
 
 type WebhookConfig struct {
@@ -28,19 +28,17 @@ type WebhookGithubConfig struct {
 }
 
 type WebhookGitlabConfig struct {
-	URL      string `yaml:"url"`
-	Secret   string `yaml:"secret"`
-	APIToken string `yaml:"token"`
+	Secret string `yaml:"secret"`
 }
 
 type ControllerConfig struct {
-	WatchedNamespaces      []string             `yaml:"namespaces"`
+	Namespaces             []string             `yaml:"namespaces"`
 	Timers                 ControllerTimers     `yaml:"timers"`
 	Types                  []string             `yaml:"types"`
 	LeaderElection         LeaderElectionConfig `yaml:"leaderElection"`
 	MetricsBindAddress     string               `yaml:"metricsBindAddress"`
 	HealthProbeBindAddress string               `yaml:"healthProbeBindAddress"`
-	KubernetesWehbookPort  int                  `yaml:"kubernetesWebhookPort"`
+	KubernetesWebhookPort  int                  `yaml:"kubernetesWebhookPort"`
 	GithubConfig           GithubConfig         `yaml:"githubConfig"`
 	GitlabConfig           GitlabConfig         `yaml:"gitlabConfig"`
 }
@@ -50,7 +48,7 @@ type GithubConfig struct {
 }
 
 type GitlabConfig struct {
-	APIToken string `yaml:"token"`
+	APIToken string `yaml:"apiToken"`
 	URL      string `yaml:"url"`
 }
 
@@ -61,8 +59,8 @@ type LeaderElectionConfig struct {
 
 type ControllerTimers struct {
 	DriftDetection     time.Duration `yaml:"driftDetection"`
-	OnError            time.Duration `yaml:"waitAction"`
-	WaitAction         time.Duration `yaml:"onError"`
+	OnError            time.Duration `yaml:"onError"`
+	WaitAction         time.Duration `yaml:"waitAction"`
 	FailureGracePeriod time.Duration `yaml:"failureGracePeriod"`
 }
 
@@ -76,12 +74,7 @@ type RunnerConfig struct {
 	Action                     string           `yaml:"action"`
 	Layer                      Layer            `yaml:"layer"`
 	Repository                 RepositoryConfig `yaml:"repository"`
-	SSHKnownHostsConfigMapName string           `yaml:"sshKnowHostsConfigMapName"`
-}
-
-type TerragruntConfig struct {
-	Enabled bool   `yaml:"enabled"`
-	Version string `yaml:"version"`
+	SSHKnownHostsConfigMapName string           `yaml:"sshKnownHostsConfigMapName"`
 }
 
 type Layer struct {
@@ -95,7 +88,7 @@ type Redis struct {
 	Database int    `yaml:"database"`
 }
 
-type Server struct {
+type ServerConfig struct {
 	Addr    string        `yaml:"port"`
 	Webhook WebhookConfig `yaml:"webhook"`
 }
@@ -108,9 +101,10 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 	v.SetConfigName("config")
 
 	// burrito looks for configuration files in the common configuration
-	// directories.
+	// directories, as well as in the current directory.
 	v.AddConfigPath("/etc/burrito/")
 	v.AddConfigPath("$HOME/.burrito/")
+	v.AddConfigPath(".")
 
 	// Viper logs the configuration file it uses, if any.
 	if err := v.ReadInConfig(); err == nil {
