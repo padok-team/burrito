@@ -20,7 +20,15 @@ func (m *Mock) IsFromProvider(pr *configv1alpha1.TerraformPullRequest) bool {
 
 func (m *Mock) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {
 	log.Infof("Mock provider all changed files")
-	allChangedFiles := []string{
+	var allChangedFiles []string
+	// Handle not useful PR
+	if pr.Spec.ID == "100" {
+		allChangedFiles = []string{
+			"README.md",
+		}
+		return allChangedFiles, nil
+	}
+	allChangedFiles = []string{
 		"terraform/main.tf",
 		"terragrunt/inputs.hcl",
 	}

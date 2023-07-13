@@ -354,6 +354,80 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 				})
 			})
+			Describe("When a TerraformPullRequest with no relevant changes is created", Ordered, func() {
+				BeforeAll(func() {
+					name = types.NamespacedName{
+						Name:      "pr-nominal-case-4",
+						Namespace: "default",
+					}
+					result, pr, reconcileError, err = getResult(name)
+				})
+				It("should still exist", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("should not return an error", func() {
+					Expect(reconcileError).NotTo(HaveOccurred())
+				})
+				It("should end in DiscoveryNeeded state", func() {
+					Expect(pr.Status.State).To(Equal("DiscoveryNeeded"))
+				})
+				It("should set RequeueAfter to WaitAction", func() {
+					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+				})
+				It("should have a LastDiscoveredCommit annotation", func() {
+					Expect(pr.Annotations[annotations.LastDiscoveredCommit]).To(Equal(pr.Annotations[annotations.LastBranchCommit]))
+				})
+				It("should not have created temp layers", func() {
+					layers, err := controller.GetLinkedLayers(k8sClient, pr)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(layers)).To(Equal(0))
+				})
+			})
+		})
+		Describe("Error Case", func() {
+			Describe("When a TerraformPullRequest is linked to a non existing repo", Ordered, func() {
+				BeforeAll(func() {
+					name = types.NamespacedName{
+						Name:      "pr-error-case-1",
+						Namespace: "default",
+					}
+					result, pr, reconcileError, err = getResult(name)
+				})
+				It("should still exist", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("should return an empty result error", func() {
+					Expect(reconcileError).NotTo(HaveOccurred())
+					Expect(result.IsZero()).To(BeTrue())
+				})
+				It("should have no state", func() {
+					Expect(pr.Status.State).To(Equal(""))
+				})
+			})
+			Describe("When a TerraformPullRequest has an unknown provider", Ordered, func() {
+				BeforeAll(func() {
+					name = types.NamespacedName{
+						Name:      "pr-error-case-2",
+						Namespace: "default",
+					}
+					result, pr, reconcileError, err = getResult(name)
+				})
+				It("should still exist", func() {
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("should return an empty result error", func() {
+					Expect(reconcileError).NotTo(HaveOccurred())
+				})
+				It("should set RequeueAfter to OnError", func() {
+					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+				})
+				It("should end in DiscoveryNeeded state", func() {
+					Expect(pr.Status.State).To(Equal("DiscoveryNeeded"))
+				})
+				It("should not have a LastDiscoveredCommit annotation", func() {
+					Expect(pr.Annotations).NotTo(HaveKey(annotations.LastDiscoveredCommit))
+				})
+			})
 		})
 	})
 })
