@@ -17,7 +17,7 @@ type Storage struct {
 func New(config config.Redis) *Storage {
 	return &Storage{
 		Client: redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%d", config.Hostname, config.Port),
+			Addr:     fmt.Sprintf("%s:%d", config.Hostname, config.ServerPort),
 			Password: config.Password, // no password set
 			DB:       config.Database, // use default DB
 		}),

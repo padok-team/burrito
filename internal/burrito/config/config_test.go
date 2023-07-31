@@ -76,13 +76,13 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			},
 		},
 		Redis: config.Redis{
-			Hostname: "burrito-redis.namespace",
-			Port:     6379,
-			Database: 0,
-			Password: "testPassword",
+			Hostname:   "burrito-redis.namespace",
+			ServerPort: 5000,
+			Database:   0,
+			Password:   "testPassword",
 		},
 		Server: config.ServerConfig{
-			Addr: ":8080",
+			Addr: ":9090",
 			Webhook: config.WebhookConfig{
 				Github: config.WebhookGithubConfig{
 					Secret: "github-secret",
@@ -133,7 +133,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY", "other-private-key", &envVarList)
 	// Redis
 	setEnvVar(t, "BURRITO_REDIS_HOSTNAME", "other-redis", &envVarList)
-	setEnvVar(t, "BURRITO_REDIS_PORT", "6379", &envVarList)
+	setEnvVar(t, "BURRITO_REDIS_SERVERPORT", "8000", &envVarList)
 	setEnvVar(t, "BURRITO_REDIS_DATABASE", "1", &envVarList)
 	setEnvVar(t, "BURRITO_REDIS_PASSWORD", "otherPassword", &envVarList)
 	// Controller
@@ -209,10 +209,10 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			},
 		},
 		Redis: config.Redis{
-			Hostname: "other-redis",
-			Port:     6379,
-			Database: 1,
-			Password: "otherPassword",
+			Hostname:   "other-redis",
+			ServerPort: 8000,
+			Database:   1,
+			Password:   "otherPassword",
 		},
 		Server: config.ServerConfig{
 			Addr: ":8090",
