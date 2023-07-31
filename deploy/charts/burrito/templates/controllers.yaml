@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: burrito-controllers
+  # TODO: checksum annotation of the CM
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
   labels:
