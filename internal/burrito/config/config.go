@@ -143,7 +143,7 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 	for i := 0; i < ift.NumField(); i++ {
 		val := ifv.Field(i)
 		typ := ift.Field(i)
-		tv, ok := typ.Tag.Lookup("yaml")
+		tv, ok := typ.Tag.Lookup("mapstructure")
 		if !ok {
 			continue
 		}
