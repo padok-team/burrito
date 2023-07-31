@@ -15,7 +15,7 @@ config:
   burrito:
     # -- Redis connection configuration
     redis:
-      hostname: "burrito-redis"
+      hostname: "burrito-redis.burrito-system"
       port: 6379
       database: 0
       # -- Prefer override with the BURRITO_REDIS_PASSWORD environment variable
@@ -95,7 +95,8 @@ global:
     image:
       repository: ghcr.io/padok-team/burrito
       # tag: "v0.1.0"
-      tag: "main"
+      # tag: "main"
+      tag: "deploy-helm-chart"
       pullPolicy: Always
     podAnnotations: {}
     podSecurityContext:

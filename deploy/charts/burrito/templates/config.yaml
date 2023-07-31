@@ -1,14 +1,23 @@
-{{- $config := .Values.config.burrito }}
-{{- $tenantNamespaces := list }}
+{{- if .Values.config.create }}
 
+{{- $config := .Values.config.burrito }}
+
+{{/*
+Tenant Namespaces
+*/}}
+{{- $tenantNamespaces := list }}
 {{- range $tenant := .Values.tenants }}
 {{- $tenantNamespaces = append $tenantNamespaces $tenant.namespace.name }}
 {{- end }}
-
-{{- if .Values.config.create }}
-{{- end }}
 {{- $_ := set $config.controller "namespaces" (default $tenantNamespaces $config.controller.namespaces) }}
-{{- if .Values.config.create }}
+
+{{/*
+Redis Hostname
+*/}}
+{{- if .Values.redis.enabled }}
+{{- $_ := set $config.redis "hostname" (printf "%s.%s" "burrito-redis" .Release.Namespace) }}
+{{- end }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:

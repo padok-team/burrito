@@ -2,10 +2,12 @@
 
 You can configure `burrito` with environment variables.
 
-|   Environment variable   |             Description             |            Default             |
-| :----------------------: | :---------------------------------: | :----------------------------: |
-| `BURRITO_REDIS_HOSTNAME` |    the redis host to connect to     | `burrito-redis.burrito-system` |
-|   `BURRITO_REDIS_PORT`   | the port of the redis to connect to |             `6379`             |
+|    Environment variable    |             Description             |            Default             |
+| :------------------------: | :---------------------------------: | :----------------------------: |
+|  `BURRITO_REDIS_HOSTNAME`  |    the redis host to connect to     | `burrito-redis.burrito-system` |
+| `BURRITO_REDIS_SERVERPORT` | the port of the redis to connect to |             `6379`             |
+|  `BURRITO_REDIS_DATABASE`  |  the redis database to connect to   |              `0`               |
+|  `BURRITO_REDIS_PASSWORD`  |         the redis password          |            (empty)             |
 
 ## Controllers' configuration
 
@@ -24,9 +26,9 @@ You can configure `burrito` with environment variables.
 
 ## Server's configuration
 
-| Environment variable  |        Description         | Default |
-| :-------------------: | :------------------------: | :-----: |
-| `BURRITO_SERVER_ADDR` | addr the server listens on | `:8080` |
+| Environment variable  |          Description          | Default |
+| :-------------------: | :---------------------------: | :-----: |
+| `BURRITO_SERVER_ADDR` | address the server listens on | `:8080` |
 
 !!! info
     For webhook configuration see [Setup a git webhook](./git-webhook.md).
