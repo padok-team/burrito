@@ -22,6 +22,7 @@ metadata:
     {{- toYaml $serviceAccount.labels | nindent 4 }}
   annotations:
     {{- toYaml $serviceAccount.annotations | nindent 4 }}
+  namespace: {{ $tenant.namespace.name }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -29,6 +30,7 @@ metadata:
   name: {{ $serviceAccount.name }}-burrito-runner
   labels:
     {{- toYaml $serviceAccount.labels | nindent 4 }}
+  namespace: {{ $tenant.namespace.name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -45,6 +47,7 @@ metadata:
   name: {{ $additionalRoleBinding.name }}
   labels:
     {{- toYaml $serviceAccount.labels | nindent 4 }}
+  namespace: {{ $tenant.namespace.name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: {{ $additionalRoleBinding.role.kind }}

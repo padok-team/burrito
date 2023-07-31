@@ -76,7 +76,8 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			},
 		},
 		Redis: config.Redis{
-			URL:      "burrito-redis:6379",
+			Hostname: "burrito-redis",
+			Port:     6379,
 			Database: 0,
 			Password: "testPassword",
 		},
@@ -131,7 +132,8 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_PASSWORD", "other-password", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY", "other-private-key", &envVarList)
 	// Redis
-	setEnvVar(t, "BURRITO_REDIS_URL", "other-redis:6379", &envVarList)
+	setEnvVar(t, "BURRITO_REDIS_HOSTNAME", "other-redis", &envVarList)
+	setEnvVar(t, "BURRITO_REDIS_PORT", "6379", &envVarList)
 	setEnvVar(t, "BURRITO_REDIS_DATABASE", "1", &envVarList)
 	setEnvVar(t, "BURRITO_REDIS_PASSWORD", "otherPassword", &envVarList)
 	// Controller
@@ -207,7 +209,8 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			},
 		},
 		Redis: config.Redis{
-			URL:      "other-redis:6379",
+			Hostname: "other-redis",
+			Port:     6379,
 			Database: 1,
 			Password: "otherPassword",
 		},

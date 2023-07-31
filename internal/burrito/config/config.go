@@ -83,7 +83,8 @@ type Layer struct {
 }
 
 type Redis struct {
-	URL      string `yaml:"url"`
+	Hostname string `yaml:"hostname"`
+	Port     int    `yaml:"port"`
 	Password string `yaml:"password"`
 	Database int    `yaml:"database"`
 }
@@ -158,7 +159,8 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 func TestConfig() *Config {
 	return &Config{
 		Redis: Redis{
-			URL:      "redis://localhost:6379",
+			Hostname: "localhost",
+			Port:     6379,
 			Password: "",
 			Database: 0,
 		},

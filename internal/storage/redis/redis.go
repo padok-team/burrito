@@ -2,9 +2,11 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/storage"
 )
 
@@ -12,12 +14,12 @@ type Storage struct {
 	Client *redis.Client
 }
 
-func New(addr string, password string, db int) *Storage {
+func New(config config.Redis) *Storage {
 	return &Storage{
 		Client: redis.NewClient(&redis.Options{
-			Addr:     addr,
-			Password: password, // no password set
-			DB:       db,       // use default DB
+			Addr:     fmt.Sprintf("%s:%d", config.Hostname, config.Port),
+			Password: config.Password, // no password set
+			DB:       config.Database, // use default DB
 		}),
 	}
 }

@@ -15,7 +15,8 @@ config:
   burrito:
     # -- Redis connection configuration
     redis:
-      url: "burrito-redis:6379"
+      hostname: "burrito-redis"
+      port: 6379
       database: 0
       # -- Prefer override with the BURRITO_REDIS_PASSWORD environment variable
       password: ""
@@ -41,7 +42,7 @@ config:
         apiToken: ""
       gitlabConfig:
         # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
-        token: ""
+        apiToken: ""
         url: ""
 
     # Burrito server configuration
@@ -54,12 +55,10 @@ config:
         gitlab:
           # -- Prefer override with the BURRITO_SERVER_WEBHOOK_GITLAB_SECRET environment variable
           secret: ""
-          url: ""
-          token: ""
 
     # Burrito runners configuration
     runner:
-      sshKnowHostsConfigMapName: burrito-ssh-known-hosts
+      sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
 redis:
   enabled: true
@@ -96,7 +95,7 @@ global:
     image:
       repository: ghcr.io/padok-team/burrito
       # tag: "v0.1.0"
-      tag: "6f83cfb8773650d54678b310970643b4d451514d"
+      tag: "main"
       pullPolicy: Always
     podAnnotations: {}
     podSecurityContext:

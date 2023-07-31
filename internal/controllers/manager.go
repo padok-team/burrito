@@ -91,7 +91,7 @@ func (c *Controllers) Exec() {
 				Client:  mgr.GetClient(),
 				Scheme:  mgr.GetScheme(),
 				Config:  c.config,
-				Storage: redis.New(c.config.Redis.URL, c.config.Redis.Password, c.config.Redis.Database),
+				Storage: redis.New(c.config.Redis),
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create layer controller: %s", err)
 			}

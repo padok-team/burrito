@@ -24,15 +24,16 @@ server:
 tenants:
   - namespace:
       create: true
-      name: "tenant-1"
+      name: "burrito-examples"
       labels: {}
       annotations: {}
     serviceAccounts:
-      - name: runner-1
+      - name: runner-burrito-examples
         additionalRoleBindings:
-          - name: test
-            role:
-              kind: ClusterRole
-              name: cluster-admin
+          []
+          # - name: test
+          #   role:
+          #     kind: ClusterRole
+          #     name: cluster-admin
         annotations: {}
         labels: {}

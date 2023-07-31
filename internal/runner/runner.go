@@ -173,7 +173,7 @@ func (r *Runner) install() error {
 }
 
 func (r *Runner) init() error {
-	r.storage = redis.New(r.config.Redis.URL, r.config.Redis.Password, r.config.Redis.Database)
+	r.storage = redis.New(r.config.Redis)
 	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
 	cl, err := newK8SClient()
 	if err != nil {

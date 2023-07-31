@@ -106,7 +106,7 @@ spec:
               service:
                 name: burrito-server
                 port:
-                  number: http
+                  name: http
   tls:
     {{- toYaml .ingress.tls | nindent 4 }}
 {{- end }}

@@ -32,7 +32,8 @@ controller:
     url: "https://gitlab.example.com"
 
 redis:
-  url: "burrito-redis:6379"
+  hostname: "burrito-redis"
+  port: 6379
   database: 0
   password: "testPassword"
 
