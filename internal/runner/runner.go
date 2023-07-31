@@ -117,6 +117,7 @@ func (r *Runner) Exec() {
 
 func (r *Runner) getLayerAndRepository() error {
 	layer := &configv1alpha1.TerraformLayer{}
+	log.Infof("getting layer %s/%s", r.config.Runner.Layer.Namespace, r.config.Runner.Layer.Name)
 	err := r.client.Get(context.TODO(), types.NamespacedName{
 		Namespace: r.config.Runner.Layer.Namespace,
 		Name:      r.config.Runner.Layer.Name,
@@ -124,8 +125,10 @@ func (r *Runner) getLayerAndRepository() error {
 	if err != nil {
 		return err
 	}
+	log.Infof("Successfully retrieved layer")
 	r.layer = layer
 	repository := &configv1alpha1.TerraformRepository{}
+	log.Infof("getting repo %s/%s", layer.Spec.Repository.Namespace, layer.Spec.Repository.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{
 		Namespace: layer.Spec.Repository.Namespace,
 		Name:      layer.Spec.Repository.Name,
@@ -133,6 +136,7 @@ func (r *Runner) getLayerAndRepository() error {
 	if err != nil {
 		return err
 	}
+	log.Infof("Successfully retrieved repo")
 	r.repository = repository
 	return nil
 }
