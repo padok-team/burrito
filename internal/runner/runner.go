@@ -125,7 +125,7 @@ func (r *Runner) getLayerAndRepository() error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Successfully retrieved layer")
+	log.Infof("successfully retrieved layer")
 	r.layer = layer
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Infof("getting repo %s/%s", layer.Spec.Repository.Namespace, layer.Spec.Repository.Name)
@@ -136,7 +136,7 @@ func (r *Runner) getLayerAndRepository() error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Successfully retrieved repo")
+	log.Infof("successfully retrieved repo")
 	r.repository = repository
 	return nil
 }
