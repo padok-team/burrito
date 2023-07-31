@@ -76,7 +76,7 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			},
 		},
 		Redis: config.Redis{
-			Hostname: "burrito-redis",
+			Hostname: "burrito-redis.namespace",
 			Port:     6379,
 			Database: 0,
 			Password: "testPassword",
