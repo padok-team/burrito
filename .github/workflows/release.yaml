@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
     - name: Fetch all tags
       run: git fetch --force --tags
 
@@ -44,15 +44,26 @@ jobs:
   version:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      CHART_PATH: ./deploy/charts/burrito
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
         ref: main
-    - name: Bump version
+
+    - name: Bump VERSION file
       run: |
         echo ${{ github.ref_name }} > VERSION
+
+    - name: Bump Helm Chart versions
+      run: |
+        export CHART_VERSION=$(echo ${{ github.ref_name }} | sed 's/v//g')
+        export APP_VERSION=${{ github.ref_name }}
+        yq -i '.version = env(CHART_VERSION)' $CHART_PATH/Chart.yaml
+        yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
+
     - name: Commit version to repository
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
