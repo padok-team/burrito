@@ -13,4 +13,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: burrito-redis
-    namespace: burrito
+    namespace: burrito-system

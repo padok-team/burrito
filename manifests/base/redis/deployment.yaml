@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/name: burrito-redis
     app.kubernetes.io/part-of: burrito
   name: burrito-redis
-  namespace: burrito
 spec:
   selector:
     matchLabels:

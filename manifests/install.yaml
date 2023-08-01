@@ -2754,7 +2754,6 @@ metadata:
     app.kubernetes.io/name: burrito-controllers
     app.kubernetes.io/part-of: burrito
   name: burrito-controllers
-  namespace: burrito
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -2764,7 +2763,6 @@ metadata:
     app.kubernetes.io/name: burrito-redis
     app.kubernetes.io/part-of: burrito
   name: burrito-redis
-  namespace: burrito
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -2774,7 +2772,6 @@ metadata:
     app.kubernetes.io/name: burrito-runner
     app.kubernetes.io/part-of: burrito
   name: burrito-runner
-  namespace: burrito
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -2784,7 +2781,6 @@ metadata:
     app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
   name: burrito-server
-  namespace: burrito
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -3002,7 +2998,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-redis
-  namespace: burrito
+  namespace: burrito-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3019,7 +3015,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-controllers
-  namespace: burrito
+  namespace: burrito-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3036,7 +3032,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-runner
-  namespace: burrito
+  namespace: burrito-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3053,7 +3049,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-server
-  namespace: burrito
+  namespace: burrito-system
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -3062,7 +3058,6 @@ metadata:
     app.kubernetes.io/name: burrito-config
     app.kubernetes.io/part-of: burrito
   name: burrito-config
-  namespace: burrito
 ---
 apiVersion: v1
 data:
@@ -3082,7 +3077,6 @@ metadata:
     app.kubernetes.io/name: burrito-ssh-known-hosts
     app.kubernetes.io/part-of: burrito
   name: burrito-ssh-known-hosts
-  namespace: burrito
 ---
 apiVersion: v1
 kind: Secret
@@ -3091,7 +3085,6 @@ metadata:
     app.kubernetes.io/name: burrito-config
     app.kubernetes.io/part-of: burrito
   name: burrito-config
-  namespace: burrito
 type: Opaque
 ---
 apiVersion: v1
@@ -3102,7 +3095,6 @@ metadata:
     app.kubernetes.io/name: burrito-redis
     app.kubernetes.io/part-of: burrito
   name: burrito-redis
-  namespace: burrito
 spec:
   ports:
   - name: tcp-redis
@@ -3119,7 +3111,6 @@ metadata:
     app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
   name: burrito-server
-  namespace: burrito
 spec:
   ports:
   - name: http
@@ -3137,7 +3128,6 @@ metadata:
     app.kubernetes.io/name: burrito-controllers
     app.kubernetes.io/part-of: burrito
   name: burrito-controllers
-  namespace: burrito
 spec:
   replicas: 1
   selector:
@@ -3194,7 +3184,6 @@ metadata:
     app.kubernetes.io/name: burrito-redis
     app.kubernetes.io/part-of: burrito
   name: burrito-redis
-  namespace: burrito
 spec:
   selector:
     matchLabels:
@@ -3231,7 +3220,6 @@ metadata:
     app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
   name: burrito-server
-  namespace: burrito
 spec:
   replicas: 1
   selector:
