@@ -9,6 +9,8 @@ on:
   pull_request:
     branches:
     - main
+    paths:
+    - 'deploy/charts/**'
 
 env:
   CHART_NAME: burrito
