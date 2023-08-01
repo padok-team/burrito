@@ -13,6 +13,9 @@ nav:
 - Overview: index.md
 - Getting Started: getting-started.md
 - Operator Manual:
+  - Install:
+    - operator-manual/install/with-static-manifests.md
+    - operator-manual/install/with-helm.md
   - operator-manual/index.md
   - operator-manual/architecture.md
   - operator-manual/git-webhook.md

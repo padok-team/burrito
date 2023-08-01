@@ -17,6 +17,9 @@ This will create a new namespace, `burrito`, where burrito services will live.
 !!! warning
     The installation manifests include `ClusterRoleBinding` resources that reference `burrito` namespace. If you are installing burrito into a different namespace then make sure to update the namespace reference.
 
+!!! info
+    You might be interested by our [Helm chart](./operator-manual/install/with-helm.md), that provides more control over burrito's configuration as well as a [multi-tenant architecture](./operator-manual/multi-tenant-architecture.md).
+
 ## 2. Create a connection to a private repository
 
 Create a Kubernetes `Secret` which looks like:
