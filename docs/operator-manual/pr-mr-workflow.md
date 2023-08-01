@@ -4,22 +4,23 @@
 
 !!! info
     In this documentation all references to pull requests can be change to merge requests for GitLab. However, the resulting Kubernetes object will still be named `TerraformPullRequest`.
+
 ## Components
 
 ### The server
 
 !!! info
-    For mor information about the server, see the [architectural overview](./architecture.md) documentation.
+    For more information about the server, see the [architectural overview](./architecture.md) documentation.
 
 Upon receiving a Pull Request creation event, the server creates a `TerraformPullRequest` resource.
 
-Upon receiving a Pull Requestion  deletion event, the server deletes the related `TerraformPullRequest` resource.
+Upon receiving a Pull Request deletion event, the server deletes the related `TerraformPullRequest` resource.
 
 ### The pull request controller
 
 The pull request controller is a Kubernetes controller which continuously monitors declared `TerraformPullRequest` resources.
 
-It is responsible for creating temporary `TerraformLayer` resources linked to the Pull Request it was generated from. Once all the `TerraformLayer` have planned, it will send a comment contianing the plan results to the pull request.
+It is responsible for creating temporary `TerraformLayer` resources linked to the Pull Request it was generated from. Once all the `TerraformLayer` have planned, it will send a comment containing the plan results to the pull request.
 
 <p align="center"><img src="../../assets/demo/comment.png" width="1000px" /></p>
 
@@ -31,9 +32,9 @@ The status of a `TerraformPulLRequest` is defined using the [conditions standard
 
 - `IsLastCommitDiscovered`. This condition is used to check if we received a new commit on the pull request by comparing the latest commit on the branch and the last discovered commit.
 - `AreLayersStillPlanning`. This condition is used to check if all the temporary layers have finished planning. This is done by checking all the resulting `TerraformLayer` statuses.
-- `IsCommentUpToDate`. This condition is used to check if the controller needs to sen a comment to a pull request. This is checked by comparing the last discovered commit and the last commit for which a comment was already sent.
+- `IsCommentUpToDate`. This condition is used to check if the controller needs to send a comment to a pull request. This is checked by comparing the last discovered commit and the last commit for which a comment was already sent.
 
-!!! info 
+!!! info
     We use annotations to store information.
 
 With those 3 conditions, we defined 3 states:
@@ -48,3 +49,4 @@ With those 3 conditions, we defined 3 states:
 | :----------------------------------------: | :-------------------------------------------: |
 | `BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN` | the API token to send comment to GitHub's API |
 | `BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN` | the API token to send comment to GitLab's API |
+|   `BURRITO_CONTROLLER_GITLABCONFIG_URL`    |        the URL of the GitLab instance         |

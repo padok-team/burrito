@@ -1,6 +1,6 @@
 # Configure the TerraformLayer to use private modules' repositories
 
-If your stack use Terraform modules that are hosted on private repositories, you can configure the `TerraformLayer` to be able to use thos private modules by [configuring the `overrideRunnerSpec` in your resource definition](./override-runner.md).
+If your stack use Terraform modules that are hosted on private repositories, you can configure the `TerraformLayer` to be able to use those private modules by [configuring the `overrideRunnerSpec` in your resource definition](./override-runner.md).
 
 ## The layer uses a private module with HTTPS
 
@@ -136,5 +136,6 @@ spec:
 
 As you can see, we added a new `overrideRunnerSpec` field to the `TerraformLayer` spec. This field allows you to override the default runner pod spec.
 In this case, we added a new volume and a new environment variable to the runner pod spec:
+
 - The volume is a secret volume that contains the SSH key we created earlier
 - The environment variable is used to tell git to use the SSH key we added to the runner pod

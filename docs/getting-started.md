@@ -64,12 +64,11 @@ metadata:
   name: random-pets
   namespace: burrito
 spec:
-  terraform: 
+  terraform:
     version: "1.3.1"
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
-    kind: TerraformRepository
     name: burrito
     namespace: burrito
 ```
