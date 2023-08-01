@@ -30,4 +30,4 @@ kubectl create namespace burrito
 kubectl apply -n burrito -f https://raw.githubusercontent.com/padok-team/burrito/main/manifests/install.yaml
 ```
 
-Follow our [getting started guide](getting_started.md). Further user oriented [documentation](user-guide/) is provided for additional features.
+Follow our [getting started guide](./getting-started.md). Further user oriented [documentation](./user-guide/) is provided for additional features.
