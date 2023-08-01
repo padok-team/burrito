@@ -13,4 +13,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: burrito-server
-    namespace: burrito-system
+    namespace: burrito

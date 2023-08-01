@@ -2998,7 +2998,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-redis
-  namespace: burrito-system
+  namespace: burrito
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3015,7 +3015,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-controllers
-  namespace: burrito-system
+  namespace: burrito
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3032,7 +3032,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-runner
-  namespace: burrito-system
+  namespace: burrito
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3049,7 +3049,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: burrito-server
-  namespace: burrito-system
+  namespace: burrito
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -3144,6 +3144,7 @@ spec:
       - args:
         - controllers
         - start
+        - --namespaces=burrito
         envFrom:
         - configMapRef:
             name: burrito-config

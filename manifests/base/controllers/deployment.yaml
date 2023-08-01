@@ -25,6 +25,7 @@ spec:
           args:
             - controllers
             - start
+            - --namespaces=burrito
           image: ghcr.io/padok-team/burrito:main
           imagePullPolicy: Always
           envFrom:
