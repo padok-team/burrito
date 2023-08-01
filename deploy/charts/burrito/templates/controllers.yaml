@@ -6,7 +6,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: burrito-controllers
-  # TODO: checksum annotation of the CM
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
   labels:
@@ -42,7 +41,7 @@ spec:
             {{- toYaml .deployment.args | nindent 12 }}
           securityContext:
             {{- toYaml .deployment.securityContext | nindent 12 }}
-          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag | default $.Chart.AppVersion }}"
           imagePullPolicy: {{ .deployment.image.pullPolicy }}
           ports:
             {{- toYaml .deployment.ports | nindent 12 }}
