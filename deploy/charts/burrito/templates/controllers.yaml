@@ -42,7 +42,7 @@ spec:
             {{- toYaml .deployment.args | nindent 12 }}
           securityContext:
             {{- toYaml .deployment.securityContext | nindent 12 }}
-          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag }}"
+          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .deployment.image.pullPolicy }}
           ports:
             {{- toYaml .deployment.ports | nindent 12 }}
