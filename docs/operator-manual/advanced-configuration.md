@@ -13,7 +13,8 @@ You can configure `burrito` with environment variables.
 
 |              Environment variable              |                                 Description                                 |             Default              |
 | :--------------------------------------------: | :-------------------------------------------------------------------------: | :------------------------------: |
-|           `BURRITO_CONTROLLER_TYPES`           |                        list of controllers to start                         |        `layer,repository`        |
+|        `BURRITO_CONTROLLER_NAMESPACES`         |                list of namespaces to watch (comma-separated)                |         `burrito-system`         |
+|           `BURRITO_CONTROLLER_TYPES`           |                        list of controllers to start                         |  `layer,repository,pullrequest`  |
 |   `BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION`   |                period between two plans for drift detection                 |              `20m`               |
 |      `BURRITO_CONTROLLER_TIMERS_ONERROR`       | period between two runners launch when an error occurred in the controllers |               `1m`               |
 |     `BURRITO_CONTROLLER_TIMERS_WAITACTION`     |          period between two runners launch when a layer is locked           |               `1m`               |
