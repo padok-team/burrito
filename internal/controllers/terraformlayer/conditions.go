@@ -102,7 +102,7 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 	planHash, ok := t.Annotations[annotations.LastPlanSum]
-	if !ok {
+	if !ok || planHash == "" {
 		condition.Reason = "NoPlanHasRunYet"
 		condition.Message = "No plan has run on this layer yet"
 		condition.Status = metav1.ConditionTrue
