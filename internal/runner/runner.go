@@ -69,9 +69,25 @@ func (r *Runner) unlock() {
 	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
 }
 
-func (r *Runner) Exec() error {
-	defer r.unlock()
+func (r *Runner) updateLayerAnnotations(ann *map[string]string) {
+	err := annotations.Add(context.TODO(), r.client, r.layer, *ann)
+	if err != nil {
+		log.Fatalf("could not update terraform layer annotations: %s", err)
+	}
+	log.Infof("successfully updated terraform layer annotations")
+}
 
+func (r *Runner) incrementLayerFailure(ann *map[string]string) {
+	n, ok := r.layer.Annotations[annotations.Failure]
+	number := 0
+	if ok {
+		number, _ = strconv.Atoi(n)
+	}
+	number++
+	(*ann)[annotations.Failure] = strconv.Itoa(number)
+}
+
+func (r *Runner) Exec() error {
 	var sum string
 	var commit string
 	ann := map[string]string{}
@@ -79,11 +95,29 @@ func (r *Runner) Exec() error {
 	err := r.init()
 	if err != nil {
 		log.Errorf("error initializing runner: %s", err)
+		return err
 	}
-	if r.gitRepository != nil {
-		ref, _ := r.gitRepository.Head()
-		commit = ref.Hash().String()
+	defer r.updateLayerAnnotations(&ann)
+	defer r.unlock()
+
+	err = r.install()
+	if err != nil {
+		log.Errorf("error installing binaries: %s", err)
+		return err
 	}
+	err = r.clone()
+	if err != nil {
+		log.Errorf("error cloning repository: %s", err)
+		return err
+	}
+	err = r.tfInit()
+	if err != nil {
+		log.Errorf("error executing terraform init: %s", err)
+		return err
+	}
+
+	ref, _ := r.gitRepository.Head()
+	commit = ref.Hash().String()
 
 	switch r.config.Runner.Action {
 	case "plan":
@@ -101,27 +135,17 @@ func (r *Runner) Exec() error {
 			ann[annotations.LastApplyCommit] = commit
 		}
 	default:
-		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
+		err = errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
 	}
 
 	if err != nil {
 		log.Errorf("error during runner execution: %s", err)
-		n, ok := r.layer.Annotations[annotations.Failure]
-		number := 0
-		if ok {
-			number, _ = strconv.Atoi(n)
-		}
-		number++
-		ann[annotations.Failure] = strconv.Itoa(number)
+		r.incrementLayerFailure(&ann)
 	} else {
 		ann[annotations.Failure] = "0"
 	}
 
-	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
-	if err != nil {
-		log.Errorf("could not update terraform layer annotations: %s", err)
-	}
-	log.Infof("successfully updated terraform layer annotations")
+	// run defers: update annotations & delete lease lock
 
 	return err
 }
@@ -166,6 +190,7 @@ func newK8SClient() (client.Client, error) {
 }
 
 func (r *Runner) install() error {
+	log.Infof("installing binaries...")
 	terraformVersion := configv1alpha1.GetTerraformVersion(r.repository, r.layer)
 	terraformExec := terraform.NewTerraform(terraformVersion, PlanArtifact)
 	terraformRuntime := "terraform"
@@ -184,25 +209,33 @@ func (r *Runner) install() error {
 	if err != nil {
 		return err
 	}
+	log.Infof("binaries successfully installed")
 	return nil
 }
 
 func (r *Runner) init() error {
+	log.Infof("initializing runner...")
 	r.storage = redis.New(r.config.Redis)
-	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
 	cl, err := newK8SClient()
 	if err != nil {
 		log.Errorf("error creating kubernetes client: %s", err)
 		return err
 	}
 	r.client = cl
+
+	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
 	err = r.getLayerAndRepository()
 	if err != nil {
 		log.Errorf("error getting kubernetes resources: %s", err)
 		return err
 	}
-	log.Infof("kubernetes resources successfully retrieved")
+	log.Infof("kubernetes ressources successfully retrieved")
 
+	return nil
+}
+
+func (r *Runner) clone() error {
+	var err error
 	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
 	r.gitRepository, err = clone(r.config.Runner.Repository, r.repository.Spec.Repository.Url, r.layer.Spec.Branch, r.layer.Spec.Path)
 	if err != nil {
@@ -212,19 +245,14 @@ func (r *Runner) init() error {
 	}
 	log.Infof("repository cloned successfully")
 
-	log.Infof("installing binaries...")
-	err = r.install()
-	if err != nil {
-		log.Errorf("error installing binaries: %s", err)
-		return err
-	}
-	log.Infof("binaries successfully installed")
+	return nil
+}
 
+func (r *Runner) tfInit() error {
 	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.layer.Spec.Path)
 	log.Infof("Launching terraform init in %s", workingDir)
-	err = r.exec.Init(workingDir)
+	err := r.exec.Init(workingDir)
 	if err != nil {
-		log.Errorf("error executing terraform init: %s", err)
 		return err
 	}
 	return nil
