@@ -117,8 +117,8 @@ func (r *Runner) Exec() error {
 		ann[annotations.Failure] = "0"
 	}
 
-	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
-	if err != nil {
+	annotErr := annotations.Add(context.TODO(), r.client, r.layer, ann)
+	if annotErr != nil {
 		log.Errorf("could not update terraform layer annotations: %s", err)
 	}
 	log.Infof("successfully updated terraform layer annotations")
@@ -232,6 +232,10 @@ func (r *Runner) init() error {
 
 func (r *Runner) plan() (string, error) {
 	log.Infof("starting terraform plan")
+	if r.exec == nil {
+		err := errors.New("terraform or terragrunt binary not installed")
+		return "", err
+	}
 	err := r.exec.Plan()
 	if err != nil {
 		log.Errorf("error executing terraform plan: %s", err)
@@ -289,6 +293,10 @@ func (r *Runner) plan() (string, error) {
 
 func (r *Runner) apply() (string, error) {
 	log.Infof("starting terraform apply")
+	if r.exec == nil {
+		err := errors.New("terraform or terragrunt binary not installed")
+		return "", err
+	}
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
 	log.Infof("getting plan binary in cache at key %s", planBinKey)
 	plan, err := r.storage.Get(planBinKey)
