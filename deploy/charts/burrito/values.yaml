@@ -15,7 +15,7 @@ config:
   burrito:
     # -- Redis connection configuration
     redis:
-      hostname: "burrito-redis.burrito-system"
+      hostname: "burrito-redis"
       port: 6379
       database: 0
       # -- Prefer override with the BURRITO_REDIS_PASSWORD environment variable
