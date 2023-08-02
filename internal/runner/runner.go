@@ -61,20 +61,19 @@ func New(c *config.Config) *Runner {
 	}
 }
 
-func (r *Runner) unlock() {
-	err := lock.DeleteLock(context.TODO(), r.client, r.layer)
-	if err != nil {
-		log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
-	}
-}
-
 func (r *Runner) Exec() {
-	defer r.unlock()
+	exitCode := 0
+	defer func() {
+		log.Infof("exiting with code %d", exitCode)
+		os.Exit(exitCode)
+	}()
+
 	var sum string
 	err := r.init()
 	ann := map[string]string{}
 	if err != nil {
 		log.Errorf("error initializing runner: %s", err)
+		exitCode = 1
 	}
 	ref, _ := r.gitRepository.Head()
 	commit := ref.Hash().String()
@@ -97,8 +96,11 @@ func (r *Runner) Exec() {
 	default:
 		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
 	}
+
 	if err != nil {
 		log.Errorf("error during runner execution: %s", err)
+		exitCode = 1
+
 		n, ok := r.layer.Annotations[annotations.Failure]
 		number := 0
 		if ok {
@@ -109,10 +111,21 @@ func (r *Runner) Exec() {
 	} else {
 		ann[annotations.Failure] = "0"
 	}
+
 	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
 	if err != nil {
 		log.Errorf("could not update terraform layer annotations: %s", err)
+		exitCode = 1
 	}
+	log.Infof("successfully updated terraform layer annotations")
+
+	err = lock.DeleteLock(context.TODO(), r.client, r.layer)
+	if err != nil {
+		log.Errorf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
+		exitCode = 1
+	}
+	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
+
 }
 
 func (r *Runner) getLayerAndRepository() error {
@@ -195,6 +208,7 @@ func (r *Runner) init() error {
 	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
 	r.gitRepository, err = clone(r.config.Runner.Repository, r.repository.Spec.Repository.Url, r.layer.Spec.Branch, r.layer.Spec.Path)
 	if err != nil {
+		log.Errorf("error cloning repository: %s", err)
 		return err
 	}
 	log.Infof("repository cloned successfully")
@@ -211,7 +225,7 @@ func (r *Runner) init() error {
 	log.Infof("Launching terraform init in %s", workingDir)
 	err = r.exec.Init(workingDir)
 	if err != nil {
-		log.Errorf("")
+		log.Errorf("error executing terraform init: %s", err)
 		return err
 	}
 	return nil
