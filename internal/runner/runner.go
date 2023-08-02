@@ -101,7 +101,7 @@ func (r *Runner) Exec() error {
 			ann[annotations.LastApplyCommit] = commit
 		}
 	default:
-		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
+		err = errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
 	}
 
 	if err != nil {
