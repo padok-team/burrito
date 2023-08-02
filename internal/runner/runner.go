@@ -246,7 +246,7 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("error parsing terraform json plan: %s", err)
 		return "", err
 	}
-	diff, shortDiff := getDiff(plan)
+	_, shortDiff := getDiff(plan)
 	planJsonKey := storage.GenerateKey(storage.LastPlannedArtifactJson, r.layer)
 	log.Infof("setting plan json into storage at key %s", planJsonKey)
 	err = r.storage.Set(planJsonKey, planJsonBytes, 3600)
@@ -256,10 +256,6 @@ func (r *Runner) plan() (string, error) {
 	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(shortDiff), 3600)
 	if err != nil {
 		log.Errorf("could not put short plan in cache: %s", err)
-	}
-	if !diff {
-		log.Infof("terraform plan diff empty, no subsequent apply should be launched")
-		return "", nil
 	}
 	planBin, err := os.ReadFile(PlanArtifact)
 	if err != nil {

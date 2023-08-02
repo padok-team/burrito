@@ -110,8 +110,8 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 	}
 	applyHash, ok := t.Annotations[annotations.LastApplySum]
 	if !ok {
-		condition.Reason = "NoApplyHasRan"
-		condition.Message = "Apply has not ran yet but a plan is available, launching apply"
+		condition.Reason = "NoApplyHasRun"
+		condition.Message = "Apply has not run yet but a plan is available, launching apply"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
