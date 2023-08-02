@@ -179,4 +179,4 @@ server:
     host: burrito.example.com
     tls: []
 
-tenants: {}
+tenants: []
