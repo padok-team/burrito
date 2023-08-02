@@ -61,22 +61,29 @@ func New(c *config.Config) *Runner {
 	}
 }
 
-func (r *Runner) Exec() {
-	exitCode := 0
-	defer func() {
-		log.Infof("exiting with code %d", exitCode)
-		// os.Exit(exitCode)
-	}()
+func (r *Runner) unlock() {
+	err := lock.DeleteLock(context.TODO(), r.client, r.layer)
+	if err != nil {
+		log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
+	}
+	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
+}
+
+func (r *Runner) Exec() error {
+	defer r.unlock()
 
 	var sum string
-	err := r.init()
+	var commit string
 	ann := map[string]string{}
+
+	err := r.init()
 	if err != nil {
 		log.Errorf("error initializing runner: %s", err)
-		exitCode = 1
 	}
-	ref, _ := r.gitRepository.Head()
-	commit := ref.Hash().String()
+	if r.gitRepository != nil {
+		ref, _ := r.gitRepository.Head()
+		commit = ref.Hash().String()
+	}
 
 	switch r.config.Runner.Action {
 	case "plan":
@@ -99,8 +106,6 @@ func (r *Runner) Exec() {
 
 	if err != nil {
 		log.Errorf("error during runner execution: %s", err)
-		exitCode = 1
-
 		n, ok := r.layer.Annotations[annotations.Failure]
 		number := 0
 		if ok {
@@ -115,16 +120,10 @@ func (r *Runner) Exec() {
 	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
 	if err != nil {
 		log.Errorf("could not update terraform layer annotations: %s", err)
-		exitCode = 1
 	}
 	log.Infof("successfully updated terraform layer annotations")
 
-	err = lock.DeleteLock(context.TODO(), r.client, r.layer)
-	if err != nil {
-		log.Errorf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
-		exitCode = 1
-	}
-	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
+	return err
 }
 
 func (r *Runner) getLayerAndRepository() error {
@@ -207,6 +206,7 @@ func (r *Runner) init() error {
 	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
 	r.gitRepository, err = clone(r.config.Runner.Repository, r.repository.Spec.Repository.Url, r.layer.Spec.Branch, r.layer.Spec.Path)
 	if err != nil {
+		r.gitRepository = nil // reset git repository for the caller
 		log.Errorf("error cloning repository: %s", err)
 		return err
 	}

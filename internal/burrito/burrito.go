@@ -26,7 +26,7 @@ type Server interface {
 }
 
 type Runner interface {
-	Exec()
+	Exec() error
 }
 
 type Controllers interface {
