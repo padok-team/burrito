@@ -26,6 +26,13 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
+	sum, ok := t.Annotations[annotations.LastPlanSum]
+	if !ok || sum == "" {
+		condition.Reason = "PlanSumNotFound"
+		condition.Message = "No plan sum was found"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
 	lastPlanDate, err := time.Parse(time.UnixDate, value)
 	if err != nil {
 		condition.Reason = "ParseError"
