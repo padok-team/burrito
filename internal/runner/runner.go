@@ -65,7 +65,7 @@ func (r *Runner) Exec() {
 	exitCode := 0
 	defer func() {
 		log.Infof("exiting with code %d", exitCode)
-		os.Exit(exitCode)
+		// os.Exit(exitCode)
 	}()
 
 	var sum string
@@ -125,7 +125,6 @@ func (r *Runner) Exec() {
 		exitCode = 1
 	}
 	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
-
 }
 
 func (r *Runner) getLayerAndRepository() error {
