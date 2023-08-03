@@ -367,6 +367,10 @@ var _ = Describe("Layer", func() {
 		It("should end in PlanNeeded state", func() {
 			Expect(layer.Status.State).To(Equal("PlanNeeded"))
 		})
+		It("should have the condition IsPlanArtifactUpToDate set to false", func() {
+			Expect(layer.Status.Conditions[0].Reason).To(Equal("LastPlanFailed"))
+			Expect(string(layer.Status.Conditions[0].Status)).To(Equal("False"))
+		})
 		It("should set RequeueAfter to WaitAction", func() {
 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 		})
