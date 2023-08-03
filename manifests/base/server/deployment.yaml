@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/component: server
     app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
-  namespace: burrito
 spec:
   selector:
     matchLabels:
@@ -22,8 +21,7 @@ spec:
       securityContext:
         runAsNonRoot: true
       containers:
-        - command:
-            - /burrito
+        - name: burrito
           args:
             - server
             - start
@@ -38,7 +36,6 @@ spec:
                 name: burrito-config
                 optional: true
           image: ghcr.io/padok-team/burrito:main
-          name: burrito
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false

@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/component: controllers
     app.kubernetes.io/name: burrito-controllers
     app.kubernetes.io/part-of: burrito
-  namespace: burrito
 spec:
   selector:
     matchLabels:
@@ -22,13 +21,12 @@ spec:
       securityContext:
         runAsNonRoot: true
       containers:
-        - command:
-            - /burrito
+        - name: burrito
           args:
             - controllers
             - start
+            - --namespaces=burrito
           image: ghcr.io/padok-team/burrito:main
-          name: burrito
           imagePullPolicy: Always
           envFrom:
             - configMapRef:

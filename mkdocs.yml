@@ -13,10 +13,14 @@ nav:
 - Overview: index.md
 - Getting Started: getting-started.md
 - Operator Manual:
+  - Install:
+    - With static manifests: operator-manual/install/with-static-manifests.md
+    - With our Helm chart: operator-manual/install/with-helm.md
   - operator-manual/index.md
   - operator-manual/architecture.md
   - operator-manual/git-webhook.md
   - operator-manual/advanced-configuration.md
+  - operator-manual/multi-tenant-architecture.md
   - operator-manual/pr-mr-workflow.md
 - User Guide:
   - user-guide/index.md

@@ -23,7 +23,6 @@ Available overrides are:
 | `Metadata.Annotations` |
 |   `Metadata.Labels`    |
 
-
 For instance with the following configuration, all the runner pods will have the specifications described inside the `TerraformRepository`:
 
 ```yaml
@@ -57,7 +56,6 @@ spec:
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
-    kind: TerraformRepository
     name: burrito
     namespace: burrito
 ```
@@ -95,7 +93,6 @@ spec:
   path: "internal/e2e/testdata/random-pets"
   branch: "main"
   repository:
-    kind: TerraformRepository
     name: burrito
     namespace: burrito
   overrideRunnerSpec:

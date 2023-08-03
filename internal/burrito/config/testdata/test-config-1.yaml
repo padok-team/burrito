@@ -32,12 +32,13 @@ controller:
     url: "https://gitlab.example.com"
 
 redis:
-  url: "burrito-redis:6379"
+  hostname: "burrito-redis.namespace"
+  serverPort: 5000
   database: 0
   password: "testPassword"
 
 server:
-  addr: ":8080"
+  addr: ":9090"
   webhook:
     github:
       secret: "github-secret"

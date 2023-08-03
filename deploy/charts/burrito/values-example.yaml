@@ -1,0 +1,50 @@
+redis:
+  enabled: true
+
+global:
+  deployment:
+    image:
+      tag: "custom-version"
+
+config:
+  burrito:
+    controller:
+      timers:
+        driftDetection: 5m
+
+controller:
+  deployment:
+    envFrom:
+      - secretRef:
+          name: burrito-gh-token
+
+server:
+  deployment:
+    envFrom:
+      - secretRef:
+          name: burrito-webhook-secret
+  ingress:
+    enabled: true
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: "true"
+    ingressClassName: nginx
+    host: burrito.padok.cloud
+    tls:
+      - secretName: wildcard-padok-cloud-tls
+
+tenants:
+  - namespace:
+      create: true
+      name: "burrito-project-1"
+      labels: {}
+      annotations: {}
+    serviceAccounts:
+      - name: runner-project-1
+        additionalRoleBindings:
+          - name: custom
+            role:
+              kind: ClusterRole
+              name: my-custom-role
+        annotations:
+          iam.cloud.provider/role: cloud-provider-role
+        labels: {}

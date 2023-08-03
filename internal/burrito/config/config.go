@@ -12,85 +12,86 @@ import (
 )
 
 type Config struct {
-	Runner     RunnerConfig     `yaml:"runner"`
-	Controller ControllerConfig `yaml:"controller"`
-	Redis      Redis            `yaml:"redis"`
-	Server     ServerConfig     `yaml:"server"`
+	Runner     RunnerConfig     `mapstructure:"runner"`
+	Controller ControllerConfig `mapstructure:"controller"`
+	Redis      Redis            `mapstructure:"redis"`
+	Server     ServerConfig     `mapstructure:"server"`
 }
 
 type WebhookConfig struct {
-	Github WebhookGithubConfig `yaml:"github"`
-	Gitlab WebhookGitlabConfig `yaml:"gitlab"`
+	Github WebhookGithubConfig `mapstructure:"github"`
+	Gitlab WebhookGitlabConfig `mapstructure:"gitlab"`
 }
 
 type WebhookGithubConfig struct {
-	Secret string `yaml:"secret"`
+	Secret string `mapstructure:"secret"`
 }
 
 type WebhookGitlabConfig struct {
-	Secret string `yaml:"secret"`
+	Secret string `mapstructure:"secret"`
 }
 
 type ControllerConfig struct {
-	Namespaces             []string             `yaml:"namespaces"`
-	Timers                 ControllerTimers     `yaml:"timers"`
-	Types                  []string             `yaml:"types"`
-	LeaderElection         LeaderElectionConfig `yaml:"leaderElection"`
-	MetricsBindAddress     string               `yaml:"metricsBindAddress"`
-	HealthProbeBindAddress string               `yaml:"healthProbeBindAddress"`
-	KubernetesWebhookPort  int                  `yaml:"kubernetesWebhookPort"`
-	GithubConfig           GithubConfig         `yaml:"githubConfig"`
-	GitlabConfig           GitlabConfig         `yaml:"gitlabConfig"`
+	Namespaces             []string             `mapstructure:"namespaces"`
+	Timers                 ControllerTimers     `mapstructure:"timers"`
+	Types                  []string             `mapstructure:"types"`
+	LeaderElection         LeaderElectionConfig `mapstructure:"leaderElection"`
+	MetricsBindAddress     string               `mapstructure:"metricsBindAddress"`
+	HealthProbeBindAddress string               `mapstructure:"healthProbeBindAddress"`
+	KubernetesWebhookPort  int                  `mapstructure:"kubernetesWebhookPort"`
+	GithubConfig           GithubConfig         `mapstructure:"githubConfig"`
+	GitlabConfig           GitlabConfig         `mapstructure:"gitlabConfig"`
 }
 
 type GithubConfig struct {
-	APIToken string `yaml:"apiToken"`
+	APIToken string `mapstructure:"apiToken"`
 }
 
 type GitlabConfig struct {
-	APIToken string `yaml:"apiToken"`
-	URL      string `yaml:"url"`
+	APIToken string `mapstructure:"apiToken"`
+	URL      string `mapstructure:"url"`
 }
 
 type LeaderElectionConfig struct {
-	Enabled bool   `yaml:"enabled"`
-	ID      string `yaml:"id"`
+	Enabled bool   `mapstructure:"enabled"`
+	ID      string `mapstructure:"id"`
 }
 
 type ControllerTimers struct {
-	DriftDetection     time.Duration `yaml:"driftDetection"`
-	OnError            time.Duration `yaml:"onError"`
-	WaitAction         time.Duration `yaml:"waitAction"`
-	FailureGracePeriod time.Duration `yaml:"failureGracePeriod"`
+	DriftDetection     time.Duration `mapstructure:"driftDetection"`
+	OnError            time.Duration `mapstructure:"onError"`
+	WaitAction         time.Duration `mapstructure:"waitAction"`
+	FailureGracePeriod time.Duration `mapstructure:"failureGracePeriod"`
 }
 
 type RepositoryConfig struct {
-	SSHPrivateKey string `yaml:"sshPrivateKey"`
-	Username      string `yaml:"username"`
-	Password      string `yaml:"password"`
+	SSHPrivateKey string `mapstructure:"sshPrivateKey"`
+	Username      string `mapstructure:"username"`
+	Password      string `mapstructure:"password"`
 }
 
 type RunnerConfig struct {
-	Action                     string           `yaml:"action"`
-	Layer                      Layer            `yaml:"layer"`
-	Repository                 RepositoryConfig `yaml:"repository"`
-	SSHKnownHostsConfigMapName string           `yaml:"sshKnownHostsConfigMapName"`
+	Action                     string           `mapstructure:"action"`
+	Layer                      Layer            `mapstructure:"layer"`
+	Repository                 RepositoryConfig `mapstructure:"repository"`
+	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
 }
 
 type Layer struct {
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
+	Name      string `mapstructure:"name"`
+	Namespace string `mapstructure:"namespace"`
 }
 
 type Redis struct {
-	URL      string `yaml:"url"`
-	Password string `yaml:"password"`
-	Database int    `yaml:"database"`
+	Hostname   string `mapstructure:"hostname"`
+	ServerPort int    `mapstructure:"serverPort"`
+	Password   string `mapstructure:"password"`
+	Database   int    `mapstructure:"database"`
 }
 
 type ServerConfig struct {
-	Addr    string        `yaml:"port"`
-	Webhook WebhookConfig `yaml:"webhook"`
+	Addr    string        `mapstructure:"addr"`
+	Webhook WebhookConfig `mapstructure:"webhook"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {
@@ -142,7 +143,7 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 	for i := 0; i < ift.NumField(); i++ {
 		val := ifv.Field(i)
 		typ := ift.Field(i)
-		tv, ok := typ.Tag.Lookup("yaml")
+		tv, ok := typ.Tag.Lookup("mapstructure")
 		if !ok {
 			continue
 		}
@@ -158,9 +159,10 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 func TestConfig() *Config {
 	return &Config{
 		Redis: Redis{
-			URL:      "redis://localhost:6379",
-			Password: "",
-			Database: 0,
+			Hostname:   "localhost",
+			ServerPort: 6379,
+			Password:   "",
+			Database:   0,
 		},
 		Controller: ControllerConfig{
 			Timers: ControllerTimers{

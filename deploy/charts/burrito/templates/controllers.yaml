@@ -1,0 +1,121 @@
+{{ $configChecksum := (include (print $.Template.BasePath "/config.yaml") . | sha256sum) }}
+{{ $sshKnownHostsChecksum := (include (print $.Template.BasePath "/ssh-known-hosts.yaml") . | sha256sum) }}
+
+{{- with mergeOverwrite (deepCopy .Values.global) .Values.controllers }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burrito-controllers
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+spec:
+  {{- if not .deployment.autoscaling.enabled }}
+  replicas: {{ .deployment.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- toYaml .metadata.labels | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/burrito-config: {{ $configChecksum }}
+        checksum/burrito-ssh-known-hosts: {{ $sshKnownHostsChecksum }}
+        {{- toYaml .deployment.podAnnotations | nindent 8 }}
+      labels:
+        {{- toYaml .metadata.labels | nindent 8 }}
+    spec:
+      {{- with .deployment.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: burrito-controllers
+      securityContext:
+        {{- toYaml .deployment.podSecurityContext | nindent 8 }}
+      containers:
+        - name: burrito
+          command:
+            {{- toYaml .deployment.command | nindent 12 }}
+          args:
+            {{- toYaml .deployment.args | nindent 12 }}
+          securityContext:
+            {{- toYaml .deployment.securityContext | nindent 12 }}
+          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .deployment.image.pullPolicy }}
+          ports:
+            {{- toYaml .deployment.ports | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .deployment.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .deployment.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .deployment.resources | nindent 12 }}
+          env:
+            {{- toYaml .deployment.env | nindent 12 }}
+          envFrom:
+            {{- toYaml .deployment.envFrom | nindent 12 }}
+          volumeMounts:
+            - name: burrito-config
+              mountPath: /etc/burrito
+              readOnly: true
+      {{- with .deployment.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .deployment.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: burrito-config
+          configMap:
+            name: burrito-config
+{{- if .service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: burrito-controllers
+  labels:
+    {{- toYaml .metadata.labels | nindent 4}}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4}}
+spec:
+  type: {{ .type }}
+  ports:
+    {{- toYaml .service.ports | nindent 4 }}
+  selector:
+    {{- toYaml .metadata.labels | nindent 4 }}
+{{- end }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: burrito-controllers
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: burrito-controllers
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-controllers
+subjects:
+  - kind: ServiceAccount
+    name: burrito-controllers
+    namespace: {{ $.Release.Namespace }}
+{{- end }}

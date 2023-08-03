@@ -27,7 +27,6 @@ spec:
   path: "internal/e2e/testdata/terragrunt/random-pets/prod"
   branch: "feat/handle-terragrunt"
   repository:
-    kind: TerraformRepository
     name: burrito
     namespace: burrito
 ```

@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/name: burrito-server
     app.kubernetes.io/part-of: burrito
   name: burrito-server
-  namespace: burrito
 spec:
   ports:
     - name: http

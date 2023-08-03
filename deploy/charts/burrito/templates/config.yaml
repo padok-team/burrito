@@ -1,0 +1,37 @@
+{{- if .Values.config.create }}
+
+{{- $config := .Values.config.burrito }}
+
+{{/*
+Tenant Namespaces
+*/}}
+{{- $tenantNamespaces := list }}
+{{- range $tenant := .Values.tenants }}
+{{- $tenantNamespaces = append $tenantNamespaces $tenant.namespace.name }}
+{{- end }}
+{{- $_ := set $config.controller "namespaces" (default $tenantNamespaces $config.controller.namespaces) }}
+
+{{/*
+Redis Hostname
+*/}}
+{{- if .Values.redis.enabled }}
+{{- $_ := set $config.redis "hostname" (printf "%s.%s" "burrito-redis" .Release.Namespace) }}
+{{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: burrito-config
+  labels:
+    app.kubernetes.io/name: burrito-config
+    {{- toYaml .Values.global.metadata.labels | nindent 4 }}
+  {{- with (mergeOverwrite (deepCopy .Values.global.metadata.annotations) .Values.config.annotations) }}
+  annotations:
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+data:
+  config.yaml: |-
+    {{- toYaml $config | nindent 4 }}
+{{- end }}

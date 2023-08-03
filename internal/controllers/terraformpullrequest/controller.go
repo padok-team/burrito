@@ -107,7 +107,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		providers = append(providers, p)
 	}
 	r.Providers = providers
-	r.Storage = redis.New(r.Config.Redis.URL, r.Config.Redis.Password, r.Config.Redis.Database)
+	r.Storage = redis.New(r.Config.Redis)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformPullRequest{}).
 		WithEventFilter(ignorePredicate()).
