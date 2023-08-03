@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM docker.io/library/golang:1.19.9@sha256:9613596d7405705447f36440a59a3a2a1d22384c7568ae1838d0129964c5ba13 as builder
+FROM docker.io/library/golang:1.19.9@sha256:8cefba2710250b21a8b8e32281788c5b53dc561ba0c51ea7de92b9a350663b7d as builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
