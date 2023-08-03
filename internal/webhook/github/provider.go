@@ -36,7 +36,7 @@ func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
 		return nil, err
 	}
 	if err != nil {
-		log.Errorf("an error occured during request parsing: %s", err)
+		log.Errorf("an error occurred during request parsing: %s", err)
 		return nil, err
 	}
 

@@ -12,9 +12,10 @@ func buildRunnerStartCmd(app *burrito.App) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start Burrito runner",
+		// Do not display usage on program error
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			app.StartRunner()
-			return nil
+			return app.StartRunner()
 		},
 	}
 

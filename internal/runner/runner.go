@@ -66,18 +66,24 @@ func (r *Runner) unlock() {
 	if err != nil {
 		log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
 	}
+	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
 }
 
-func (r *Runner) Exec() {
+func (r *Runner) Exec() error {
 	defer r.unlock()
+
 	var sum string
-	err := r.init()
+	var commit string
 	ann := map[string]string{}
+
+	err := r.init()
 	if err != nil {
 		log.Errorf("error initializing runner: %s", err)
 	}
-	ref, _ := r.gitRepository.Head()
-	commit := ref.Hash().String()
+	if r.gitRepository != nil {
+		ref, _ := r.gitRepository.Head()
+		commit = ref.Hash().String()
+	}
 
 	switch r.config.Runner.Action {
 	case "plan":
@@ -95,8 +101,9 @@ func (r *Runner) Exec() {
 			ann[annotations.LastApplyCommit] = commit
 		}
 	default:
-		err = errors.New("unrecognized runner action, If this is happening there might be a version mismatch between the controller and runner")
+		err = errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
 	}
+
 	if err != nil {
 		log.Errorf("error during runner execution: %s", err)
 		n, ok := r.layer.Annotations[annotations.Failure]
@@ -109,10 +116,14 @@ func (r *Runner) Exec() {
 	} else {
 		ann[annotations.Failure] = "0"
 	}
-	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
-	if err != nil {
+
+	annotErr := annotations.Add(context.TODO(), r.client, r.layer, ann)
+	if annotErr != nil {
 		log.Errorf("could not update terraform layer annotations: %s", err)
 	}
+	log.Infof("successfully updated terraform layer annotations")
+
+	return err
 }
 
 func (r *Runner) getLayerAndRepository() error {
@@ -195,6 +206,8 @@ func (r *Runner) init() error {
 	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
 	r.gitRepository, err = clone(r.config.Runner.Repository, r.repository.Spec.Repository.Url, r.layer.Spec.Branch, r.layer.Spec.Path)
 	if err != nil {
+		r.gitRepository = nil // reset git repository for the caller
+		log.Errorf("error cloning repository: %s", err)
 		return err
 	}
 	log.Infof("repository cloned successfully")
@@ -211,7 +224,7 @@ func (r *Runner) init() error {
 	log.Infof("Launching terraform init in %s", workingDir)
 	err = r.exec.Init(workingDir)
 	if err != nil {
-		log.Errorf("")
+		log.Errorf("error executing terraform init: %s", err)
 		return err
 	}
 	return nil
@@ -219,6 +232,10 @@ func (r *Runner) init() error {
 
 func (r *Runner) plan() (string, error) {
 	log.Infof("starting terraform plan")
+	if r.exec == nil {
+		err := errors.New("terraform or terragrunt binary not installed")
+		return "", err
+	}
 	err := r.exec.Plan()
 	if err != nil {
 		log.Errorf("error executing terraform plan: %s", err)
@@ -246,7 +263,7 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("error parsing terraform json plan: %s", err)
 		return "", err
 	}
-	diff, shortDiff := getDiff(plan)
+	_, shortDiff := getDiff(plan)
 	planJsonKey := storage.GenerateKey(storage.LastPlannedArtifactJson, r.layer)
 	log.Infof("setting plan json into storage at key %s", planJsonKey)
 	err = r.storage.Set(planJsonKey, planJsonBytes, 3600)
@@ -256,10 +273,6 @@ func (r *Runner) plan() (string, error) {
 	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(shortDiff), 3600)
 	if err != nil {
 		log.Errorf("could not put short plan in cache: %s", err)
-	}
-	if !diff {
-		log.Infof("terraform plan diff empty, no subsequent apply should be launched")
-		return "", nil
 	}
 	planBin, err := os.ReadFile(PlanArtifact)
 	if err != nil {
@@ -280,6 +293,10 @@ func (r *Runner) plan() (string, error) {
 
 func (r *Runner) apply() (string, error) {
 	log.Infof("starting terraform apply")
+	if r.exec == nil {
+		err := errors.New("terraform or terragrunt binary not installed")
+		return "", err
+	}
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
 	log.Infof("getting plan binary in cache at key %s", planBinKey)
 	plan, err := r.storage.Get(planBinKey)

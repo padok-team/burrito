@@ -1,5 +1,5 @@
 package burrito
 
-func (app *App) StartRunner() {
-	app.Runner.Exec()
+func (app *App) StartRunner() error {
+	return app.Runner.Exec()
 }

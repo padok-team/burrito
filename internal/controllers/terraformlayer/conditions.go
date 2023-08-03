@@ -26,6 +26,13 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
+	planHash, ok := t.Annotations[annotations.LastPlanSum]
+	if !ok || planHash == "" {
+		condition.Reason = "LastPlanFailed"
+		condition.Message = "Last plan run has failed"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
 	lastPlanDate, err := time.Parse(time.UnixDate, value)
 	if err != nil {
 		condition.Reason = "ParseError"
@@ -95,7 +102,7 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 	planHash, ok := t.Annotations[annotations.LastPlanSum]
-	if !ok {
+	if !ok || planHash == "" {
 		condition.Reason = "NoPlanHasRunYet"
 		condition.Message = "No plan has run on this layer yet"
 		condition.Status = metav1.ConditionTrue
@@ -103,8 +110,8 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 	}
 	applyHash, ok := t.Annotations[annotations.LastApplySum]
 	if !ok {
-		condition.Reason = "NoApplyHasRan"
-		condition.Message = "Apply has not ran yet but a plan is available, launching apply"
+		condition.Reason = "NoApplyHasRun"
+		condition.Message = "Apply has not run yet but a plan is available, launching apply"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}

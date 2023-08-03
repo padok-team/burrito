@@ -36,7 +36,7 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 		return nil, err
 	}
 	if err != nil {
-		log.Errorf("an error occured during event parsing: %s", err)
+		log.Errorf("an error occurred during event parsing: %s", err)
 		return nil, err
 	}
 	switch payload := p.(type) {
