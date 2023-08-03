@@ -111,7 +111,7 @@ func (s *CommentNeeded) getHandler() func(ctx context.Context, r *Reconciler, re
 		comment := comment.NewDefaultComment(layers, r.Storage)
 		err = provider.Comment(repository, pr, comment)
 		if err != nil {
-			log.Errorf("an error occured while commenting pull request: %s", err)
+			log.Errorf("an error occurred while commenting pull request: %s", err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 		}
 		err = annotations.Add(ctx, r.Client, pr, map[string]string{annotations.LastCommentedCommit: pr.Annotations[annotations.LastDiscoveredCommit]})
