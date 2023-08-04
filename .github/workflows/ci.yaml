@@ -97,6 +97,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         push: true
+        provenance: false
         platforms: ${{ env.BUILD_PLATFORMS }}
         build-args: |
           VERSION=${{ env.VERSION }}
