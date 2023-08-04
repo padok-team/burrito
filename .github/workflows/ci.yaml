@@ -65,15 +65,15 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ghcr.io/{{ github.repository }}
+        images: ghcr.io/${{ github.repository }}
         # generate Docker tags:
         # - type=ref,event=branch -> branch name
         # - type=ref,event=tag -> tag name
-        # - type=sha,format=long -> commit sha
+        # - type=sha,format=long,prefix= -> commit sha
         tags: |
           type=ref,event=branch
           type=ref,event=tag
-          type=sha,format=long
+          type=sha,format=long,prefix=
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
