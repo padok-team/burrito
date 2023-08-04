@@ -66,6 +66,9 @@ func (c *DefaultComment) Generate(commit string) (string, error) {
 		Layers: reportedLayers,
 	}
 	comment := bytes.NewBufferString("")
-	defaultTemplate.Execute(comment, data)
+	err := defaultTemplate.Execute(comment, data)
+	if err != nil {
+		return "", err
+	}
 	return comment.String(), nil
 }

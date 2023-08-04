@@ -44,8 +44,6 @@ var (
 	scheme = runtime.NewScheme()
 )
 
-const ()
-
 type Controllers struct {
 	config *config.Config
 }

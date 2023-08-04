@@ -21,13 +21,7 @@ type Github struct {
 }
 
 func (g *Github) IsConfigPresent(c *config.Config) bool {
-	if &c.Controller.GithubConfig == nil {
-		return false
-	}
-	if c.Controller.GithubConfig.APIToken == "" {
-		return false
-	}
-	return true
+	return c.Controller.GithubConfig.APIToken != ""
 }
 
 func (g *Github) Init(c *config.Config) error {

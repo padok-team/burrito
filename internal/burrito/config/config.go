@@ -123,12 +123,20 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 		name = strings.ReplaceAll(name, "-", "_")
 		return pflag.NormalizedName(name)
 	})
-	v.BindPFlags(flags)
+	err := v.BindPFlags(flags)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error binding flags: %s\n", err)
+		return err
+	}
 
 	// Nested configuration options set with environment variables use an
 	// underscore as a separator.
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	bindEnvironmentVariables(v, *c)
+	err = bindEnvironmentVariables(v, *c)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error binding environment variables: %s\n", err)
+		return err
+	}
 
 	return v.Unmarshal(c)
 }
@@ -137,7 +145,7 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 // fields to environment variables. This is a workaround to a limitation of
 // Viper, found here:
 // https://github.com/spf13/viper/issues/188#issuecomment-399884438
-func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string) {
+func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string) error {
 	ifv := reflect.ValueOf(iface)
 	ift := reflect.TypeOf(iface)
 	for i := 0; i < ift.NumField(); i++ {
@@ -149,11 +157,18 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 		}
 		switch val.Kind() {
 		case reflect.Struct:
-			bindEnvironmentVariables(v, val.Interface(), append(parts, tv)...)
+			err := bindEnvironmentVariables(v, val.Interface(), append(parts, tv)...)
+			if err != nil {
+				return err
+			}
 		default:
-			v.BindEnv(strings.Join(append(parts, tv), "."))
+			err := v.BindEnv(strings.Join(append(parts, tv), "."))
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func TestConfig() *Config {

@@ -18,13 +18,7 @@ type Gitlab struct {
 }
 
 func (g *Gitlab) IsConfigPresent(c *config.Config) bool {
-	if &c.Controller.GitlabConfig == nil {
-		return false
-	}
-	if c.Controller.GitlabConfig.APIToken == "" {
-		return false
-	}
-	return true
+	return c.Controller.GitlabConfig.APIToken != ""
 }
 
 func (g *Gitlab) Init(c *config.Config) error {

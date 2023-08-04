@@ -20,7 +20,10 @@ import (
 func LoadResources(client client.Client, path string) {
 	log := logf.FromContext(context.TODO())
 
-	resources := parseResources(path)
+	resources, err := parseResources(path)
+	if err != nil {
+		panic(err)
+	}
 	for _, r := range resources {
 		log.Info(fmt.Sprintf("Creating %s, %s/%s", r.GetObjectKind().GroupVersionKind().Kind, r.GetNamespace(), r.GetName()))
 		err := client.Create(context.TODO(), r)
@@ -30,14 +33,14 @@ func LoadResources(client client.Client, path string) {
 	}
 }
 
-func parseResources(path string) []client.Object {
+func parseResources(path string) ([]client.Object, error) {
 	log := logf.FromContext(context.TODO())
 	_ = configv1alpha1.AddToScheme(scheme.Scheme)
 	decoder := scheme.Codecs.UniversalDeserializer()
 
 	list := []client.Object{}
 	r := []byte{}
-	filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, walkErr error) error {
 		if d.IsDir() {
 			return nil
 		}
@@ -55,6 +58,9 @@ func parseResources(path string) []client.Object {
 		r = append(r, data...)
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	for _, doc := range strings.Split(string(r), "---") {
 		if doc == "" || doc == "\n" {
@@ -68,5 +74,5 @@ func parseResources(path string) []client.Object {
 		list = append(list, obj.(client.Object))
 
 	}
-	return list
+	return list, nil
 }

@@ -3,7 +3,7 @@ package gitlab_test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"net/http"
@@ -38,7 +38,7 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 	}
 	defer payloadFile.Close()
 
-	payloadBytes, err := ioutil.ReadAll(payloadFile)
+	payloadBytes, err := io.ReadAll(payloadFile)
 	if err != nil {
 		t.Fatalf("failed to read payload file: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 	}
 	defer payloadFile.Close()
 
-	payloadBytes, err := ioutil.ReadAll(payloadFile)
+	payloadBytes, err := io.ReadAll(payloadFile)
 	if err != nil {
 		t.Fatalf("failed to read payload file: %v", err)
 	}
