@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"net/http"
@@ -42,7 +42,7 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	}
 	defer payloadFile.Close()
 
-	payloadBytes, err := ioutil.ReadAll(payloadFile)
+	payloadBytes, err := io.ReadAll(payloadFile)
 	if err != nil {
 		t.Fatalf("failed to read payload file: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	}
 	defer payloadFile.Close()
 
-	payloadBytes, err := ioutil.ReadAll(payloadFile)
+	payloadBytes, err := io.ReadAll(payloadFile)
 	if err != nil {
 		t.Fatalf("failed to read payload file: %v", err)
 	}
