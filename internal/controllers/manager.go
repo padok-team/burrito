@@ -32,6 +32,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
+	"github.com/padok-team/burrito/internal/controllers/terraformrun"
 	"github.com/padok-team/burrito/internal/storage/redis"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -84,7 +85,7 @@ func (c *Controllers) Exec() {
 		},
 	})
 	if err != nil {
-		log.Fatalf("unable to start manager: %s", err)
+		logrus.Fatalf("unable to start manager: %s", err)
 	}
 
 	for _, ctrlType := range c.config.Controller.Types {
@@ -96,9 +97,9 @@ func (c *Controllers) Exec() {
 				Config:  c.config,
 				Storage: redis.New(c.config.Redis),
 			}).SetupWithManager(mgr); err != nil {
-				log.Fatalf("unable to create layer controller: %s", err)
+				logrus.Fatalf("unable to create layer controller: %s", err)
 			}
-			log.Infof("layer controller started successfully")
+			logrus.Infof("layer controller started successfully")
 		case "repository":
 			if err = (&terraformrepository.Reconciler{
 				Client: mgr.GetClient(),
@@ -107,6 +108,15 @@ func (c *Controllers) Exec() {
 				logrus.Fatalf("unable to create repository controller: %s", err)
 			}
 			logrus.Infof("repository controller started successfully")
+		case "run":
+			if err = (&terraformrun.Reconciler{
+				Client: mgr.GetClient(),
+				Scheme: mgr.GetScheme(),
+				Config: c.config,
+			}).SetupWithManager(mgr); err != nil {
+				logrus.Fatalf("unable to create run controller: %s", err)
+			}
+			logrus.Infof("run controller started successfully")
 		case "pullrequest":
 			if err = (&terraformpullrequest.Reconciler{
 				Client: mgr.GetClient(),

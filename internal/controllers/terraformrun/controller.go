@@ -18,6 +18,7 @@ package terraformrun
 
 import (
 	"context"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,12 +26,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/burrito/config"
 )
+
+type Clock interface {
+	Now() time.Time
+}
+
+type RealClock struct{}
+
+func (c RealClock) Now() time.Time {
+	return time.Now()
+}
 
 // RunReconcilier reconciles a TerraformRun object
 type Reconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Config *config.Config
+	Clock
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformruns,verbs=get;list;watch;create;update;patch;delete
@@ -52,7 +66,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	// TODO(user): your logic here
 
 	// - Get the TerraformRun object (handle not found/errors)
-	// - Lease/Lock management ??
+	// - Lease/Lock management ?? Not sure if needed
 	// - Get State/Conditions of TerraformRun: Newly Created / Running / Succeeded / Definitly Failed / Exponential Backoff
 	// - Act: Create a Pod / Wait for Result / Wait because of Exponential Backoff / Do nothing
 	// - Update State/Conditions of TerraformRun

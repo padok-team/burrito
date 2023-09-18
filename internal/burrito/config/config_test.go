@@ -59,7 +59,7 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				WaitAction:         1 * time.Minute,
 				FailureGracePeriod: 15 * time.Second,
 			},
-			Types: []string{"layer", "repository", "pullrequest"},
+			Types: []string{"layer", "repository", "run", "pullrequest"},
 			LeaderElection: config.LeaderElectionConfig{
 				Enabled: true,
 				ID:      "6d185457.terraform.padok.cloud",
