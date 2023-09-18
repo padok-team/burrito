@@ -27,6 +27,9 @@ spec:
     - jsonPath: .status.errors
       name: Errors
       type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Created On
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:

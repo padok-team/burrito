@@ -18,14 +18,20 @@ package terraformrun
 
 import (
 	"context"
+	"math"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 )
 
@@ -61,22 +67,100 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.WithContext(ctx)
-
-	// TODO(user): your logic here
-
 	// - Get the TerraformRun object (handle not found/errors)
-	// - Lease/Lock management ?? Not sure if needed
 	// - Get State/Conditions of TerraformRun: Newly Created / Running / Succeeded / Definitly Failed / Exponential Backoff
 	// - Act: Create a Pod / Wait for Result / Wait because of Exponential Backoff / Do nothing
 	// - Update State/Conditions of TerraformRun
 
-	return ctrl.Result{}, nil
+	log := log.WithContext(ctx)
+	log.Infof("starting reconciliation...")
+	run := &configv1alpha1.TerraformRun{}
+	err := r.Client.Get(ctx, req.NamespacedName, run)
+	if errors.IsNotFound(err) {
+		log.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
+		return ctrl.Result{}, nil
+	}
+	if err != nil {
+		log.Errorf("failed to get TerraformRun: %s", err)
+		return ctrl.Result{}, err
+	}
+	// locked, err := lock.IsLocked(ctx, r.Client, layer)
+	// if err != nil {
+	// 	log.Errorf("failed to get Lease Resource: %s", err)
+	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	// }
+	// if locked {
+	// 	log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
+	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+	// }
+	// repository := &configv1alpha1.TerraformRepository{}
+	// log.Infof("getting Linked TerraformRepository to layer %s", layer.Name)
+	// err = r.Client.Get(ctx, types.NamespacedName{
+	// 	Namespace: layer.Spec.Repository.Namespace,
+	// 	Name:      layer.Spec.Repository.Name,
+	// }, repository)
+	// if errors.IsNotFound(err) {
+	// 	log.Infof("TerraformRepository linked to layer %s not found, ignoring layer until it's modified: %s", layer.Name, err)
+	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	// }
+	// if err != nil {
+	// 	log.Errorf("failed to get TerraformRepository linked to layer %s: %s", layer.Name, err)
+	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	// }
+	state, conditions := r.GetState(ctx, run)
+	// lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, run))
+	// if err != nil {
+	// 	lastResult = []byte("Error getting last Result")
+	// }
+	run.Status = configv1alpha1.TerraformRunStatus{Conditions: conditions, State: getStateString(state), Errors: 0}
+	result := state.getHandler()(ctx, r, run)
+	err = r.Client.Status().Update(ctx, run)
+	if err != nil {
+		log.Errorf("could not update run %s status: %s", run.Name, err)
+	}
+	log.Infof("finished reconciliation cycle for run %s", run.Name)
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRun{}).
+		WithEventFilter(ignorePredicate()).
 		Complete(r)
+}
+
+func GetRunExponentialBackOffTime(DefaultRequeueAfter time.Duration, run *configv1alpha1.TerraformRun) time.Duration {
+	var n, ok = run.Annotations[annotations.Failure]
+	var err error
+	attempts := 0
+
+	if ok {
+		attempts, err = strconv.Atoi(n)
+		if err != nil {
+			log.Errorf("failed to convert failure annotations : %v to int. Error : %v", n, err)
+		}
+	}
+	if attempts < 1 {
+		return DefaultRequeueAfter
+	}
+	return GetExponentialBackOffTime(DefaultRequeueAfter, attempts)
+}
+
+func GetExponentialBackOffTime(DefaultRequeueAfter time.Duration, attempts int) time.Duration {
+	var x float64 = float64(attempts)
+	return time.Duration(int32(math.Exp(x))) * DefaultRequeueAfter
+}
+
+func ignorePredicate() predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			// Ignore updates to CR status in which case metadata.Generation does not change
+			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			// Evaluates to false if the object has been confirmed deleted.
+			return !e.DeleteStateUnknown
+		},
+	}
 }

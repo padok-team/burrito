@@ -17,14 +17,14 @@ const (
 	ApplyAction Action = "apply"
 )
 
-func GetDefaultLabels(layer *configv1alpha1.TerraformLayer, action Action) map[string]string {
+func GetDefaultLabels(run *configv1alpha1.TerraformRun, action Action) map[string]string {
 	return map[string]string{
-		"burrito/layer":  layer.Name,
-		"burrito/action": string(action),
+		"burrito/managed-by": run.Name,
+		"burrito/action":     string(action),
 	}
 }
 
-func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
+func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
 	defaultSpec := defaultPodSpec(r.Config, layer, repository)
 
 	switch action {
@@ -98,7 +98,8 @@ func (r *Reconciler) getPod(layer *configv1alpha1.TerraformLayer, repository *co
 	pod := corev1.Pod{
 		Spec: defaultSpec,
 		ObjectMeta: metav1.ObjectMeta{
-			Labels:      mergeMaps(overrideSpec.Metadata.Labels, GetDefaultLabels(layer, action)),
+			// TODO: Add OwnerReference to the TerraformRun resource
+			Labels:      mergeMaps(overrideSpec.Metadata.Labels, GetDefaultLabels(run, action)),
 			Annotations: overrideSpec.Metadata.Annotations,
 		},
 	}

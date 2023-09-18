@@ -46,6 +46,7 @@ type TerraformRunStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Errors",type=string,JSONPath=`.status.errors`
+// +kubebuilder:printcolumn:name="Created On",type=string,JSONPath=`.metadata.creationTimestamp`
 // TerraformRun is the Schema for the terraformRuns API
 type TerraformRun struct {
 	metav1.TypeMeta   `json:",inline"`
