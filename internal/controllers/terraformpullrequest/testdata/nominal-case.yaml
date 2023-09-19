@@ -24,7 +24,8 @@ metadata:
 spec:
   branch: main
   path: terraform/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -42,7 +43,8 @@ metadata:
 spec:
   branch: main
   path: terragrunt/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -84,7 +86,8 @@ metadata:
 spec:
   branch: feature-branch-2
   path: terraform/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -127,7 +130,8 @@ metadata:
 spec:
   branch: feature-branch-3
   path: terraform/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default

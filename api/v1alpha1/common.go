@@ -24,13 +24,14 @@ type MetadataOverride struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=dry;autoApply
-type RemediationStrategy string
+type RemediationStrategy struct {
+	AutoApply bool                       `json:"autoApply,omitempty"`
+	OnError   OnErrorRemediationStrategy `json:"onError,omitempty"`
+}
 
-const (
-	DryRemediationStrategy       RemediationStrategy = "dry"
-	AutoApplyRemediationStrategy RemediationStrategy = "autoApply"
-)
+type OnErrorRemediationStrategy struct {
+	MaxRetries int `json:"maxRetries,omitempty"`
+}
 
 type TerraformConfig struct {
 	Version          string           `json:"version,omitempty"`

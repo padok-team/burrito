@@ -14,7 +14,8 @@ metadata:
 spec:
   branch: main
   path: error-case-one/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -42,7 +43,8 @@ metadata:
 spec:
   branch: main
   path: error-case-two/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -67,7 +69,8 @@ metadata:
 spec:
   branch: main
   path: error-case-three/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -95,7 +98,8 @@ metadata:
 spec:
   branch: main
   path: error-case-four/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default

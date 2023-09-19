@@ -99,7 +99,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
 		remediationStrategy := getRemediationStrategy(repository, layer)
-		if remediationStrategy != configv1alpha1.AutoApplyRemediationStrategy {
+		if !remediationStrategy.AutoApply {
 			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
 		}
@@ -120,12 +120,14 @@ func (s *ApplyNeeded) getHandler() Handler {
 }
 
 func getRemediationStrategy(repo *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer) configv1alpha1.RemediationStrategy {
-	result := configv1alpha1.DryRemediationStrategy
-	if len(repo.Spec.RemediationStrategy) > 0 {
-		result = repo.Spec.RemediationStrategy
+	result := configv1alpha1.RemediationStrategy{
+		AutoApply: false,
 	}
-	if len(layer.Spec.RemediationStrategy) > 0 {
-		result = layer.Spec.RemediationStrategy
+	if repo.Spec.RemediationStrategy.AutoApply {
+		result.AutoApply = true
+	}
+	if layer.Spec.RemediationStrategy.AutoApply {
+		result.AutoApply = true
 	}
 	return result
 }

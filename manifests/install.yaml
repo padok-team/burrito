@@ -34,7 +34,7 @@ spec:
       name: Path
       type: string
     - jsonPath: .status.lastResult
-      name: LastResult
+      name: Last Result
       type: string
     name: v1alpha1
     schema:
@@ -1239,10 +1239,15 @@ spec:
               path:
                 type: string
               remediationStrategy:
-                enum:
-                - dry
-                - autoApply
-                type: string
+                properties:
+                  autoApply:
+                    type: boolean
+                  onError:
+                    properties:
+                      maxRetries:
+                        type: integer
+                    type: object
+                type: object
               repository:
                 properties:
                   name:
@@ -2669,10 +2674,15 @@ spec:
                     type: array
                 type: object
               remediationStrategy:
-                enum:
-                - dry
-                - autoApply
-                type: string
+                properties:
+                  autoApply:
+                    type: boolean
+                  onError:
+                    properties:
+                      maxRetries:
+                        type: integer
+                    type: object
+                type: object
               repository:
                 properties:
                   secretName:
@@ -2771,11 +2781,14 @@ spec:
     - jsonPath: .status.state
       name: State
       type: string
-    - jsonPath: .status.errors
-      name: Errors
+    - jsonPath: .status.retries
+      name: Retries
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Created On
+      type: string
+    - jsonPath: .status.runnerPod
+      name: Runner Pod
       type: string
     name: v1alpha1
     schema:
@@ -2849,8 +2862,12 @@ spec:
                   - type
                   type: object
                 type: array
-              errors:
+              lastRun:
+                type: string
+              retries:
                 type: integer
+              runnerPod:
+                type: string
               state:
                 type: string
             type: object

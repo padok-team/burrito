@@ -1,6 +1,7 @@
 package terraformrun
 
 import (
+	"context"
 	"fmt"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -8,6 +9,10 @@ import (
 	"github.com/padok-team/burrito/internal/version"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Action string
@@ -17,11 +22,53 @@ const (
 	ApplyAction Action = "apply"
 )
 
-func GetDefaultLabels(run *configv1alpha1.TerraformRun, action Action) map[string]string {
+func getDefaultLabels(run *configv1alpha1.TerraformRun) map[string]string {
 	return map[string]string{
 		"burrito/managed-by": run.Name,
-		"burrito/action":     string(action),
+		"burrito/action":     string(run.Spec.Action),
 	}
+}
+
+func getLabelSelector(run *configv1alpha1.TerraformRun) labels.Selector {
+	selector := labels.NewSelector()
+	for key, value := range getDefaultLabels(run) {
+		requirement, err := labels.NewRequirement(key, selection.Equals, []string{value})
+		if err != nil {
+			return selector
+		}
+		selector = selector.Add(*requirement)
+	}
+	return selector
+}
+
+func (r *Reconciler) GetLinkedPods(run *configv1alpha1.TerraformRun) (*corev1.PodList, error) {
+	list := &corev1.PodList{}
+	selector := getLabelSelector(run)
+	err := r.Client.List(context.Background(), list, client.MatchingLabelsSelector{Selector: selector}, &client.ListOptions{
+		Namespace: run.Namespace,
+	})
+	if err != nil {
+		return list, err
+	}
+	return list, nil
+}
+
+func (r *Reconciler) getFailedPods(run *configv1alpha1.TerraformRun) (*corev1.PodList, error) {
+	list := &corev1.PodList{}
+	fieldSelector := fields.SelectorFromSet(fields.Set{"status.phase": string(corev1.PodFailed)})
+	labelSelector := getLabelSelector(run)
+
+	err := r.Client.List(
+		context.Background(), list,
+		client.MatchingFieldsSelector{Selector: fieldSelector},
+		client.MatchingLabelsSelector{Selector: labelSelector},
+		&client.ListOptions{
+			Namespace: run.Namespace,
+		})
+	if err != nil {
+		return list, err
+	}
+	return list, nil
 }
 
 func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
@@ -99,7 +146,7 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 		Spec: defaultSpec,
 		ObjectMeta: metav1.ObjectMeta{
 			// TODO: Add OwnerReference to the TerraformRun resource
-			Labels:      mergeMaps(overrideSpec.Metadata.Labels, GetDefaultLabels(run, action)),
+			Labels:      mergeMaps(overrideSpec.Metadata.Labels, getDefaultLabels(run)),
 			Annotations: overrideSpec.Metadata.Annotations,
 		},
 	}

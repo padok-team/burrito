@@ -1978,10 +1978,15 @@ spec:
                     type: array
                 type: object
               remediationStrategy:
-                enum:
-                - dry
-                - autoApply
-                type: string
+                properties:
+                  autoApply:
+                    type: boolean
+                  onError:
+                    properties:
+                      maxRetries:
+                        type: integer
+                    type: object
+                type: object
               repository:
                 properties:
                   secretName:

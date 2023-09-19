@@ -19,19 +19,18 @@ package terraformrun
 import (
 	"context"
 	"math"
-	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 )
 
@@ -93,27 +92,28 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	// 	log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
 	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	// }
-	// repository := &configv1alpha1.TerraformRepository{}
-	// log.Infof("getting Linked TerraformRepository to layer %s", layer.Name)
-	// err = r.Client.Get(ctx, types.NamespacedName{
-	// 	Namespace: layer.Spec.Repository.Namespace,
-	// 	Name:      layer.Spec.Repository.Name,
-	// }, repository)
-	// if errors.IsNotFound(err) {
-	// 	log.Infof("TerraformRepository linked to layer %s not found, ignoring layer until it's modified: %s", layer.Name, err)
-	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
-	// }
-	// if err != nil {
-	// 	log.Errorf("failed to get TerraformRepository linked to layer %s: %s", layer.Name, err)
-	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
-	// }
+	layer := &configv1alpha1.TerraformLayer{}
+	log.Infof("getting linked TerraformLayer to run %s", run.Name)
+	err = r.Client.Get(ctx, types.NamespacedName{
+		Namespace: run.Spec.Layer.Namespace,
+		Name:      run.Spec.Layer.Name,
+	}, layer)
+	if errors.IsNotFound(err) {
+		log.Infof("TerraformLayer linked to run %s not found, ignoring run until it's modified: %s", run.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	}
+	if err != nil {
+		log.Errorf("failed to get TerraformLayer linked to run %s: %s", run.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	}
 	state, conditions := r.GetState(ctx, run)
 	// lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, run))
 	// if err != nil {
 	// 	lastResult = []byte("Error getting last Result")
 	// }
-	run.Status = configv1alpha1.TerraformRunStatus{Conditions: conditions, State: getStateString(state), Errors: 0}
-	result := state.getHandler()(ctx, r, run)
+	result := state.getHandler()(ctx, r, run, layer)
+	// TODO: error count, runner pod name
+	run.Status = configv1alpha1.TerraformRunStatus{Conditions: conditions, State: getStateString(state), Retries: 0}
 	err = r.Client.Status().Update(ctx, run)
 	if err != nil {
 		log.Errorf("could not update run %s status: %s", run.Name, err)
@@ -130,24 +130,15 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func GetRunExponentialBackOffTime(DefaultRequeueAfter time.Duration, run *configv1alpha1.TerraformRun) time.Duration {
-	var n, ok = run.Annotations[annotations.Failure]
-	var err error
-	attempts := 0
-
-	if ok {
-		attempts, err = strconv.Atoi(n)
-		if err != nil {
-			log.Errorf("failed to convert failure annotations : %v to int. Error : %v", n, err)
-		}
-	}
+func getRunExponentialBackOffTime(DefaultRequeueAfter time.Duration, run *configv1alpha1.TerraformRun) time.Duration {
+	var attempts = run.Status.Retries
 	if attempts < 1 {
 		return DefaultRequeueAfter
 	}
-	return GetExponentialBackOffTime(DefaultRequeueAfter, attempts)
+	return getExponentialBackOffTime(DefaultRequeueAfter, attempts)
 }
 
-func GetExponentialBackOffTime(DefaultRequeueAfter time.Duration, attempts int) time.Duration {
+func getExponentialBackOffTime(DefaultRequeueAfter time.Duration, attempts int) time.Duration {
 	var x float64 = float64(attempts)
 	return time.Duration(int32(math.Exp(x))) * DefaultRequeueAfter
 }

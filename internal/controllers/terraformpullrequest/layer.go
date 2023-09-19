@@ -81,12 +81,14 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 				},
 			},
 			Spec: configv1alpha1.TerraformLayerSpec{
-				Path:                layer.Spec.Path,
-				Branch:              pr.Spec.Branch,
-				TerraformConfig:     layer.Spec.TerraformConfig,
-				Repository:          layer.Spec.Repository,
-				RemediationStrategy: "dry",
-				OverrideRunnerSpec:  layer.Spec.OverrideRunnerSpec,
+				Path:            layer.Spec.Path,
+				Branch:          pr.Spec.Branch,
+				TerraformConfig: layer.Spec.TerraformConfig,
+				Repository:      layer.Spec.Repository,
+				RemediationStrategy: configv1alpha1.RemediationStrategy{
+					AutoApply: false,
+				},
+				OverrideRunnerSpec: layer.Spec.OverrideRunnerSpec,
 			},
 		}
 		list = append(list, new)

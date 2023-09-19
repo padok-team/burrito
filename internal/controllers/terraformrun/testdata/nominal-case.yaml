@@ -8,27 +8,27 @@ spec:
   layer:
     name: nominal-case-1
     namespace: default
----
-apiVersion: config.terraform.padok.cloud/v1alpha1
-kind: TerraformRun
-metadata:
-  name: nominal-case-2
-  namespace: default
-spec:
-  action: plan
-  layer:
-    name: nominal-case-2
-    namespace: default
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nominal-case-2
-  namespace: default
-  labels:
-    burrito/managed-by: nominal-case-2
-    burrito/action: plan
-spec:
-  containers:
-    - name: container
-      image: burrito-runner
+# ---
+# apiVersion: config.terraform.padok.cloud/v1alpha1
+# kind: TerraformRun
+# metadata:
+#   name: nominal-case-2
+#   namespace: default
+# spec:
+#   action: plan
+#   layer:
+#     name: nominal-case-2
+#     namespace: default
+# ---
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: nominal-case-2
+#   namespace: default
+#   labels:
+#     burrito/managed-by: nominal-case-2
+#     burrito/action: plan
+# spec:
+#   containers:
+#     - name: container
+#       image: burrito-runner

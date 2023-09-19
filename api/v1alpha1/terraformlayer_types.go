@@ -55,7 +55,7 @@ type TerraformLayerStatus struct {
 // +kubebuilder:printcolumn:name="Repository",type=string,JSONPath=`.spec.repository.name`
 // +kubebuilder:printcolumn:name="Branch",type=string,JSONPath=`.spec.branch`
 // +kubebuilder:printcolumn:name="Path",type=string,JSONPath=`.spec.path`
-// +kubebuilder:printcolumn:name="LastResult",type=string,JSONPath=`.status.lastResult`
+// +kubebuilder:printcolumn:name="Last Result",type=string,JSONPath=`.status.lastResult`
 // TerraformLayer is the Schema for the terraformlayers API
 type TerraformLayer struct {
 	metav1.TypeMeta   `json:",inline"`

@@ -34,7 +34,7 @@ spec:
       name: Path
       type: string
     - jsonPath: .status.lastResult
-      name: LastResult
+      name: Last Result
       type: string
     name: v1alpha1
     schema:
@@ -1992,10 +1992,15 @@ spec:
               path:
                 type: string
               remediationStrategy:
-                enum:
-                - dry
-                - autoApply
-                type: string
+                properties:
+                  autoApply:
+                    type: boolean
+                  onError:
+                    properties:
+                      maxRetries:
+                        type: integer
+                    type: object
+                type: object
               repository:
                 properties:
                   name:
