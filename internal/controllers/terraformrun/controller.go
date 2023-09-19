@@ -66,11 +66,6 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// - Get the TerraformRun object (handle not found/errors)
-	// - Get State/Conditions of TerraformRun: Newly Created / Running / Succeeded / Definitly Failed / Exponential Backoff
-	// - Act: Create a Pod / Wait for Result / Wait because of Exponential Backoff / Do nothing
-	// - Update State/Conditions of TerraformRun
-
 	log := log.WithContext(ctx)
 	log.Infof("starting reconciliation...")
 	run := &configv1alpha1.TerraformRun{}
@@ -83,35 +78,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRun: %s", err)
 		return ctrl.Result{}, err
 	}
-	// locked, err := lock.IsLocked(ctx, r.Client, layer)
-	// if err != nil {
-	// 	log.Errorf("failed to get Lease Resource: %s", err)
-	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
-	// }
-	// if locked {
-	// 	log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
-	// 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
-	// }
-	layer := &configv1alpha1.TerraformLayer{}
-	log.Infof("getting linked TerraformLayer to run %s", run.Name)
-	err = r.Client.Get(ctx, types.NamespacedName{
-		Namespace: run.Spec.Layer.Namespace,
-		Name:      run.Spec.Layer.Name,
-	}, layer)
-	if errors.IsNotFound(err) {
-		log.Infof("TerraformLayer linked to run %s not found, ignoring run until it's modified: %s", run.Name, err)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
-	}
+	layer, err := r.getLinkedLayer(run)
 	if err != nil {
-		log.Errorf("failed to get TerraformLayer linked to run %s: %s", run.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
-	state, conditions := r.GetState(ctx, run)
-	// lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, run))
-	// if err != nil {
-	// 	lastResult = []byte("Error getting last Result")
-	// }
-	result := state.getHandler()(ctx, r, run, layer)
+	repo, err := r.getLinkedRepo(run, layer)
+	if err != nil {
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	}
+	state, conditions := r.GetState(ctx, run, layer, repo)
+	result := state.getHandler()(ctx, r, run, layer, repo)
 	// TODO: error count, runner pod name
 	run.Status = configv1alpha1.TerraformRunStatus{Conditions: conditions, State: getStateString(state), Retries: 0}
 	err = r.Client.Status().Update(ctx, run)
@@ -154,4 +130,40 @@ func ignorePredicate() predicate.Predicate {
 			return !e.DeleteStateUnknown
 		},
 	}
+}
+
+func (r *Reconciler) getLinkedLayer(run *configv1alpha1.TerraformRun) (*configv1alpha1.TerraformLayer, error) {
+	layer := &configv1alpha1.TerraformLayer{}
+	log.Infof("getting linked TerraformLayer to run %s", run.Name)
+	err := r.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: run.Spec.Layer.Namespace,
+		Name:      run.Spec.Layer.Name,
+	}, layer)
+	if errors.IsNotFound(err) {
+		log.Infof("TerraformLayer linked to run %s not found, ignoring run until it's modified: %s", run.Name, err)
+		return nil, err
+	}
+	if err != nil {
+		log.Errorf("failed to get TerraformLayer linked to run %s: %s", run.Name, err)
+		return nil, err
+	}
+	return layer, nil
+}
+
+func (r *Reconciler) getLinkedRepo(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer) (*configv1alpha1.TerraformRepository, error) {
+	repo := &configv1alpha1.TerraformRepository{}
+	log.Infof("getting linked TerraformRepository to run %s", run.Name)
+	err := r.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: layer.Spec.Repository.Namespace,
+		Name:      layer.Spec.Repository.Name,
+	}, repo)
+	if errors.IsNotFound(err) {
+		log.Infof("TerraformRepository linked to run %s not found, ignoring run until it's modified: %s", run.Name, err)
+		return nil, err
+	}
+	if err != nil {
+		log.Errorf("failed to get TerraformRepository linked to run %s: %s", run.Name, err)
+		return nil, err
+	}
+	return repo, nil
 }
