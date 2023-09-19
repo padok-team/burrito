@@ -6,7 +6,8 @@ metadata:
 spec:
   branch: main
   path: no-path-changed/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -27,7 +28,8 @@ metadata:
 spec:
   branch: main
   path: no-path-changed/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -45,7 +47,8 @@ metadata:
 spec:
   branch: main
   path: layer-path-changed/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -63,7 +66,8 @@ metadata:
 spec:
   branch: main
   path: layer-path-changed-2/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -81,7 +85,8 @@ metadata:
 spec:
   branch: main
   path: layer-path-changed-3/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -101,7 +106,8 @@ metadata:
 spec:
   branch: main
   path: layer-path-changed/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -121,7 +127,8 @@ metadata:
 spec:
   branch: main
   path: terragrunt/layer-path-changed/prod/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
