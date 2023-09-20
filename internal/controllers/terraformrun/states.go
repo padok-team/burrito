@@ -57,7 +57,7 @@ func (r *Reconciler) GetState(ctx context.Context, run *configv1alpha1.Terraform
 	case !isRunning && !hasReachedRetryLimit:
 		log.Infof("run %s has not reach retry limit, retrying...", run.Name)
 		return &Retrying{}, conditions
-	case isRunning && !hasReachedRetryLimit:
+	case isRunning:
 		log.Infof("run %s is running", run.Name)
 		return &Running{}, conditions
 	default:
