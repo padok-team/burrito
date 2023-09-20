@@ -105,6 +105,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Clock = RealClock{}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRun{}).
 		WithEventFilter(ignorePredicate()).
