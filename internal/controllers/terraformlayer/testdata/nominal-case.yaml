@@ -28,7 +28,7 @@ metadata:
     runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
 spec:
   branch: main
-  path: shared-path/
+  path: nominal-case-two/
   remediationStrategy:
     autoApply: true
   repository:
@@ -113,6 +113,33 @@ spec:
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
 metadata:
+  name: nominal-case-5-shared-path
+  namespace: default
+spec:
+  branch: main
+  path: shared-path/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: coordination.k8s.io/v1
+kind: Lease
+metadata:
+  name: burrito-layer-lock-953655719
+  namespace: default
+spec:
+  holderIdentity: burrito-controller
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
   labels:
     app.kubernetes.io/instance: in-cluster-burrito
   name: nominal-case-6
@@ -137,5 +164,3 @@ spec:
       enabled: true
       version: 0.45.4
     version: 1.3.1
----
-

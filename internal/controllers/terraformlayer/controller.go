@@ -81,7 +81,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformLayer: %s", err)
 		return ctrl.Result{}, err
 	}
-	locked, err := lock.IsLocked(ctx, r.Client, layer)
+	locked, err := lock.IsLayerLocked(ctx, r.Client, layer)
 	if err != nil {
 		log.Errorf("failed to get Lease Resource: %s", err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err

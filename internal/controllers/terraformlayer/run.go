@@ -1,6 +1,8 @@
 package terraformlayer
 
 import (
+	"fmt"
+
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,7 +23,9 @@ func GetDefaultLabels(layer *configv1alpha1.TerraformLayer) map[string]string {
 func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) configv1alpha1.TerraformRun {
 	return configv1alpha1.TerraformRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Labels: GetDefaultLabels(layer),
+			GenerateName: fmt.Sprintf("%s-%s-", layer.Name, action),
+			Namespace:    layer.Namespace,
+			Labels:       GetDefaultLabels(layer),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: layer.GetAPIVersion(),

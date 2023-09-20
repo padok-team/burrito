@@ -9,7 +9,6 @@ import (
 	"github.com/padok-team/burrito/internal/version"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,24 +46,6 @@ func (r *Reconciler) GetLinkedPods(run *configv1alpha1.TerraformRun) (*corev1.Po
 	err := r.Client.List(context.Background(), list, client.MatchingLabelsSelector{Selector: selector}, &client.ListOptions{
 		Namespace: run.Namespace,
 	})
-	if err != nil {
-		return list, err
-	}
-	return list, nil
-}
-
-func (r *Reconciler) getFailedPods(run *configv1alpha1.TerraformRun) (*corev1.PodList, error) {
-	list := &corev1.PodList{}
-	fieldSelector := fields.SelectorFromSet(fields.Set{"status.phase": string(corev1.PodFailed)})
-	labelSelector := getLabelSelector(run)
-
-	err := r.Client.List(
-		context.Background(), list,
-		client.MatchingFieldsSelector{Selector: fieldSelector},
-		client.MatchingLabelsSelector{Selector: labelSelector},
-		&client.ListOptions{
-			Namespace: run.Namespace,
-		})
 	if err != nil {
 		return list, err
 	}

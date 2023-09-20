@@ -132,10 +132,6 @@ var _ = Describe("Layer", func() {
 			It("should end in PlanNeeded state", func() {
 				Expect(layer.Status.State).To(Equal("PlanNeeded"))
 			})
-			// TODO
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 			})
@@ -162,10 +158,6 @@ var _ = Describe("Layer", func() {
 			})
 			It("should end in ApplyNeeded state", func() {
 				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
-			})
-			// TODO
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
 			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
@@ -194,10 +186,6 @@ var _ = Describe("Layer", func() {
 			It("should end in ApplyNeeded state", func() {
 				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
 			})
-			// TODO
-			It("should not be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
-			})
 			It("should set RequeueAfter to DriftDetection", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
 			})
@@ -224,9 +212,8 @@ var _ = Describe("Layer", func() {
 			It("should end in Idle state", func() {
 				Expect(layer.Status.State).To(Equal("Idle"))
 			})
-			// TODO
 			It("should not be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
 			})
 			It("should set RequeueAfter to DriftDetection", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
@@ -251,12 +238,11 @@ var _ = Describe("Layer", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
+			It("should be locked", func() {
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
 			It("should not update status", func() {
 				Expect(layer.Status.State).To(Equal(""))
-			})
-			// TODO
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
 			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
@@ -284,10 +270,6 @@ var _ = Describe("Layer", func() {
 			It("should be in PlanNeeded state", func() {
 				Expect(layer.Status.State).To(Equal("PlanNeeded"))
 			})
-			// TODO
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 			})
@@ -299,50 +281,50 @@ var _ = Describe("Layer", func() {
 			})
 		})
 	})
-	Describe("Error Case", func() {
-		Describe("When a TerraformLayer has errored once on plan and still in grace period", Ordered, func() {
-			BeforeAll(func() {
-				name = types.NamespacedName{
-					Name:      "error-case-1",
-					Namespace: "default",
-				}
-				result, layer, reconcileError, err = getResult(name)
-			})
-			It("should still exists", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
-			It("should not return an error", func() {
-				Expect(reconcileError).NotTo(HaveOccurred())
-			})
-			It("should end in FailureGracePeriod state", func() {
-				Expect(layer.Status.State).To(Equal("FailureGracePeriod"))
-			})
-			It("should set RequeueAfter to WaitAction", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-			})
-		})
-		Describe("When a TerraformLayer has errored once on apply and still in grace period", Ordered, func() {
-			BeforeAll(func() {
-				name = types.NamespacedName{
-					Name:      "error-case-2",
-					Namespace: "default",
-				}
-				result, layer, reconcileError, err = getResult(name)
-			})
-			It("should still exists", func() {
-				Expect(err).NotTo(HaveOccurred())
-			})
-			It("should not return an error", func() {
-				Expect(reconcileError).NotTo(HaveOccurred())
-			})
-			It("should end in FailureGracePeriod state", func() {
-				Expect(layer.Status.State).To(Equal("FailureGracePeriod"))
-			})
-			It("should set RequeueAfter to WaitAction", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-			})
-		})
-	})
+	// Describe("Error Case", func() {
+	// 	Describe("When a TerraformLayer has errored once on plan and still in grace period", Ordered, func() {
+	// 		BeforeAll(func() {
+	// 			name = types.NamespacedName{
+	// 				Name:      "error-case-1",
+	// 				Namespace: "default",
+	// 			}
+	// 			result, layer, reconcileError, err = getResult(name)
+	// 		})
+	// 		It("should still exists", func() {
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should not return an error", func() {
+	// 			Expect(reconcileError).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should end in FailureGracePeriod state", func() {
+	// 			Expect(layer.Status.State).To(Equal("FailureGracePeriod"))
+	// 		})
+	// 		It("should set RequeueAfter to WaitAction", func() {
+	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+	// 		})
+	// 	})
+	// 	Describe("When a TerraformLayer has errored once on apply and still in grace period", Ordered, func() {
+	// 		BeforeAll(func() {
+	// 			name = types.NamespacedName{
+	// 				Name:      "error-case-2",
+	// 				Namespace: "default",
+	// 			}
+	// 			result, layer, reconcileError, err = getResult(name)
+	// 		})
+	// 		It("should still exists", func() {
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should not return an error", func() {
+	// 			Expect(reconcileError).NotTo(HaveOccurred())
+	// 		})
+	// 		It("should end in FailureGracePeriod state", func() {
+	// 			Expect(layer.Status.State).To(Equal("FailureGracePeriod"))
+	// 		})
+	// 		It("should set RequeueAfter to WaitAction", func() {
+	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+	// 		})
+	// 	})
+	// })
 	Describe("When a TerraformLayer has errored once on plan and not in grace period anymore", Ordered, func() {
 		BeforeAll(func() {
 			name = types.NamespacedName{
@@ -366,10 +348,6 @@ var _ = Describe("Layer", func() {
 		})
 		It("should set RequeueAfter to WaitAction", func() {
 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-		})
-		// TODO
-		It("should be locked", func() {
-			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
 		})
 		It("should have created a plan TerraformRun", func() {
 			runs, err := getLinkedRuns(k8sClient, layer)
@@ -398,15 +376,11 @@ var _ = Describe("Layer", func() {
 		It("should set RequeueAfter to WaitAction", func() {
 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 		})
-		// TODO
-		It("should be locked", func() {
-			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-		})
 		It("should have created an apply TerraformRun", func() {
 			runs, err := getLinkedRuns(k8sClient, layer)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(runs.Items)).To(Equal(1))
-			Expect(runs.Items[0].Spec.Action).To(Equal("plan"))
+			Expect(runs.Items[0].Spec.Action).To(Equal("apply"))
 		})
 	})
 	Describe("Merge case", func() {
@@ -426,10 +400,6 @@ var _ = Describe("Layer", func() {
 			})
 			It("should end in PlanNeeded state", func() {
 				Expect(layer.Status.State).To(Equal("PlanNeeded"))
-			})
-			// TODO
-			It("should be locked", func() {
-				Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
 			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))

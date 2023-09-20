@@ -7,7 +7,9 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/lock"
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -70,8 +72,13 @@ type Initial struct{}
 func (s *Initial) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
 		log := log.WithContext(ctx)
+		err := lock.CreateLock(ctx, r.Client, layer, run)
+		if err != nil {
+			log.Errorf("could not set lock on run %s for layer %s, requeuing resource: %s", run.Name, layer.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
+		}
 		pod := r.getPod(run, layer, repo)
-		err := r.Client.Create(ctx, &pod)
+		err = r.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Errorf("failed to create pod for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
@@ -141,7 +148,14 @@ type Succeeded struct{}
 
 func (s *Succeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
-		// Wait and do nothing
+		// Try to delete lock if it still exists
+		log := log.WithContext(ctx)
+		err := lock.DeleteLock(ctx, r.Client, layer, run)
+		if errors.IsNotFound(err) {
+			log.Infof("lock for run %s has already been deleted", run.Name)
+		} else {
+			log.Infof("lock for run %s successfully deleted", run.Name)
+		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
 }
@@ -150,7 +164,14 @@ type Failed struct{}
 
 func (s *Failed) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
-		// Wait and do nothing
+		// Try to delete lock if it still exists
+		log := log.WithContext(ctx)
+		err := lock.DeleteLock(ctx, r.Client, layer, run)
+		if errors.IsNotFound(err) {
+			log.Infof("lock for run %s has already been deleted", run.Name)
+		} else {
+			log.Infof("lock for run %s successfully deleted", run.Name)
+		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
 }
