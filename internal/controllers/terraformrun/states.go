@@ -9,7 +9,6 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/lock"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -151,10 +150,9 @@ func (s *Succeeded) getHandler() Handler {
 		// Try to delete lock if it still exists
 		log := log.WithContext(ctx)
 		err := lock.DeleteLock(ctx, r.Client, layer, run)
-		if errors.IsNotFound(err) {
-			log.Infof("lock for run %s has already been deleted", run.Name)
-		} else {
-			log.Infof("lock for run %s successfully deleted", run.Name)
+		if err != nil {
+			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
@@ -167,10 +165,9 @@ func (s *Failed) getHandler() Handler {
 		// Try to delete lock if it still exists
 		log := log.WithContext(ctx)
 		err := lock.DeleteLock(ctx, r.Client, layer, run)
-		if errors.IsNotFound(err) {
-			log.Infof("lock for run %s has already been deleted", run.Name)
-		} else {
-			log.Infof("lock for run %s successfully deleted", run.Name)
+		if err != nil {
+			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}

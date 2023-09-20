@@ -6,7 +6,6 @@ import (
 	"hash/fnv"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	log "github.com/sirupsen/logrus"
 	coordination "k8s.io/api/coordination/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,8 +47,6 @@ func getLeaseLock(layer *configv1alpha1.TerraformLayer, run *configv1alpha1.Terr
 }
 
 func IsLayerLocked(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer) (bool, error) {
-	log := log.WithContext(ctx)
-	log.Infof("checking lock %s", getLeaseName(layer))
 	err := c.Get(ctx, types.NamespacedName{
 		Name:      getLeaseName(layer),
 		Namespace: layer.Namespace,

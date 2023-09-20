@@ -78,6 +78,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRun: %s", err)
 		return ctrl.Result{}, err
 	}
+	if run.Status.State == "Succeeded" || run.Status.State == "Failed" {
+		log.Infof("run %s is in a terminal state, ignoring...", run.Name)
+		return ctrl.Result{}, nil
+	}
 	layer, err := r.getLinkedLayer(run)
 	if err != nil {
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
