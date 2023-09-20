@@ -3,7 +3,6 @@ package terraformrun
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -45,6 +44,25 @@ func (r *Reconciler) HasStatus(t *configv1alpha1.TerraformRun) (metav1.Condition
 	return condition, false
 }
 
+func getMaxRetries(r *configv1alpha1.TerraformRepository, l *configv1alpha1.TerraformLayer) int {
+	repo := r.Spec.RemediationStrategy.OnError.MaxRetries
+	layer := l.Spec.RemediationStrategy.OnError.MaxRetries
+
+	if repo == nil && layer == nil {
+		// TODO: Default value in config ?
+		return 5
+	}
+	if repo == nil && layer != nil {
+		return *layer
+	}
+	if repo != nil && layer == nil {
+		return *repo
+	}
+
+	// layer takes precedence over repo
+	return *layer
+}
+
 func (r *Reconciler) HasReachedRetryLimit(
 	run *configv1alpha1.TerraformRun,
 	layer *configv1alpha1.TerraformLayer,
@@ -56,11 +74,7 @@ func (r *Reconciler) HasReachedRetryLimit(
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	// TODO: Fix this, layer with no remediation strategy will have 0 as default value
-	maxRetries := int(math.Min(
-		float64(repo.Spec.RemediationStrategy.OnError.MaxRetries),
-		float64(layer.Spec.RemediationStrategy.OnError.MaxRetries),
-	))
+	maxRetries := getMaxRetries(repo, layer)
 	if run.Status.Retries >= maxRetries {
 		condition.Reason = "HasReachedRetryLimit"
 		condition.Message = fmt.Sprintf("This run has reached the retry limit (%d)", maxRetries)

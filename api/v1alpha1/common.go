@@ -30,7 +30,7 @@ type RemediationStrategy struct {
 }
 
 type OnErrorRemediationStrategy struct {
-	MaxRetries int `json:"maxRetries,omitempty"`
+	MaxRetries *int `json:"maxRetries,omitempty"`
 }
 
 type TerraformConfig struct {
