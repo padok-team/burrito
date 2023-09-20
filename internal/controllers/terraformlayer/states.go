@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/lock"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -23,12 +22,8 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	c1, isPlanArtifactUpToDate := r.IsPlanArtifactUpToDate(layer)
 	c2, isApplyUpToDate := r.IsApplyUpToDate(layer)
 	c3, isLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
-	c4, isInFailureGracePeriod := r.IsInFailureGracePeriod(layer)
-	conditions := []metav1.Condition{c1, c2, c3, c4}
+	conditions := []metav1.Condition{c1, c2, c3}
 	switch {
-	case isInFailureGracePeriod:
-		log.Infof("layer %s is in failure grace period", layer.Name)
-		return &FailureGracePeriod{}, conditions
 	case isPlanArtifactUpToDate && isApplyUpToDate && isLastRelevantCommitPlanned:
 		log.Infof("layer %s is up to date, waiting for a new drift detection cycle", layer.Name)
 		return &Idle{}, conditions
@@ -41,26 +36,6 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is an intended behavior.", layer.Name)
 		return &Idle{}, conditions
-	}
-}
-
-type FailureGracePeriod struct{}
-
-func (s *FailureGracePeriod) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-		lastActionTime, ok := GetLastActionTime(r, layer)
-		if ok != nil {
-			log.Errorf("could not get lastActionTime on layer %s,: %s", layer.Name, ok)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
-		}
-		expTime := GetLayerExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, layer)
-		endIdleTime := lastActionTime.Add(expTime)
-		now := r.Clock.Now()
-		if endIdleTime.After(now) {
-			log.Infof("the grace period is over for layer %v, new retry", layer.Name)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
-		}
-		return ctrl.Result{RequeueAfter: now.Sub(endIdleTime)}
 	}
 }
 
@@ -77,16 +52,10 @@ type PlanNeeded struct{}
 func (s *PlanNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
 		log := log.WithContext(ctx)
-		err := lock.CreateLock(ctx, r.Client, layer)
+		run := r.getRun(layer, repository, "plan")
+		err := r.Client.Create(ctx, &run)
 		if err != nil {
-			log.Errorf("could not set lock on layer %s, requeing resource: %s", layer.Name, err)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
-		}
-		pod := r.getPod(layer, repository, "plan")
-		err = r.Client.Create(ctx, &pod)
-		if err != nil {
-			log.Errorf("failed to create pod for Plan action on layer %s: %s", layer.Name, err)
-			_ = lock.DeleteLock(ctx, r.Client, layer)
+			log.Errorf("failed to create TerraformRun for Plan action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
@@ -103,16 +72,10 @@ func (s *ApplyNeeded) getHandler() Handler {
 			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
 		}
-		err := lock.CreateLock(ctx, r.Client, layer)
+		run := r.getRun(layer, repository, "apply")
+		err := r.Client.Create(ctx, &run)
 		if err != nil {
-			log.Errorf("could not set lock on layer %s, requeing resource: %s", layer.Name, err)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
-		}
-		pod := r.getPod(layer, repository, "apply")
-		err = r.Client.Create(ctx, &pod)
-		if err != nil {
-			log.Errorf("failed to create pod for Apply action on layer %s: %s", layer.Name, err)
-			_ = lock.DeleteLock(ctx, r.Client, layer)
+			log.Errorf("failed to create TerraformRun for Apply action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}

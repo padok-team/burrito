@@ -77,3 +77,22 @@ type TerraformLayerList struct {
 func init() {
 	SchemeBuilder.Register(&TerraformLayer{}, &TerraformLayerList{})
 }
+
+// Associated functions
+
+// Workaround needed for envtest which does not populate the TypeMeta structure
+// See https://github.com/kubernetes-sigs/controller-runtime/issues/1870
+func (layer *TerraformLayer) GetAPIVersion() string {
+	if layer.APIVersion == "" {
+		return "config.terraform.padok.cloud/v1alpha1"
+	}
+	return layer.APIVersion
+}
+
+// Same as above
+func (layer *TerraformLayer) GetKind() string {
+	if layer.Kind == "" {
+		return "TerraformLayer"
+	}
+	return layer.Kind
+}
