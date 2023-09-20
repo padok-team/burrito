@@ -81,8 +81,7 @@ func (r *Reconciler) HasSucceeded(t *configv1alpha1.TerraformRun) (metav1.Condit
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 	currentState := t.Status.State
-	podPhase := r.getPodPhase(t.Status.RunnerPod, t.Namespace)
-	if currentState == "Suceeded" || podPhase == corev1.PodSucceeded {
+	if currentState == "Suceeded" || (t.Status.RunnerPod != "" && r.getPodPhase(t.Status.RunnerPod, t.Namespace) == corev1.PodSucceeded) {
 		condition.Reason = "HasSucceeded"
 		condition.Message = "This run has succeeded"
 		condition.Status = metav1.ConditionTrue
@@ -125,8 +124,7 @@ func (r *Reconciler) IsInFailureGracePeriod(t *configv1alpha1.TerraformRun) (met
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	podPhase := r.getPodPhase(t.Status.RunnerPod, t.Namespace)
-	if podPhase == corev1.PodFailed {
+	if t.Status.RunnerPod != "" && r.getPodPhase(t.Status.RunnerPod, t.Namespace) == corev1.PodFailed {
 		lastFailureTime, err := getLastActionTime(r, t)
 		if err != nil {
 			condition.Reason = "CouldNotGetLastActionTime"

@@ -71,10 +71,10 @@ func (r *Reconciler) getFailedPods(run *configv1alpha1.TerraformRun) (*corev1.Po
 	return list, nil
 }
 
-func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) corev1.Pod {
+func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.Pod {
 	defaultSpec := defaultPodSpec(r.Config, layer, repository)
 
-	switch action {
+	switch Action(run.Spec.Action) {
 	case PlanAction:
 		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
@@ -145,13 +145,20 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 	pod := corev1.Pod{
 		Spec: defaultSpec,
 		ObjectMeta: metav1.ObjectMeta{
-			// TODO: Add OwnerReference to the TerraformRun resource
 			Labels:      mergeMaps(overrideSpec.Metadata.Labels, getDefaultLabels(run)),
 			Annotations: overrideSpec.Metadata.Annotations,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: run.GetAPIVersion(),
+					Kind:       run.GetKind(),
+					Name:       run.Name,
+					UID:        run.UID,
+				},
+			},
 		},
 	}
 	pod.SetNamespace(layer.Namespace)
-	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, action))
+	pod.SetGenerateName(fmt.Sprintf("%s-%s-", layer.Name, run.Spec.Action))
 
 	return pod
 }

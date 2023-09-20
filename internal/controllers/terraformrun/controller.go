@@ -87,9 +87,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, run, layer, repo)
-	result := state.getHandler()(ctx, r, run, layer, repo)
-	// TODO: error count, runner pod name
-	run.Status = configv1alpha1.TerraformRunStatus{Conditions: conditions, State: getStateString(state), Retries: 0}
+	result, runInfo := state.getHandler()(ctx, r, run, layer, repo)
+	run.Status = configv1alpha1.TerraformRunStatus{
+		Conditions: conditions,
+		State:      getStateString(state),
+		Retries:    runInfo.Retries,
+		LastRun:    runInfo.LastRun,
+		RunnerPod:  runInfo.RunnerPod,
+	}
 	err = r.Client.Status().Update(ctx, run)
 	if err != nil {
 		log.Errorf("could not update run %s status: %s", run.Name, err)

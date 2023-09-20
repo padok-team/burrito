@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
@@ -11,13 +12,26 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type Handler func(context.Context, *Reconciler, *configv1alpha1.TerraformRun, *configv1alpha1.TerraformLayer, *configv1alpha1.TerraformRepository) ctrl.Result
+type RunInfo struct {
+	Retries   int
+	LastRun   string
+	RunnerPod string
+}
+
+func getRunInfo(run *configv1alpha1.TerraformRun) RunInfo {
+	return RunInfo{
+		Retries:   run.Status.Retries,
+		LastRun:   run.Status.LastRun,
+		RunnerPod: run.Status.RunnerPod,
+	}
+}
+
+type Handler func(context.Context, *Reconciler, *configv1alpha1.TerraformRun, *configv1alpha1.TerraformLayer, *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo)
 
 type State interface {
 	getHandler() Handler
 }
 
-// TODO
 func (r *Reconciler) GetState(ctx context.Context, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (State, []metav1.Condition) {
 	log := log.WithContext(ctx)
 	c1, hasStatus := r.HasStatus(run)
@@ -30,20 +44,23 @@ func (r *Reconciler) GetState(ctx context.Context, run *configv1alpha1.Terraform
 	case !hasStatus:
 		log.Infof("run %s is in initial state", run.Name)
 		return &Initial{}, conditions
-	case isInFailureGracePeriod:
+	case hasSucceeded:
+		log.Infof("run %s has succeeded", run.Name)
+		return &Succeeded{}, conditions
+	case isInFailureGracePeriod && !hasReachedRetryLimit && !isRunning:
 		log.Infof("run %s is in failure grace period", run.Name)
 		return &FailureGracePeriod{}, conditions
-	case !isInFailureGracePeriod && isRunning:
+	case isInFailureGracePeriod && hasReachedRetryLimit && !isRunning:
+		log.Infof("run %s has reached retry limit, marking run as failed", run.Name)
+		return &Failed{}, conditions
+	case !isRunning && !hasReachedRetryLimit:
+		log.Infof("run %s has not reach retry limit, retrying...", run.Name)
+		return &Retrying{}, conditions
+	case isRunning && !hasReachedRetryLimit:
 		log.Infof("run %s is running", run.Name)
 		return &Running{}, conditions
-	case isFinished && c2.Reason == "Succeeded":
-		log.Infof("run %s is finished and has succeeded", run.Name)
-		return &Succeeded{}, conditions
-	case isFinished && c2.Reason == "Failed":
-		log.Infof("run %s is finished and has definitely failed", run.Name)
-		return &Failed{}, conditions
 	default:
-		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is an intended behavior.", layer.Name)
+		log.Infof("run %s is failed", run.Name)
 		return &Failed{}, conditions
 	}
 }
@@ -51,47 +68,92 @@ func (r *Reconciler) GetState(ctx context.Context, run *configv1alpha1.Terraform
 type Initial struct{}
 
 func (s *Initial) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) ctrl.Result {
-		// TODO: create a pod here and return its name + lastRun + retries to 0
-		// TODO: change requeue after to the minimal
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
+		log := log.WithContext(ctx)
+		pod := r.getPod(run, layer, repo)
+		err := r.Client.Create(ctx, &pod)
+		if err != nil {
+			log.Errorf("failed to create pod for run %s: %s", run.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
+		}
+		runInfo := RunInfo{
+			Retries:   0,
+			LastRun:   pod.GetObjectMeta().GetCreationTimestamp().Format(time.UnixDate),
+			RunnerPod: pod.Name,
+		}
+		// Minimal time (1s) to transit from Initial state to Running state
+		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
 	}
 }
 
 type Running struct{}
 
 func (s *Running) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
 		// Wait and do nothing
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
 }
 
 type FailureGracePeriod struct{}
 
 func (s *FailureGracePeriod) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
 		lastActionTime, ok := getLastActionTime(r, run)
 		if ok != nil {
 			log.Errorf("could not get lastActionTime on run %s,: %s", run.Name, ok)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
 		expTime := getRunExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, run)
 		endIdleTime := lastActionTime.Add(expTime)
 		now := r.Clock.Now()
 		if endIdleTime.After(now) {
 			log.Infof("the grace period is over for run %v, new retry", run.Name)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 		}
-		return ctrl.Result{RequeueAfter: now.Sub(endIdleTime)}
+		return ctrl.Result{RequeueAfter: now.Sub(endIdleTime)}, getRunInfo(run)
 	}
 }
 
 type Retrying struct{}
 
+func (s *Retrying) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
+		log := log.WithContext(ctx)
+		runInfo := getRunInfo(run)
+		pod := r.getPod(run, layer, repo)
+		err := r.Client.Create(ctx, &pod)
+		if err != nil {
+			log.Errorf("failed to create retry pod for run %s: %s", run.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, runInfo
+		}
+		runInfo = RunInfo{
+			Retries:   runInfo.Retries + 1,
+			LastRun:   pod.GetObjectMeta().GetCreationTimestamp().Format(time.UnixDate),
+			RunnerPod: pod.Name,
+		}
+		// Minimal time (1s) to transit from Retrying state to Running state
+		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
+	}
+}
+
 type Succeeded struct{}
 
+func (s *Succeeded) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
+		// Wait and do nothing
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
+	}
+}
+
 type Failed struct{}
+
+func (s *Failed) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
+		// Wait and do nothing
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
+	}
+}
 
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), ".")

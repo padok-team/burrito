@@ -104,14 +104,14 @@ var _ = Describe("Run", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
-			It("should end in Running state", func() {
-				Expect(run.Status.State).To(Equal("Running"))
+			It("should end in Initial state", func() {
+				Expect(run.Status.State).To(Equal("Initial"))
 			})
 			It("should have an associated pod", func() {
 				Expect(run.Status.RunnerPod).To(Not(BeEmpty()))
 			})
-			It("should set RequeueAfter to WaitAction", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			It("should set RequeueAfter to 1s", func() {
+				Expect(result.RequeueAfter).To(Equal(time.Duration(1 * time.Second)))
 			})
 			It("should have created a plan pod", func() {
 				pods, err := reconciler.GetLinkedPods(run)

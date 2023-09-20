@@ -71,3 +71,22 @@ type TerraformRunList struct {
 func init() {
 	SchemeBuilder.Register(&TerraformRun{}, &TerraformRunList{})
 }
+
+// Associated functions
+
+// Workaround needed for envtest which does not populate the TypeMeta structure
+// See https://github.com/kubernetes-sigs/controller-runtime/issues/1870
+func (run *TerraformRun) GetAPIVersion() string {
+	if run.APIVersion == "" {
+		return "config.terraform.padok.cloud/v1alpha1"
+	}
+	return run.APIVersion
+}
+
+// Same as above
+func (run *TerraformRun) GetKind() string {
+	if run.Kind == "" {
+		return "TerraformRun"
+	}
+	return run.Kind
+}

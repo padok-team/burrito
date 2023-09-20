@@ -1,0 +1,33 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: burrito
+  namespace: default
+spec:
+  overrideRunnerSpec:
+    imagePullSecrets:
+      - name: ghcr-creds
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:padok-team/burrito-examples.git
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: nominal-case-1
+  namespace: default
+spec:
+  branch: main
+  path: nominal-case-one/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
