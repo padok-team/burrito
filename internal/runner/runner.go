@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -60,17 +59,7 @@ func New(c *config.Config) *Runner {
 	}
 }
 
-// func (r *Runner) unlock() {
-// 	err := lock.DeleteLock(context.TODO(), r.client, r.layer)
-// 	if err != nil {
-// 		log.Fatalf("could not remove lease lock for terraform layer %s: %s", r.layer.Name, err)
-// 	}
-// 	log.Infof("successfully removed lease lock for terraform layer %s", r.layer.Name)
-// }
-
 func (r *Runner) Exec() error {
-	// defer r.unlock()
-
 	var sum string
 	var commit string
 	ann := map[string]string{}
@@ -105,15 +94,6 @@ func (r *Runner) Exec() error {
 
 	if err != nil {
 		log.Errorf("error during runner execution: %s", err)
-		n, ok := r.layer.Annotations[annotations.Failure]
-		number := 0
-		if ok {
-			number, _ = strconv.Atoi(n)
-		}
-		number++
-		ann[annotations.Failure] = strconv.Itoa(number)
-	} else {
-		ann[annotations.Failure] = "0"
 	}
 
 	annotErr := annotations.Add(context.TODO(), r.client, r.layer, ann)
