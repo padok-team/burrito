@@ -368,6 +368,10 @@ var _ = Describe("Layer", func() {
 			})
 		})
 	})
+	// TODO: test cleanup of runs
+	Describe("Cleanup case", func() {
+
+	})
 })
 
 var _ = AfterSuite(func() {

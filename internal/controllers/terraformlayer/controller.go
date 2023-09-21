@@ -104,6 +104,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRepository linked to layer %s: %s", layer.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
+	err = r.cleanupRuns(ctx, layer, repository)
+	if err != nil {
+		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
+	}
 	state, conditions := r.GetState(ctx, layer)
 	lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, layer))
 	if err != nil {
