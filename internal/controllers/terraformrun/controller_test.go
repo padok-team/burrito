@@ -106,11 +106,22 @@ func updatePodPhase(name types.NamespacedName, phase corev1.PodPhase) error {
 	return k8sClient.Status().Update(context.TODO(), pod)
 }
 
+func updateLastRunDate(name types.NamespacedName, unixDate string) error {
+	run := &configv1alpha1.TerraformRun{}
+	err := k8sClient.Get(context.TODO(), name, run)
+	if err != nil {
+		return err
+	}
+	run.Status.LastRun = unixDate
+	return k8sClient.Status().Update(context.TODO(), run)
+}
+
 var _ = Describe("Run", func() {
 	var run *configv1alpha1.TerraformRun
 	var reconcileError error
 	var err error
 	var podErr error
+	var dateErr error
 	var result reconcile.Result
 	var name types.NamespacedName
 	Describe("Nominal Case", func() {
@@ -146,7 +157,7 @@ var _ = Describe("Run", func() {
 			It("should set RequeueAfter to 1s", func() {
 				Expect(result.RequeueAfter).To(Equal(time.Duration(1 * time.Second)))
 			})
-			It("should have created a plan pod", func() {
+			It("should have created a pod", func() {
 				pods, err := reconciler.GetLinkedPods(run)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods.Items)).To(Equal(1))
@@ -225,246 +236,240 @@ var _ = Describe("Run", func() {
 				Expect(pods.Items[0].Status.Phase).To(Equal(corev1.PodSucceeded))
 			})
 		})
-		// 	Describe("When a TerraformLayer just got applied", Ordered, func() {
-		// 		BeforeAll(func() {
-		// 			name = types.NamespacedName{
-		// 				Name:      "nominal-case-4",
-		// 				Namespace: "default",
-		// 			}
-		// 			result, layer, reconcileError, err = getResult(name)
-		// 		})
-		// 		It("should still exists", func() {
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 		})
-		// 		It("should not return an error", func() {
-		// 			Expect(reconcileError).NotTo(HaveOccurred())
-		// 		})
-		// 		It("should end in Idle state", func() {
-		// 			Expect(layer.Status.State).To(Equal("Idle"))
-		// 		})
-		// 		It("should not be locked", func() {
-		// 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
-		// 		})
-		// 		It("should set RequeueAfter to DriftDetection", func() {
-		// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
-		// 		})
-		// 		It("should not have created a plan pod", func() {
-		// 			pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 			Expect(len(pods.Items)).To(Equal(0))
-		// 		})
-		// 		It("should not have created an apply pod", func() {
-		// 			pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 			Expect(len(pods.Items)).To(Equal(0))
-		// 		})
-		// 	})
-		// 	Describe("When a TerraformLayer shares a path with another TerraformLayer and an action is already running", Ordered, func() {
-		// 		BeforeAll(func() {
-		// 			name = types.NamespacedName{
-		// 				Name:      "nominal-case-5",
-		// 				Namespace: "default",
-		// 			}
-		// 			result, layer, reconcileError, err = getResult(name)
-		// 		})
-		// 		It("should still exists", func() {
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 		})
-		// 		It("should not return an error", func() {
-		// 			Expect(reconcileError).NotTo(HaveOccurred())
-		// 		})
-		// 		It("should not update status", func() {
-		// 			Expect(layer.Status.State).To(Equal(""))
-		// 		})
-		// 		It("should be locked", func() {
-		// 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-		// 		})
-		// 		It("should set RequeueAfter to WaitAction", func() {
-		// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-		// 		})
-		// 		It("should not have created a plan pod", func() {
-		// 			pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 			Expect(len(pods.Items)).To(Equal(0))
-		// 		})
-		// 		It("should not have created an apply pod", func() {
-		// 			pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 			Expect(len(pods.Items)).To(Equal(0))
-		// 		})
-		// 	})
-		// 	Describe("When a TerraformLayer hasn't been planned since more time than the DriftDetection period", Ordered, func() {
-		// 		BeforeAll(func() {
-		// 			name = types.NamespacedName{
-		// 				Name:      "nominal-case-6",
-		// 				Namespace: "default",
-		// 			}
-		// 			result, layer, reconcileError, err = getResult(name)
-		// 		})
-		// 		It("should still exists", func() {
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 		})
-		// 		It("should not return an error", func() {
-		// 			Expect(reconcileError).NotTo(HaveOccurred())
-		// 		})
-		// 		It("should be in PlanNeeded state", func() {
-		// 			Expect(layer.Status.State).To(Equal("PlanNeeded"))
-		// 		})
-		// 		It("should be locked", func() {
-		// 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-		// 		})
-		// 		It("should set RequeueAfter to WaitAction", func() {
-		// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-		// 		})
-		// 		It("should have created a plan pod", func() {
-		// 			pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 			Expect(len(pods.Items)).To(Equal(1))
-		// 		})
-		// 		It("should not have created an apply pod", func() {
-		// 			pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
-		// 			Expect(err).NotTo(HaveOccurred())
-		// 			Expect(len(pods.Items)).To(Equal(0))
-		// 		})
-		// 	})
+		Describe("When TerraformRun is already suceeded", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "nominal-case-1",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should be in Succeeded state", func() {
+				Expect(run.Status.State).To(Equal("Succeeded"))
+			})
+			It("should not requeue", func() {
+				Expect(result.Requeue).To(BeFalse())
+			})
+			It("should not have any pod running", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				var isFinished = func(p corev1.Pod) bool {
+					return p.Status.Phase == corev1.PodSucceeded || p.Status.Phase == corev1.PodFailed
+				}
+				Expect(pods.Items).To(HaveEach(Satisfy(isFinished)))
+			})
+		})
 	})
-	// Describe("Error Case", func() {
-	// 	Describe("When a TerraformLayer has errored once on plan and still in grace period", Ordered, func() {
-	// 		BeforeAll(func() {
-	// 			name = types.NamespacedName{
-	// 				Name:      "error-case-1",
-	// 				Namespace: "default",
-	// 			}
-	// 			result, layer, reconcileError, err = getResult(name)
-	// 		})
-	// 		It("should still exists", func() {
-	// 			Expect(err).NotTo(HaveOccurred())
-	// 		})
-	// 		It("should not return an error", func() {
-	// 			Expect(reconcileError).NotTo(HaveOccurred())
-	// 		})
-	// 		It("should end in FailureGracePeriod state", func() {
-	// 			Expect(layer.Status.State).To(Equal("FailureGracePeriod"))
-	// 		})
-	// 		It("should set RequeueAfter to WaitAction", func() {
-	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-	// 		})
-	// 	})
-	// 	Describe("When a TerraformLayer has errored once on apply and still in grace period", Ordered, func() {
-	// 		BeforeAll(func() {
-	// 			name = types.NamespacedName{
-	// 				Name:      "error-case-2",
-	// 				Namespace: "default",
-	// 			}
-	// 			result, layer, reconcileError, err = getResult(name)
-	// 		})
-	// 		It("should still exists", func() {
-	// 			Expect(err).NotTo(HaveOccurred())
-	// 		})
-	// 		It("should not return an error", func() {
-	// 			Expect(reconcileError).NotTo(HaveOccurred())
-	// 		})
-	// 		It("should end in FailureGracePeriod state", func() {
-	// 			Expect(layer.Status.State).To(Equal("FailureGracePeriod"))
-	// 		})
-	// 		It("should set RequeueAfter to WaitAction", func() {
-	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-	// 		})
-	// 	})
-	// })
-	// Describe("When a TerraformLayer has errored once on plan and not in grace period anymore", Ordered, func() {
-	// 	BeforeAll(func() {
-	// 		name = types.NamespacedName{
-	// 			Name:      "error-case-3",
-	// 			Namespace: "default",
-	// 		}
-	// 		result, layer, reconcileError, err = getResult(name)
-	// 	})
-	// 	It("should still exists", func() {
-	// 		Expect(err).NotTo(HaveOccurred())
-	// 	})
-	// 	It("should not return an error", func() {
-	// 		Expect(reconcileError).NotTo(HaveOccurred())
-	// 	})
-	// 	It("should end in PlanNeeded state", func() {
-	// 		Expect(layer.Status.State).To(Equal("PlanNeeded"))
-	// 	})
-	// 	It("should have the condition IsPlanArtifactUpToDate set to false", func() {
-	// 		Expect(layer.Status.Conditions[0].Reason).To(Equal("LastPlanFailed"))
-	// 		Expect(string(layer.Status.Conditions[0].Status)).To(Equal("False"))
-	// 	})
-	// 	It("should set RequeueAfter to WaitAction", func() {
-	// 		Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-	// 	})
-	// 	It("should be locked", func() {
-	// 		Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-	// 	})
-	// 	It("should have created a plan pod", func() {
-	// 		pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
-	// 		Expect(err).NotTo(HaveOccurred())
-	// 		Expect(len(pods.Items)).To(Equal(1))
-	// 	})
-	// })
-	// Describe("When a TerraformLayer has errored once on apply and not in grace period anymore", Ordered, func() {
-	// 	BeforeAll(func() {
-	// 		name = types.NamespacedName{
-	// 			Name:      "error-case-4",
-	// 			Namespace: "default",
-	// 		}
-	// 		result, layer, reconcileError, err = getResult(name)
-	// 	})
-	// 	It("should still exists", func() {
-	// 		Expect(err).NotTo(HaveOccurred())
-	// 	})
-	// 	It("should not return an error", func() {
-	// 		Expect(reconcileError).NotTo(HaveOccurred())
-	// 	})
-	// 	It("should end in ApplyNeeded state", func() {
-	// 		Expect(layer.Status.State).To(Equal("ApplyNeeded"))
-	// 	})
-	// 	It("should set RequeueAfter to WaitAction", func() {
-	// 		Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-	// 	})
-	// 	It("should be locked", func() {
-	// 		Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-	// 	})
-	// 	It("should have created an apply pod", func() {
-	// 		pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
-	// 		Expect(err).NotTo(HaveOccurred())
-	// 		Expect(len(pods.Items)).To(Equal(1))
-	// 	})
-	// })
-	// Describe("Merge case", func() {
-	// 	Describe("When a TerraformLayer is created", Ordered, func() {
-	// 		BeforeAll(func() {
-	// 			name = types.NamespacedName{
-	// 				Name:      "merge-case-1",
-	// 				Namespace: "default",
-	// 			}
-	// 			result, layer, reconcileError, err = getResult(name)
-	// 		})
-	// 		It("should still exists", func() {
-	// 			Expect(err).NotTo(HaveOccurred())
-	// 		})
-	// 		It("should not return an error", func() {
-	// 			Expect(reconcileError).NotTo(HaveOccurred())
-	// 		})
-	// 		It("should end in PlanNeeded state", func() {
-	// 			Expect(layer.Status.State).To(Equal("PlanNeeded"))
-	// 		})
-	// 		It("should be locked", func() {
-	// 			Expect(lock.IsLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
-	// 		})
-	// 		It("should set RequeueAfter to WaitAction", func() {
-	// 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-	// 		})
-	// 		It("should have created a plan pod", func() {
-	// 			pods, err := getLinkedPods(k8sClient, layer, controller.PlanAction, name.Namespace)
-	// 			Expect(err).NotTo(HaveOccurred())
-	// 			Expect(len(pods.Items)).To(Equal(1))
-	// 		})
-	// 	})
-	// })
+	Describe("Error Case", func() {
+		Describe("When a TerraformRun is associated to an unknown layer", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-1",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should return an error", func() {
+				Expect(reconcileError).To(HaveOccurred())
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
+		Describe("When a TerraformRun is associated to a layer with an unknown repo", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-2",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should return an error", func() {
+				Expect(reconcileError).To(HaveOccurred())
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
+		Describe("When a TerraformRun has errored once and still in grace period", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-3",
+					Namespace: "default",
+				}
+				// first reconciliation to create the run in initial state
+				// not testing because not the purpose of this test
+				result, run, reconcileError, err = getResult(name)
+
+				podErr = updatePodPhase(name, corev1.PodFailed)
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(podErr).NotTo(HaveOccurred())
+				Expect(dateErr).NotTo(HaveOccurred())
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should still have a lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
+			It("should end in FailureGracePeriod state", func() {
+				Expect(run.Status.State).To(Equal("FailureGracePeriod"))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+		})
+		Describe("When a TerraformRun has errored once and not in grace period anymore", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-3",
+					Namespace: "default",
+				}
+				// error-case-3 has already been reconciled in previous test
+				t, _ := time.Parse(time.UnixDate, testTime)
+				// substract 1h to be sure to be out of grace period
+				t = t.Add(-time.Duration(1 * time.Hour))
+				dateErr = updateLastRunDate(name, t.Format(time.UnixDate))
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(dateErr).NotTo(HaveOccurred())
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Retrying state", func() {
+				Expect(run.Status.State).To(Equal("Retrying"))
+			})
+			It("should set RequeueAfter to 1s", func() {
+				Expect(result.RequeueAfter).To(Equal(time.Duration(1 * time.Second)))
+			})
+			It("should still have a lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
+			It("should have created a second pod", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(2))
+			})
+		})
+		Describe("When a TerraformRun has reached its max retry limit", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-3",
+					Namespace: "default",
+				}
+				// error-case-3 has already been reconciled in previous test
+				t, _ := time.Parse(time.UnixDate, testTime)
+				// substract 1h to be sure to be out of grace period
+				t = t.Add(-time.Duration(1 * time.Hour))
+				dateErr = updateLastRunDate(name, t.Format(time.UnixDate))
+				// make sure the pod has failed again
+				podErr = updatePodPhase(name, corev1.PodFailed)
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(dateErr).NotTo(HaveOccurred())
+				Expect(podErr).NotTo(HaveOccurred())
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Failed state", func() {
+				Expect(run.Status.State).To(Equal("Failed"))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should release the lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
+			})
+			It("should not have created any new pod", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(2))
+			})
+		})
+	})
+	Describe("Concurrent case", func() {
+		Describe("When an another TerraformRun is already running on the same layer", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "concurrent-case-1",
+					Namespace: "default",
+				}
+				// not testing for first run because not the purpose of this test
+				result, run, reconcileError, err = getResult(name)
+
+				name = types.NamespacedName{
+					Name:      "concurrent-case-2",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Initial state", func() {
+				Expect(run.Status.State).To(Equal("Initial"))
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+			It("should not have released the lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
+			It("should not have created any pod", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(0))
+			})
+		})
+	})
 })
 
 var _ = AfterSuite(func() {
@@ -473,138 +478,134 @@ var _ = AfterSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 })
 
-// func TestGetLayerExponentialBackOffTime(t *testing.T) {
-// 	tt := []struct {
-// 		name         string
-// 		defaultTime  time.Duration
-// 		layer        *configv1alpha1.TerraformLayer
-// 		expectedTime time.Duration
-// 	}{
-// 		{
-// 			"Exponential backoff : No retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : Success",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "0"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : 1 retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "1"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			2 * time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : 2 retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "2"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			7 * time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : 3 retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "3"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			20 * time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : 5 retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "5"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			148 * time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : 10 retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "10"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			22026 * time.Minute,
-// 		},
-// 		{
-// 			"Exponential backoff : 17 retry",
-// 			time.Minute,
-// 			&configv1alpha1.TerraformLayer{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Annotations: map[string]string{"runner.terraform.padok.cloud/failure": "17"},
-// 				},
-// 				Spec: configv1alpha1.TerraformLayerSpec{
-// 					TerraformConfig: configv1alpha1.TerraformConfig{
-// 						Version: "1.0.1",
-// 					},
-// 				},
-// 			},
-// 			24154952 * time.Minute,
-// 		},
-// 	}
+func TestGetMaxRetries(t *testing.T) {
+	// Test case 1: Both repo and layer max retries are nil
+	r1 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{}}
+	l1 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{}}
+	// TODO: use config
+	expectedResult1 := 5
+	result1 := controller.GetMaxRetries(r1, l1)
+	if result1 != expectedResult1 {
+		t.Errorf("Test case 1 failed: expected %d, got %d", expectedResult1, result1)
+	}
 
-// 	for _, tc := range tt {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			result := controller.GetLayerExponentialBackOffTime(tc.defaultTime, tc.layer)
-// 			if tc.expectedTime != result {
-// 				t.Errorf("different version computed: expected %s go %s", tc.expectedTime, result)
-// 			}
-// 		})
-// 	}
-// }
+	// Test case 2: Repo max retries is nil, layer max retries is not nil
+	r2 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{}}
+	l2 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(3)}}}}
+	expectedResult2 := 3
+	result2 := controller.GetMaxRetries(r2, l2)
+	if result2 != expectedResult2 {
+		t.Errorf("Test case 2 failed: expected %d, got %d", expectedResult2, result2)
+	}
+
+	// Test case 3: Repo max retries is not nil, layer max retries is nil
+	r3 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(7)}}}}
+	l3 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{}}
+	expectedResult3 := 7
+	result3 := controller.GetMaxRetries(r3, l3)
+	if result3 != expectedResult3 {
+		t.Errorf("Test case 3 failed: expected %d, got %d", expectedResult3, result3)
+	}
+
+	// Test case 4: Both repo and layer max retries are not nil, layer takes precedence
+	r4 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(4)}}}}
+	l4 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(8)}}}}
+	expectedResult4 := 8
+	result4 := controller.GetMaxRetries(r4, l4)
+	if result4 != expectedResult4 {
+		t.Errorf("Test case 4 failed: expected %d, got %d", expectedResult4, result4)
+	}
+}
+
+func intPtr(i int) *int {
+	return &i
+}
+
+func TestGetRunExponentialBackOffTime(t *testing.T) {
+	tt := []struct {
+		name         string
+		defaultTime  time.Duration
+		run          *configv1alpha1.TerraformRun
+		expectedTime time.Duration
+	}{
+		{
+			"Exponential backoff: No retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 0,
+				},
+			},
+			time.Minute,
+		},
+		{
+			"Exponential backoff: 1 retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 1,
+				},
+			},
+			2 * time.Minute,
+		},
+		{
+			"Exponential backoff : 2 retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 2,
+				},
+			},
+			7 * time.Minute,
+		},
+		{
+			"Exponential backoff : 3 retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 3,
+				},
+			},
+			20 * time.Minute,
+		},
+		{
+			"Exponential backoff : 5 retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 5,
+				},
+			},
+			148 * time.Minute,
+		},
+		{
+			"Exponential backoff : 10 retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 10,
+				},
+			},
+			22026 * time.Minute,
+		},
+		{
+			"Exponential backoff : 17 retry",
+			time.Minute,
+			&configv1alpha1.TerraformRun{
+				Status: configv1alpha1.TerraformRunStatus{
+					Retries: 17,
+				},
+			},
+			24154952 * time.Minute,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := controller.GetRunExponentialBackOffTime(tc.defaultTime, tc.run)
+			if tc.expectedTime != result {
+				t.Errorf("different version computed: expected %s go %s", tc.expectedTime, result)
+			}
+		})
+	}
+}

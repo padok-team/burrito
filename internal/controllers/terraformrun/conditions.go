@@ -44,7 +44,7 @@ func (r *Reconciler) HasStatus(t *configv1alpha1.TerraformRun) (metav1.Condition
 	return condition, false
 }
 
-func getMaxRetries(r *configv1alpha1.TerraformRepository, l *configv1alpha1.TerraformLayer) int {
+func GetMaxRetries(r *configv1alpha1.TerraformRepository, l *configv1alpha1.TerraformLayer) int {
 	repo := r.Spec.RemediationStrategy.OnError.MaxRetries
 	layer := l.Spec.RemediationStrategy.OnError.MaxRetries
 
@@ -74,7 +74,7 @@ func (r *Reconciler) HasReachedRetryLimit(
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	maxRetries := getMaxRetries(repo, layer)
+	maxRetries := GetMaxRetries(repo, layer)
 	if run.Status.Retries >= maxRetries {
 		condition.Reason = "HasReachedRetryLimit"
 		condition.Message = fmt.Sprintf("This run has reached the retry limit (%d)", maxRetries)
@@ -146,7 +146,7 @@ func (r *Reconciler) IsInFailureGracePeriod(t *configv1alpha1.TerraformRun) (met
 			condition.Status = metav1.ConditionFalse
 			return condition, false
 		}
-		nextFailure := lastFailureTime.Add(getRunExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, t))
+		nextFailure := lastFailureTime.Add(GetRunExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, t))
 		now := r.Clock.Now()
 		if nextFailure.After(now) {
 			condition.Reason = "InFailureGracePeriod"

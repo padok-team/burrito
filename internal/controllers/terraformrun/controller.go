@@ -116,7 +116,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getRunExponentialBackOffTime(DefaultRequeueAfter time.Duration, run *configv1alpha1.TerraformRun) time.Duration {
+func GetRunExponentialBackOffTime(DefaultRequeueAfter time.Duration, run *configv1alpha1.TerraformRun) time.Duration {
 	var attempts = run.Status.Retries
 	if attempts < 1 {
 		return DefaultRequeueAfter

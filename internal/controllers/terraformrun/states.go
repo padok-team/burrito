@@ -84,7 +84,7 @@ func (s *Initial) getHandler() Handler {
 		}
 		runInfo := RunInfo{
 			Retries:   0,
-			LastRun:   pod.GetObjectMeta().GetCreationTimestamp().Format(time.UnixDate),
+			LastRun:   r.Clock.Now().Format(time.UnixDate),
 			RunnerPod: pod.Name,
 		}
 		// Minimal time (1s) to transit from Initial state to Running state
@@ -110,7 +110,7 @@ func (s *FailureGracePeriod) getHandler() Handler {
 			log.Errorf("could not get lastActionTime on run %s,: %s", run.Name, ok)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
-		expTime := getRunExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, run)
+		expTime := GetRunExponentialBackOffTime(r.Config.Controller.Timers.FailureGracePeriod, run)
 		endIdleTime := lastActionTime.Add(expTime)
 		now := r.Clock.Now()
 		if endIdleTime.After(now) {
@@ -135,7 +135,7 @@ func (s *Retrying) getHandler() Handler {
 		}
 		runInfo = RunInfo{
 			Retries:   runInfo.Retries + 1,
-			LastRun:   pod.GetObjectMeta().GetCreationTimestamp().Format(time.UnixDate),
+			LastRun:   r.Clock.Now().Format(time.UnixDate),
 			RunnerPod: pod.Name,
 		}
 		// Minimal time (1s) to transit from Retrying state to Running state
