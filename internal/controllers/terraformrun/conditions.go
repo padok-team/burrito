@@ -44,13 +44,12 @@ func (r *Reconciler) HasStatus(t *configv1alpha1.TerraformRun) (metav1.Condition
 	return condition, false
 }
 
-func GetMaxRetries(r *configv1alpha1.TerraformRepository, l *configv1alpha1.TerraformLayer) int {
+func GetMaxRetries(defaultValue int, r *configv1alpha1.TerraformRepository, l *configv1alpha1.TerraformLayer) int {
 	repo := r.Spec.RemediationStrategy.OnError.MaxRetries
 	layer := l.Spec.RemediationStrategy.OnError.MaxRetries
 
 	if repo == nil && layer == nil {
-		// TODO: Default value in config ?
-		return 5
+		return defaultValue
 	}
 	if repo == nil && layer != nil {
 		return *layer
@@ -74,7 +73,7 @@ func (r *Reconciler) HasReachedRetryLimit(
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	maxRetries := GetMaxRetries(repo, layer)
+	maxRetries := GetMaxRetries(r.Config.Controller.TerraformMaxRetries, repo, layer)
 	if run.Status.Retries >= maxRetries {
 		condition.Reason = "HasReachedRetryLimit"
 		condition.Message = fmt.Sprintf("This run has reached the retry limit (%d)", maxRetries)

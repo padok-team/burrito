@@ -479,12 +479,13 @@ var _ = AfterSuite(func() {
 })
 
 func TestGetMaxRetries(t *testing.T) {
+	// Config
+	defaultMaxRetries := 42
 	// Test case 1: Both repo and layer max retries are nil
 	r1 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{}}
 	l1 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{}}
-	// TODO: use config
-	expectedResult1 := 5
-	result1 := controller.GetMaxRetries(r1, l1)
+	expectedResult1 := defaultMaxRetries
+	result1 := controller.GetMaxRetries(defaultMaxRetries, r1, l1)
 	if result1 != expectedResult1 {
 		t.Errorf("Test case 1 failed: expected %d, got %d", expectedResult1, result1)
 	}
@@ -493,7 +494,7 @@ func TestGetMaxRetries(t *testing.T) {
 	r2 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{}}
 	l2 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(3)}}}}
 	expectedResult2 := 3
-	result2 := controller.GetMaxRetries(r2, l2)
+	result2 := controller.GetMaxRetries(defaultMaxRetries, r2, l2)
 	if result2 != expectedResult2 {
 		t.Errorf("Test case 2 failed: expected %d, got %d", expectedResult2, result2)
 	}
@@ -502,7 +503,7 @@ func TestGetMaxRetries(t *testing.T) {
 	r3 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(7)}}}}
 	l3 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{}}
 	expectedResult3 := 7
-	result3 := controller.GetMaxRetries(r3, l3)
+	result3 := controller.GetMaxRetries(defaultMaxRetries, r3, l3)
 	if result3 != expectedResult3 {
 		t.Errorf("Test case 3 failed: expected %d, got %d", expectedResult3, result3)
 	}
@@ -511,7 +512,7 @@ func TestGetMaxRetries(t *testing.T) {
 	r4 := &configv1alpha1.TerraformRepository{Spec: configv1alpha1.TerraformRepositorySpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(4)}}}}
 	l4 := &configv1alpha1.TerraformLayer{Spec: configv1alpha1.TerraformLayerSpec{RemediationStrategy: configv1alpha1.RemediationStrategy{OnError: configv1alpha1.OnErrorRemediationStrategy{MaxRetries: intPtr(8)}}}}
 	expectedResult4 := 8
-	result4 := controller.GetMaxRetries(r4, l4)
+	result4 := controller.GetMaxRetries(defaultMaxRetries, r4, l4)
 	if result4 != expectedResult4 {
 		t.Errorf("Test case 4 failed: expected %d, got %d", expectedResult4, result4)
 	}

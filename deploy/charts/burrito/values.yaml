@@ -30,6 +30,7 @@ config:
         onError: 1m
         waitAction: 1m
         failureGracePeriod: 15s
+      terraformMaxRetries: 5
       types: ["layer", "repository", "run", "pullrequest"]
       leaderElection:
         enabled: true

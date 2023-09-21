@@ -34,6 +34,7 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.OnError, "on-error-period", defaultOnErrorTimer, "period between two runners launch when an error occurred in the controllers. Must end with s, m or h.")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.WaitAction, "wait-action-period", defaultWaitActionTimer, "period between two runners when a layer is locked. Must end with s, m or h.")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.FailureGracePeriod, "failure-grace-period", defaultFailureGracePeriod, "initial time before retry, goes exponential function of number failure. Must end with s, m or h.")
+	cmd.Flags().IntVar(&app.Config.Controller.TerraformMaxRetries, "terraform-max-retries", 5, "default number of retries for terraform actions (can be overriden in CRDs)")
 	cmd.Flags().BoolVar(&app.Config.Controller.LeaderElection.Enabled, "leader-election", true, "whether leader election is enabled or not, default to true")
 	cmd.Flags().StringVar(&app.Config.Controller.LeaderElection.ID, "leader-election-id", "6d185457.terraform.padok.cloud", "lease id used for leader election")
 	cmd.Flags().StringVar(&app.Config.Controller.HealthProbeBindAddress, "health-probe-bind-address", ":8081", "address to bind the metrics server embedded in the controllers")

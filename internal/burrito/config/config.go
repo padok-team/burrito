@@ -34,6 +34,7 @@ type WebhookGitlabConfig struct {
 type ControllerConfig struct {
 	Namespaces             []string             `mapstructure:"namespaces"`
 	Timers                 ControllerTimers     `mapstructure:"timers"`
+	TerraformMaxRetries    int                  `mapstructure:"terraformMaxRetries"`
 	Types                  []string             `mapstructure:"types"`
 	LeaderElection         LeaderElectionConfig `mapstructure:"leaderElection"`
 	MetricsBindAddress     string               `mapstructure:"metricsBindAddress"`
@@ -180,6 +181,7 @@ func TestConfig() *Config {
 			Database:   0,
 		},
 		Controller: ControllerConfig{
+			TerraformMaxRetries: 5,
 			Timers: ControllerTimers{
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,
