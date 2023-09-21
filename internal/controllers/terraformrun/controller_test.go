@@ -2,6 +2,7 @@ package terraformrun_test
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 	"time"
@@ -9,10 +10,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/lock"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	utils "github.com/padok-team/burrito/internal/testing"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -71,7 +74,6 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
-
 })
 
 func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.TerraformRun, error, error) {
@@ -83,10 +85,32 @@ func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.Ter
 	return result, run, reconcileError, err
 }
 
+func updatePodPhase(name types.NamespacedName, phase corev1.PodPhase) error {
+	run := &configv1alpha1.TerraformRun{}
+	err := k8sClient.Get(context.TODO(), name, run)
+	if err != nil {
+		return err
+	}
+	if run.Status.RunnerPod == "" {
+		return errors.New("no pod associated to the run")
+	}
+	pod := &corev1.Pod{}
+	err = k8sClient.Get(context.TODO(), types.NamespacedName{
+		Name:      run.Status.RunnerPod,
+		Namespace: run.Namespace,
+	}, pod)
+	if err != nil {
+		return err
+	}
+	pod.Status.Phase = phase
+	return k8sClient.Status().Update(context.TODO(), pod)
+}
+
 var _ = Describe("Run", func() {
 	var run *configv1alpha1.TerraformRun
 	var reconcileError error
 	var err error
+	var podErr error
 	var result reconcile.Result
 	var name types.NamespacedName
 	Describe("Nominal Case", func() {
@@ -110,6 +134,15 @@ var _ = Describe("Run", func() {
 			It("should have an associated pod", func() {
 				Expect(run.Status.RunnerPod).To(Not(BeEmpty()))
 			})
+			It("should have created a lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
 			It("should set RequeueAfter to 1s", func() {
 				Expect(result.RequeueAfter).To(Equal(time.Duration(1 * time.Second)))
 			})
@@ -119,58 +152,79 @@ var _ = Describe("Run", func() {
 				Expect(len(pods.Items)).To(Equal(1))
 			})
 		})
-		// Describe("When a TerraformRun is running", Ordered, func() {
-		// 	BeforeAll(func() {
-		// 		name = types.NamespacedName{
-		// 			Name:      "nominal-case-2",
-		// 			Namespace: "default",
-		// 		}
-		// 		result, run, reconcileError, err = getResult(name)
-		// 	})
-		// 	It("should still exists", func() {
-		// 		Expect(err).NotTo(HaveOccurred())
-		// 	})
-		// 	It("should not return an error", func() {
-		// 		Expect(reconcileError).NotTo(HaveOccurred())
-		// 	})
-		// 	It("should still be in Running state", func() {
-		// 		Expect(run.Status.State).To(Equal("Running"))
-		// 	})
-		// 	It("should set RequeueAfter to WaitAction", func() {
-		// 		Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
-		// 	})
-		// 	It("should not create any new pod", func() {
-		// 		pods, err := getLinkedPods(k8sClient, run, controller.PlanAction, name.Namespace)
-		// 		Expect(err).NotTo(HaveOccurred())
-		// 		Expect(len(pods.Items)).To(Equal(1))
-		// 	})
-		// })
-		// Describe("When a TerraformRun has a completed pod", Ordered, func() {
-		// 	BeforeAll(func() {
-		// 		name = types.NamespacedName{
-		// 			Name:      "nominal-case-3",
-		// 			Namespace: "default",
-		// 		}
-		// 		result, run, reconcileError, err = getResult(name)
-		// 	})
-		// 	It("should still exists", func() {
-		// 		Expect(err).NotTo(HaveOccurred())
-		// 	})
-		// 	It("should not return an error", func() {
-		// 		Expect(reconcileError).NotTo(HaveOccurred())
-		// 	})
-		// 	It("should end in Succeeded state", func() {
-		// 		Expect(run.Status.State).To(Equal("Succeeded"))
-		// 	})
-		// 	It("should set RequeueAfter to DriftDetection", func() {
-		// 		Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
-		// 	})
-		// 	It("should not have created an apply pod", func() {
-		// 		pods, err := getLinkedPods(k8sClient, layer, controller.ApplyAction, name.Namespace)
-		// 		Expect(err).NotTo(HaveOccurred())
-		// 		Expect(len(pods.Items)).To(Equal(0))
-		// 	})
-		// })
+		Describe("When a TerraformRun is running its initial pod", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "nominal-case-1",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should be in Running state", func() {
+				Expect(run.Status.State).To(Equal("Running"))
+			})
+			It("should still have a lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should not create a new runner pod", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(1))
+			})
+		})
+		Describe("When a running TerraformRun has a completed pod", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "nominal-case-1",
+					Namespace: "default",
+				}
+				podErr = updatePodPhase(name, corev1.PodSucceeded)
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(podErr).NotTo(HaveOccurred())
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should be in Succeeded state", func() {
+				Expect(run.Status.State).To(Equal("Succeeded"))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should have released the lock on the layer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      run.Spec.Layer.Name,
+					Namespace: run.Namespace,
+				}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
+			})
+			It("should not create any new pod", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(1))
+				Expect(pods.Items[0].Status.Phase).To(Equal(corev1.PodSucceeded))
+			})
+		})
 		// 	Describe("When a TerraformLayer just got applied", Ordered, func() {
 		// 		BeforeAll(func() {
 		// 			name = types.NamespacedName{
