@@ -38,7 +38,7 @@ type TerraformRunLayer struct {
 type TerraformRunStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 	State      string             `json:"state,omitempty"`
-	Retries    int                `json:"retries,omitempty"`
+	Retries    int                `json:"retries"`
 	LastRun    string             `json:"lastRun,omitempty"`
 	RunnerPod  string             `json:"runnerPod,omitempty"`
 }
@@ -47,7 +47,7 @@ type TerraformRunStatus struct {
 // +kubebuilder:resource:shortName=runs;run;tfruns;tfrun;
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
-// +kubebuilder:printcolumn:name="Retries",type=string,JSONPath=`.status.retries`
+// +kubebuilder:printcolumn:name="Retries",type=integer,JSONPath=`.status.retries`
 // +kubebuilder:printcolumn:name="Created On",type=string,JSONPath=`.metadata.creationTimestamp`
 // +kubebuilder:printcolumn:name="Runner Pod",type=string,JSONPath=`.status.runnerPod`
 // TerraformRun is the Schema for the terraformRuns API

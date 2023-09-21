@@ -26,7 +26,7 @@ spec:
       type: string
     - jsonPath: .status.retries
       name: Retries
-      type: string
+      type: integer
     - jsonPath: .metadata.creationTimestamp
       name: Created On
       type: string
@@ -142,6 +142,8 @@ spec:
                 type: string
               state:
                 type: string
+            required:
+            - retries
             type: object
         type: object
     served: true
