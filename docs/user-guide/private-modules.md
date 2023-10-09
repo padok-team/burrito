@@ -51,7 +51,8 @@ spec:
     terragrunt:
       enabled: true
       version: "0.45.4"
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   path: "terragrunt/random-pets-private-module/test"
   branch: main
   repository:
@@ -113,7 +114,8 @@ spec:
     terragrunt:
       enabled: true
       version: "0.45.4"
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   path: "terragrunt/random-pets-private-module-ssh/test"
   branch: main
   repository:

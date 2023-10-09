@@ -19,7 +19,8 @@ spec:
     terragrunt:
       enabled: true
       version: "0.45.4"
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   path: "terragrunt/random-pets/test"
   branch: "main"
   repository:
@@ -44,7 +45,8 @@ spec:
     terragrunt:
       enabled: true
       version: "0.45.4"
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   path: "terragrunt/random-pets/test"
   branch: "main"
   repository:

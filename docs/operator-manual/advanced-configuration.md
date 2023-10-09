@@ -19,6 +19,7 @@ You can configure `burrito` with environment variables.
 |      `BURRITO_CONTROLLER_TIMERS_ONERROR`       | period between two runners launch when an error occurred in the controllers |                `1m`                |
 |     `BURRITO_CONTROLLER_TIMERS_WAITACTION`     |          period between two runners launch when a layer is locked           |                `1m`                |
 | `BURRITO_CONTROLLER_TIMERS_FAILUREGRACEPERIOD` |   initial time before retry, goes exponential function of number failure    |               `15s`                |
+|    `BURRITO_CONTROLLER_TERRAFORMMAXRETRIES`    |   default number of retries for terraform runs (can be overriden in CRDs)   |                `5`                 |
 |  `BURRITO_CONTROLLER_LEADERELECTION_ENABLED`   |                  whether leader election is enabled or not                  |               `true`               |
 |     `BURRITO_CONTROLLER_LEADERELECTION_ID`     |                      lease id used for leader election                      |  `6d185457.terraform.padok.cloud`  |
 |  `BURRITO_CONTROLLER_HEALTHPROBEBINDADDRESS`   |     address to bind the health probe server embedded in the controllers     |              `:8081`               |
