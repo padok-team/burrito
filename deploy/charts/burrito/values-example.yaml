@@ -12,7 +12,7 @@ config:
       timers:
         driftDetection: 5m
 
-controller:
+controllers:
   deployment:
     envFrom:
       - secretRef:
