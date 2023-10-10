@@ -65,6 +65,7 @@ func init() {
 }
 
 func (c *Controllers) Exec() {
+	ctrl.SetLogger(zap.New())
 	log := log.WithContext(context.TODO())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
