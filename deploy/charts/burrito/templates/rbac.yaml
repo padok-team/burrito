@@ -52,6 +52,18 @@ rules:
 - apiGroups:
   - config.terraform.padok.cloud
   resources:
+  - terraformrepositories
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
   - terraformlayers/finalizers
   verbs:
   - update
