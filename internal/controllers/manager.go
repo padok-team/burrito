@@ -17,8 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
-
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -27,6 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	log "github.com/sirupsen/logrus"
 
@@ -66,7 +65,6 @@ func init() {
 
 func (c *Controllers) Exec() {
 	ctrl.SetLogger(zap.New())
-	log := log.WithContext(context.TODO())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
