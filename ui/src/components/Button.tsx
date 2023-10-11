@@ -41,20 +41,25 @@ const Button: React.FC<ButtonProps> = ({
       text-primary-600
       underline
       hover:text-primary-400
+      hover:fill-primary-400
       active:text-primary-400
+      active:fill-primary-400
       fill-primary-600`,
   };
 
   const variantClassesDisabled = {
     primary: `bg-nuances-50
-      text-nuances-300`,
+      text-nuances-300
+      fill-nuances-300`,
 
     secondary: `bg-nuances-50
-      text-nuances-300`,
+      text-nuances-300
+      fill-nuances-300`,
 
     tertiary: `bg-nuances-white
       text-nuances-300
-      underline`,
+      underline
+      fill-nuances-300`,
   };
 
   variant = variant ?? "primary";
@@ -67,16 +72,22 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       onClick={onClick}
     >
-      {leftIcon && <span>{leftIcon}</span>}
-      <div className={`font-semibold text-base ${isLoading && "invisible"}`}>
-        {children}
-      </div>
-      {isLoading && (
-        <div className="absolute inset-0 flex justify-center items-center z-10">
-          <LoaderIcon className="w-6 h-6 animate-spin" />
+      <div className="flex justify-center items-center gap-2">
+        {leftIcon && (
+          <span className={`${isLoading && "invisible"}`}>{leftIcon}</span>
+        )}
+        <div className={`font-semibold text-base ${isLoading && "invisible"}`}>
+          {children}
         </div>
-      )}
-      {rightIcon && <span>{rightIcon}</span>}
+        {isLoading && (
+          <div className="absolute inset-0 flex justify-center items-center z-10">
+            <LoaderIcon className="animate-spin" />
+          </div>
+        )}
+        {rightIcon && (
+          <span className={`${isLoading && "invisible"}`}>{rightIcon}</span>
+        )}
+      </div>
     </button>
   );
 };
