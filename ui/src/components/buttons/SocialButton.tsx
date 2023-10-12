@@ -1,6 +1,6 @@
 import React from "react";
 
-import Button from "./Button";
+import Button from "@/components/buttons/Button";
 import GithubIcon from "@/assets/icons/GithubIcon";
 import GitlabIcon from "@/assets/icons/GitlabIcon";
 
