@@ -17,6 +17,8 @@ limitations under the License.
 package controllers
 
 import (
+	"os"
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,14 +27,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	log "github.com/sirupsen/logrus"
-
+	logrusr "github.com/bombsimon/logrusr/v4"
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	"github.com/padok-team/burrito/internal/storage/redis"
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -64,8 +66,12 @@ func init() {
 }
 
 func (c *Controllers) Exec() {
-	ctrl.SetLogger(zap.New())
-
+	ctrl.SetLogger(logrusr.New(&log.Logger{
+		Out:       os.Stderr,
+		Formatter: new(logrus.TextFormatter),
+		Hooks:     make(logrus.LevelHooks),
+		Level:     logrus.DebugLevel,
+	}))
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     c.config.Controller.MetricsBindAddress,
@@ -98,33 +104,33 @@ func (c *Controllers) Exec() {
 				Client: mgr.GetClient(),
 				Scheme: mgr.GetScheme(),
 			}).SetupWithManager(mgr); err != nil {
-				log.Fatalf("unable to create repository controller: %s", err)
+				logrus.Fatalf("unable to create repository controller: %s", err)
 			}
-			log.Infof("repository controller started successfully")
+			logrus.Infof("repository controller started successfully")
 		case "pullrequest":
 			if err = (&terraformpullrequest.Reconciler{
 				Client: mgr.GetClient(),
 				Scheme: mgr.GetScheme(),
 				Config: c.config,
 			}).SetupWithManager(mgr); err != nil {
-				log.Fatalf("unable to create pullrequest controller: %s", err)
+				logrus.Fatalf("unable to create pullrequest controller: %s", err)
 			}
-			log.Infof("pullrequest controller started successfully")
+			logrus.Infof("pullrequest controller started successfully")
 		default:
-			log.Infof("unrecognized controller type %s, ignoring", ctrlType)
+			logrus.Infof("unrecognized controller type %s, ignoring", ctrlType)
 		}
 	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		log.Fatalf("unable to set up health check: %s", err)
+		logrus.Fatalf("unable to set up health check: %s", err)
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		log.Fatalf("unable to set up ready check: %s", err)
+		logrus.Fatalf("unable to set up ready check: %s", err)
 	}
 
-	log.Infof("starting manager")
+	logrus.Infof("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		log.Fatalf("problem running manager: %s", err)
+		logrus.Fatalf("problem running manager: %s", err)
 	}
 }
