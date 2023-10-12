@@ -5,10 +5,10 @@ import LoaderIcon from "@/assets/icons/LoaderIcon";
 
 export interface ButtonProps {
   className?: string;
+  variant?: "primary" | "secondary" | "tertiary";
   children?: React.ReactNode;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  variant?: "primary" | "secondary" | "tertiary";
   isLoading?: boolean;
   disabled?: boolean;
   onClick?: () => void;
@@ -16,10 +16,10 @@ export interface ButtonProps {
 
 const Button: React.FC<ButtonProps> = ({
   className,
+  variant,
   children,
   leftIcon,
   rightIcon,
-  variant,
   isLoading,
   disabled,
   onClick,
