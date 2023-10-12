@@ -1,6 +1,6 @@
 import React from "react";
 
-import LoaderIcon from "./icons/LoaderIcon";
+import LoaderIcon from "../assets/icons/LoaderIcon";
 
 export interface ButtonProps {
   children?: React.ReactNode;
