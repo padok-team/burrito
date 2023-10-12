@@ -6,6 +6,9 @@ export default {
       sans: ["Outfit", "sans-serif"],
     },
     colors: {
+      inherit: "inherit",
+      current: "currentColor",
+      transparent: "transparent",
       primary: {
         100: "#FBFDFF",
         300: "#F1F8FF",
