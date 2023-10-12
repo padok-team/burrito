@@ -85,7 +85,7 @@ func (c *Controllers) Exec() {
 		},
 	})
 	if err != nil {
-		logrus.Fatalf("unable to start manager: %s", err)
+		log.Fatalf("unable to start manager: %s", err)
 	}
 
 	for _, ctrlType := range c.config.Controller.Types {
@@ -97,50 +97,50 @@ func (c *Controllers) Exec() {
 				Config:  c.config,
 				Storage: redis.New(c.config.Redis),
 			}).SetupWithManager(mgr); err != nil {
-				logrus.Fatalf("unable to create layer controller: %s", err)
+				log.Fatalf("unable to create layer controller: %s", err)
 			}
-			logrus.Infof("layer controller started successfully")
+			log.Infof("layer controller started successfully")
 		case "repository":
 			if err = (&terraformrepository.Reconciler{
 				Client: mgr.GetClient(),
 				Scheme: mgr.GetScheme(),
 			}).SetupWithManager(mgr); err != nil {
-				logrus.Fatalf("unable to create repository controller: %s", err)
+				log.Fatalf("unable to create repository controller: %s", err)
 			}
-			logrus.Infof("repository controller started successfully")
+			log.Infof("repository controller started successfully")
 		case "run":
 			if err = (&terraformrun.Reconciler{
 				Client: mgr.GetClient(),
 				Scheme: mgr.GetScheme(),
 				Config: c.config,
 			}).SetupWithManager(mgr); err != nil {
-				logrus.Fatalf("unable to create run controller: %s", err)
+				log.Fatalf("unable to create run controller: %s", err)
 			}
-			logrus.Infof("run controller started successfully")
+			log.Infof("run controller started successfully")
 		case "pullrequest":
 			if err = (&terraformpullrequest.Reconciler{
 				Client: mgr.GetClient(),
 				Scheme: mgr.GetScheme(),
 				Config: c.config,
 			}).SetupWithManager(mgr); err != nil {
-				logrus.Fatalf("unable to create pullrequest controller: %s", err)
+				log.Fatalf("unable to create pullrequest controller: %s", err)
 			}
-			logrus.Infof("pullrequest controller started successfully")
+			log.Infof("pullrequest controller started successfully")
 		default:
-			logrus.Infof("unrecognized controller type %s, ignoring", ctrlType)
+			log.Infof("unrecognized controller type %s, ignoring", ctrlType)
 		}
 	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		logrus.Fatalf("unable to set up health check: %s", err)
+		log.Fatalf("unable to set up health check: %s", err)
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		logrus.Fatalf("unable to set up ready check: %s", err)
+		log.Fatalf("unable to set up ready check: %s", err)
 	}
 
-	logrus.Infof("starting manager")
+	log.Infof("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		logrus.Fatalf("problem running manager: %s", err)
+		log.Fatalf("problem running manager: %s", err)
 	}
 }
