@@ -1,10 +1,12 @@
 import React from "react";
+import { twMerge } from "tailwind-merge";
 
 interface TagProps {
   variant: "success" | "warning" | "error" | "disabled";
+  className?: string;
 }
 
-const Tag: React.FC<TagProps> = ({ variant }) => {
+const Tag: React.FC<TagProps> = ({ variant, className }) => {
   const variantClasses = {
     success: `bg-status-success-default
     text-nuances-black`,
@@ -31,7 +33,8 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
 
   return (
     <div
-      className={`flex
+      className={twMerge(
+        `flex
         px-3 py-1
         items-center
         gap-1
@@ -39,7 +42,9 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
         text-sm
         font-semibold
         leading-5
-        ${variantClasses[variant]}`}
+        ${variantClasses[variant]}`,
+        className
+      )}
     >
       {getContent()}
     </div>
