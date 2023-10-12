@@ -42,9 +42,11 @@ const Input: React.FC<InputProps> = ({
 
   const variantClassesError = `outline outline-1 outline-status-error-default`;
 
-  const variantClassesDisabled = {
-    // TODO: merge with twMerge
-  };
+  const variantClassesDisabled = `bg-nuances-50
+    placeholder-nuances-200
+    hover:outline-0
+    focus:outline-0
+    active:outline-0`;
 
   variant = variant ?? "light";
 
@@ -61,9 +63,12 @@ const Input: React.FC<InputProps> = ({
     >
       {label && (
         <label
-          className={`font-normal
-        text-base
-        ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`}
+          className={twMerge(
+            `font-normal
+            text-base
+            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
+            disabled && "text-nuances-300"
+          )}
         >
           {label}
         </label>
@@ -85,7 +90,8 @@ const Input: React.FC<InputProps> = ({
           active:outline
           active:outline-2
           ${variantClasses[variant]}`,
-          error && variantClassesError
+          error && variantClassesError,
+          disabled && variantClassesDisabled
         )}
         type={type}
         placeholder={placeholder}
@@ -99,7 +105,8 @@ const Input: React.FC<InputProps> = ({
             `font-normal
             text-sm
             ${variant === "light" ? "text-primary-600" : "text-nuances-300"}`,
-            error && "text-status-error-default"
+            error && "text-status-error-default",
+            disabled && "text-nuances-300"
           )}
         >
           {caption}
