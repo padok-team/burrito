@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge";
 import LoaderIcon from "../assets/icons/LoaderIcon";
 
 export interface ButtonProps {
+  className?: string;
   children?: React.ReactNode;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -11,10 +12,10 @@ export interface ButtonProps {
   isLoading?: boolean;
   disabled?: boolean;
   onClick?: () => void;
-  className?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
+  className,
   children,
   leftIcon,
   rightIcon,
@@ -22,7 +23,6 @@ const Button: React.FC<ButtonProps> = ({
   isLoading,
   disabled,
   onClick,
-  className,
 }) => {
   const variantClasses = {
     primary: `bg-nuances-black
