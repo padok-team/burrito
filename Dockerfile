@@ -61,6 +61,7 @@ RUN addgroup \
 COPY --from=builder /workspace/bin/burrito /usr/local/bin/burrito
 
 RUN chmod +x /usr/local/bin/burrito
+RUN mkdir /repository && chown -R burrito:burrito /repository
 
 # Use an unprivileged user
 USER 65532:65532
