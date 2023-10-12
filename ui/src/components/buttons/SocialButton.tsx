@@ -1,8 +1,8 @@
 import React from "react";
 
 import Button from "./Button";
-import GithubIcon from "../assets/icons/GithubIcon";
-import GitlabIcon from "../assets/icons/GitlabIcon";
+import GithubIcon from "@/assets/icons/GithubIcon";
+import GitlabIcon from "@/assets/icons/GitlabIcon";
 
 interface SocialButtonProps {
   variant: "github" | "gitlab";

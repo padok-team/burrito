@@ -1,7 +1,7 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
-import LoaderIcon from "../assets/icons/LoaderIcon";
+import LoaderIcon from "@/assets/icons/LoaderIcon";
 
 export interface ButtonProps {
   className?: string;
