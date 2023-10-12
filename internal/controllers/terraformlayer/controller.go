@@ -18,11 +18,8 @@ package terraformlayer
 
 import (
 	"context"
-	"math"
-	"strconv"
 	"time"
 
-	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
 	"github.com/padok-team/burrito/internal/storage"
@@ -84,7 +81,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformLayer: %s", err)
 		return ctrl.Result{}, err
 	}
-	locked, err := lock.IsLocked(ctx, r.Client, layer)
+	locked, err := lock.IsLayerLocked(ctx, r.Client, layer)
 	if err != nil {
 		log.Errorf("failed to get Lease Resource: %s", err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
@@ -129,28 +126,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&configv1alpha1.TerraformLayer{}).
 		WithEventFilter(ignorePredicate()).
 		Complete(r)
-}
-
-func GetLayerExponentialBackOffTime(DefaultRequeueAfter time.Duration, layer *configv1alpha1.TerraformLayer) time.Duration {
-	var n, ok = layer.Annotations[annotations.Failure]
-	var err error
-	attempts := 0
-
-	if ok {
-		attempts, err = strconv.Atoi(n)
-		if err != nil {
-			log.Errorf("failed to convert failure annotations : %v to int. Error : %v", n, err)
-		}
-	}
-	if attempts < 1 {
-		return DefaultRequeueAfter
-	}
-	return GetExponentialBackOffTime(DefaultRequeueAfter, attempts)
-}
-
-func GetExponentialBackOffTime(DefaultRequeueAfter time.Duration, attempts int) time.Duration {
-	var x float64 = float64(attempts)
-	return time.Duration(int32(math.Exp(x))) * DefaultRequeueAfter
 }
 
 func ignorePredicate() predicate.Predicate {

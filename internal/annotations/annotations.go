@@ -13,7 +13,6 @@ const (
 	LastPlanCommit  string = "runner.terraform.padok.cloud/plan-commit"
 	LastPlanDate    string = "runner.terraform.padok.cloud/plan-date"
 	LastPlanSum     string = "runner.terraform.padok.cloud/plan-sum"
-	Failure         string = "runner.terraform.padok.cloud/failure"
 	Lock            string = "runner.terraform.padok.cloud/lock"
 
 	LastBranchCommit   string = "webhook.terraform.padok.cloud/branch-commit"

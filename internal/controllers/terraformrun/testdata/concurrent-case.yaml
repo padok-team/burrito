@@ -1,29 +1,21 @@
 apiVersion: config.terraform.padok.cloud/v1alpha1
-kind: TerraformLayer
-metadata:
-  name: test
-  namespace: default
-spec:
-  branch: main
-  path: test/
-  remediationStrategy:
-    autoApply: true
-  repository:
-    name: burrito
-    namespace: default
-  terraform:
-    terragrunt:
-      enabled: true
-      version: 0.45.4
-    version: 1.3.1
----
-apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
 metadata:
-  name: test-run
+  name: concurrent-case-1
   namespace: default
 spec:
   action: plan
   layer:
-    name: test
+    name: concurrent-case-1
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: concurrent-case-2
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: concurrent-case-1
     namespace: default

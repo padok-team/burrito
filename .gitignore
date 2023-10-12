@@ -31,3 +31,9 @@ Dockerfile.cross
 *.swp
 *.swo
 *~
+
+# Python virtual environment (for mkdocs)
+.env
+.venv
+env/
+venv/

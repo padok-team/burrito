@@ -1,0 +1,44 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-1
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: unknown-layer
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: unknown-repo-layer-1
+  namespace: default
+spec:
+  branch: main
+  path: error/
+  repository:
+    name: unknown-repo
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-2
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: unknown-repo-layer-1
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-3
+  namespace: default
+spec:
+  action: apply
+  layer:
+    name: error-case-1
+    namespace: default

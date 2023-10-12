@@ -6,7 +6,8 @@ metadata:
 spec:
   branch: main
   path: merge-case-one/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
@@ -17,11 +18,11 @@ spec:
     version: 1.3.1
   overrideRunnerSpec:
     imagePullSecrets:
-    - name: gh-token
+      - name: gh-token
     image: ghcr.io/padok-team/super-burrito:v0.1.0
     tolerations:
-    - effect: "NoSchedule"
-      key: "padok.cloud/no-schedule"
+      - effect: "NoSchedule"
+        key: "padok.cloud/no-schedule"
     nodeSelector:
       padok.cloud: "true"
     serviceAccountName: "test"
@@ -30,19 +31,19 @@ spec:
         cpu: 1
         memory: 0.5
     env:
-    - name: "test"
-      value: "test"
+      - name: "test"
+        value: "test"
     envFrom:
       - secretRef:
           name: test
           optional: true
     volumeMounts:
-    - mountPath: /test
-      name: test
-      readOnly: true
+      - mountPath: /test
+        name: test
+        readOnly: true
     volumes:
-    - name: test
-      emptyDir: {}
+      - name: test
+        emptyDir: {}
     metadata:
       annotations:
         padok.cloud: "test"

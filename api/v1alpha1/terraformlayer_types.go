@@ -55,7 +55,7 @@ type TerraformLayerStatus struct {
 // +kubebuilder:printcolumn:name="Repository",type=string,JSONPath=`.spec.repository.name`
 // +kubebuilder:printcolumn:name="Branch",type=string,JSONPath=`.spec.branch`
 // +kubebuilder:printcolumn:name="Path",type=string,JSONPath=`.spec.path`
-// +kubebuilder:printcolumn:name="LastResult",type=string,JSONPath=`.status.lastResult`
+// +kubebuilder:printcolumn:name="Last Result",type=string,JSONPath=`.status.lastResult`
 // TerraformLayer is the Schema for the terraformlayers API
 type TerraformLayer struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -76,4 +76,23 @@ type TerraformLayerList struct {
 
 func init() {
 	SchemeBuilder.Register(&TerraformLayer{}, &TerraformLayerList{})
+}
+
+// Associated functions
+
+// Workaround needed for envtest which does not populate the TypeMeta structure
+// See https://github.com/kubernetes-sigs/controller-runtime/issues/1870
+func (layer *TerraformLayer) GetAPIVersion() string {
+	if layer.APIVersion == "" {
+		return "config.terraform.padok.cloud/v1alpha1"
+	}
+	return layer.APIVersion
+}
+
+// Same as above
+func (layer *TerraformLayer) GetKind() string {
+	if layer.Kind == "" {
+		return "TerraformLayer"
+	}
+	return layer.Kind
 }

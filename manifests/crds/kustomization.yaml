@@ -5,3 +5,4 @@ resources:
   - config.terraform.padok.cloud_terraformpullrequests.yaml
   - config.terraform.padok.cloud_terraformrepositories.yaml
   - config.terraform.padok.cloud_terraformlayers.yaml
+  - config.terraform.padok.cloud_terraformruns.yaml

@@ -23,7 +23,8 @@ spec:
     terragrunt:
       enabled: true
       version: "0.44.5"
-  remediationStrategy: dry
+  remediationStrategy:
+    autoApply: false
   path: "internal/e2e/testdata/terragrunt/random-pets/prod"
   branch: "feat/handle-terragrunt"
   repository:

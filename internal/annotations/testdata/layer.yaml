@@ -6,7 +6,8 @@ metadata:
 spec:
   branch: main
   path: test/
-  remediationStrategy: autoApply
+  remediationStrategy:
+    autoApply: true
   repository:
     name: burrito
     namespace: default
