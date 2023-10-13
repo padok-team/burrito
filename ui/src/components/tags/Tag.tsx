@@ -1,6 +1,6 @@
 import React from "react";
 
-interface TagProps {
+export interface TagProps {
   variant: "success" | "warning" | "error" | "disabled";
 }
 

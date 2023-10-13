@@ -1,7 +1,7 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
-interface InputProps {
+export interface InputProps {
   className?: string;
   variant?: "light" | "dark";
   label?: string;

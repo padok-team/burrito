@@ -1,6 +1,6 @@
 import React from "react";
 
-interface NavigationButtonProps {
+export interface NavigationButtonProps {
   variant?: "light" | "dark";
   icon: React.ReactNode;
   onClick?: () => void;

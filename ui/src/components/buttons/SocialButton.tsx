@@ -4,7 +4,7 @@ import Button from "@/components/buttons/Button";
 import GithubIcon from "@/assets/icons/GithubIcon";
 import GitlabIcon from "@/assets/icons/GitlabIcon";
 
-interface SocialButtonProps {
+export interface SocialButtonProps {
   variant: "github" | "gitlab";
   isLoading?: boolean;
 }
