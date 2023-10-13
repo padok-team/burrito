@@ -23,8 +23,8 @@ const Input: React.FC<InputProps> = ({
   type,
   placeholder,
   value,
-  leftIcon,
-  rightIcon,
+  leftIcon, // TODO: Implement
+  rightIcon, // TODO: Implement
   caption,
   error,
   disabled,
