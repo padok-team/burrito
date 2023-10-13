@@ -6,7 +6,6 @@ const GitlabIcon = (props: SVGProps<SVGSVGElement>) => (
     width={24}
     height={24}
     viewBox="9.89 10.27 20.22 19.47"
-    fill="none"
     {...props}
   >
     <path
@@ -27,4 +26,5 @@ const GitlabIcon = (props: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
+
 export default GitlabIcon;
