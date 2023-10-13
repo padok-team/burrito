@@ -70,9 +70,12 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={twMerge(
-        `relative px-4 py-2 rounded-md ${
-          !disabled ? variantClasses[variant] : variantClassesDisabled[variant]
-        }`,
+        `relative
+        px-4
+        py-2
+        rounded-md
+        ${variantClasses[variant]}`,
+        disabled && variantClassesDisabled[variant],
         className
       )}
       disabled={disabled}
@@ -86,7 +89,14 @@ const Button: React.FC<ButtonProps> = ({
           {children}
         </div>
         {isLoading && (
-          <div className="absolute inset-0 flex justify-center items-center z-10">
+          <div
+            className={`absolute
+              inset-0
+              flex
+              justify-center
+              items-center
+              z-10`}
+          >
             <LoaderIcon className="animate-spin" />
           </div>
         )}
