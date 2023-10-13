@@ -85,7 +85,7 @@ const Card: React.FC<CardProps> = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col items-start gap-2">
+      <div className="grid grid-cols-[min-content_1fr] items-start gap-x-7 gap-y-2">
         {[
           ["Namespace", namespace],
           ["State", getTag()],
@@ -94,7 +94,7 @@ const Card: React.FC<CardProps> = ({
           ["Path", path],
           ["Last result", lastResult],
         ].map(([label, value], index) => (
-          <div key={index} className="flex items-start gap-7">
+          <React.Fragment key={index}>
             <span
               className={`text-base
               font-normal
@@ -104,14 +104,12 @@ const Card: React.FC<CardProps> = ({
             </span>
             <span
               className={`text-base
-              font-semibold
-              ${
-                variant === "light" ? "text-nuances-black" : "text-nuances-50"
-              }`}
+            font-semibold
+            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`}
             >
               {value}
             </span>
-          </div>
+          </React.Fragment>
         ))}
       </div>
     </div>
