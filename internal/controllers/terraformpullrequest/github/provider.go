@@ -50,13 +50,13 @@ func (g *Github) GetChanges(repository *configv1alpha1.TerraformRepository, pr *
 		return []string{}, err
 	}
 	// Per page is 30 by default, max is 100
-	opts := &github.RepositoryListByOrgOptions{
-		ListOptions: github.ListOptions{PerPage: 100},
+	opts := &github.ListOptions{
+		PerPage: 100,
 	}
 	// Get all pull request files from Github
 	var allChangedFiles []string
 	for {
-		changedFiles, resp, err := g.Client.PullRequests.ListFiles(context.TODO(), owner, repoName, id, nil)
+		changedFiles, resp, err := g.Client.PullRequests.ListFiles(context.TODO(), owner, repoName, id, opts)
 		if err != nil {
 			return []string{}, err
 		}
