@@ -5,7 +5,7 @@ export interface TagProps {
 }
 
 const Tag: React.FC<TagProps> = ({ variant }) => {
-  const variantClasses = {
+  const styles = {
     success: `bg-status-success-default
     text-nuances-black`,
     warning: `bg-status-warning-default
@@ -39,7 +39,7 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
         text-sm
         font-semibold
         leading-5
-        ${variantClasses[variant]}`}
+        ${styles[variant]}`}
     >
       {getContent()}
     </div>

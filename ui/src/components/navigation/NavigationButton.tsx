@@ -11,7 +11,7 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
   icon,
   onClick,
 }) => {
-  const variantClasses = {
+  const styles = {
     light: `bg-primary-400
       hover:bg-primary-500
       fill-primary-600`,
@@ -32,7 +32,7 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
         h-8
         flex-shrink
         rounded-lg
-        ${variantClasses[variant]}`}
+        ${styles[variant]}`}
       onClick={onClick}
     >
       {icon}

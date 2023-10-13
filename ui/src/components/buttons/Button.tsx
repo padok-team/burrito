@@ -24,45 +24,46 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   onClick,
 }) => {
-  const variantClasses = {
-    primary: `bg-nuances-black
-      text-nuances-white
-      hover:bg-nuances-400
-      active:bg-nuances-400
-      fill-nuances-white`,
+  const styles = {
+    base: {
+      primary: `bg-nuances-black
+        text-nuances-white
+        hover:bg-nuances-400
+        active:bg-nuances-400
+        fill-nuances-white`,
 
-    secondary: `
-      bg-nuances-white
-      text-nuances-black
-      border
-      border-nuances-black
-      hover:bg-nuances-50
-      active:bg-nuances-50
-      fill-nuances-black`,
+      secondary: `bg-nuances-white
+        text-nuances-black
+        border
+        border-nuances-black
+        hover:bg-nuances-50
+        active:bg-nuances-50
+        fill-nuances-black`,
 
-    tertiary: `bg-nuances-white
-      text-primary-600
-      underline
-      hover:text-primary-400
-      hover:fill-primary-400
-      active:text-primary-400
-      active:fill-primary-400
-      fill-primary-600`,
-  };
+      tertiary: `bg-nuances-white
+        text-primary-600
+        underline
+        hover:text-primary-400
+        hover:fill-primary-400
+        active:text-primary-400
+        active:fill-primary-400
+        fill-primary-600`,
+    },
 
-  const variantClassesDisabled = {
-    primary: `bg-nuances-50
-      text-nuances-300
-      fill-nuances-300`,
+    disabled: {
+      primary: `bg-nuances-50
+        text-nuances-300
+        fill-nuances-300`,
 
-    secondary: `bg-nuances-50
-      text-nuances-300
-      fill-nuances-300`,
+      secondary: `bg-nuances-50
+        text-nuances-300
+        fill-nuances-300`,
 
-    tertiary: `bg-nuances-white
-      text-nuances-300
-      underline
-      fill-nuances-300`,
+      tertiary: `bg-nuances-white
+        text-nuances-300
+        underline
+        fill-nuances-300`,
+    },
   };
 
   variant = variant ?? "primary";
@@ -74,8 +75,8 @@ const Button: React.FC<ButtonProps> = ({
         px-4
         py-2
         rounded-md
-        ${variantClasses[variant]}`,
-        disabled && variantClassesDisabled[variant],
+        ${styles.base[variant]}`,
+        disabled && styles.disabled[variant],
         className
       )}
       disabled={disabled}

@@ -30,23 +30,27 @@ const Input: React.FC<InputProps> = ({
   disabled,
   onChange,
 }) => {
-  const variantClasses = {
-    light: `bg-primary-400
-      text-nuances-black
-      placeholder-primary-600`,
+  const styles = {
+    base: {
+      light: `bg-primary-400
+        text-nuances-black
+        placeholder-primary-600`,
 
-    dark: `bg-nuances-400
-      text-nuances-50
-      placeholder-nuances-300`,
+      dark: `bg-nuances-400
+        text-nuances-50
+        placeholder-nuances-300`,
+    },
+
+    error: `outline
+      outline-1
+      outline-status-error-default`,
+
+    disabled: `bg-nuances-50
+      placeholder-nuances-200
+      hover:outline-0
+      focus:outline-0
+      active:outline-0`,
   };
-
-  const variantClassesError = `outline outline-1 outline-status-error-default`;
-
-  const variantClassesDisabled = `bg-nuances-50
-    placeholder-nuances-200
-    hover:outline-0
-    focus:outline-0
-    active:outline-0`;
 
   variant = variant ?? "light";
 
@@ -89,9 +93,9 @@ const Input: React.FC<InputProps> = ({
           focus:outline-2
           active:outline
           active:outline-2
-          ${variantClasses[variant]}`,
-          error && variantClassesError,
-          disabled && variantClassesDisabled
+          ${styles.base[variant]}`,
+          error && styles.error,
+          disabled && styles.disabled
         )}
         type={type}
         placeholder={placeholder}
