@@ -98,6 +98,7 @@ const Input: React.FC<InputProps> = ({
             font-medium
             text-base
             outline-primary-600
+            outline-offset-0
             hover:outline
             hover:outline-1
             focus:outline
