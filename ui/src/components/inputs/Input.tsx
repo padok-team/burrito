@@ -1,6 +1,8 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
+import ExclamationTriangleIcon from "@/assets/icons/ExclamationTriangleIcon";
+
 export interface InputProps {
   className?: string;
   variant?: "light" | "dark";
@@ -23,8 +25,8 @@ const Input: React.FC<InputProps> = ({
   type,
   placeholder,
   value,
-  leftIcon, // TODO: Implement
-  rightIcon, // TODO: Implement
+  leftIcon,
+  rightIcon,
   caption,
   error,
   disabled,
@@ -34,11 +36,15 @@ const Input: React.FC<InputProps> = ({
     base: {
       light: `bg-primary-400
         text-nuances-black
-        placeholder-primary-600`,
+        caret-nuances-black
+        placeholder-primary-600
+        fill-primary-600`,
 
       dark: `bg-nuances-400
         text-nuances-50
-        placeholder-nuances-300`,
+        caret-nuances-50
+        placeholder-nuances-300
+        fill-nuances-300`,
     },
 
     error: `outline
@@ -47,6 +53,8 @@ const Input: React.FC<InputProps> = ({
 
     disabled: `bg-nuances-50
       placeholder-nuances-200
+      fill-nuances-200
+      outline-0
       hover:outline-0
       focus:outline-0
       active:outline-0`,
@@ -55,54 +63,89 @@ const Input: React.FC<InputProps> = ({
   variant = variant ?? "light";
 
   return (
-    <div
+    <label
       className={twMerge(
-        `flex
-        flex-col
-        justify-center
-        items-start
-        gap-1`,
-        className
+        `font-normal
+        text-base
+        ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
+        disabled && "text-nuances-300"
       )}
     >
-      {label && (
-        <label
-          className={twMerge(
-            `font-normal
-            text-base
-            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
-            disabled && "text-nuances-300"
-          )}
-        >
-          {label}
-        </label>
-      )}
-      <input
-        className={twMerge(
-          `flex
-          px-4
-          py-2
-          h-10
-          rounded-lg
-          font-medium
-          text-base
-          outline-primary-600
-          hover:outline
-          hover:outline-1
-          focus:outline
-          focus:outline-2
-          active:outline
-          active:outline-2
-          ${styles.base[variant]}`,
-          error && styles.error,
-          disabled && styles.disabled
+      {label}
+      <div className="relative flex items-center">
+        {leftIcon && (
+          <div
+            className={twMerge(
+              `absolute
+              left-0
+              translate-x-4
+              cursor-text
+              ${styles.base[variant]}`,
+              disabled && styles.disabled
+            )}
+          >
+            {leftIcon}
+          </div>
         )}
-        type={type}
-        placeholder={placeholder}
-        disabled={disabled}
-        value={value}
-        onChange={onChange}
-      />
+        <input
+          className={twMerge(
+            `w-[300px]
+            px-4
+            py-2
+            h-10
+            rounded-lg
+            font-medium
+            text-base
+            outline-primary-600
+            hover:outline
+            hover:outline-1
+            focus:outline
+            focus:outline-2
+            active:outline
+            active:outline-2
+            ${styles.base[variant]}`,
+            leftIcon && "pl-12",
+            rightIcon && "pr-12",
+            error && styles.error,
+            error && "pr-12",
+            disabled && styles.disabled,
+            className
+          )}
+          type={type}
+          placeholder={placeholder}
+          disabled={disabled}
+          value={value}
+          onChange={onChange}
+        />
+        {rightIcon && !error && (
+          <div
+            className={twMerge(
+              `absolute
+              right-0
+              -translate-x-4
+              cursor-text
+              ${styles.base[variant]}`,
+              disabled && styles.disabled
+            )}
+          >
+            {rightIcon}
+          </div>
+        )}
+        {error && (
+          <div
+            className={twMerge(
+              `absolute
+              right-0
+              -translate-x-4
+              cursor-text
+              fill-status-error-default`,
+              disabled && styles.disabled
+            )}
+          >
+            <ExclamationTriangleIcon />
+          </div>
+        )}
+      </div>
       {caption && (
         <span
           className={twMerge(
@@ -116,7 +159,7 @@ const Input: React.FC<InputProps> = ({
           {caption}
         </span>
       )}
-    </div>
+    </label>
   );
 };
 
