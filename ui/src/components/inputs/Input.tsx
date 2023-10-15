@@ -79,7 +79,7 @@ const Input: React.FC<InputProps> = ({
               `absolute
               left-0
               translate-x-4
-              cursor-text
+              pointer-events-none
               ${styles.base[variant]}`,
               disabled && styles.disabled
             )}
@@ -90,6 +90,7 @@ const Input: React.FC<InputProps> = ({
         <input
           className={twMerge(
             `w-[300px]
+            my-1
             px-4
             py-2
             h-10
@@ -123,7 +124,7 @@ const Input: React.FC<InputProps> = ({
               `absolute
               right-0
               -translate-x-4
-              cursor-text
+              pointer-events-none
               ${styles.base[variant]}`,
               disabled && styles.disabled
             )}
@@ -137,7 +138,7 @@ const Input: React.FC<InputProps> = ({
               `absolute
               right-0
               -translate-x-4
-              cursor-text
+              pointer-events-none
               fill-status-error-default`,
               disabled && styles.disabled
             )}
