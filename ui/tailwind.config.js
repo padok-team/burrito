@@ -55,6 +55,12 @@ export default {
       light: "0px 0px 32px 0px rgba(121, 140, 140, 0.16)",
       dark: "0px 4px 4px 0px rgba(0, 0, 0, 0.25)",
     },
+    backgroundImage: {
+      "background-light":
+        "url('@/assets/backgrounds/background-light.png'), linear-gradient(to right, #E9F4FF, #E9F4FF)",
+      "background-dark":
+        "url('@/assets/backgrounds/background-dark.png'), linear-gradient(to right, #252525, #252525)",
+    },
   },
   plugins: [],
 };
