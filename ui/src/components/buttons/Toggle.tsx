@@ -8,11 +8,19 @@ import AvocadoSeed from "@/assets/avocado/AvocadoSeed";
 export interface ToggleProps {
   className?: string;
   checked?: boolean;
+  defaultChecked?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const Toggle: React.FC<ToggleProps> = ({ className, checked, onChange }) => {
-  const [internalChecked, setInternalChecked] = useState(false);
+const Toggle: React.FC<ToggleProps> = ({
+  className,
+  checked,
+  defaultChecked,
+  onChange,
+}) => {
+  const [internalChecked, setInternalChecked] = useState(
+    defaultChecked ?? false
+  );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInternalChecked(event.target.checked);
