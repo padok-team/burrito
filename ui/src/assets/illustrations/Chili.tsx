@@ -6,6 +6,7 @@ const Chili = (props: SVGProps<SVGSVGElement>) => (
     width={424}
     height={424}
     viewBox="0 0 424 424"
+    fill="none"
     {...props}
   >
     <path
