@@ -15,7 +15,7 @@ const Layers: React.FC = () => {
   return (
     <div className="flex bg-primary-100">
       <NavigationBar />
-      <div className="flex flex-col flex-grow h-screen gap-3 overflow-auto">
+      <div className="relative flex flex-col flex-grow h-screen gap-3 overflow-auto">
         <div className="sticky top-0 flex flex-col p-6 pb-3 gap-6 bg-primary-100">
           <div className="flex justify-between">
             <h1 className="text-[32px] font-extrabold leading-[130%]">
