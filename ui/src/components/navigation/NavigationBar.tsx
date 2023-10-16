@@ -33,7 +33,9 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         items-center
         h-screen
         w-[72px]
+        min-w-[72px]
         py-8
+        gap-20
         ${styles[variant]}`,
         className
       )}
