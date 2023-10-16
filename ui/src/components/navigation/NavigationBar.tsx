@@ -1,8 +1,8 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
+import ProfilePicture from "@/components/misc/ProfilePicture";
 import Burrito from "@/assets/illustrations/Burrito";
-import Sombrero from "@/assets/illustrations/Sombrero";
 import LayerGroupIcon from "@/assets/icons/LayerGroupIcon";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 
@@ -29,7 +29,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       className={twMerge(
         `flex
         flex-col
-        relative
+        justify-between
         items-center
         h-screen
         w-[72px]
@@ -45,6 +45,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           <CodeBranchIcon />
         </div>
       </div>
+      <ProfilePicture variant={variant} />
     </div>
   );
 };
