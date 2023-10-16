@@ -58,7 +58,7 @@ const Layers: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] p-6 pt-3 gap-6">
+        <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
           <Card
             title="fail-terragrunt"
             isRunning
