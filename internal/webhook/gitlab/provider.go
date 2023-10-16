@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/webhooks/gitlab"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	utils "github.com/padok-team/burrito/internal/utils/url"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
 )
@@ -49,7 +50,7 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 		e = &event.PushEvent{
-			URL:      event.NormalizeUrl(payload.Project.WebURL),
+			URL:      utils.NormalizeUrl(payload.Project.WebURL),
 			Revision: event.ParseRevision(payload.Ref),
 			ChangeInfo: event.ChangeInfo{
 				ShaBefore: payload.Before,
@@ -62,7 +63,7 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 		e = &event.PullRequestEvent{
 			Provider: "gitlab",
 			ID:       strconv.Itoa(int(payload.ObjectAttributes.IID)),
-			URL:      event.NormalizeUrl(payload.Project.WebURL),
+			URL:      utils.NormalizeUrl(payload.Project.WebURL),
 			Revision: payload.ObjectAttributes.SourceBranch,
 			Action:   getNormalizedAction(payload.ObjectAttributes.Action),
 			Base:     payload.ObjectAttributes.TargetBranch,

@@ -6,7 +6,9 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -84,8 +86,7 @@ func (e *PushEvent) getAffectedRepositories(repositories []configv1alpha1.Terraf
 	affectedRepositories := []configv1alpha1.TerraformRepository{}
 	log.Infof("looking for affected repositories, event url: %s", e.URL)
 	for _, repo := range repositories {
-		if e.URL == NormalizeUrl(repo.Spec.Repository.Url) {
-			log.Infof("repository %s is affected by push event", repo.Name)
+		if e.URL == utils.NormalizeUrl(repo.Spec.Repository.Url) {
 			affectedRepositories = append(affectedRepositories, repo)
 			continue
 		}

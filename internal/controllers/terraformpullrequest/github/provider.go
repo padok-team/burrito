@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -92,21 +92,9 @@ func (g *Github) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 }
 
 func parseGithubUrl(url string) (string, string) {
-	normalizedUrl := normalizeUrl(url)
+	normalizedUrl := utils.NormalizeUrl(url)
 	// nomalized url are "https://padok.github.com/owner/repo"
 	// we remove "https://" then split on "/"
 	split := strings.Split(normalizedUrl[8:], "/")
 	return split[1], split[2]
-}
-
-func normalizeUrl(url string) string {
-	if strings.Contains(url, "https://") {
-		return url
-	}
-	// All SSH URL from GitHub are like "git@padok.github.com:<owner>/<repo>.git"
-	// We split on ":" then remove ".git" by removing the last characters
-	// To handle enterprise GitHub, we dynamically get "padok.github.com"
-	// By removing "git@" at the beginning of the string
-	split := strings.Split(url, ":")
-	return fmt.Sprintf("https://%s/%s", split[0][4:], split[1][:len(split[1])-4])
 }

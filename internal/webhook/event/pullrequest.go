@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	utils "github.com/padok-team/burrito/internal/utils/url"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -104,8 +105,8 @@ func (e *PullRequestEvent) getAffectedRepositories(repositories []configv1alpha1
 	affectedRepositories := []configv1alpha1.TerraformRepository{}
 	for _, repo := range repositories {
 		log.Infof("evaluating terraform repository %s for url %s", repo.Name, repo.Spec.Repository.Url)
-		log.Infof("comparing normalized url %s with received URL from payload %s", NormalizeUrl(repo.Spec.Repository.Url), e.URL)
-		if e.URL == NormalizeUrl(repo.Spec.Repository.Url) {
+		log.Infof("comparing normalized url %s with received URL from payload %s", utils.NormalizeUrl(repo.Spec.Repository.Url), e.URL)
+		if e.URL == utils.NormalizeUrl(repo.Spec.Repository.Url) {
 			affectedRepositories = append(affectedRepositories, repo)
 		}
 	}

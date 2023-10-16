@@ -1,7 +1,6 @@
 package event
 
 import (
-	"fmt"
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -18,22 +17,6 @@ type ChangeInfo struct {
 
 type Event interface {
 	Handle(client.Client) error
-}
-
-// Normalize a Github/Gitlab URL (SSH or HTTPS) to a HTTPS URL
-func NormalizeUrl(url string) string {
-	if strings.Contains(url, "https://") {
-		return url
-	}
-	if strings.Contains(url, "http://") {
-		return "https://" + url[7:]
-	}
-	// All SSH URL from GitHub are like "git@padok.github.com:<owner>/<repo>.git"
-	// We split on ":" then remove ".git" by removing the last characters
-	// To handle enterprise GitHub, we dynamically get "padok.github.com"
-	// By removing "git@" at the beginning of the string
-	split := strings.Split(url, ":")
-	return fmt.Sprintf("https://%s/%s", split[0][4:], split[1][:len(split[1])-4])
 }
 
 func ParseRevision(ref string) string {
