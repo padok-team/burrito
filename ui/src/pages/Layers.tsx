@@ -22,7 +22,9 @@ const Layers: React.FC = () => {
             <h1 className="text-[32px] font-extrabold leading-[130%]">
               Layers
             </h1>
-            <Button>Refresh layers</Button>
+            <Button onClick={() => console.log("Refresh layers")}>
+              Refresh layers
+            </Button>
           </div>
           <Input
             className="w-full"

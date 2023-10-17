@@ -14,10 +14,12 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
   const styles = {
     light: `bg-primary-400
       hover:bg-primary-500
+      focus:outline-none
       fill-primary-600`,
 
     dark: `bg-nuances-black
       hover:bg-nuances-400
+      focus:outline-none
       fill-nuances-white`,
   };
 
@@ -31,6 +33,7 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
         flex-shrink
         rounded-lg
         ${styles[variant]}`}
+      tabIndex={0}
       onClick={onClick}
     >
       {icon}
