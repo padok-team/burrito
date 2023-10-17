@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 import Box from "@/components/misc/Box";
@@ -23,6 +23,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   disabled,
 }) => {
   const [open, setOpen] = useState(false);
+  const divRef = useRef<HTMLDivElement>(null);
 
   const handleFocus = () => {
     setOpen(true);
@@ -31,6 +32,12 @@ const Dropdown: React.FC<DropdownProps> = ({
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) {
       setOpen(false);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (divRef.current && event.key === "Escape") {
+      divRef.current.blur();
     }
   };
 
@@ -86,6 +93,8 @@ const Dropdown: React.FC<DropdownProps> = ({
       tabIndex={0}
       onFocus={handleFocus}
       onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      ref={divRef}
     >
       {label}
       <AngleDownIcon />
