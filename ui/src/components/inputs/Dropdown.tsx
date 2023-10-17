@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
+
+import Box from "@/components/misc/Box";
 
 import AngleDownIcon from "@/assets/icons/AngleDownIcon";
 
@@ -20,6 +22,33 @@ const Dropdown: React.FC<DropdownProps> = ({
   filled,
   disabled,
 }) => {
+  const [open, setOpen] = useState(false);
+  const divRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      setOpen(true);
+    };
+
+    const handleBlur = () => {
+      setOpen(false);
+    };
+
+    const divElement = divRef.current;
+
+    if (divElement) {
+      divElement.addEventListener("focus", handleFocus);
+      divElement.addEventListener("blur", handleBlur);
+    }
+
+    return () => {
+      if (divElement) {
+        divElement.removeEventListener("focus", handleFocus);
+        divElement.removeEventListener("blur", handleBlur);
+      }
+    };
+  }, []);
+
   const styles = {
     base: {
       light: `bg-primary-400
@@ -47,7 +76,8 @@ const Dropdown: React.FC<DropdownProps> = ({
   return (
     <div
       className={twMerge(
-        `flex
+        `relative
+        flex
         flex-row
         items-center
         justify-center
@@ -69,9 +99,19 @@ const Dropdown: React.FC<DropdownProps> = ({
         className
       )}
       tabIndex={0}
+      ref={divRef}
     >
       {label}
       <AngleDownIcon />
+
+      {open && (
+        <Box
+          className={`absolute left-0 top-10 items-center justify-center`}
+          variant={variant}
+        >
+          {children}
+        </Box>
+      )}
     </div>
   );
 };
