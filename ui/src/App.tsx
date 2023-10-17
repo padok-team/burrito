@@ -1,4 +1,4 @@
-import Layers from "@/pages/Layers";
+import Layers from "@/pages/layers/Layers";
 
 function App() {
   return <Layers />;

@@ -8,6 +8,9 @@ import Toggle from "@/components/buttons/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
 
+import StateDropdown from "@/pages/layers/components/StateDropdown";
+import RepositoryDropdown from "./components/RepositoryDropdown";
+
 import SearchIcon from "@/assets/icons/SearchIcon";
 import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
@@ -42,10 +45,10 @@ const Layers: React.FC = () => {
               </span>
               <div className="flex flex-row items-center gap-2">
                 <Dropdown label="State">
-                  <></>
+                  <StateDropdown />
                 </Dropdown>
                 <Dropdown label="Repository">
-                  <></>
+                  <RepositoryDropdown />
                 </Dropdown>
               </div>
               <div className="flex flex-row items-center gap-[7px]">
