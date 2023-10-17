@@ -33,7 +33,7 @@ const Layers: React.FC = () => {
               <span className="text-base font-semibold text-nuances-black">
                 267 layers
               </span>
-              <span className="text-base font-medium text-primary-600">|</span>
+              <span className="border-l h-6 border-primary-600"></span>
               <span className="text-base font-medium text-primary-600">
                 Filter by
               </span>
