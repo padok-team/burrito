@@ -37,7 +37,11 @@ const Dropdown: React.FC<DropdownProps> = ({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (divRef.current && event.key === "Escape") {
-      divRef.current.blur();
+      if (document.activeElement === divRef.current) {
+        divRef.current.blur();
+      } else {
+        divRef.current.focus();
+      }
     }
   };
 
