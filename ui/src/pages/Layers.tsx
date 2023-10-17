@@ -3,6 +3,7 @@ import React from "react";
 import NavigationBar from "@/components/navigation/NavigationBar";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/inputs/Input";
+import Dropdown from "@/components/inputs/Dropdown";
 import Toggle from "@/components/buttons/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
@@ -38,12 +39,12 @@ const Layers: React.FC = () => {
                 Filter by
               </span>
               <div className="flex flex-row items-center gap-2">
-                <div className="flex items-center h-8 p-2 rounded-lg bg-primary-400">
-                  State
-                </div>
-                <div className="flex items-center h-8 p-2 rounded-lg bg-primary-400">
-                  Repository
-                </div>
+                <Dropdown label="State">
+                  <></>
+                </Dropdown>
+                <Dropdown label="Repository">
+                  <></>
+                </Dropdown>
               </div>
               <div className="flex flex-row items-center gap-[7px]">
                 <span className="text-sm font-medium text-nuances-black">
