@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 import ExclamationTriangleIcon from "@/assets/icons/ExclamationTriangleIcon";
@@ -32,6 +32,15 @@ const Input: React.FC<InputProps> = ({
   disabled,
   onChange,
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleEscape = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (inputRef.current && event.key === "Escape") {
+      // event.preventDefault();
+      inputRef.current.blur();
+    }
+  };
+
   const styles = {
     base: {
       light: `bg-primary-400
@@ -116,6 +125,8 @@ const Input: React.FC<InputProps> = ({
           disabled={disabled}
           value={value}
           onChange={onChange}
+          onKeyDown={handleEscape}
+          ref={inputRef}
         />
         {rightIcon && !error && (
           <div
