@@ -16,7 +16,7 @@ export interface ButtonProps {
 
 const Button: React.FC<ButtonProps> = ({
   className,
-  variant,
+  variant = "primary",
   children,
   leftIcon,
   rightIcon,
@@ -65,8 +65,6 @@ const Button: React.FC<ButtonProps> = ({
         fill-nuances-300`,
     },
   };
-
-  variant = variant ?? "primary";
 
   return (
     <button

@@ -13,7 +13,7 @@ export interface NavigationBarProps {
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({
   className,
-  variant,
+  variant = "light",
 }) => {
   const styles = {
     light: `bg-background-light
@@ -21,8 +21,6 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
     dark: `bg-background-dark
       fill-nuances-50`,
   };
-
-  variant = variant ?? "light";
 
   return (
     <div

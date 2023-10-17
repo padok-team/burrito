@@ -20,7 +20,7 @@ export interface CardProps {
 
 const Card: React.FC<CardProps> = ({
   className,
-  variant,
+  variant = "light",
   title,
   isRunning,
   namespace,
@@ -30,8 +30,6 @@ const Card: React.FC<CardProps> = ({
   path,
   lastResult,
 }) => {
-  variant = variant ?? "light";
-
   const getTag = () => {
     return (
       <div className="flex items-center">

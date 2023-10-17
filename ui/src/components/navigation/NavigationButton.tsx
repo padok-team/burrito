@@ -7,7 +7,7 @@ export interface NavigationButtonProps {
 }
 
 const NavigationButton: React.FC<NavigationButtonProps> = ({
-  variant,
+  variant = "dark",
   icon,
   onClick,
 }) => {
@@ -20,8 +20,6 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
       hover:bg-nuances-400
       fill-nuances-white`,
   };
-
-  variant = variant ?? "dark";
 
   return (
     <button

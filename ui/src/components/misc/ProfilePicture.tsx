@@ -10,7 +10,7 @@ export interface ProfilePictureProps {
 
 const ProfilePicture: React.FC<ProfilePictureProps> = ({
   className,
-  variant,
+  variant = "light",
 }) => {
   const styles = {
     light: `bg-primary-100
@@ -20,8 +20,6 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
       outline-nuances-300
       text-primary-100`,
   };
-
-  variant = variant ?? "light";
 
   return (
     <div className={twMerge(`relative h-10 w-10`, className)}>

@@ -20,7 +20,7 @@ export interface InputProps {
 
 const Input: React.FC<InputProps> = ({
   className,
-  variant,
+  variant = "light",
   label,
   type,
   placeholder,
@@ -59,8 +59,6 @@ const Input: React.FC<InputProps> = ({
       focus:outline-0
       active:outline-0`,
   };
-
-  variant = variant ?? "light";
 
   return (
     <label
