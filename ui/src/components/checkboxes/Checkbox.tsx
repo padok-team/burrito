@@ -28,6 +28,10 @@ const Checkbox: React.FC<CheckboxProps> = ({
       light: `bg-nuances-white
         border-primary-500
         hover:border-primary-600
+        focus:outline
+        focus:outline-1
+        focus:outline-offset-2
+        focus:outline-primary-600
         checked:bg-primary-600
         checked:border-primary-600
         checked:hover:border-primary-600`,
@@ -35,6 +39,10 @@ const Checkbox: React.FC<CheckboxProps> = ({
       dark: `bg-nuances-400
         border-nuances-300
         hover:border-nuances-100
+        focus:outline
+        focus:outline-1
+        focus:outline-offset-2
+        focus:outline-nuances-100
         checked:bg-primary-600
         checked:border-primary-600
         checked:hover:border-primary-600`,
@@ -69,6 +77,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
           disabled && styles.disabled
         )}
         type="checkbox"
+        tabIndex={0}
         checked={checked}
         defaultChecked={defaultChecked}
         disabled={disabled}
