@@ -5,32 +5,27 @@ import Tag from "@/components/tags/Tag";
 import SyncIcon from "@/assets/icons/SyncIcon";
 import Chili from "@/assets/illustrations/Chili";
 
-import { LayerState } from "@/types/types";
+import { Layer } from "@/types/types";
 
 export interface CardProps {
   className?: string;
   variant?: "light" | "dark";
-  title: string;
-  isRunning?: boolean;
-  namespace: string;
-  state: LayerState;
-  repository: string;
-  branch: string;
-  path: string;
-  lastResult: string;
+  layer: Layer;
 }
 
 const Card: React.FC<CardProps> = ({
   className,
   variant = "light",
-  title,
-  isRunning,
-  namespace,
-  state,
-  repository,
-  branch,
-  path,
-  lastResult,
+  layer: {
+    name,
+    namespace,
+    state,
+    repository,
+    branch,
+    path,
+    lastResult,
+    isRunning,
+  },
 }) => {
   const getTag = () => {
     return (
@@ -82,7 +77,7 @@ const Card: React.FC<CardProps> = ({
             overflow-hidden
             ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`}
         >
-          {title}
+          {name}
         </span>
         {isRunning && (
           <div className="flex items-center gap-2 text-blue-500 fill-blue-500">

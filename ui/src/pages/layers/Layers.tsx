@@ -9,13 +9,48 @@ import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
 
 import StateDropdown from "@/pages/layers/components/StateDropdown";
-import RepositoryDropdown from "./components/RepositoryDropdown";
+import RepositoryDropdown from "@/pages/layers/components/RepositoryDropdown";
+
+import { Layer } from "@/types/types";
 
 import SearchIcon from "@/assets/icons/SearchIcon";
 import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
 
 const Layers: React.FC = () => {
+  const testData: Layer[] = [
+    {
+      namespace: "burrito-examples",
+      name: "fail-terragrunt",
+      state: "success",
+      repository: "burrito",
+      branch: "failling-terraform",
+      path: "terragrunt/random-pets/test",
+      lastResult: "error getting last results",
+      isRunning: false,
+    },
+    {
+      namespace: "burrito-examples",
+      name: "fail-terragrunt",
+      state: "warning",
+      repository: "burrito",
+      branch: "failling-terraform",
+      path: "terragrunt/random-pets/test",
+      lastResult: "error getting last results",
+      isRunning: true,
+    },
+    {
+      namespace: "burrito-examples",
+      name: "fail-terragrunt",
+      state: "error",
+      repository: "burrito",
+      branch: "failling-terraform",
+      path: "terragrunt/random-pets/test",
+      lastResult: "error getting last results",
+      isRunning: false,
+    },
+  ];
+
   return (
     <div className="flex bg-primary-100">
       <NavigationBar />
@@ -65,61 +100,9 @@ const Layers: React.FC = () => {
           </div>
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-          <Card
-            title="fail-terragrunt"
-            isRunning
-            namespace="burrito-examples"
-            state="success"
-            repository="burrito"
-            branch="failing-terragrunt"
-            path="terragrunt/random-pets/test"
-            lastResult="error getting last results"
-          />
-          <Card
-            title="fail-terragruntfail-terragruntfail-terragruntfail-terragruntfail-terragruntfail-terragruntfail-terragruntfail-terragrunt"
-            namespace="burrito-examples"
-            state="success"
-            repository="burrito"
-            branch="failing-terragrunt"
-            path="terragrunt/random-pets/test"
-            lastResult="error getting last resultserror getting last resultserror getting last resultserror getting last resultserror getting last results"
-          />
-          <Card
-            title="fail-terragrunt"
-            namespace="burrito-examples"
-            state="warning"
-            repository="burrito"
-            branch="failing-terragrunt"
-            path="terragrunt/random-pets/test"
-            lastResult="error getting last results"
-          />
-          <Card
-            title="fail-terragrunt"
-            namespace="burrito-examples"
-            state="warning"
-            repository="burrito"
-            branch="failing-terragrunt"
-            path="terragrunt/random-pets/test"
-            lastResult="error getting last results"
-          />
-          <Card
-            title="fail-terragrunt"
-            namespace="burrito-examples"
-            state="error"
-            repository="burrito"
-            branch="failing-terragrunt"
-            path="terragrunt/random-pets/test"
-            lastResult="error getting last results"
-          />
-          <Card
-            title="fail-terragrunt"
-            namespace="burrito-examples"
-            state="success"
-            repository="burrito"
-            branch="failing-terragrunt"
-            path="terragrunt/random-pets/test"
-            lastResult="error getting last results"
-          />
+          {testData.map((layer, index) => (
+            <Card key={index} layer={layer} />
+          ))}
         </div>
       </div>
     </div>
