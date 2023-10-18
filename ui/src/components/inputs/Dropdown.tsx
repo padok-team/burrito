@@ -23,10 +23,28 @@ const Dropdown: React.FC<DropdownProps> = ({
   disabled,
 }) => {
   const [open, setOpen] = useState(false);
-  const divRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLDivElement>(null);
 
-  const handleFocus = () => {
-    setOpen(true);
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (toggleRef.current) {
+      if (event.target === toggleRef.current) {
+        setOpen(!open);
+      }
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (toggleRef.current) {
+      if (event.key === "Escape") {
+        toggleRef.current.blur();
+        setOpen(false);
+      } else if (event.key === " " || event.key === "Enter") {
+        if (toggleRef.current === document.activeElement) {
+          event.preventDefault();
+          setOpen(!open);
+        }
+      }
+    }
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
@@ -35,22 +53,11 @@ const Dropdown: React.FC<DropdownProps> = ({
     }
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (divRef.current && event.key === "Escape") {
-      if (document.activeElement === divRef.current) {
-        divRef.current.blur();
-      } else {
-        divRef.current.focus();
-      }
-    }
-  };
-
   const styles = {
     base: {
       light: `bg-primary-400
         text-primary-600
-        fill-primary-600
-        `,
+        fill-primary-600`,
 
       dark: `bg-nuances-400
         text-nuances-300
@@ -83,6 +90,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         rounded-lg
         text-base
         font-medium
+        cursor-pointer
         outline-primary-600
         outline-offset-0
         hover:outline
@@ -95,17 +103,22 @@ const Dropdown: React.FC<DropdownProps> = ({
         className
       )}
       tabIndex={0}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
+      onMouseDown={handleClick}
       onKeyDown={handleKeyDown}
-      ref={divRef}
+      onBlur={handleBlur}
+      ref={toggleRef}
     >
       {label}
-      <AngleDownIcon />
+      <AngleDownIcon className="pointer-events-none" />
 
       {open && (
         <Box
-          className={`absolute left-0 top-10 items-center justify-center`}
+          className={`absolute
+            left-0
+            top-10
+            items-center
+            justify-center
+            cursor-auto`}
           variant={variant}
         >
           {children}
