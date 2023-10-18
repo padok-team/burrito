@@ -6,6 +6,7 @@ export type Layer = {
   branch: string;
   path: string;
   lastResult: string;
+  isRunning: boolean;
 };
 
 export type LayerState = "success" | "warning" | "error" | "disabled";

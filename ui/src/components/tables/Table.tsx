@@ -8,8 +8,10 @@ import {
 } from "@tanstack/react-table";
 
 import Tag from "@/components/tags/Tag";
+import Chili from "@/assets/illustrations/Chili";
+import SyncIcon from "@/assets/icons/SyncIcon";
 
-import { Layer } from "@/types/types";
+import { Layer, LayerState } from "@/types/types";
 
 export interface TableProps {
   className?: string;
@@ -28,11 +30,7 @@ const columns = [
   }),
   columnHelper.accessor("state", {
     header: "State",
-    cell: (status) => (
-      <div className="flex">
-        <Tag variant={status.getValue()} />
-      </div>
-    ),
+    cell: (status) => getTag(status.getValue()),
   }),
   columnHelper.accessor("repository", {
     header: "Repository",
@@ -47,6 +45,21 @@ const columns = [
     header: "Last result",
   }),
 ];
+
+const getTag = (status: LayerState) => {
+  return (
+    <div className="relative flex items-center">
+      <Tag variant={status} />
+      {status === "error" && (
+        <Chili
+          className="absolute translate-x-16 rotate-[-21deg]"
+          height={24}
+          width={24}
+        />
+      )}
+    </div>
+  );
+};
 
 const Table: React.FC<TableProps> = ({
   className,
@@ -65,12 +78,18 @@ const Table: React.FC<TableProps> = ({
       dark: `text-nuances-300`,
     },
     row: {
-      light: `text-nuances-black
-        hover:bg-nuances-white
-        hover:shadow-light`,
-      dark: `text-nuances-50
-        hover:bg-nuances-400
-        hover:shadow-dark`,
+      base: {
+        light: `text-nuances-black
+          hover:bg-nuances-white
+          hover:shadow-light`,
+        dark: `text-nuances-50
+          hover:bg-nuances-400
+          hover:shadow-dark`,
+      },
+      running: {
+        light: `outline-blue-400`,
+        dark: `outline-blue-500`,
+      },
     },
   };
 
@@ -101,7 +120,15 @@ const Table: React.FC<TableProps> = ({
       </thead>
       <tbody>
         {table.getRowModel().rows.map((row) => (
-          <tr key={row.id} className={`${styles.row[variant]}`}>
+          <tr
+            key={row.id}
+            className={twMerge(
+              `relative
+              ${styles.row.base[variant]}`,
+              row.original.isRunning &&
+                `rounded-2xl outline outline-4 ${styles.row.running[variant]}`
+            )}
+          >
             {row.getVisibleCells().map((cell) => (
               <td
                 key={cell.id}
