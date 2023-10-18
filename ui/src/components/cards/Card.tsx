@@ -58,7 +58,12 @@ const Card: React.FC<CardProps> = ({
         gap-4
         ${variant === "light" ? "bg-nuances-white" : "bg-nuances-400"}
         ${variant === "light" ? "shadow-light" : "shadow-dark"}
-        ${isRunning && "outline outline-4 outline-blue-400"}`,
+        ${
+          isRunning &&
+          `outline outline-4 ${
+            variant === "light" ? "outline-blue-400" : "outline-blue-500"
+          }`
+        }`,
         className
       )}
     >
