@@ -65,8 +65,12 @@ const Table: React.FC<TableProps> = ({
       dark: `text-nuances-300`,
     },
     row: {
-      light: `text-nuances-black`,
-      dark: `text-nuances-50`,
+      light: `text-nuances-black
+        hover:bg-nuances-white
+        hover:shadow-light`,
+      dark: `text-nuances-50
+        hover:bg-nuances-400
+        hover:shadow-dark`,
     },
   };
 
@@ -74,7 +78,7 @@ const Table: React.FC<TableProps> = ({
     <table className={twMerge(`w-full border-collapse`, className)}>
       <thead>
         {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id}>
+          <tr key={headerGroup.id} className={`${styles.header[variant]}`}>
             {headerGroup.headers.map((header) => (
               <th
                 key={header.id}
@@ -82,8 +86,7 @@ const Table: React.FC<TableProps> = ({
                   text-base
                   font-normal
                   px-6
-                  pb-4
-                  ${styles.header[variant]}`}
+                  pb-4`}
               >
                 {header.isPlaceholder
                   ? null
@@ -98,7 +101,7 @@ const Table: React.FC<TableProps> = ({
       </thead>
       <tbody>
         {table.getRowModel().rows.map((row) => (
-          <tr key={row.id}>
+          <tr key={row.id} className={`${styles.row[variant]}`}>
             {row.getVisibleCells().map((cell) => (
               <td
                 key={cell.id}
@@ -106,8 +109,7 @@ const Table: React.FC<TableProps> = ({
                   text-base
                   font-semibold
                   px-6
-                  py-4
-                  ${styles.row[variant]}`}
+                  py-4`}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
