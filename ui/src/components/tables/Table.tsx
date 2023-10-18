@@ -30,7 +30,7 @@ const columns = [
   }),
   columnHelper.accessor("state", {
     header: "State",
-    cell: (status) => getTag(status.getValue()),
+    cell: (state) => getTag(state.getValue()),
   }),
   columnHelper.accessor("repository", {
     header: "Repository",
@@ -46,11 +46,11 @@ const columns = [
   }),
 ];
 
-const getTag = (status: LayerState) => {
+const getTag = (state: LayerState) => {
   return (
     <div className="relative flex items-center">
-      <Tag variant={status} />
-      {status === "error" && (
+      <Tag variant={state} />
+      {state === "error" && (
         <Chili
           className="absolute translate-x-16 rotate-[-21deg]"
           height={24}
