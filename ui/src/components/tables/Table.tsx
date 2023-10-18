@@ -19,53 +19,83 @@ export interface TableProps {
   data: Layer[];
 }
 
-const columnHelper = createColumnHelper<Layer>();
-
-const columns = [
-  columnHelper.accessor("namespace", {
-    header: "Namespace",
-  }),
-  columnHelper.accessor("name", {
-    header: "Name",
-  }),
-  columnHelper.accessor("state", {
-    header: "State",
-    cell: (state) => getTag(state.getValue()),
-  }),
-  columnHelper.accessor("repository", {
-    header: "Repository",
-  }),
-  columnHelper.accessor("branch", {
-    header: "Branch",
-  }),
-  columnHelper.accessor("path", {
-    header: "Path",
-  }),
-  columnHelper.accessor("lastResult", {
-    header: "Last result",
-  }),
-];
-
-const getTag = (state: LayerState) => {
-  return (
-    <div className="relative flex items-center">
-      <Tag variant={state} />
-      {state === "error" && (
-        <Chili
-          className="absolute translate-x-16 rotate-[-21deg]"
-          height={24}
-          width={24}
-        />
-      )}
-    </div>
-  );
-};
-
 const Table: React.FC<TableProps> = ({
   className,
   variant = "light",
   data,
 }) => {
+  const columnHelper = createColumnHelper<Layer>();
+
+  const columns = [
+    columnHelper.accessor("namespace", {
+      header: "Namespace",
+    }),
+    columnHelper.accessor("name", {
+      header: "Name",
+    }),
+    columnHelper.accessor("state", {
+      header: "State",
+      cell: (state) => getTag(state.getValue()),
+    }),
+    columnHelper.accessor("repository", {
+      header: "Repository",
+    }),
+    columnHelper.accessor("branch", {
+      header: "Branch",
+    }),
+    columnHelper.accessor("path", {
+      header: "Path",
+    }),
+    columnHelper.accessor("lastResult", {
+      header: "Last result",
+      cell: (result) => (
+        <div className="relative flex items-center">
+          <span>{result.getValue()}</span>
+          {result.row.original.isRunning && (
+            <div
+              className={`absolute
+              -right-6
+              flex
+              items-center
+              justify-end
+              h-[60px]
+              min-w-fit
+              w-full
+              rounded-2xl
+              pr-4
+              pointer-events-none
+              ${
+                variant === "light"
+                  ? "bg-[linear-gradient(270deg,_#FFF_56.84%,_rgba(255,_255,_255,_0.00)_100%)]"
+                  : "bg-[linear-gradient(270deg,_#000_56.84%,_rgba(0,_0,_0,_0.00)_100%)]"
+              }`}
+            >
+              <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
+                <span className="text-sm font-semibold">Running</span>
+                <SyncIcon height={16} width={16} />
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+    }),
+  ];
+
+  const getTag = (state: LayerState) => {
+    return (
+      <div className="relative flex items-center">
+        <Tag variant={state} />
+        {state === "error" && (
+          <Chili
+            className="absolute translate-x-16 rotate-[-21deg]"
+            height={24}
+            width={24}
+          />
+        )}
+      </div>
+    );
+  };
+
   const table = useReactTable({
     data,
     columns,
