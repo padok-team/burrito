@@ -1,9 +1,11 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
-import Tag, { TagProps } from "@/components/tags/Tag";
+import Tag from "@/components/tags/Tag";
 import SyncIcon from "@/assets/icons/SyncIcon";
 import Chili from "@/assets/illustrations/Chili";
+
+import { LayerState } from "@/types/types";
 
 export interface CardProps {
   className?: string;
@@ -11,7 +13,7 @@ export interface CardProps {
   title: string;
   isRunning?: boolean;
   namespace: string;
-  state: TagProps["variant"];
+  state: LayerState;
   repository: string;
   branch: string;
   path: string;

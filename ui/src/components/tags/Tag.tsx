@@ -1,7 +1,9 @@
 import React from "react";
 
+import { LayerState } from "@/types/types";
+
 export interface TagProps {
-  variant: "success" | "warning" | "error" | "disabled";
+  variant: LayerState;
 }
 
 const Tag: React.FC<TagProps> = ({ variant }) => {
