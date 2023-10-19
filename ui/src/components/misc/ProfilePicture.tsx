@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { twMerge } from "tailwind-merge";
+
+import ThemeToggle from "@/components/misc/ThemeToggle";
 
 import Sombrero from "@/assets/illustrations/Sombrero";
 
@@ -12,6 +14,23 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
   className,
   variant = "light",
 }) => {
+  const [open, setOpen] = useState(false);
+  const pictureRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (pictureRef.current) {
+      if (event.target === pictureRef.current) {
+        setOpen(!open);
+      }
+    }
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setOpen(false);
+    }
+  };
+
   const styles = {
     light: `bg-primary-100
       outline-primary-500
@@ -22,30 +41,52 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
   };
 
   return (
-    <div className={twMerge(`relative h-10 w-10`, className)}>
+    <div
+      className={twMerge("relative flex items-center", className)}
+      tabIndex={0}
+      onBlur={handleBlur}
+    >
       <Sombrero
-        className="absolute -rotate-[15deg] -left-[5px] -top-[23px]"
+        className={`
+          absolute
+          z-10
+          -rotate-[15deg]
+          -left-[5px]
+          -top-[23px]
+          pointer-events-none
+        `}
         height={40}
         width={40}
       />
       {/* <img src={ProfilePicture} className="rounded-full" /> // TODO: Add profile picture */}
       <div
-        className={`flex
+        className={`
+          flex
           justify-center
           items-center
-          h-full
-          w-full
+          h-10
+          w-10
           outline
           outline-1
           rounded-full
+          cursor-pointer
           text-base
           font-semibold
           tracking-[2px]
           pl-[2px]
-          ${styles[variant]}`}
+          ${styles[variant]}
+        `}
+        onClick={handleClick}
+        ref={pictureRef}
       >
         BR
       </div>
+      {open && (
+        <ThemeToggle
+          className="absolute left-12 w-max z-10"
+          variant={variant}
+        />
+      )}
     </div>
   );
 };
