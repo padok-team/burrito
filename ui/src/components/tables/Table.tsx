@@ -104,15 +104,19 @@ const Table: React.FC<TableProps> = ({
 
   const styles = {
     header: {
-      light: `text-primary-600`,
-      dark: `text-nuances-300`,
+      light: `text-primary-600
+        border-primary-500`,
+      dark: `text-nuances-300
+        border-nuances-300`,
     },
     row: {
       base: {
         light: `text-nuances-black
+          border-primary-500
           hover:bg-nuances-white
           hover:shadow-light`, // BUG: not working on Safari
         dark: `text-nuances-50
+          border-nuances-300
           hover:bg-nuances-400
           hover:shadow-dark`, // BUG: not working on Safari
       },
@@ -127,7 +131,10 @@ const Table: React.FC<TableProps> = ({
     <table className={twMerge(`w-full border-collapse`, className)}>
       <thead>
         {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id} className={`${styles.header[variant]}`}>
+          <tr
+            key={headerGroup.id}
+            className={`border-b ${styles.header[variant]}`}
+          >
             {headerGroup.headers.map((header) => (
               <th
                 key={header.id}
@@ -153,7 +160,8 @@ const Table: React.FC<TableProps> = ({
           <tr
             key={row.id}
             className={twMerge(
-              `${styles.row.base[variant]}`,
+              `border-b
+              ${styles.row.base[variant]}`,
               row.original.isRunning &&
                 `rounded-2xl
                 outline
@@ -165,15 +173,15 @@ const Table: React.FC<TableProps> = ({
             {row.getVisibleCells().map((cell) => (
               <td
                 key={cell.id}
-                className={`text-left
+                className={twMerge(
+                  `text-left
                   text-base
                   font-semibold
                   px-6
-                  py-4
-                  ${
-                    cell.row.original.isRunning &&
+                  py-4`,
+                  cell.row.original.isRunning &&
                     "first:rounded-l-2xl last:rounded-r-2xl"
-                  }`}
+                )}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
