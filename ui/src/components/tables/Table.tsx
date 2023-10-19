@@ -58,8 +58,8 @@ const Table: React.FC<TableProps> = ({
               flex
               items-center
               justify-end
-              h-[52px]
-              min-w-fit
+              h-[calc(100%_+_24px)]
+              min-w-full
               w-full
               rounded-xl
               pr-4
