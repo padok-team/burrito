@@ -54,14 +54,14 @@ const Table: React.FC<TableProps> = ({
           {result.row.original.isRunning && (
             <div
               className={`absolute
-              -right-6
+              -right-5
               flex
               items-center
               justify-end
-              h-[60px]
+              h-[52px]
               min-w-fit
               w-full
-              rounded-2xl
+              rounded-xl
               pr-4
               pointer-events-none
               ${
@@ -156,7 +156,11 @@ const Table: React.FC<TableProps> = ({
               `relative
               ${styles.row.base[variant]}`,
               row.original.isRunning &&
-                `rounded-2xl outline outline-4 ${styles.row.running[variant]}`
+                `rounded-2xl
+                outline
+                outline-4
+                -outline-offset-4
+                ${styles.row.running[variant]}`
             )}
           >
             {row.getVisibleCells().map((cell) => (
@@ -166,7 +170,11 @@ const Table: React.FC<TableProps> = ({
                   text-base
                   font-semibold
                   px-6
-                  py-4`}
+                  py-4
+                  ${
+                    cell.row.original.isRunning &&
+                    "first:rounded-l-2xl last:rounded-r-2xl"
+                  }`}
               >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
