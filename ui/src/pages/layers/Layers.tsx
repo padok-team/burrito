@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import NavigationBar from "@/components/navigation/NavigationBar";
 import Button from "@/components/buttons/Button";
@@ -7,6 +7,7 @@ import Dropdown from "@/components/inputs/Dropdown";
 import Toggle from "@/components/buttons/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
+import Table from "@/components/tables/Table";
 
 import StateDropdown from "@/pages/layers/components/StateDropdown";
 import RepositoryDropdown from "@/pages/layers/components/RepositoryDropdown";
@@ -18,6 +19,8 @@ import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
 
 const Layers: React.FC = () => {
+  const [view, setView] = useState<"grid" | "table">("grid");
+
   const testData: Layer[] = [
     {
       namespace: "burrito-examples",
@@ -94,16 +97,26 @@ const Layers: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-row items-center gap-2">
-              <NavigationButton icon={<AppsIcon />} />
-              <NavigationButton icon={<BarsIcon />} variant="light" />
+              <NavigationButton
+                icon={<AppsIcon />}
+                onClick={() => setView("grid")}
+              />
+              <NavigationButton
+                icon={<BarsIcon />}
+                variant="light"
+                onClick={() => setView("table")}
+              />
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-          {testData.map((layer, index) => (
-            <Card key={index} layer={layer} />
-          ))}
-        </div>
+        {view === "grid" && (
+          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+            {testData.map((layer, index) => (
+              <Card key={index} layer={layer} />
+            ))}
+          </div>
+        )}
+        {view === "table" && <Table data={testData} />}
       </div>
     </div>
   );
