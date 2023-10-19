@@ -111,10 +111,10 @@ const Table: React.FC<TableProps> = ({
       base: {
         light: `text-nuances-black
           hover:bg-nuances-white
-          hover:shadow-light`,
+          hover:shadow-light`, // BUG: not working on Safari
         dark: `text-nuances-50
           hover:bg-nuances-400
-          hover:shadow-dark`,
+          hover:shadow-dark`, // BUG: not working on Safari
       },
       running: {
         light: `outline-blue-400`,
@@ -153,8 +153,7 @@ const Table: React.FC<TableProps> = ({
           <tr
             key={row.id}
             className={twMerge(
-              `relative
-              ${styles.row.base[variant]}`,
+              `${styles.row.base[variant]}`,
               row.original.isRunning &&
                 `rounded-2xl
                 outline
