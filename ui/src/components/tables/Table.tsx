@@ -54,21 +54,21 @@ const Table: React.FC<TableProps> = ({
           {result.row.original.isRunning && (
             <div
               className={`absolute
-              -right-5
-              flex
-              items-center
-              justify-end
-              h-[calc(100%_+_24px)]
-              min-w-full
-              w-full
-              rounded-xl
-              pr-4
-              pointer-events-none
-              ${
-                variant === "light"
-                  ? "bg-[linear-gradient(270deg,_#FFF_56.84%,_rgba(255,_255,_255,_0.00)_100%)]"
-                  : "bg-[linear-gradient(270deg,_#000_56.84%,_rgba(0,_0,_0,_0.00)_100%)]"
-              }`}
+                -right-5
+                flex
+                items-center
+                justify-end
+                h-[calc(100%_+_24px)]
+                min-w-full
+                w-full
+                rounded-xl
+                pr-4
+                pointer-events-none
+                ${
+                  variant === "light"
+                    ? "bg-[linear-gradient(270deg,_#FFF_56.84%,_rgba(255,_255,_255,_0.00)_100%)]"
+                    : "bg-[linear-gradient(270deg,_#000_56.84%,_rgba(0,_0,_0,_0.00)_100%)]"
+                }`}
             >
               <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
                 <span className="text-sm font-semibold">Running</span>
