@@ -26,7 +26,7 @@ const Layers: React.FC = () => {
       namespace: "burrito-examples",
       name: "fail-terragrunt",
       state: "success",
-      repository: "burrito",
+      repository: "burrito-1",
       branch: "failling-terraform",
       path: "terragrunt/random-pets/test",
       lastResult: "error getting last results",
@@ -37,7 +37,7 @@ const Layers: React.FC = () => {
       namespace: "burrito-examples",
       name: "fail-terragrunt",
       state: "warning",
-      repository: "burrito",
+      repository: "burrito-2",
       branch: "failling-terraform",
       path: "terragrunt/random-pets/test",
       lastResult: "error getting last results",
@@ -48,7 +48,7 @@ const Layers: React.FC = () => {
       namespace: "burrito-examples",
       name: "fail-terragrunt",
       state: "error",
-      repository: "burrito",
+      repository: "burrito-3",
       branch: "failling-terraform",
       path: "terragrunt/random-pets/test",
       lastResult: "error getting last results",
@@ -60,6 +60,7 @@ const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const [view, setView] = useState<"grid" | "table">("grid");
   const [stateFilter, setStateFilter] = useState<string[]>([]);
+  const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
   const [displayOnlyPRFilter, setDisplayOnlyPRFilter] =
     useState<boolean>(false);
   const [data] = useState<Layer[]>(testData); // TODO: replace with data from API
@@ -71,9 +72,14 @@ const Layers: React.FC = () => {
         .filter((layer) =>
           stateFilter.length === 0 ? layer : stateFilter.includes(layer.state)
         )
+        .filter((layer) =>
+          repositoryFilter.length === 0
+            ? layer
+            : repositoryFilter.includes(layer.repository)
+        )
         .filter((layer) => !displayOnlyPRFilter || layer.isPR)
     );
-  }, [data, stateFilter, displayOnlyPRFilter]);
+  }, [data, stateFilter, repositoryFilter, displayOnlyPRFilter]);
 
   return (
     <div
