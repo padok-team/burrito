@@ -3,7 +3,8 @@ import { twMerge } from "tailwind-merge";
 
 import Tag from "@/components/tags/Tag";
 import SyncIcon from "@/assets/icons/SyncIcon";
-import Chili from "@/assets/illustrations/Chili";
+import ChiliLight from "@/assets/illustrations/ChiliLight";
+import ChiliDark from "@/assets/illustrations/ChiliDark";
 
 import { Layer } from "@/types/types";
 
@@ -31,13 +32,20 @@ const Card: React.FC<CardProps> = ({
     return (
       <div className="flex items-center">
         <Tag variant={state} />
-        {state === "error" && (
-          <Chili
-            className="absolute translate-x-16 rotate-[-21deg]"
-            height={40}
-            width={40}
-          />
-        )}
+        {state === "error" &&
+          (variant === "light" ? (
+            <ChiliLight
+              className="absolute translate-x-16 rotate-[-21deg]"
+              height={40}
+              width={40}
+            />
+          ) : (
+            <ChiliDark
+              className="absolute translate-x-16 rotate-[-21deg]"
+              height={40}
+              width={40}
+            />
+          ))}
       </div>
     );
   };

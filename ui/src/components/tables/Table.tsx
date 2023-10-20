@@ -8,7 +8,8 @@ import {
 } from "@tanstack/react-table";
 
 import Tag from "@/components/tags/Tag";
-import Chili from "@/assets/illustrations/Chili";
+import ChiliLight from "@/assets/illustrations/ChiliLight";
+import ChiliDark from "@/assets/illustrations/ChiliDark";
 import SyncIcon from "@/assets/icons/SyncIcon";
 
 import { Layer, LayerState } from "@/types/types";
@@ -87,13 +88,20 @@ const Table: React.FC<TableProps> = ({
     return (
       <div className="relative flex items-center">
         <Tag variant={state} />
-        {state === "error" && (
-          <Chili
-            className="absolute translate-x-16 rotate-[-21deg]"
-            height={24}
-            width={24}
-          />
-        )}
+        {state === "error" &&
+          (variant === "light" ? (
+            <ChiliLight
+              className="absolute translate-x-16 rotate-[-21deg]"
+              height={24}
+              width={24}
+            />
+          ) : (
+            <ChiliDark
+              className="absolute translate-x-16 rotate-[-21deg]"
+              height={24}
+              width={24}
+            />
+          ))}
       </div>
     );
   };

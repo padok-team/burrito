@@ -1,6 +1,6 @@
 import { SVGProps } from "react";
 
-const Chili = (props: SVGProps<SVGSVGElement>) => (
+const ChiliLight = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={424}
@@ -22,7 +22,7 @@ const Chili = (props: SVGProps<SVGSVGElement>) => (
       d="M277.392 167.459C238.626 206.53 144.707 281.21 34.109 226.461c-.684-.338-1.512.223-1.468.985 8.704 149.463 336.139 79.472 333.813-45.349-.696-37.353-23.27-47.735-43.784-45.901-18.891 1.69-31.919 17.799-45.278 31.263Z"
     />
     <mask
-      id="a-chili"
+      id="a-chili-light"
       width={335}
       height={177}
       x={32}
@@ -37,7 +37,7 @@ const Chili = (props: SVGProps<SVGSVGElement>) => (
         d="M277.392 167.459C238.626 206.53 144.707 281.21 34.109 226.461c-.684-.338-1.512.223-1.468.985 8.704 149.463 336.139 79.472 333.813-45.349-.696-37.353-23.27-47.735-43.784-45.901-18.891 1.69-31.919 17.799-45.278 31.263Z"
       />
     </mask>
-    <g mask="url(#a-chili)">
+    <g mask="url(#a-chili-light)">
       <path
         fill="#6BEF70"
         d="m262.162 160.256 107.409 78.61 27.241-83.28-84.059-44.365-50.591 49.035Z"
@@ -58,4 +58,4 @@ const Chili = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default Chili;
+export default ChiliLight;
