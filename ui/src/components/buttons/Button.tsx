@@ -30,7 +30,10 @@ const Button: React.FC<ButtonProps> = ({
         text-nuances-white
         hover:bg-nuances-400
         active:bg-nuances-400
-        focus:outline-none
+        focus:outline
+        focus:outline-1
+        focus:outline-offset-[3px]
+        focus:outline-nuances-black
         fill-nuances-white`,
 
       secondary: `bg-nuances-white
@@ -39,7 +42,10 @@ const Button: React.FC<ButtonProps> = ({
         border-nuances-black
         hover:bg-nuances-50
         active:bg-nuances-50
-        focus:outline-none
+        focus:outline
+        focus:outline-1
+        focus:outline-offset-[3px]
+        focus:outline-nuances-white
         fill-nuances-black`,
 
       tertiary: `bg-nuances-white
