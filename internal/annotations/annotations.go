@@ -24,8 +24,6 @@ const (
 	LastCommentedCommit  string = "pullrequest.terraform.padok.cloud/last-commented-commit"
 
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
-	PlanRunRetention        string = "config.terraform.padok.cloud/plan-run-retention"
-	ApplyRunRetention       string = "config.terraform.padok.cloud/apply-run-retention"
 )
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {

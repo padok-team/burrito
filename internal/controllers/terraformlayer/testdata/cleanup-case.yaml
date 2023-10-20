@@ -12,9 +12,6 @@ kind: TerraformLayer
 metadata:
   name: cleanup-case-1
   namespace: default
-  annotations:
-    config.terraform.padok.cloud/plan-run-retention: "1h"
-    config.terraform.padok.cloud/apply-run-retention: "24h"
 spec:
   branch: main
   path: cleanup-case-1/

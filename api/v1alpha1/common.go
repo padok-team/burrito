@@ -5,6 +5,11 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
+const (
+	PlanRunRetention  int = 6
+	ApplyRunRetention int = 6
+)
+
 type OverrideRunnerSpec struct {
 	ImagePullSecrets   []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	Image              string                        `json:"image,omitempty"`
@@ -22,6 +27,11 @@ type OverrideRunnerSpec struct {
 type MetadataOverride struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
+}
+
+type RunHistoryPolicy struct {
+	KeepLastPlanRuns  *int `json:"plan,omitempty"`
+	KeepLastApplyRuns *int `json:"apply,omitempty"`
 }
 
 type RemediationStrategy struct {
@@ -89,6 +99,13 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 	}
 }
 
+func GetRunHistoryPolicy(repository *TerraformRepository, layer *TerraformLayer) RunHistoryPolicy {
+	return RunHistoryPolicy{
+		KeepLastPlanRuns:  chooseInt(repository.Spec.RunHistoryPolicy.KeepLastPlanRuns, layer.Spec.RunHistoryPolicy.KeepLastPlanRuns, PlanRunRetention),
+		KeepLastApplyRuns: chooseInt(repository.Spec.RunHistoryPolicy.KeepLastApplyRuns, layer.Spec.RunHistoryPolicy.KeepLastApplyRuns, ApplyRunRetention),
+	}
+}
+
 func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObjectReference {
 	result := []corev1.LocalObjectReference{}
 	temp := map[string]string{}
@@ -111,6 +128,16 @@ func chooseString(a, b string) string {
 		return b
 	}
 	return a
+}
+
+func chooseInt(a, b *int, d int) *int {
+	if b != nil {
+		return b
+	}
+	if a != nil {
+		return a
+	}
+	return &d
 }
 
 func mergeEnvFrom(a, b []corev1.EnvFromSource) []corev1.EnvFromSource {

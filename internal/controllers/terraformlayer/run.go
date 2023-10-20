@@ -3,11 +3,11 @@ package terraformlayer
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -88,37 +88,6 @@ type runRetention struct {
 	apply time.Duration
 }
 
-func getRetentions(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (runRetention, error) {
-	var planRet time.Duration
-	var applyRet time.Duration
-	var err error
-
-	if ann, ok := layer.Annotations[annotations.PlanRunRetention]; ok {
-		planRet, err = time.ParseDuration(ann)
-	} else if ann, ok := repository.Annotations[annotations.PlanRunRetention]; ok {
-		planRet, err = time.ParseDuration(ann)
-	} else {
-		planRet = 0 * time.Second
-	}
-
-	if ann, ok := layer.Annotations[annotations.ApplyRunRetention]; ok {
-		applyRet, err = time.ParseDuration(ann)
-	} else if ann, ok := repository.Annotations[annotations.ApplyRunRetention]; ok {
-		applyRet, err = time.ParseDuration(ann)
-	} else {
-		applyRet = 0 * time.Second
-	}
-
-	if err != nil {
-		return runRetention{}, err
-	}
-
-	return runRetention{
-		plan:  planRet,
-		apply: applyRet,
-	}, nil
-}
-
 func deleteAll(ctx context.Context, c client.Client, objs []*configv1alpha1.TerraformRun) error {
 	var wg sync.WaitGroup
 	errorCh := make(chan error, len(objs))
@@ -154,43 +123,48 @@ func deleteAll(ctx context.Context, c client.Client, objs []*configv1alpha1.Terr
 }
 
 func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {
-	retentions, err := getRetentions(layer, repository)
-	if err != nil {
-		log.Errorf("could not get run retentions for layer %s: %s", layer.Name, err)
-		return err
-	}
-	if retentions.plan == 0 && retentions.apply == 0 {
-		// nothing to do
-		log.Infof("no run retention set for layer %s, skipping cleanup", layer.Name)
-		return nil
-	}
+	historyPolicy := configv1alpha1.GetRunHistoryPolicy(repository, layer)
 
 	runs, err := r.getAllFinishedRuns(ctx, layer, repository)
 	if err != nil {
-		log.Errorf("could not get runs for layer %s: %s", layer.Name, err)
 		return err
 	}
-
+	sortedRuns := sortAndSplitRunsByAction(runs)
 	toDelete := []*configv1alpha1.TerraformRun{}
-	for _, run := range runs {
-		if run.Spec.Action == string(PlanAction) &&
-			retentions.plan != 0 &&
-			r.Clock.Now().Sub(run.CreationTimestamp.Time) > retentions.plan {
-			toDelete = append(toDelete, run)
-			continue
-		}
-		if run.Spec.Action == string(ApplyAction) &&
-			retentions.apply != 0 &&
-			r.Clock.Now().Sub(run.CreationTimestamp.Time) > retentions.apply {
-			toDelete = append(toDelete, run)
-			continue
-		}
+	if len(sortedRuns[string(PlanAction)]) <= *historyPolicy.KeepLastPlanRuns {
+		log.Infof("no plan runs to delete for layer %s", layer.Name)
+	} else {
+		toDelete = append(toDelete, sortedRuns[string(PlanAction)][:len(sortedRuns[string(PlanAction)])-*historyPolicy.KeepLastPlanRuns]...)
 	}
-
+	if len(sortedRuns[string(ApplyAction)]) <= *historyPolicy.KeepLastApplyRuns {
+		log.Infof("no apply runs to delete for layer %s", layer.Name)
+	} else {
+		toDelete = append(toDelete, sortedRuns[string(ApplyAction)][:len(sortedRuns[string(ApplyAction)])-*historyPolicy.KeepLastApplyRuns]...)
+	}
+	if len(toDelete) == 0 {
+		log.Infof("no runs to delete for layer %s", layer.Name)
+		return nil
+	}
 	err = deleteAll(ctx, r.Client, toDelete)
 	if err != nil {
 		return err
 	}
-
+	log.Infof("deleted %d runs for layer %s", len(toDelete), layer.Name)
 	return nil
+}
+
+func sortAndSplitRunsByAction(runs []*configv1alpha1.TerraformRun) map[string][]*configv1alpha1.TerraformRun {
+	splittedRuns := map[string][]*configv1alpha1.TerraformRun{}
+	for _, run := range runs {
+		if _, ok := splittedRuns[run.Spec.Action]; !ok {
+			splittedRuns[run.Spec.Action] = []*configv1alpha1.TerraformRun{}
+		}
+		splittedRuns[run.Spec.Action] = append(splittedRuns[run.Spec.Action], run)
+	}
+	for action, _ := range splittedRuns {
+		sort.Slice(splittedRuns[action], func(i, j int) bool {
+			return splittedRuns[action][i].CreationTimestamp.Before(&splittedRuns[action][j].CreationTimestamp)
+		})
+	}
+	return splittedRuns
 }
