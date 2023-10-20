@@ -75,9 +75,7 @@ const Card: React.FC<CardProps> = ({
             text-lg
             font-black
             leading-6
-            text-ellipsis
-            whitespace-nowrap
-            overflow-hidden
+            truncate
             ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}
           `}
         >
@@ -104,9 +102,7 @@ const Card: React.FC<CardProps> = ({
               className={`
                 text-base
                 font-normal
-                text-ellipsis
-                whitespace-nowrap
-                overflow-hidden
+                truncate
                 ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
               `}
             >
@@ -116,9 +112,7 @@ const Card: React.FC<CardProps> = ({
               className={`
                 text-base
                 font-semibold
-                text-ellipsis
-                whitespace-nowrap
-                overflow-hidden
+                truncate
                 ${
                   variant === "light" ? "text-nuances-black" : "text-nuances-50"
                 }
