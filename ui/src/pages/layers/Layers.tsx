@@ -177,7 +177,11 @@ const Layers: React.FC = () => {
                   label="Repository"
                   filled={repositoryFilter.length !== 0}
                 >
-                  <RepositoryDropdown variant={theme} />
+                  <RepositoryDropdown
+                    variant={theme}
+                    filter={repositoryFilter}
+                    onChange={setRepositoryFilter}
+                  />
                 </Dropdown>
               </div>
               <div className="flex flex-row items-center gap-[7px]">
