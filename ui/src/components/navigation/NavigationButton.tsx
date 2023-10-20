@@ -3,24 +3,38 @@ import React from "react";
 export interface NavigationButtonProps {
   variant?: "light" | "dark";
   icon: React.ReactNode;
+  selected?: boolean;
   onClick?: () => void;
 }
 
 const NavigationButton: React.FC<NavigationButtonProps> = ({
   variant = "dark",
   icon,
+  selected,
   onClick,
 }) => {
   const styles = {
-    light: `bg-primary-400
-      hover:bg-primary-500
-      focus:outline-none
-      fill-primary-600`,
+    base: {
+      light: `bg-primary-400
+        fill-primary-600
+        hover:bg-primary-500
+        focus:outline-primary-600`,
 
-    dark: `bg-nuances-black
-      hover:bg-nuances-400
-      focus:outline-none
-      fill-nuances-white`,
+      dark: `bg-nuances-400
+        fill-nuances-300
+        hover:bg-nuances-black
+        focus:outline-nuances-300`,
+    },
+
+    selected: {
+      light: `bg-nuances-black
+        fill-nuances-white
+        focus:outline-nuances-black`,
+
+      dark: `bg-nuances-50
+        fill-nuances-black
+        focus:outline-nuances-50`,
+    },
   };
 
   return (
@@ -33,7 +47,10 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
         h-8
         flex-shrink
         rounded-lg
-        ${styles[variant]}
+        focus:outline
+        focus:outline-1
+        focus:outline-offset-2
+        ${selected ? styles.selected[variant] : styles.base[variant]}
       `}
       tabIndex={0}
       onClick={onClick}

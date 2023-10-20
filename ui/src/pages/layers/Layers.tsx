@@ -177,11 +177,14 @@ const Layers: React.FC = () => {
             <div className="flex flex-row items-center gap-2">
               <NavigationButton
                 icon={<AppsIcon />}
+                variant={theme}
+                selected={view === "grid"}
                 onClick={() => setView("grid")}
               />
               <NavigationButton
                 icon={<BarsIcon />}
-                variant="light"
+                variant={theme}
+                selected={view === "table"}
                 onClick={() => setView("table")}
               />
             </div>
