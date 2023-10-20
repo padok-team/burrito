@@ -22,7 +22,8 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
     "burrito-4",
   ];
 
-  const [repositories, setRepositories] = useState<string[]>(testData);
+  const [repositories] = useState<string[]>(testData);
+  // const [repositories, setRepositories] = useState<string[]>(testData);
   const [filteredRepositories, setFilteredRepositories] =
     useState<string[]>(repositories);
   const [search, setSearch] = useState<string>("");
