@@ -30,10 +30,10 @@ const Button: React.FC<ButtonProps> = ({
         text-nuances-white
         hover:bg-nuances-400
         active:bg-nuances-400
-        focus:outline
-        focus:outline-1
-        focus:outline-offset-[3px]
-        focus:outline-nuances-black
+        focus-visible:outline
+        focus-visible:outline-1
+        focus-visible:outline-offset-[3px]
+        focus-visible:outline-nuances-black
         fill-nuances-white`,
 
       secondary: `bg-nuances-white
@@ -42,10 +42,10 @@ const Button: React.FC<ButtonProps> = ({
         border-nuances-black
         hover:bg-nuances-50
         active:bg-nuances-50
-        focus:outline
-        focus:outline-1
-        focus:outline-offset-[3px]
-        focus:outline-nuances-white
+        focus-visible:outline
+        focus-visible:outline-1
+        focus-visible:outline-offset-[3px]
+        focus-visible:outline-nuances-white
         fill-nuances-black`,
 
       tertiary: `bg-nuances-white
@@ -55,7 +55,7 @@ const Button: React.FC<ButtonProps> = ({
         hover:fill-primary-400
         active:text-primary-400
         active:fill-primary-400
-        focus:outline-none
+        focus-visible:outline-none
         fill-primary-600`,
     },
 

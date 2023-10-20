@@ -18,22 +18,22 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
       light: `bg-primary-400
         fill-primary-600
         hover:bg-primary-500
-        focus:outline-primary-600`,
+        focus-visible:outline-primary-600`,
 
       dark: `bg-nuances-400
         fill-nuances-300
         hover:bg-nuances-black
-        focus:outline-nuances-300`,
+        focus-visible:outline-nuances-300`,
     },
 
     selected: {
       light: `bg-nuances-black
         fill-nuances-white
-        focus:outline-nuances-black`,
+        focus-visible:outline-nuances-black`,
 
       dark: `bg-nuances-50
         fill-nuances-black
-        focus:outline-nuances-50`,
+        focus-visible:outline-nuances-50`,
     },
   };
 
@@ -47,9 +47,9 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
         h-8
         flex-shrink
         rounded-lg
-        focus:outline
-        focus:outline-1
-        focus:outline-offset-2
+        focus-visible:outline
+        focus-visible:outline-1
+        focus-visible:outline-offset-2
         ${selected ? styles.selected[variant] : styles.base[variant]}
       `}
       tabIndex={0}
