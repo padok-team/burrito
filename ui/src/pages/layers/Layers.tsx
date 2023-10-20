@@ -59,13 +59,21 @@ const Layers: React.FC = () => {
 
   const { theme } = useContext(ThemeContext);
   const [view, setView] = useState<"grid" | "table">("grid");
-  const [displayOnlyPR, setDisplayOnlyPR] = useState<boolean>(false);
+  const [stateFilter, setStateFilter] = useState<string[]>([]);
+  const [displayOnlyPRFilter, setDisplayOnlyPRFilter] =
+    useState<boolean>(false);
   const [data] = useState<Layer[]>(testData); // TODO: replace with data from API
   const [filteredData, setFilteredData] = useState<Layer[]>([]);
 
   useEffect(() => {
-    setFilteredData(data.filter((layer) => !displayOnlyPR || layer.isPR));
-  }, [data, displayOnlyPR]);
+    setFilteredData(
+      data
+        .filter((layer) =>
+          stateFilter.length === 0 ? layer : stateFilter.includes(layer.state)
+        )
+        .filter((layer) => !displayOnlyPRFilter || layer.isPR)
+    );
+  }, [data, stateFilter, displayOnlyPRFilter]);
 
   return (
     <div
@@ -169,8 +177,8 @@ const Layers: React.FC = () => {
                   Show only open PR
                 </span>
                 <Toggle
-                  checked={displayOnlyPR}
-                  onChange={() => setDisplayOnlyPR(!displayOnlyPR)}
+                  checked={displayOnlyPRFilter}
+                  onChange={() => setDisplayOnlyPRFilter(!displayOnlyPRFilter)}
                 />
               </div>
             </div>
