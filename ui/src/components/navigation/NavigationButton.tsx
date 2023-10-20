@@ -25,14 +25,16 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
 
   return (
     <button
-      className={`flex
+      className={`
+        flex
         justify-center
         items-center
         w-8
         h-8
         flex-shrink
         rounded-lg
-        ${styles[variant]}`}
+        ${styles[variant]}
+      `}
       tabIndex={0}
       onClick={onClick}
     >

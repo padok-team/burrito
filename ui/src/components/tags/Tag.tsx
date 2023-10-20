@@ -33,7 +33,8 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
 
   return (
     <div
-      className={`flex
+      className={`
+        flex
         px-3 py-1
         items-center
         gap-1
@@ -41,7 +42,8 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
         text-sm
         font-semibold
         leading-5
-        ${styles[variant]}`}
+        ${styles[variant]}
+      `}
     >
       {getContent()}
     </div>

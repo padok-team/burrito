@@ -53,7 +53,8 @@ const Table: React.FC<TableProps> = ({
           <span>{result.getValue()}</span>
           {result.row.original.isRunning && (
             <div
-              className={`absolute
+              className={`
+                absolute
                 -right-5
                 flex
                 items-center
@@ -68,7 +69,8 @@ const Table: React.FC<TableProps> = ({
                   variant === "light"
                     ? "bg-[linear-gradient(270deg,_#FFF_56.84%,_rgba(255,_255,_255,_0.00)_100%)]"
                     : "bg-[linear-gradient(270deg,_#000_56.84%,_rgba(0,_0,_0,_0.00)_100%)]"
-                }`}
+                }
+              `}
             >
               <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
                 <span className="text-sm font-semibold">Running</span>
@@ -138,11 +140,13 @@ const Table: React.FC<TableProps> = ({
             {headerGroup.headers.map((header) => (
               <th
                 key={header.id}
-                className={`text-left
+                className={`
+                  text-left
                   text-base
                   font-normal
                   px-6
-                  pb-4`}
+                  pb-4
+                `}
               >
                 {header.isPlaceholder
                   ? null

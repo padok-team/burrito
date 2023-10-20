@@ -113,12 +113,14 @@ const Dropdown: React.FC<DropdownProps> = ({
 
       {open && (
         <Box
-          className={`absolute
+          className={`
+            absolute
             left-0
             top-10
             items-center
             justify-center
-            cursor-auto`}
+            cursor-auto
+          `}
           variant={variant}
         >
           {children}

@@ -29,38 +29,40 @@ const Toggle: React.FC<ToggleProps> = ({
   return (
     <label className={twMerge(`relative rotate-180 cursor-pointer`, className)}>
       <AvocadoOn
-        className={`relative
+        className={`
+          relative
           top-0
           left-0
           transition-all
           ease-in-out
           duration-500
-          ${
-            checked ?? internalChecked ? "opacity-100" : "opacity-0 delay-150"
-          }`}
+          ${checked ?? internalChecked ? "opacity-100" : "opacity-0 delay-150"}
+        `}
         height={32}
         width={48}
       />
       <AvocadoOff
-        className={`absolute
+        className={`
+          absolute
           top-0
           left-0
           transition-all
           ease-in-out
           duration-500
-          ${
-            checked ?? internalChecked ? "opacity-0 delay-150" : "opacity-100"
-          }`}
+          ${checked ?? internalChecked ? "opacity-0 delay-150" : "opacity-100"}
+        `}
         height={32}
         width={48}
       />
       <AvocadoSeed
-        className={`absolute
+        className={`
+          absolute
           top-0
           left-0
           transition-all
           duration-500
-          ${checked ?? internalChecked ? "rotate-90" : "translate-x-[22px] "}`}
+          ${checked ?? internalChecked ? "rotate-90" : "translate-x-[22px] "}
+        `}
         height={32}
         width={32}
       />

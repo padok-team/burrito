@@ -84,24 +84,28 @@ const Checkbox: React.FC<CheckboxProps> = ({
         onChange={onChange}
       />
       <CheckIcon
-        className={`absolute
+        className={`
+          absolute
           left-0.5
           fill-nuances-white
           pointer-events-none
           hidden
           peer-checked:block
-          peer-checked:peer-hover:hidden`}
+          peer-checked:peer-hover:hidden
+        `}
         height={16}
         width={16}
       />
       <MinusIcon
-        className={`absolute
+        className={`
+          absolute
           left-0.5
           fill-nuances-white
           pointer-events-none
           hidden
           peer-checked:hidden
-          peer-checked:peer-hover:block`}
+          peer-checked:peer-hover:block
+        `}
         height={16}
         width={16}
       />

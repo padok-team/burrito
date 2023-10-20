@@ -63,19 +63,23 @@ const Card: React.FC<CardProps> = ({
       )}
     >
       <div
-        className={`flex
+        className={`
+          flex
           items-center
           justify-between
-          self-stretch`}
+          self-stretch
+        `}
       >
         <span
-          className={`text-lg
+          className={`
+            text-lg
             font-black
             leading-6
             text-ellipsis
             whitespace-nowrap
             overflow-hidden
-            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`}
+            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}
+          `}
         >
           {name}
         </span>
@@ -97,26 +101,28 @@ const Card: React.FC<CardProps> = ({
         ].map(([label, value], index) => (
           <React.Fragment key={index}>
             <span
-              className={`text-base
+              className={`
+                text-base
                 font-normal
                 text-ellipsis
                 whitespace-nowrap
                 overflow-hidden
-                ${
-                  variant === "light" ? "text-primary-600" : "text-nuances-300"
-                }`}
+                ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+              `}
             >
               {label}
             </span>
             <span
-              className={`text-base
+              className={`
+                text-base
                 font-semibold
                 text-ellipsis
                 whitespace-nowrap
                 overflow-hidden
                 ${
                   variant === "light" ? "text-nuances-black" : "text-nuances-50"
-                }`}
+                }
+              `}
             >
               {value}
             </span>

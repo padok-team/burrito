@@ -93,12 +93,14 @@ const Button: React.FC<ButtonProps> = ({
         </div>
         {isLoading && (
           <div
-            className={`absolute
+            className={`
+              absolute
               inset-0
               flex
               justify-center
               items-center
-              z-10`}
+              z-10
+            `}
           >
             <LoaderIcon className="animate-spin" />
           </div>
