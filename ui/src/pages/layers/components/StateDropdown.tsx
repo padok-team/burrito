@@ -32,12 +32,21 @@ const StateDropdown: React.FC<StateDropdownProps> = ({
       variant={variant}
       className="flex-col items-center justify-center gap-2"
     >
-      <span className="self-start mx-4 mt-2">State</span>
+      <span
+        className={`
+          self-start
+          mx-4
+          mt-2
+          ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+        `}
+      >
+        State
+      </span>
       <hr
         className={`
           h-[1px]
           w-full
-          ${variant === "light" ? "bg-primary-600" : "bg-nuances-300"}
+          ${variant === "light" ? "border-primary-600" : "border-nuances-300"}
         `}
       />
       <div className="flex flex-col self-start mx-4 mb-2 gap-2">

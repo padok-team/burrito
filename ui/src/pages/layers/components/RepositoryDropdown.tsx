@@ -53,12 +53,21 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
       variant={variant}
       className="flex-col items-center justify-center gap-2"
     >
-      <span className="self-start mx-4 mt-2">Repository</span>
+      <span
+        className={`
+          self-start
+          mx-4
+          mt-2
+          ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+        `}
+      >
+        Repository
+      </span>
       <hr
         className={`
           h-[1px]
           w-full
-          ${variant === "light" ? "bg-primary-600" : "bg-nuances-300"}
+          ${variant === "light" ? "border-primary-600" : "border-nuances-300"}
         `}
       />
       <Input
@@ -72,7 +81,7 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
         className={`
           h-[1px]
           w-full
-          ${variant === "light" ? "bg-primary-600" : "bg-nuances-300"}
+          ${variant === "light" ? "border-primary-600" : "border-nuances-300"}
         `}
       />
       <div
