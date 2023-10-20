@@ -24,7 +24,7 @@ const Layers: React.FC = () => {
   const testData: Layer[] = [
     {
       namespace: "burrito-examples",
-      name: "fail-terragrunt",
+      name: "terragrunt",
       state: "success",
       repository: "burrito-1",
       branch: "failling-terraform",
@@ -35,7 +35,7 @@ const Layers: React.FC = () => {
     },
     {
       namespace: "burrito-examples",
-      name: "fail-terragrunt",
+      name: "burrito",
       state: "warning",
       repository: "burrito-2",
       branch: "failling-terraform",
@@ -46,7 +46,7 @@ const Layers: React.FC = () => {
     },
     {
       namespace: "burrito-examples",
-      name: "fail-terragrunt",
+      name: "padok",
       state: "error",
       repository: "burrito-3",
       branch: "failling-terraform",
@@ -58,6 +58,7 @@ const Layers: React.FC = () => {
   ];
 
   const { theme } = useContext(ThemeContext);
+  const [search, setSearch] = useState<string>("");
   const [view, setView] = useState<"grid" | "table">("grid");
   const [stateFilter, setStateFilter] = useState<LayerState[]>([]);
   const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
@@ -70,6 +71,9 @@ const Layers: React.FC = () => {
     setFilteredData(
       data
         .filter((layer) =>
+          layer.name.toLowerCase().includes(search.toLowerCase())
+        )
+        .filter((layer) =>
           stateFilter.length === 0 ? layer : stateFilter.includes(layer.state)
         )
         .filter((layer) =>
@@ -79,7 +83,7 @@ const Layers: React.FC = () => {
         )
         .filter((layer) => !displayOnlyPRFilter || layer.isPR)
     );
-  }, [data, stateFilter, repositoryFilter, displayOnlyPRFilter]);
+  }, [data, search, stateFilter, repositoryFilter, displayOnlyPRFilter]);
 
   return (
     <div
@@ -126,6 +130,8 @@ const Layers: React.FC = () => {
             className="w-full"
             placeholder="Search into layers"
             leftIcon={<SearchIcon />}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
           <div className="flex flex-row items-center justify-between gap-8">
             <div className="flex flex-row items-center gap-4">
