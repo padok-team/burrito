@@ -70,7 +70,9 @@ const Checkbox: React.FC<CheckboxProps> = ({
           appearance-none
           cursor-pointer
           h-5
+          min-h-[20px]
           w-5
+          min-w-[20px]
           border
           rounded
           ${styles.base[variant]}`,
