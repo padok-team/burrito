@@ -138,7 +138,7 @@ const Layers: React.FC = () => {
                   }
               `}
               >
-                267 layers
+                {filteredData.length} layers
               </span>
               <span
                 className={`
