@@ -7,6 +7,7 @@ export type Layer = {
   path: string;
   lastResult: string;
   isRunning: boolean;
+  isPR: boolean;
 };
 
 export type LayerState = "success" | "warning" | "error" | "disabled";

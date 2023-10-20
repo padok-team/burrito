@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
@@ -21,9 +21,6 @@ import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
 
 const Layers: React.FC = () => {
-  const { theme } = useContext(ThemeContext);
-  const [view, setView] = useState<"grid" | "table">("grid");
-
   const testData: Layer[] = [
     {
       namespace: "burrito-examples",
@@ -34,6 +31,7 @@ const Layers: React.FC = () => {
       path: "terragrunt/random-pets/test",
       lastResult: "error getting last results",
       isRunning: false,
+      isPR: true,
     },
     {
       namespace: "burrito-examples",
@@ -44,6 +42,7 @@ const Layers: React.FC = () => {
       path: "terragrunt/random-pets/test",
       lastResult: "error getting last results",
       isRunning: true,
+      isPR: false,
     },
     {
       namespace: "burrito-examples",
@@ -54,8 +53,19 @@ const Layers: React.FC = () => {
       path: "terragrunt/random-pets/test",
       lastResult: "error getting last results",
       isRunning: false,
+      isPR: true,
     },
   ];
+
+  const { theme } = useContext(ThemeContext);
+  const [view, setView] = useState<"grid" | "table">("grid");
+  const [displayOnlyPR, setDisplayOnlyPR] = useState<boolean>(false);
+  const [data] = useState<Layer[]>(testData); // TODO: replace with data from API
+  const [filteredData, setFilteredData] = useState<Layer[]>([]);
+
+  useEffect(() => {
+    setFilteredData(data.filter((layer) => !displayOnlyPR || layer.isPR));
+  }, [data, displayOnlyPR]);
 
   return (
     <div
@@ -156,9 +166,12 @@ const Layers: React.FC = () => {
                     }
                   `}
                 >
-                  Show open PR
+                  Show only open PR
                 </span>
-                <Toggle defaultChecked />
+                <Toggle
+                  checked={displayOnlyPR}
+                  onChange={() => setDisplayOnlyPR(!displayOnlyPR)}
+                />
               </div>
             </div>
             <div className="flex flex-row items-center gap-2">
@@ -176,12 +189,12 @@ const Layers: React.FC = () => {
         </div>
         {view === "grid" && (
           <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-            {testData.map((layer, index) => (
+            {filteredData.map((layer, index) => (
               <Card key={index} variant={theme} layer={layer} />
             ))}
           </div>
         )}
-        {view === "table" && <Table variant={theme} data={testData} />}
+        {view === "table" && <Table variant={theme} data={filteredData} />}
       </div>
     </div>
   );
