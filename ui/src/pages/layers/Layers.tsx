@@ -14,7 +14,7 @@ import Table from "@/components/tables/Table";
 import StateDropdown from "@/pages/layers/components/StateDropdown";
 import RepositoryDropdown from "@/pages/layers/components/RepositoryDropdown";
 
-import { Layer } from "@/types/types";
+import { Layer, LayerState } from "@/types/types";
 
 import SearchIcon from "@/assets/icons/SearchIcon";
 import AppsIcon from "@/assets/icons/AppsIcon";
@@ -59,7 +59,7 @@ const Layers: React.FC = () => {
 
   const { theme } = useContext(ThemeContext);
   const [view, setView] = useState<"grid" | "table">("grid");
-  const [stateFilter, setStateFilter] = useState<string[]>([]);
+  const [stateFilter, setStateFilter] = useState<LayerState[]>([]);
   const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
   const [displayOnlyPRFilter, setDisplayOnlyPRFilter] =
     useState<boolean>(false);
@@ -161,10 +161,22 @@ const Layers: React.FC = () => {
                 Filter by
               </span>
               <div className="flex flex-row items-center gap-2">
-                <Dropdown variant={theme} label="State">
-                  <StateDropdown variant={theme} />
+                <Dropdown
+                  variant={theme}
+                  label="State"
+                  filled={stateFilter.length !== 0}
+                >
+                  <StateDropdown
+                    variant={theme}
+                    filter={stateFilter}
+                    onChange={setStateFilter}
+                  />
                 </Dropdown>
-                <Dropdown variant={theme} label="Repository">
+                <Dropdown
+                  variant={theme}
+                  label="Repository"
+                  filled={repositoryFilter.length !== 0}
+                >
                   <RepositoryDropdown variant={theme} />
                 </Dropdown>
               </div>
