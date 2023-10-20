@@ -23,6 +23,10 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
   ];
 
   const [repositories, setRepositories] = useState<string[]>(testData);
+  const [filteredRepositories, setFilteredRepositories] =
+    useState<string[]>(repositories);
+  const [search, setSearch] = useState<string>("");
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     repository: string
@@ -32,6 +36,15 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
     } else {
       onChange(filter.filter((r) => r !== repository));
     }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setFilteredRepositories(
+      repositories.filter((repository) =>
+        repository.toLowerCase().includes(e.target.value.toLowerCase())
+      )
+    );
   };
 
   return (
@@ -51,6 +64,8 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
         variant={variant}
         className="w-[200px] mx-2"
         placeholder="Search repository"
+        value={search}
+        onChange={handleSearch}
       />
       <hr
         className={`
@@ -59,8 +74,21 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
           ${variant === "light" ? "bg-primary-600" : "bg-nuances-300"}
         `}
       />
-      <div className="flex flex-col self-start max-h-52 w-full overflow-scroll px-4 py-1 mb-2 gap-2">
-        {repositories.map((repository) => (
+      <div
+        className={`
+          flex
+          flex-col
+          self-start
+          max-h-52
+          w-full
+          overflow-scroll
+          px-4
+          py-1
+          mb-2
+          gap-2
+        `}
+      >
+        {filteredRepositories.map((repository) => (
           <Checkbox
             key={repository}
             variant={variant}
