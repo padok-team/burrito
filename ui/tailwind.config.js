@@ -53,7 +53,7 @@ export default {
     },
     boxShadow: {
       light: "0px 0px 32px 0px rgba(121, 140, 140, 0.16)",
-      dark: "0px 4px 4px 0px rgba(0, 0, 0, 0.25)",
+      dark: "0px 0px 32px 0px rgba(143, 143, 143, 0.24)",
     },
     backgroundImage: {
       "background-light":
