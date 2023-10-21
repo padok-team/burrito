@@ -128,7 +128,7 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 	assert.IsType(t, &event.PullRequestEvent{}, evt)
 
 	pullRequestEvt := evt.(*event.PullRequestEvent)
-	assert.Equal(t, "99", pullRequestEvt.ID)
+	assert.Equal(t, "1", pullRequestEvt.ID)
 	assert.Equal(t, "gitlab", pullRequestEvt.Provider)
 	assert.Equal(t, "https://example.com/gitlabhq/gitlab-test", pullRequestEvt.URL)
 	assert.Equal(t, "demo", pullRequestEvt.Revision)

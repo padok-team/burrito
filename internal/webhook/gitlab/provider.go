@@ -61,7 +61,7 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 		log.Infof("parsing Gitlab merge request event payload")
 		e = &event.PullRequestEvent{
 			Provider: "gitlab",
-			ID:       strconv.Itoa(int(payload.ObjectAttributes.ID)),
+			ID:       strconv.Itoa(int(payload.ObjectAttributes.IID)),
 			URL:      event.NormalizeUrl(payload.Project.WebURL),
 			Revision: payload.ObjectAttributes.SourceBranch,
 			Action:   getNormalizedAction(payload.ObjectAttributes.Action),
