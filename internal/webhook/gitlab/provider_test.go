@@ -18,17 +18,17 @@ import (
 )
 
 func TestGilab_IsFromProvider(t *testing.T) {
-	github := gitlab.Gitlab{}
+	gitlab := gitlab.Gitlab{}
 
 	req, err := http.NewRequest("GET", "/", nil)
 	assert.NoError(t, err)
 	req.Header.Set("X-GitHub-Event", "test")
-	assert.False(t, github.IsFromProvider(req))
+	assert.False(t, gitlab.IsFromProvider(req))
 
 	req, err = http.NewRequest("GET", "/", nil)
 	assert.NoError(t, err)
 	req.Header.Set("X-GitLab-Event", "test")
-	assert.True(t, github.IsFromProvider(req))
+	assert.True(t, gitlab.IsFromProvider(req))
 }
 
 func TestGitlab_GetEvent_PushEvent(t *testing.T) {
@@ -84,6 +84,22 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 }
 
 func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
+	// Test GitLab initialization
+	secret := "test-secret"
+	gitlab := gitlab.Gitlab{}
+	config := &config.Config{
+		Server: config.ServerConfig{
+			Webhook: config.WebhookConfig{
+				Gitlab: config.WebhookGitlabConfig{
+					Secret: secret,
+				},
+			},
+		},
+	}
+	err := gitlab.Init(config)
+	assert.NoError(t, err)
+
+	// Test event handling
 	payloadFile, err := os.Open("testdata/gitlab-open-merge-request-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
@@ -101,38 +117,35 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 		t.Fatalf("failed to unmarshal payload: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", "/", bytes.NewBuffer(payloadBytes))
-	if err != nil {
-		t.Fatalf("failed to create request: %v", err)
+	testWithGivenAction := func(action string, expected string) {
+		payload.ObjectAttributes.Action = action
+		payloadBytes, err := json.Marshal(payload)
+		assert.NoError(t, err)
+
+		req, err := http.NewRequest("POST", "/", bytes.NewBuffer(payloadBytes))
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		req.Header.Set("X-GitLab-Event", "Merge Request Hook")
+		req.Header.Set("X-Gitlab-Token", secret)
+
+		evt, err := gitlab.GetEvent(req)
+		assert.NoError(t, err)
+		assert.IsType(t, &event.PullRequestEvent{}, evt)
+
+		pullRequestEvt := evt.(*event.PullRequestEvent)
+		assert.Equal(t, "1", pullRequestEvt.ID)
+		assert.Equal(t, "gitlab", pullRequestEvt.Provider)
+		assert.Equal(t, "https://example.com/gitlabhq/gitlab-test", pullRequestEvt.URL)
+		assert.Equal(t, "demo", pullRequestEvt.Revision)
+		assert.Equal(t, "main", pullRequestEvt.Base)
+		assert.Equal(t, "da1560886d4f094c3e6c9ef40349f7d38b5d27d7", pullRequestEvt.Commit)
+		assert.Equal(t, expected, pullRequestEvt.Action)
 	}
 
-	secret := "test-secret"
-	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
-		},
-	}
-	err = gitlab.Init(config)
-	assert.NoError(t, err)
-
-	req.Header.Set("X-GitLab-Event", "Merge Request Hook")
-	req.Header.Set("X-Gitlab-Token", secret)
-
-	evt, err := gitlab.GetEvent(req)
-	assert.NoError(t, err)
-	assert.IsType(t, &event.PullRequestEvent{}, evt)
-
-	pullRequestEvt := evt.(*event.PullRequestEvent)
-	assert.Equal(t, "1", pullRequestEvt.ID)
-	assert.Equal(t, "gitlab", pullRequestEvt.Provider)
-	assert.Equal(t, "https://example.com/gitlabhq/gitlab-test", pullRequestEvt.URL)
-	assert.Equal(t, "demo", pullRequestEvt.Revision)
-	assert.Equal(t, "main", pullRequestEvt.Base)
-	assert.Equal(t, "da1560886d4f094c3e6c9ef40349f7d38b5d27d7", pullRequestEvt.Commit)
-	assert.Equal(t, "opened", pullRequestEvt.Action)
+	testWithGivenAction("open", event.PullRequestOpened)
+	testWithGivenAction("reopen", event.PullRequestOpened)
+	testWithGivenAction("close", event.PullRequestClosed)
+	testWithGivenAction("merge", event.PullRequestClosed)
 }

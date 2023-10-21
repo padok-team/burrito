@@ -76,9 +76,9 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 
 func getNormalizedAction(action string) string {
 	switch action {
-	case "open":
+	case "open", "reopen":
 		return event.PullRequestOpened
-	case "close":
+	case "close", "merge":
 		return event.PullRequestClosed
 	default:
 		return action
