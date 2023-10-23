@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -19,6 +20,7 @@ type layer struct {
 	Repository string `json:"repository"`
 	Branch     string `json:"branch"`
 	Path       string `json:"path"`
+	State      string `json:"state"`
 	LastResult string `json:"lastResult"`
 	IsRunning  bool   `json:"isRunning"`
 	IsPR       bool   `json:"isPR"`
@@ -32,8 +34,12 @@ func (a *API) LayersHandler(c echo.Context) error {
 	layers := &configv1alpha1.TerraformLayerList{}
 	err := a.Client.List(context.Background(), layers)
 	if err != nil {
-		log.Errorf("could not list terraform repositories: %s", err)
-		return c.String(http.StatusInternalServerError, "could not list terraform repositories")
+		log.Errorf("could not list terraform layers: %s", err)
+		return c.String(http.StatusInternalServerError, "could not list terraform layers")
+	}
+	if err != nil {
+		log.Errorf("could not list terraform layers: %s", err)
+		return c.String(http.StatusInternalServerError, "could not list terraform layers")
 	}
 	results := []layer{}
 	for _, l := range layers.Items {
@@ -43,6 +49,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 			Repository: fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
 			Branch:     l.Spec.Branch,
 			Path:       l.Spec.Path,
+			State:      a.getLayerState(l),
 			LastResult: l.Status.LastResult,
 			IsRunning:  a.isLayerRunning(l),
 			IsPR:       a.isLayerPR(l),
@@ -52,6 +59,34 @@ func (a *API) LayersHandler(c echo.Context) error {
 		Results: results,
 	},
 	)
+}
+
+func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
+	repository := &configv1alpha1.TerraformRepository{}
+	err := a.Client.Get(context.Background(), client.ObjectKey{
+		Namespace: layer.Spec.Repository.Namespace,
+		Name:      layer.Spec.Repository.Name,
+	}, repository)
+	if err != nil {
+		log.Errorf("could not get terraform repository: %s", err)
+		return "Unknown"
+	}
+	state := "success"
+	switch {
+	case len(layer.Status.Conditions) == 0:
+		state = "disabled"
+	case layer.Status.State == "ApplyNeeded":
+		state = "warning"
+	case layer.Status.State == "PlanNeeded":
+		state = "warning"
+	}
+	if layer.Annotations[annotations.LastPlanSum] == "" {
+		state = "error"
+	}
+	if layer.Annotations[annotations.LastApplySum] != "" && layer.Annotations[annotations.LastApplySum] == "" {
+		state = "error"
+	}
+	return state
 }
 
 func (a *API) isLayerRunning(layer configv1alpha1.TerraformLayer) bool {

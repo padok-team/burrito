@@ -106,6 +106,19 @@ func GetRunHistoryPolicy(repository *TerraformRepository, layer *TerraformLayer)
 	}
 }
 
+func GetRemediationStrategy(repo *TerraformRepository, layer *TerraformLayer) RemediationStrategy {
+	result := RemediationStrategy{
+		AutoApply: false,
+	}
+	if repo.Spec.RemediationStrategy.AutoApply {
+		result.AutoApply = true
+	}
+	if layer.Spec.RemediationStrategy.AutoApply {
+		result.AutoApply = true
+	}
+	return result
+}
+
 func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObjectReference {
 	result := []corev1.LocalObjectReference{}
 	temp := map[string]string{}
