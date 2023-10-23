@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -39,7 +40,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 		results = append(results, layer{
 			Name:       l.Name,
 			Namespace:  l.Namespace,
-			Repository: l.Spec.Repository.Name,
+			Repository: fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
 			Branch:     l.Spec.Branch,
 			Path:       l.Spec.Path,
 			LastResult: l.Status.LastResult,

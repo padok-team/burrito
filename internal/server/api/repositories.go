@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -27,7 +28,7 @@ func (a *API) RepositoriesHandler(c echo.Context) error {
 	results := []repository{}
 	for _, r := range repositories.Items {
 		results = append(results, repository{
-			Name: r.Name,
+			Name: fmt.Sprintf("%s/%s", r.Namespace, r.Name),
 		})
 	}
 	return c.JSON(http.StatusOK, &repositoriesResponse{
