@@ -33,25 +33,25 @@ const Layers: React.FC = () => {
   const [displayOnlyPRFilter, setDisplayOnlyPRFilter] =
     useState<boolean>(false);
 
-  const layersQuery = useQuery(reactQueryKeys.layers, fetchLayers);
-
-  // useEffect(() => {
-  //   setFilteredData(
-  //     data
-  //       .filter((layer) =>
-  //         layer.name.toLowerCase().includes(search.toLowerCase())
-  //       )
-  //       .filter((layer) =>
-  //         stateFilter.length === 0 ? layer : stateFilter.includes(layer.state)
-  //       )
-  //       .filter((layer) =>
-  //         repositoryFilter.length === 0
-  //           ? layer
-  //           : repositoryFilter.includes(layer.repository)
-  //       )
-  //       .filter((layer) => !displayOnlyPRFilter || layer.isPR)
-  //   );
-  // }, [data, search, stateFilter, repositoryFilter, displayOnlyPRFilter]);
+  const layersQuery = useQuery(reactQueryKeys.layers, fetchLayers, {
+    select: (data) => ({
+      ...data,
+      results: data.results
+        .filter((layer) =>
+          layer.name.toLowerCase().includes(search.toLowerCase())
+        )
+        .filter(
+          (layer) =>
+            stateFilter.length === 0 || stateFilter.includes(layer.state)
+        )
+        .filter(
+          (layer) =>
+            repositoryFilter.length === 0 ||
+            repositoryFilter.includes(layer.repository)
+        )
+        .filter((layer) => !displayOnlyPRFilter || layer.isPR),
+    }),
+  });
 
   return (
     <div
