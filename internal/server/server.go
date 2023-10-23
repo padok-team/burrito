@@ -26,10 +26,10 @@ type Server struct {
 }
 
 func New(c *config.Config) *Server {
-	webhook := webhook.New(c)
 	return &Server{
 		config:  c,
-		Webhook: webhook,
+		Webhook: webhook.New(c),
+		API:     api.New(c),
 	}
 }
 
