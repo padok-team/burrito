@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
@@ -83,11 +82,6 @@ func (r *Reconciler) getAllFinishedRuns(ctx context.Context, layer *configv1alph
 	return runs, nil
 }
 
-type runRetention struct {
-	plan  time.Duration
-	apply time.Duration
-}
-
 func deleteAll(ctx context.Context, c client.Client, objs []*configv1alpha1.TerraformRun) error {
 	var wg sync.WaitGroup
 	errorCh := make(chan error, len(objs))
@@ -161,7 +155,7 @@ func sortAndSplitRunsByAction(runs []*configv1alpha1.TerraformRun) map[string][]
 		}
 		splittedRuns[run.Spec.Action] = append(splittedRuns[run.Spec.Action], run)
 	}
-	for action, _ := range splittedRuns {
+	for action := range splittedRuns {
 		sort.Slice(splittedRuns[action], func(i, j int) bool {
 			return splittedRuns[action][i].CreationTimestamp.Before(&splittedRuns[action][j].CreationTimestamp)
 		})

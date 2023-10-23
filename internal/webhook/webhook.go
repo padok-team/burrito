@@ -5,6 +5,7 @@ import (
 	"html"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -12,12 +13,6 @@ import (
 	"github.com/padok-team/burrito/internal/webhook/github"
 	"github.com/padok-team/burrito/internal/webhook/gitlab"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
-	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -44,19 +39,9 @@ type Provider interface {
 }
 
 func (w *Webhook) Init() error {
-	scheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
-	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{
-		Scheme: scheme,
-	})
-	if err != nil {
-		return err
-	}
-	w.Client = cl
 	providers := []Provider{}
 	for _, p := range []Provider{&github.Github{}, &gitlab.Gitlab{}} {
-		err = p.Init(w.Config)
+		err := p.Init(w.Config)
 		if err != nil {
 			log.Warnf("failed to initialize webhook provider: %s", err)
 			continue
@@ -70,9 +55,10 @@ func (w *Webhook) Init() error {
 	return nil
 }
 
-func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
-	log.Infof("webhook event received...")
-	return func(writer http.ResponseWriter, r *http.Request) {
+func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
+	return func(c echo.Context) error {
+		log.Infof("webhook event received...")
+		r := c.Request()
 		var err error
 		var event event.Event
 		for _, p := range w.Providers {
@@ -87,17 +73,17 @@ func (w *Webhook) GetHttpHandler() func(http.ResponseWriter, *http.Request) {
 			if r.Method != "POST" {
 				status = http.StatusMethodNotAllowed
 			}
-			http.Error(writer, fmt.Sprintf("webhook processing failed: %s", html.EscapeString(err.Error())), status)
-			return
+			return c.String(status, fmt.Sprintf("webhook processing failed: %s", html.EscapeString(err.Error())))
 		}
 		if event == nil {
 			log.Infof("ignoring unknown webhook event")
-			http.Error(writer, "Unknown webhook event", http.StatusBadRequest)
+			return c.String(http.StatusBadRequest, "Unknown webhook event")
 		}
 
 		err = event.Handle(w.Client)
 		if err != nil {
 			log.Errorf("webhook processing worked but errored during event handling: %s", err)
 		}
+		return c.String(http.StatusOK, "OK")
 	}
 }
