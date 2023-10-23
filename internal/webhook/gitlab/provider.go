@@ -61,7 +61,7 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 		log.Infof("parsing Gitlab merge request event payload")
 		e = &event.PullRequestEvent{
 			Provider: "gitlab",
-			ID:       strconv.Itoa(int(payload.ObjectAttributes.ID)),
+			ID:       strconv.Itoa(int(payload.ObjectAttributes.IID)),
 			URL:      event.NormalizeUrl(payload.Project.WebURL),
 			Revision: payload.ObjectAttributes.SourceBranch,
 			Action:   getNormalizedAction(payload.ObjectAttributes.Action),
@@ -76,9 +76,9 @@ func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
 
 func getNormalizedAction(action string) string {
 	switch action {
-	case "open":
+	case "open", "reopen":
 		return event.PullRequestOpened
-	case "close":
+	case "close", "merge":
 		return event.PullRequestClosed
 	default:
 		return action

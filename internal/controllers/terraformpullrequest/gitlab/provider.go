@@ -43,18 +43,23 @@ func (g *Gitlab) GetChanges(repository *configv1alpha1.TerraformRepository, pr *
 		log.Errorf("Error while parsing Gitlab merge request ID: %s", err)
 		return []string{}, err
 	}
-	getOpts := gitlab.GetMergeRequestChangesOptions{
-		AccessRawDiffs: gitlab.Bool(true),
-	}
-
-	mr, _, err := g.Client.MergeRequests.GetMergeRequestChanges(getGitlabNamespacedName(repository.Spec.Repository.Url), id, &getOpts)
-	if err != nil {
-		log.Errorf("Error while getting merge request changes: %s", err)
-		return []string{}, err
+	listOpts := gitlab.ListMergeRequestDiffsOptions{
+		PerPage: 20,
 	}
 	var changes []string
-	for _, change := range mr.Changes {
-		changes = append(changes, change.NewPath)
+	for {
+		diffs, resp, err := g.Client.MergeRequests.ListMergeRequestDiffs(getGitlabNamespacedName(repository.Spec.Repository.Url), id, &listOpts)
+		if err != nil {
+			log.Errorf("Error while getting merge request changes: %s", err)
+			return []string{}, err
+		}
+		for _, change := range diffs {
+			changes = append(changes, change.NewPath)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 	return changes, nil
 }
