@@ -93,6 +93,32 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformruns
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformruns/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformruns/status
+  verbs:
+  - get
+  - patch
+  - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
