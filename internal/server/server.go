@@ -55,8 +55,9 @@ func (s *Server) Exec() {
 	if err != nil {
 		log.Fatalf("error initializing client: %s", err)
 	}
-	s.API.Client = *client
-	s.Webhook.Client = *client
+	s.client = *client
+	s.API.Client = s.client
+	s.Webhook.Client = s.client
 	log.Infof("starting burrito server...")
 	e := echo.New()
 	e.Use(middleware.Logger())

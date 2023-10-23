@@ -63,7 +63,11 @@ func (a *API) isLayerRunning(layer configv1alpha1.TerraformLayer) bool {
 		log.Errorf("could not list terraform runs, returning false: %s", err)
 		return false
 	}
-	a.Client.List(context.Background(), runs)
+	err = a.Client.List(context.Background(), runs)
+	if err != nil {
+		log.Errorf("could not list terraform runs, returning false: %s", err)
+		return false
+	}
 	for _, r := range runs.Items {
 		if r.Status.State == "Running" {
 			return true
@@ -73,8 +77,5 @@ func (a *API) isLayerRunning(layer configv1alpha1.TerraformLayer) bool {
 }
 
 func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {
-	if layer.OwnerReferences[0].Kind == "TerraformPullRequest" {
-		return true
-	}
-	return false
+	return layer.OwnerReferences[0].Kind == "TerraformPullRequest"
 }
