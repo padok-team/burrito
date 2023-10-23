@@ -1,6 +1,6 @@
 import React from "react";
 
-import { LayerState } from "@/types/types";
+import { LayerState } from "@/clients/layers/types";
 
 export interface TagProps {
   variant: LayerState;

@@ -3,7 +3,7 @@ import React from "react";
 import Box from "@/components/misc/Box";
 import Checkbox from "@/components/checkboxes/Checkbox";
 
-import { LayerState } from "@/types/types";
+import { LayerState } from "@/clients/layers/types";
 
 export interface StateDropdownProps {
   variant?: "light" | "dark";

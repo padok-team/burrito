@@ -12,7 +12,7 @@ import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 import SyncIcon from "@/assets/icons/SyncIcon";
 
-import { Layer, LayerState } from "@/types/types";
+import { Layer, LayerState } from "@/clients/layers/types";
 
 export interface TableProps {
   className?: string;
