@@ -32,6 +32,7 @@ type TerraformRepositorySpec struct {
 	TerraformConfig     TerraformConfig               `json:"terraform,omitempty"`
 	RemediationStrategy RemediationStrategy           `json:"remediationStrategy,omitempty"`
 	OverrideRunnerSpec  OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
+	RunHistoryPolicy    RunHistoryPolicy              `json:"runHistoryPolicy,omitempty"`
 }
 
 type TerraformRepositoryRepository struct {

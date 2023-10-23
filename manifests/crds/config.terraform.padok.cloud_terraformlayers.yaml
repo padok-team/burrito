@@ -2008,6 +2008,13 @@ spec:
                   namespace:
                     type: string
                 type: object
+              runHistoryPolicy:
+                properties:
+                  apply:
+                    type: integer
+                  plan:
+                    type: integer
+                type: object
               terraform:
                 properties:
                   terragrunt:
