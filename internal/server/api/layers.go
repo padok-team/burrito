@@ -72,5 +72,8 @@ func (a *API) isLayerRunning(layer configv1alpha1.TerraformLayer) bool {
 }
 
 func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {
+	if len(layer.OwnerReferences) == 0 {
+		return false
+	}
 	return layer.OwnerReferences[0].Kind == "TerraformPullRequest"
 }
