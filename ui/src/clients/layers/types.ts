@@ -1,5 +1,3 @@
-import { Repository } from "@/clients/repositories/types";
-
 export type Layers = {
   results: Layer[];
 };
@@ -8,7 +6,7 @@ export type Layer = {
   namespace: string;
   name: string;
   state: LayerState;
-  repository: Repository;
+  repository: string;
   branch: string;
   path: string;
   lastResult: string;
