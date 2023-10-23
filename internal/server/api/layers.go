@@ -19,9 +19,9 @@ type layer struct {
 	Repository string `json:"repository"`
 	Branch     string `json:"branch"`
 	Path       string `json:"path"`
-	LastResult string `json:"last_result"`
-	IsRunning  bool   `json:"is_running"`
-	IsPR       bool   `json:"is_pr"`
+	LastResult string `json:"lastResult"`
+	IsRunning  bool   `json:"isRunning"`
+	IsPR       bool   `json:"isPR"`
 }
 
 type layersResponse struct {
