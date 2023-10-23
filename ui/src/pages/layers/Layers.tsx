@@ -6,7 +6,6 @@ import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import NavigationBar from "@/components/navigation/NavigationBar";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/inputs/Input";
 import Dropdown from "@/components/inputs/Dropdown";
@@ -54,164 +53,152 @@ const Layers: React.FC = () => {
   });
 
   return (
-    <div
-      className={`
-        flex
-        ${theme === "light" ? "bg-primary-100" : "bg-nuances-black"}
-      `}
-    >
-      <NavigationBar variant={theme} />
-      <div className="relative flex flex-col flex-grow h-screen gap-3 overflow-auto">
-        <div
-          className={`
-            sticky
-            top-0
-            z-10
-            flex
-            flex-col
-            p-6
-            pb-3
-            gap-6
-            ${theme === "light" ? "bg-primary-100" : "bg-nuances-black"}
-          `}
-        >
-          <div className="flex justify-between">
-            <h1
+    <div className="relative flex flex-col flex-grow h-screen gap-3 overflow-auto">
+      <div
+        className={`
+          sticky
+          top-0
+          z-10
+          flex
+          flex-col
+          p-6
+          pb-3
+          gap-6
+          ${theme === "light" ? "bg-primary-100" : "bg-nuances-black"}
+        `}
+      >
+        <div className="flex justify-between">
+          <h1
+            className={`
+              text-[32px]
+              font-extrabold
+              leading-[130%]
+              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+            `}
+          >
+            Layers
+          </h1>
+          <Button
+            variant={theme === "light" ? "primary" : "secondary"}
+            isLoading={layersQuery.isRefetching}
+            onClick={() => layersQuery.refetch()}
+          >
+            Refresh layers
+          </Button>
+        </div>
+        <Input
+          variant={theme}
+          className="w-full"
+          placeholder="Search into layers"
+          leftIcon={<SearchIcon />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="flex flex-row items-center justify-between gap-8">
+          <div className="flex flex-row items-center gap-4">
+            <span
               className={`
-                text-[32px]
-                font-extrabold
-                leading-[130%]
+                text-base
+                font-semibold
                 ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+            `}
+            >
+              {`${
+                layersQuery.isSuccess ? layersQuery.data.results.length : 0
+              } layers`}
+            </span>
+            <span
+              className={`
+                border-l
+                h-6
+                ${
+                  theme === "light"
+                    ? "border-primary-600"
+                    : "border-nuances-200"
+                }
               `}
+            ></span>
+            <span
+              className={`
+                text-base
+                font-medium
+                ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+            `}
             >
-              Layers
-            </h1>
-            <Button
-              variant={theme === "light" ? "primary" : "secondary"}
-              isLoading={layersQuery.isRefetching}
-              onClick={() => layersQuery.refetch()}
-            >
-              Refresh layers
-            </Button>
-          </div>
-          <Input
-            variant={theme}
-            className="w-full"
-            placeholder="Search into layers"
-            leftIcon={<SearchIcon />}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <div className="flex flex-row items-center justify-between gap-8">
-            <div className="flex flex-row items-center gap-4">
+              Filter by
+            </span>
+            <div className="flex flex-row items-center gap-2">
+              <Dropdown
+                variant={theme}
+                label="State"
+                filled={stateFilter.length !== 0}
+              >
+                <StateDropdown
+                  variant={theme}
+                  filter={stateFilter}
+                  onChange={setStateFilter}
+                />
+              </Dropdown>
+              <Dropdown
+                variant={theme}
+                label="Repository"
+                filled={repositoryFilter.length !== 0}
+              >
+                <RepositoryDropdown
+                  variant={theme}
+                  filter={repositoryFilter}
+                  onChange={setRepositoryFilter}
+                />
+              </Dropdown>
+            </div>
+            <div className="flex flex-row items-center gap-[7px]">
               <span
                 className={`
-                  text-base
-                  font-semibold
+                  text-sm
+                  font-medium
                   ${
                     theme === "light" ? "text-nuances-black" : "text-nuances-50"
                   }
-              `}
-              >
-                {`${
-                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                } layers`}
-              </span>
-              <span
-                className={`
-                  border-l
-                  h-6
-                  ${
-                    theme === "light"
-                      ? "border-primary-600"
-                      : "border-nuances-200"
-                  }
                 `}
-              ></span>
-              <span
-                className={`
-                  text-base
-                  font-medium
-                  ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
-              `}
               >
-                Filter by
+                Show only open PR
               </span>
-              <div className="flex flex-row items-center gap-2">
-                <Dropdown
-                  variant={theme}
-                  label="State"
-                  filled={stateFilter.length !== 0}
-                >
-                  <StateDropdown
-                    variant={theme}
-                    filter={stateFilter}
-                    onChange={setStateFilter}
-                  />
-                </Dropdown>
-                <Dropdown
-                  variant={theme}
-                  label="Repository"
-                  filled={repositoryFilter.length !== 0}
-                >
-                  <RepositoryDropdown
-                    variant={theme}
-                    filter={repositoryFilter}
-                    onChange={setRepositoryFilter}
-                  />
-                </Dropdown>
-              </div>
-              <div className="flex flex-row items-center gap-[7px]">
-                <span
-                  className={`
-                    text-sm
-                    font-medium
-                    ${
-                      theme === "light"
-                        ? "text-nuances-black"
-                        : "text-nuances-50"
-                    }
-                  `}
-                >
-                  Show only open PR
-                </span>
-                <Toggle
-                  checked={displayOnlyPRFilter}
-                  onChange={() => setDisplayOnlyPRFilter(!displayOnlyPRFilter)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-row items-center gap-2">
-              <NavigationButton
-                icon={<AppsIcon />}
-                variant={theme}
-                selected={view === "grid"}
-                onClick={() => setView("grid")}
-              />
-              <NavigationButton
-                icon={<BarsIcon />}
-                variant={theme}
-                selected={view === "table"}
-                onClick={() => setView("table")}
+              <Toggle
+                checked={displayOnlyPRFilter}
+                onChange={() => setDisplayOnlyPRFilter(!displayOnlyPRFilter)}
               />
             </div>
           </div>
+          <div className="flex flex-row items-center gap-2">
+            <NavigationButton
+              icon={<AppsIcon />}
+              variant={theme}
+              selected={view === "grid"}
+              onClick={() => setView("grid")}
+            />
+            <NavigationButton
+              icon={<BarsIcon />}
+              variant={theme}
+              selected={view === "table"}
+              onClick={() => setView("table")}
+            />
+          </div>
         </div>
-        {layersQuery.isLoading && <></>}
-        {layersQuery.isError && <></>}
-        {layersQuery.isSuccess &&
-          (view === "grid" ? (
-            <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-              {layersQuery.data.results.map((layer, index) => (
-                <Card key={index} variant={theme} layer={layer} />
-              ))}
-            </div>
-          ) : view === "table" ? (
-            <Table variant={theme} data={layersQuery.data.results} />
-          ) : (
-            <></>
-          ))}
       </div>
+      {layersQuery.isLoading && <></>}
+      {layersQuery.isError && <></>}
+      {layersQuery.isSuccess &&
+        (view === "grid" ? (
+          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+            {layersQuery.data.results.map((layer, index) => (
+              <Card key={index} variant={theme} layer={layer} />
+            ))}
+          </div>
+        ) : view === "table" ? (
+          <Table variant={theme} data={layersQuery.data.results} />
+        ) : (
+          <></>
+        ))}
     </div>
   );
 };
