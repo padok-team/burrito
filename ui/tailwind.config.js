@@ -61,6 +61,11 @@ export default {
       "background-dark":
         "url('@/assets/backgrounds/background-dark.png'), linear-gradient(to right, #252525, #252525)",
     },
+    extend: {
+      animation: {
+        "spin-slow": "spin 2s linear infinite",
+      },
+    },
   },
   plugins: [],
 };

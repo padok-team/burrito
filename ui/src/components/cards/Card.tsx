@@ -76,6 +76,7 @@ const Card: React.FC<CardProps> = ({
           items-center
           justify-between
           self-stretch
+          gap-3
         `}
       >
         <span
@@ -92,7 +93,7 @@ const Card: React.FC<CardProps> = ({
         {isRunning && (
           <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
             <span className="text-sm font-semibold">Running</span>
-            <SyncIcon height={16} width={16} />
+            <SyncIcon className="animate-spin-slow" height={16} width={16} />
           </div>
         )}
       </div>
