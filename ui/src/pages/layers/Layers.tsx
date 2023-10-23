@@ -88,7 +88,8 @@ const Layers: React.FC = () => {
             </h1>
             <Button
               variant={theme === "light" ? "primary" : "secondary"}
-              onClick={() => console.log("Refresh layers")}
+              isLoading={layersQuery.isRefetching}
+              onClick={() => layersQuery.refetch()}
             >
               Refresh layers
             </Button>
