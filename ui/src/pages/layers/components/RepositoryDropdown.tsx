@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+import { fetchRepositories } from "@/clients/repositories/client";
+import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import Box from "@/components/misc/Box";
 import Input from "@/components/inputs/Input";
@@ -15,18 +19,20 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
   filter,
   onChange,
 }) => {
-  const testData: string[] = [
-    "burrito-1",
-    "burrito-2",
-    "burrito-3",
-    "burrito-4",
-  ];
-
-  const [repositories] = useState<string[]>(testData);
-  // const [repositories, setRepositories] = useState<string[]>(testData);
-  const [filteredRepositories, setFilteredRepositories] =
-    useState<string[]>(repositories);
   const [search, setSearch] = useState<string>("");
+
+  const repositoriesQuery = useQuery(
+    reactQueryKeys.repositories,
+    fetchRepositories,
+    {
+      select: (data) => ({
+        ...data,
+        results: data.results.filter((r) =>
+          r.name.toLowerCase().includes(search.toLowerCase())
+        ),
+      }),
+    }
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -41,11 +47,6 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setFilteredRepositories(
-      repositories.filter((repository) =>
-        repository.toLowerCase().includes(e.target.value.toLowerCase())
-      )
-    );
   };
 
   return (
@@ -98,15 +99,22 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
           gap-2
         `}
       >
-        {filteredRepositories.map((repository) => (
-          <Checkbox
-            key={repository}
-            variant={variant}
-            label={repository}
-            checked={filter.includes(repository)}
-            onChange={(e) => handleChange(e, repository)}
-          />
-        ))}
+        {repositoriesQuery.isLoading && <span>Loading...</span>}
+        {repositoriesQuery.isError && <span>An error occurred.</span>}
+        {repositoriesQuery.isSuccess &&
+          (repositoriesQuery.data.results.length !== 0 ? (
+            repositoriesQuery.data.results.map((repository) => (
+              <Checkbox
+                key={repository.name}
+                variant={variant}
+                label={repository.name}
+                checked={filter.includes(repository.name)}
+                onChange={(e) => handleChange(e, repository.name)}
+              />
+            ))
+          ) : (
+            <span>No repositories found.</span>
+          ))}
       </div>
     </Box>
   );
