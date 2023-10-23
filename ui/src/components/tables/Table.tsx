@@ -50,7 +50,7 @@ const Table: React.FC<TableProps> = ({
     columnHelper.accessor("lastResult", {
       header: "Last result",
       cell: (result) => (
-        <div className="relative flex items-center">
+        <div className="relative flex items-center h-full">
           <span>{result.getValue()}</span>
           {result.row.original.isRunning && (
             <div
@@ -60,7 +60,7 @@ const Table: React.FC<TableProps> = ({
                 flex
                 items-center
                 justify-end
-                h-[calc(100%_+_24px)]
+                h-[calc(100%_+_26px)]
                 min-w-full
                 w-full
                 rounded-xl
