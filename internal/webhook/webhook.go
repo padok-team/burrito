@@ -56,8 +56,8 @@ func (w *Webhook) Init() error {
 }
 
 func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
-	log.Infof("webhook event received...")
 	return func(c echo.Context) error {
+		log.Infof("webhook event received...")
 		r := c.Request()
 		var err error
 		var event event.Event

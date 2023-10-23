@@ -63,11 +63,6 @@ func (a *API) isLayerRunning(layer configv1alpha1.TerraformLayer) bool {
 		log.Errorf("could not list terraform runs, returning false: %s", err)
 		return false
 	}
-	err = a.Client.List(context.Background(), runs)
-	if err != nil {
-		log.Errorf("could not list terraform runs, returning false: %s", err)
-		return false
-	}
 	for _, r := range runs.Items {
 		if r.Status.State == "Running" {
 			return true
