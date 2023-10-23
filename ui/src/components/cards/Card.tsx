@@ -6,7 +6,7 @@ import SyncIcon from "@/assets/icons/SyncIcon";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 
-import { Layer } from "@/types/types";
+import { Layer } from "@/clients/layers/types";
 
 export interface CardProps {
   className?: string;

@@ -1,4 +1,8 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+import { fetchLayers } from "@/clients/layers/client";
+import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
@@ -14,49 +18,13 @@ import Table from "@/components/tables/Table";
 import StateDropdown from "@/pages/layers/components/StateDropdown";
 import RepositoryDropdown from "@/pages/layers/components/RepositoryDropdown";
 
-import { Layer, LayerState } from "@/types/types";
+import { LayerState } from "@/clients/layers/types";
 
 import SearchIcon from "@/assets/icons/SearchIcon";
 import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
 
 const Layers: React.FC = () => {
-  const testData: Layer[] = [
-    {
-      namespace: "burrito-examples",
-      name: "terragrunt",
-      state: "success",
-      repository: "burrito-1",
-      branch: "failling-terraform",
-      path: "terragrunt/random-pets/test",
-      lastResult: "error getting last results",
-      isRunning: false,
-      isPR: true,
-    },
-    {
-      namespace: "burrito-examples",
-      name: "burrito",
-      state: "warning",
-      repository: "burrito-2",
-      branch: "failling-terraform",
-      path: "terragrunt/random-pets/test",
-      lastResult: "error getting last results",
-      isRunning: true,
-      isPR: false,
-    },
-    {
-      namespace: "burrito-examples",
-      name: "padok",
-      state: "error",
-      repository: "burrito-3",
-      branch: "failling-terraform",
-      path: "terragrunt/random-pets/test",
-      lastResult: "error getting last results",
-      isRunning: false,
-      isPR: true,
-    },
-  ];
-
   const { theme } = useContext(ThemeContext);
   const [search, setSearch] = useState<string>("");
   const [view, setView] = useState<"grid" | "table">("grid");
@@ -64,26 +32,26 @@ const Layers: React.FC = () => {
   const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
   const [displayOnlyPRFilter, setDisplayOnlyPRFilter] =
     useState<boolean>(false);
-  const [data] = useState<Layer[]>(testData); // TODO: replace with data from API
-  const [filteredData, setFilteredData] = useState<Layer[]>([]);
 
-  useEffect(() => {
-    setFilteredData(
-      data
-        .filter((layer) =>
-          layer.name.toLowerCase().includes(search.toLowerCase())
-        )
-        .filter((layer) =>
-          stateFilter.length === 0 ? layer : stateFilter.includes(layer.state)
-        )
-        .filter((layer) =>
-          repositoryFilter.length === 0
-            ? layer
-            : repositoryFilter.includes(layer.repository)
-        )
-        .filter((layer) => !displayOnlyPRFilter || layer.isPR)
-    );
-  }, [data, search, stateFilter, repositoryFilter, displayOnlyPRFilter]);
+  const layersQuery = useQuery(reactQueryKeys.layers, fetchLayers);
+
+  // useEffect(() => {
+  //   setFilteredData(
+  //     data
+  //       .filter((layer) =>
+  //         layer.name.toLowerCase().includes(search.toLowerCase())
+  //       )
+  //       .filter((layer) =>
+  //         stateFilter.length === 0 ? layer : stateFilter.includes(layer.state)
+  //       )
+  //       .filter((layer) =>
+  //         repositoryFilter.length === 0
+  //           ? layer
+  //           : repositoryFilter.includes(layer.repository)
+  //       )
+  //       .filter((layer) => !displayOnlyPRFilter || layer.isPR)
+  //   );
+  // }, [data, search, stateFilter, repositoryFilter, displayOnlyPRFilter]);
 
   return (
     <div
@@ -144,7 +112,9 @@ const Layers: React.FC = () => {
                   }
               `}
               >
-                {filteredData.length} layers
+                {`${
+                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                } layers`}
               </span>
               <span
                 className={`
@@ -226,14 +196,20 @@ const Layers: React.FC = () => {
             </div>
           </div>
         </div>
-        {view === "grid" && (
-          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-            {filteredData.map((layer, index) => (
-              <Card key={index} variant={theme} layer={layer} />
-            ))}
-          </div>
-        )}
-        {view === "table" && <Table variant={theme} data={filteredData} />}
+        {layersQuery.isLoading && <></>}
+        {layersQuery.isError && <></>}
+        {layersQuery.isSuccess &&
+          (view === "grid" ? (
+            <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+              {layersQuery.data.results.map((layer, index) => (
+                <Card key={index} variant={theme} layer={layer} />
+              ))}
+            </div>
+          ) : view === "table" ? (
+            <Table variant={theme} data={layersQuery.data.results} />
+          ) : (
+            <></>
+          ))}
       </div>
     </div>
   );
