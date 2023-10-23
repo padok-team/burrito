@@ -17,8 +17,11 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "layers",
         index: true,
+        element: <Navigate to="/layers" />,
+      },
+      {
+        path: "layers",
         element: <Layers />,
       },
     ],
