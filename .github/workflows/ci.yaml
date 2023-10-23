@@ -10,6 +10,9 @@ on:
     branches:
     - main
 
+env:
+  GO_VERSION: 1.19
+
 jobs:
   unit-tests:
     name: Unit Tests
@@ -25,7 +28,7 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v4
       with:
-        go-version: "1.19"
+        go-version: "${{ env.GO_VERSION }}"
     - name: Install envtest
       run: make envtest
     - name: Setup envtest
@@ -44,12 +47,27 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v4
       with:
-        go-version: "1.19"
+        go-version: "${{ env.GO_VERSION }}"
     - name: Generate manifests
       run: make manifests
     - name: Check nothing has changed
       run: |
         git diff --exit-code ./manifests
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.53
+          args: --timeout=5m
 
   build-and-push:
     name: Build & Push
