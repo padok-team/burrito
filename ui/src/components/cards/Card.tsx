@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 
 import Tag from "@/components/tags/Tag";
 import SyncIcon from "@/assets/icons/SyncIcon";
+import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 
@@ -26,6 +27,7 @@ const Card: React.FC<CardProps> = ({
     path,
     lastResult,
     isRunning,
+    isPR,
   },
 }) => {
   const getTag = () => {
@@ -90,12 +92,18 @@ const Card: React.FC<CardProps> = ({
         >
           {name}
         </span>
-        {isRunning && (
+        {isRunning ? (
           <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
             <span className="text-sm font-semibold">Running</span>
             <SyncIcon className="animate-spin-slow" height={16} width={16} />
           </div>
-        )}
+        ) : isPR ? (
+          <CodeBranchIcon
+            className={`
+              ${variant === "light" ? "fill-nuances-black" : "fill-nuances-50"}
+            `}
+          />
+        ) : null}
       </div>
       <div className="grid grid-cols-[min-content_1fr] items-start gap-x-7 gap-y-2">
         {[
