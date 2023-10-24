@@ -7,9 +7,14 @@ import GitlabIcon from "@/assets/icons/GitlabIcon";
 export interface SocialButtonProps {
   variant: "github" | "gitlab";
   isLoading?: boolean;
+  onClick?: () => void;
 }
 
-const SocialButton: React.FC<SocialButtonProps> = ({ variant, isLoading }) => {
+const SocialButton: React.FC<SocialButtonProps> = ({
+  variant,
+  isLoading,
+  onClick,
+}) => {
   const getContent = () => {
     switch (variant) {
       case "github":
@@ -30,7 +35,12 @@ const SocialButton: React.FC<SocialButtonProps> = ({ variant, isLoading }) => {
   };
 
   return (
-    <Button variant="secondary" isLoading={isLoading} className="w-[300px]">
+    <Button
+      className="w-[300px]"
+      variant="secondary"
+      isLoading={isLoading}
+      onClick={onClick}
+    >
       <div className="flex items-center gap-4 justify-center">
         {getContent()}
       </div>
