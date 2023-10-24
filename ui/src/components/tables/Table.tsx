@@ -10,6 +10,7 @@ import {
 import Tag from "@/components/tags/Tag";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
+import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 import SyncIcon from "@/assets/icons/SyncIcon";
 
 import { Layer, LayerState } from "@/clients/layers/types";
@@ -28,6 +29,10 @@ const Table: React.FC<TableProps> = ({
   const columnHelper = createColumnHelper<Layer>();
 
   const columns = [
+    columnHelper.accessor("isPR", {
+      header: "",
+      cell: (isPR) => isPR.getValue() && <CodeBranchIcon className="-mr-6" />,
+    }),
     columnHelper.accessor("namespace", {
       header: "Namespace",
     }),
@@ -126,10 +131,12 @@ const Table: React.FC<TableProps> = ({
     row: {
       base: {
         light: `text-nuances-black
+          fill-nuances-black
           border-primary-500
           hover:bg-nuances-white
           hover:shadow-light`, // BUG: not working on Safari
         dark: `text-nuances-50
+          fill-nuances-50
           border-nuances-300
           hover:bg-nuances-400
           hover:shadow-dark`, // BUG: not working on Safari
