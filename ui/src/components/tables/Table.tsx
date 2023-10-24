@@ -60,7 +60,7 @@ const Table: React.FC<TableProps> = ({
                 flex
                 items-center
                 justify-end
-                h-[calc(100%_+_26px)]
+                h-[calc(100%_+_25px)]
                 min-w-full
                 w-full
                 rounded-xl
@@ -142,7 +142,8 @@ const Table: React.FC<TableProps> = ({
   };
 
   return (
-    <table className={twMerge(`w-full border-collapse`, className)}>
+    <table className={twMerge(`w-full border-collapse h-[1px]`, className)}>
+      {/* HACK: 1px height actually ignored but required to make cell div full size */}
       <thead>
         {table.getHeaderGroups().map((headerGroup) => (
           <tr
@@ -177,6 +178,7 @@ const Table: React.FC<TableProps> = ({
             key={row.id}
             className={twMerge(
               `border-b
+              h-full
               ${styles.row.base[variant]}`,
               row.original.isRunning &&
                 `rounded-2xl
@@ -191,6 +193,7 @@ const Table: React.FC<TableProps> = ({
                 key={cell.id}
                 className={twMerge(
                   `text-left
+                  h-full
                   text-base
                   font-semibold
                   px-6
