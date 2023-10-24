@@ -10,6 +10,7 @@ import ThemeProvider from "@/contexts/ThemeContext";
 import Layout from "@/layout/Layout";
 import Layers from "@/pages/layers/Layers";
 import Pulls from "@/pages/pulls/Pulls";
+import Login from "@/pages/login/Login";
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
         element: <Pulls />,
       },
     ],
+  },
+  {
+    path: "/login",
+    element: <Login />,
   },
   {
     path: "*",
