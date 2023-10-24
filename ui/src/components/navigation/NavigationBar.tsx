@@ -44,7 +44,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
         <div className="flex flex-col items-center gap-6">
           <NavLink
             className={({ isActive }) =>
-              isActive ? "fill-primary-600" : "fill-inherit"
+              isActive ? "fill-inherit" : "fill-primary-600"
             }
             to="/layers"
           >
@@ -52,7 +52,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
           </NavLink>
           <NavLink
             className={({ isActive }) =>
-              isActive ? "fill-primary-600" : "fill-inherit"
+              isActive ? "fill-inherit" : "fill-primary-600"
             }
             to="/pulls"
           >
