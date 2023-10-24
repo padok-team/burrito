@@ -29,8 +29,7 @@ const Layers: React.FC = () => {
   const [view, setView] = useState<"grid" | "table">("grid");
   const [stateFilter, setStateFilter] = useState<LayerState[]>([]);
   const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
-  const [displayOnlyPRFilter, setDisplayOnlyPRFilter] =
-    useState<boolean>(false);
+  const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
 
   const layersQuery = useQuery(reactQueryKeys.layers, fetchLayers, {
     select: (data) => ({
@@ -48,7 +47,7 @@ const Layers: React.FC = () => {
             repositoryFilter.length === 0 ||
             repositoryFilter.includes(layer.repository)
         )
-        .filter((layer) => !displayOnlyPRFilter || layer.isPR),
+        .filter((layer) => !hidePRFilter || !layer.isPR),
     }),
   });
 
@@ -161,11 +160,11 @@ const Layers: React.FC = () => {
                   }
                 `}
               >
-                Show only open PR
+                Hide Pull Requests
               </span>
               <Toggle
-                checked={displayOnlyPRFilter}
-                onChange={() => setDisplayOnlyPRFilter(!displayOnlyPRFilter)}
+                checked={hidePRFilter}
+                onChange={() => setHidePRFilter(!hidePRFilter)}
               />
             </div>
           </div>
