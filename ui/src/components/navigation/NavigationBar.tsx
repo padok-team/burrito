@@ -1,5 +1,6 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { NavLink } from "react-router-dom";
 
 import ProfilePicture from "@/components/misc/ProfilePicture";
 import Burrito from "@/assets/illustrations/Burrito";
@@ -41,8 +42,22 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       <div className="flex flex-col items-center gap-10">
         <Burrito height={40} width={40} />
         <div className="flex flex-col items-center gap-6">
-          <LayerGroupIcon />
-          <CodeBranchIcon />
+          <NavLink
+            className={({ isActive }) =>
+              isActive ? "fill-primary-600" : "fill-inherit"
+            }
+            to="/layers"
+          >
+            <LayerGroupIcon />
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              isActive ? "fill-primary-600" : "fill-inherit"
+            }
+            to="/pulls"
+          >
+            <CodeBranchIcon />
+          </NavLink>
         </div>
       </div>
       <ProfilePicture variant={variant} />

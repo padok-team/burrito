@@ -24,6 +24,10 @@ const router = createBrowserRouter([
         path: "layers",
         element: <Layers />,
       },
+      {
+        path: "pulls",
+        element: <div>Pull Requests</div>,
+      },
     ],
   },
   {
