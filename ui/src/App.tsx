@@ -9,6 +9,7 @@ import ThemeProvider from "@/contexts/ThemeContext";
 
 import Layout from "@/layout/Layout";
 import Layers from "@/pages/layers/Layers";
+import Pulls from "@/pages/pulls/Pulls";
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -26,7 +27,7 @@ const router = createBrowserRouter([
       },
       {
         path: "pulls",
-        element: <div>Pull Requests</div>,
+        element: <Pulls />,
       },
     ],
   },
