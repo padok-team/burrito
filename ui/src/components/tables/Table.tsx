@@ -212,7 +212,8 @@ const Table: React.FC<TableProps> = ({
                   )}
                   data-tooltip-id="table-tooltip"
                   data-tooltip-content={
-                    cell.column.id !== "state"
+                    cell.column.id === "lastResult" &&
+                    cell.row.original.isRunning
                       ? (cell.getValue() as string)
                       : null
                   }

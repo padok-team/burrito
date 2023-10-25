@@ -90,8 +90,6 @@ const Card: React.FC<CardProps> = ({
             truncate
             ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}
           `}
-          data-tooltip-id="card-tooltip"
-          data-tooltip-content={name}
         >
           {name}
         </span>
@@ -140,7 +138,11 @@ const Card: React.FC<CardProps> = ({
             >
               <span
                 data-tooltip-id="card-tooltip"
-                data-tooltip-content={typeof value === "string" ? value : null}
+                data-tooltip-content={
+                  label === "Path" || label === "Last result"
+                    ? (value as string)
+                    : null
+                }
               >
                 {value}
               </span>
