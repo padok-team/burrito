@@ -224,7 +224,10 @@ const Table: React.FC<TableProps> = ({
           ))}
         </tbody>
       </table>
-      <Tooltip id="table-tooltip" />
+      <Tooltip
+        id="table-tooltip"
+        variant={variant === "light" ? "dark" : "light"}
+      />
     </div>
   );
 };

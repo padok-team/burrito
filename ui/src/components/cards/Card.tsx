@@ -128,17 +128,17 @@ const Card: React.FC<CardProps> = ({
             >
               {label}
             </span>
-            <div className="truncate">
+            <div
+              className={`
+                text-base
+                font-semibold
+                truncate
+                ${
+                  variant === "light" ? "text-nuances-black" : "text-nuances-50"
+                }
+              `}
+            >
               <span
-                className={`
-                  text-base
-                  font-semibold
-                  ${
-                    variant === "light"
-                      ? "text-nuances-black"
-                      : "text-nuances-50"
-                  }
-                `}
                 data-tooltip-id="card-tooltip"
                 data-tooltip-content={typeof value === "string" ? value : null}
               >
@@ -148,7 +148,10 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
-      <Tooltip id="card-tooltip" />
+      <Tooltip
+        id="card-tooltip"
+        variant={variant === "light" ? "dark" : "light"}
+      />
     </div>
   );
 };
