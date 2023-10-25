@@ -149,6 +149,7 @@ const Card: React.FC<CardProps> = ({
         ))}
       </div>
       <Tooltip
+        className="!opacity-100"
         id="card-tooltip"
         variant={variant === "light" ? "dark" : "light"}
       />
