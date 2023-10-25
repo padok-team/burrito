@@ -60,6 +60,10 @@ export default {
         "url('@/assets/backgrounds/background-light.png'), linear-gradient(to right, #E9F4FF, #E9F4FF)",
       "background-dark":
         "url('@/assets/backgrounds/background-dark.png'), linear-gradient(to right, #252525, #252525)",
+      "background-login-light":
+        "url('@/assets/backgrounds/background-login-light.png'), linear-gradient(to right, #E9F4FF, #E9F4FF)",
+      "background-login-dark":
+        "url('@/assets/backgrounds/background-login-dark.png'), linear-gradient(to right, #252525, #252525)",
     },
     extend: {
       animation: {
