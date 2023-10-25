@@ -140,7 +140,7 @@ const Card: React.FC<CardProps> = ({
                   }
                 `}
                 data-tooltip-id="card-tooltip"
-                data-tooltip-content={typeof value === "string" ? value : ""}
+                data-tooltip-content={typeof value === "string" ? value : null}
               >
                 {value}
               </span>

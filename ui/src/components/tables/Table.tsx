@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Tooltip } from "react-tooltip";
 
 import Tag from "@/components/tags/Tag";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
@@ -149,73 +150,82 @@ const Table: React.FC<TableProps> = ({
   };
 
   return (
-    <table className={twMerge(`w-full border-collapse h-[1px]`, className)}>
-      {/* HACK: 1px height actually ignored but required to make cell div full size */}
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr
-            key={headerGroup.id}
-            className={`border-b ${styles.header[variant]}`}
-          >
-            {headerGroup.headers.map((header) => (
-              <th
-                key={header.id}
-                className={`
-                  text-left
-                  text-base
-                  font-normal
-                  px-6
-                  pb-4
-                `}
-              >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr
-            key={row.id}
-            className={twMerge(
-              `border-b
-              h-full
-              ${styles.row.base[variant]}`,
-              row.original.isRunning &&
-                `rounded-2xl
-                outline
-                outline-4
-                -outline-offset-4
-                ${styles.row.running[variant]}`
-            )}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <td
-                key={cell.id}
-                className={twMerge(
-                  `text-left
-                  h-full
-                  text-base
-                  font-semibold
-                  px-6
-                  py-4`,
-                  cell.row.original.isRunning &&
-                    "first:rounded-l-2xl last:rounded-r-2xl"
-                )}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      <table className={twMerge(`w-full border-collapse h-[1px]`, className)}>
+        {/* HACK: 1px height actually ignored but required to make cell div full size */}
+        <thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr
+              key={headerGroup.id}
+              className={`border-b ${styles.header[variant]}`}
+            >
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  className={`
+                    text-left
+                    text-base
+                    font-normal
+                    px-6
+                    pb-4
+                  `}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map((row) => (
+            <tr
+              key={row.id}
+              className={twMerge(
+                `border-b
+                h-full
+                ${styles.row.base[variant]}`,
+                row.original.isRunning &&
+                  `rounded-2xl
+                  outline
+                  outline-4
+                  -outline-offset-4
+                  ${styles.row.running[variant]}`
+              )}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <td
+                  key={cell.id}
+                  className={twMerge(
+                    `text-left
+                    h-full
+                    text-base
+                    font-semibold
+                    px-6
+                    py-4`,
+                    cell.row.original.isRunning &&
+                      "first:rounded-l-2xl last:rounded-r-2xl"
+                  )}
+                  data-tooltip-id="table-tooltip"
+                  data-tooltip-content={
+                    cell.column.id !== "state"
+                      ? (cell.getValue() as string)
+                      : null
+                  }
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Tooltip id="table-tooltip" />
+    </div>
   );
 };
 
