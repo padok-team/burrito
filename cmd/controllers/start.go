@@ -23,9 +23,9 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 		},
 	}
 
-	defaultDriftDetectionTimer, _ := time.ParseDuration("20m")
-	defaultOnErrorTimer, _ := time.ParseDuration("1m")
-	defaultWaitActionTimer, _ := time.ParseDuration("1m")
+	defaultDriftDetectionTimer, _ := time.ParseDuration("1h")
+	defaultOnErrorTimer, _ := time.ParseDuration("30s")
+	defaultWaitActionTimer, _ := time.ParseDuration("15s")
 	defaultFailureGracePeriod, _ := time.ParseDuration("15s")
 
 	cmd.Flags().StringSliceVar(&app.Config.Controller.Namespaces, "namespaces", []string{"burrito-system"}, "list of namespaces to watch")

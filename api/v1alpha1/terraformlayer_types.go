@@ -47,6 +47,7 @@ type TerraformLayerStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 	State      string             `json:"state,omitempty"`
 	LastResult string             `json:"lastResult,omitempty"`
+	LastRun    string             `json:"lastRun,omitempty"`
 }
 
 // +kubebuilder:object:root=true

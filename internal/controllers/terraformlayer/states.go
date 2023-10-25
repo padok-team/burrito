@@ -11,7 +11,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-type Handler func(context.Context, *Reconciler, *configv1alpha1.TerraformLayer, *configv1alpha1.TerraformRepository) ctrl.Result
+type Handler func(context.Context, *Reconciler, *configv1alpha1.TerraformLayer, *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun)
 
 type State interface {
 	getHandler() Handler
@@ -42,43 +42,43 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 type Idle struct{}
 
 func (s *Idle) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 	}
 }
 
 type PlanNeeded struct{}
 
 func (s *PlanNeeded) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
 		run := r.getRun(layer, repository, "plan")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			log.Errorf("failed to create TerraformRun for Plan action on layer %s: %s", layer.Name, err)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
 
 type ApplyNeeded struct{}
 
 func (s *ApplyNeeded) getHandler() Handler {
-	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
 		remediationStrategy := configv1alpha1.GetRemediationStrategy(repository, layer)
 		if !remediationStrategy.AutoApply {
 			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
 		run := r.getRun(layer, repository, "apply")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			log.Errorf("failed to create TerraformRun for Apply action on layer %s: %s", layer.Name, err)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
 
