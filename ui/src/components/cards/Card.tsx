@@ -1,5 +1,6 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { Tooltip } from "react-tooltip";
 
 import Tag from "@/components/tags/Tag";
 import SyncIcon from "@/assets/icons/SyncIcon";
@@ -89,6 +90,8 @@ const Card: React.FC<CardProps> = ({
             truncate
             ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}
           `}
+          data-tooltip-id="card-tooltip"
+          data-tooltip-content={name}
         >
           {name}
         </span>
@@ -125,21 +128,27 @@ const Card: React.FC<CardProps> = ({
             >
               {label}
             </span>
-            <span
-              className={`
-                text-base
-                font-semibold
-                truncate
-                ${
-                  variant === "light" ? "text-nuances-black" : "text-nuances-50"
-                }
-              `}
-            >
-              {value}
-            </span>
+            <div className="truncate">
+              <span
+                className={`
+                  text-base
+                  font-semibold
+                  ${
+                    variant === "light"
+                      ? "text-nuances-black"
+                      : "text-nuances-50"
+                  }
+                `}
+                data-tooltip-id="card-tooltip"
+                data-tooltip-content={typeof value === "string" ? value : ""}
+              >
+                {value}
+              </span>
+            </div>
           </React.Fragment>
         ))}
       </div>
+      <Tooltip id="card-tooltip" />
     </div>
   );
 };
