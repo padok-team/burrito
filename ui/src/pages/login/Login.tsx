@@ -9,8 +9,8 @@ import SocialButton from "@/components/buttons/SocialButton";
 
 import Burrito from "@/assets/illustrations/Burrito";
 import EyeSlashIcon from "@/assets/icons/EyeSlashIcon";
-// import CoverLight from "@/assets/covers/cover-light.png";
-// import CoverDark from "@/assets/covers/cover-dark.png";
+import CoverLight from "@/assets/covers/cover-light.png";
+import CoverDark from "@/assets/covers/cover-dark.png";
 
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -128,11 +128,16 @@ const Login: React.FC = () => {
           relative
           flex
           flex-col
+          overflow-hidden
           w-[calc(100%_-_500px)]
           pt-20
           px-16
           gap-6
-          bg-background-dark
+          ${
+            theme === "light"
+              ? "bg-background-login-light"
+              : "bg-background-login-dark"
+          }
         `}
       >
         <div
@@ -147,10 +152,19 @@ const Login: React.FC = () => {
             Monitor the status of your layers and their impacts on your project.
           </span>
         </div>
-        {/* <img
-          className="absolute right-0 bottom-0 -rotate-12 translate-y-20 translate-x-28 shadow-light rounded-lg h-[600px] object-cover"
-          src={CoverLight}
-        /> */}
+        <img
+          className={`
+            absolute
+            right-0
+            bottom-0
+            -rotate-12
+            translate-y-20
+            translate-x-28
+            rounded-lg
+            ${theme === "light" ? "shadow-light" : "shadow-dark"}
+          `}
+          src={theme === "light" ? CoverLight : CoverDark}
+        />
       </div>
     </div>
   );
