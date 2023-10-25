@@ -5,12 +5,14 @@ import GithubIcon from "@/assets/icons/GithubIcon";
 import GitlabIcon from "@/assets/icons/GitlabIcon";
 
 export interface SocialButtonProps {
+  className?: string;
   variant: "github" | "gitlab";
   isLoading?: boolean;
   onClick?: () => void;
 }
 
 const SocialButton: React.FC<SocialButtonProps> = ({
+  className,
   variant,
   isLoading,
   onClick,
@@ -36,7 +38,7 @@ const SocialButton: React.FC<SocialButtonProps> = ({
 
   return (
     <Button
-      className="w-[300px]"
+      className={className}
       variant="secondary"
       isLoading={isLoading}
       onClick={onClick}
