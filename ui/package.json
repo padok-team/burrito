@@ -16,6 +16,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
+    "react-tooltip": "^5.21.6",
     "tailwind-merge": "^1.14.0"
   },
   "devDependencies": {
