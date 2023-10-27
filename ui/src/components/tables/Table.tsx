@@ -124,21 +124,17 @@ const Table: React.FC<TableProps> = ({
 
   const styles = {
     header: {
-      light: `text-primary-600
-        border-primary-500`,
-      dark: `text-nuances-300
-        border-nuances-300`,
+      light: `text-primary-600`,
+      dark: `text-nuances-300`,
     },
     row: {
       base: {
         light: `text-nuances-black
           fill-nuances-black
-          border-primary-500
           hover:bg-nuances-white
           hover:shadow-light`, // BUG: not working on Safari
         dark: `text-nuances-50
           fill-nuances-50
-          border-nuances-300
           hover:bg-nuances-400
           hover:shadow-dark`, // BUG: not working on Safari
       },
@@ -146,6 +142,10 @@ const Table: React.FC<TableProps> = ({
         light: `outline-blue-400`,
         dark: `outline-blue-500`,
       },
+    },
+    separator: {
+      light: `border-primary-500`,
+      dark: `border-nuances-300`,
     },
   };
 
@@ -155,14 +155,12 @@ const Table: React.FC<TableProps> = ({
         {/* HACK: 1px height actually ignored but required to make cell div full size */}
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr
-              key={headerGroup.id}
-              className={`border-b ${styles.header[variant]}`}
-            >
-              {headerGroup.headers.map((header) => (
+            <tr key={headerGroup.id} className={`${styles.header[variant]}`}>
+              {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
                   className={`
+                    relative
                     text-left
                     text-base
                     font-normal
@@ -176,6 +174,37 @@ const Table: React.FC<TableProps> = ({
                         header.column.columnDef.header,
                         header.getContext()
                       )}
+                  {index === 0 ? (
+                    <hr
+                      className={`
+                        absolute
+                        right-0
+                        bottom-0
+                        w-[calc(100%_-_25px)]
+                        ${styles.separator[variant]}
+                      `}
+                    />
+                  ) : index === headerGroup.headers.length - 1 ? (
+                    <hr
+                      className={`
+                        absolute
+                        left-0
+                        bottom-0
+                        w-[calc(100%_-_25px)]
+                        ${styles.separator[variant]}
+                      `}
+                    />
+                  ) : (
+                    <hr
+                      className={`
+                        absolute
+                        bottom-0
+                        left-0
+                        w-full
+                        ${styles.separator[variant]}
+                      `}
+                    />
+                  )}
                 </th>
               ))}
             </tr>
@@ -186,8 +215,7 @@ const Table: React.FC<TableProps> = ({
             <tr
               key={row.id}
               className={twMerge(
-                `border-b
-                h-full
+                `h-full
                 ${styles.row.base[variant]}`,
                 row.original.isRunning &&
                   `rounded-2xl
@@ -197,11 +225,12 @@ const Table: React.FC<TableProps> = ({
                   ${styles.row.running[variant]}`
               )}
             >
-              {row.getVisibleCells().map((cell) => (
+              {row.getVisibleCells().map((cell, index) => (
                 <td
                   key={cell.id}
                   className={twMerge(
-                    `text-left
+                    `relative
+                    text-left
                     h-full
                     text-base
                     font-semibold
@@ -219,6 +248,37 @@ const Table: React.FC<TableProps> = ({
                   }
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  {index === 0 ? (
+                    <hr
+                      className={`
+                        absolute
+                        right-0
+                        bottom-0
+                        w-[calc(100%_-_25px)]
+                        ${styles.separator[variant]}
+                      `}
+                    />
+                  ) : index === row.getVisibleCells().length - 1 ? (
+                    <hr
+                      className={`
+                        absolute
+                        left-0
+                        bottom-0
+                        w-[calc(100%_-_25px)]
+                        ${styles.separator[variant]}
+                      `}
+                    />
+                  ) : (
+                    <hr
+                      className={`
+                        absolute
+                        bottom-0
+                        left-0
+                        w-full
+                        ${styles.separator[variant]}
+                      `}
+                    />
+                  )}
                 </td>
               ))}
             </tr>
