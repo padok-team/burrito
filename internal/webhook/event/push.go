@@ -47,7 +47,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 	}
 
-	for _, layer := range e.getAffectedLayers(layers.Items, repositories.Items) {
+	for _, layer := range e.getAffectedLayers(layers.Items, affectedRepositories) {
 		ann := map[string]string{}
 		log.Printf("evaluating terraform layer %s for revision %s", layer.Name, e.Revision)
 		if layer.Spec.Branch != e.Revision {
@@ -57,6 +57,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
 
 		if controller.LayerFilesHaveChanged(layer, e.Changes) {
+			log.Infof("layer %s is affected by push event", layer.Name)
 			ann[annotations.LastRelevantCommit] = e.ChangeInfo.ShaAfter
 		}
 
@@ -81,8 +82,10 @@ func (e *PushEvent) Handle(c client.Client) error {
 
 func (e *PushEvent) getAffectedRepositories(repositories []configv1alpha1.TerraformRepository) []configv1alpha1.TerraformRepository {
 	affectedRepositories := []configv1alpha1.TerraformRepository{}
+	log.Infof("looking for affected repositories, event url: %s", e.URL)
 	for _, repo := range repositories {
 		if e.URL == NormalizeUrl(repo.Spec.Repository.Url) {
+			log.Infof("repository %s is affected by push event", repo.Name)
 			affectedRepositories = append(affectedRepositories, repo)
 			continue
 		}
