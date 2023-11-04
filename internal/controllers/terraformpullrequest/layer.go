@@ -63,7 +63,7 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 		new := configv1alpha1.TerraformLayer{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:    layer.ObjectMeta.Namespace,
-				GenerateName: fmt.Sprintf("%s-%s-", layer.Name, pr.Spec.ID),
+				GenerateName: fmt.Sprintf("%s-pr-%s-", layer.Name, pr.Spec.ID),
 				Annotations: map[string]string{
 					annotations.LastBranchCommit:   pr.Annotations[annotations.LastBranchCommit],
 					annotations.LastRelevantCommit: pr.Annotations[annotations.LastBranchCommit],

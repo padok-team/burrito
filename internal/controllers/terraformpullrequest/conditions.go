@@ -29,7 +29,7 @@ func (r *Reconciler) IsLastCommitDiscovered(pr *configv1alpha1.TerraformPullRequ
 	lastBranchCommit, ok := pr.Annotations[annotations.LastBranchCommit]
 	if !ok {
 		condition.Reason = "UnknownLastBranchCommit"
-		condition.Message = "This should have happened"
+		condition.Message = "This should not have happened"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
