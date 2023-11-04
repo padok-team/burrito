@@ -51,6 +51,7 @@ func (e *PullRequestEvent) Handle(c client.Client) error {
 func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
+		log.Infof("creating terraform pull request %s/%s", pr.Namespace, pr.Name)
 		err := c.Create(ctx, &pr)
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
@@ -62,7 +63,7 @@ func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv
 func batchDeletePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
-		log.Info(fmt.Sprintf("deleting pull request %s", pr.Name))
+		log.Infof("deleting terraform pull request %s/%s", pr.Namespace, pr.Name)
 		err := c.Delete(ctx, &pr)
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
