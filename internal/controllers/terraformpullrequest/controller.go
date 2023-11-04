@@ -55,9 +55,8 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-
 	log := log.WithContext(ctx)
-	log.Infof("starting reconciliation...")
+	log.Infof("starting reconciliation for pull request %s/%s ...", req.Namespace, req.Name)
 	pr := &configv1alpha1.TerraformPullRequest{}
 	err := r.Client.Get(ctx, req.NamespacedName, pr)
 	if errors.IsNotFound(err) {
@@ -89,7 +88,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Errorf("could not update pull request %s status: %s", pr.Name, err)
 	}
-	log.Infof("finished reconciliation cycle for pull request %s", pr.Name)
+	log.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)
 	return result, nil
 }
 

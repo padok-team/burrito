@@ -70,7 +70,7 @@ type Reconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.WithContext(ctx)
-	log.Infof("starting reconciliation...")
+	log.Infof("starting reconciliation for layer %s/%s ...", req.Namespace, req.Name)
 	layer := &configv1alpha1.TerraformLayer{}
 	err := r.Client.Get(ctx, req.NamespacedName, layer)
 	if errors.IsNotFound(err) {
@@ -119,7 +119,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Errorf("could not update layer %s status: %s", layer.Name, err)
 	}
-	log.Infof("finished reconciliation cycle for layer %s", layer.Name)
+	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
 	return result, nil
 }
 
