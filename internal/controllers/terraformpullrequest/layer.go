@@ -12,6 +12,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	log "github.com/sirupsen/logrus"
 )
 
 func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
@@ -114,6 +115,7 @@ func GetLinkedLayers(cl client.Client, pr *configv1alpha1.TerraformPullRequest) 
 }
 
 func (r *Reconciler) deleteTempLayers(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) error {
+	log.Infof("deleting temporary layers for pull request %s/%s", pr.Namespace, pr.Name)
 	return r.Client.DeleteAllOf(
 		ctx, &configv1alpha1.TerraformLayer{}, client.InNamespace(pr.Namespace), client.MatchingLabels{"burrito/managed-by": pr.Name},
 	)

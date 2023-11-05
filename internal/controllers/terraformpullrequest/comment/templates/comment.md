@@ -2,7 +2,8 @@
 
 {{ len .Layers }} layer(s) affected with {{ .Commit }} commit.
 
-{{- range .Layers }}
+{{ range .Layers }}
+
 ### Layer {{ .Path }}
 
 `{{ .ShortDiff }}`
@@ -14,4 +15,5 @@
 {{ .PrettyPlan }}
 ```
 </details>
-{{- end }}
+
+{{ end }}
