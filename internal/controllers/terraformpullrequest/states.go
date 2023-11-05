@@ -32,7 +32,7 @@ func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformP
 		return &Idle{}, conditions
 	case isLastCommitDiscovered && areLayersStillPlanning:
 		log.Infof("pull request %s layers are still planning, waiting", pr.Name)
-		return &Idle{}, conditions
+		return &Planning{}, conditions
 	case isLastCommitDiscovered && !areLayersStillPlanning && !isCommentUpToDate:
 		log.Infof("pull request %s layers have finished, posting comment", pr.Name)
 		return &CommentNeeded{}, conditions
@@ -45,6 +45,14 @@ func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformP
 type Idle struct{}
 
 func (s *Idle) getHandler() func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+	}
+}
+
+type Planning struct{}
+
+func (s *Planning) getHandler() func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 	}
