@@ -7,14 +7,24 @@ metadata:
     app.kubernetes.io/name: burrito-controllers
     app.kubernetes.io/part-of: burrito
 rules:
-  - apiGroups: ["events.k8s.io"]
-    resources: ["events"]
-    verbs: ["create", "update"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["create", "update"]
-  - apiGroups: [""]
-    resources: ["pods"]
+  - apiGroups:
+      - events.k8s.io
+    resources:
+      - events
+    verbs:
+      - create
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
     verbs:
       - create
       - delete
@@ -30,6 +40,7 @@ rules:
     verbs:
       - create
       - delete
+      - deletecollection
       - get
       - list
       - patch
@@ -128,7 +139,7 @@ rules:
       - patch
       - update
   - apiGroups:
-      - "coordination.k8s.io"
+      - coordination.k8s.io
     resources:
       - leases
     verbs:
