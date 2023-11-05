@@ -1,15 +1,11 @@
 package terraformpullrequest
 
 import (
-	"context"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (r *Reconciler) IsLastCommitDiscovered(pr *configv1alpha1.TerraformPullRequest) (metav1.Condition, bool) {
@@ -142,18 +138,4 @@ func (r *Reconciler) IsCommentUpToDate(pr *configv1alpha1.TerraformPullRequest) 
 	condition.Message = "The comment is up to date."
 	condition.Status = metav1.ConditionTrue
 	return condition, true
-}
-
-func GetLinkedLayers(cl client.Client, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
-	layers := configv1alpha1.TerraformLayerList{}
-	requirement, err := labels.NewRequirement("burrito/managed-by", selection.Equals, []string{pr.Name})
-	if err != nil {
-		return nil, err
-	}
-	selector := labels.NewSelector().Add(*requirement)
-	err = cl.List(context.TODO(), &layers, client.MatchingLabelsSelector{Selector: selector})
-	if err != nil {
-		return nil, err
-	}
-	return layers.Items, nil
 }
