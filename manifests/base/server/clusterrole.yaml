@@ -11,7 +11,18 @@ rules:
       - config.terraform.padok.cloud
     resources:
       - terraformlayers
-      - terraformpullrequests
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - config.terraform.padok.cloud
+    resources:
+      - terraformrepositories
     verbs:
       - create
       - delete
@@ -29,15 +40,7 @@ rules:
   - apiGroups:
       - config.terraform.padok.cloud
     resources:
-      - terraformlayers/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - config.terraform.padok.cloud
-    resources:
-      - terraformrepositories
+      - terraformpullrequests
     verbs:
       - create
       - delete
@@ -49,26 +52,40 @@ rules:
   - apiGroups:
       - config.terraform.padok.cloud
     resources:
-      - terraformrepositories/finalizers
+      - terraformpullrequests/finalizers
     verbs:
       - update
   - apiGroups:
       - config.terraform.padok.cloud
     resources:
-      - terraformrepositories/status
+      - terraformpullrequests/status
     verbs:
       - get
       - patch
       - update
   - apiGroups:
-      - "coordination.k8s.io"
+      - config.terraform.padok.cloud
     resources:
-      - leases
+      - terraformruns
     verbs:
+      - create
+      - delete
       - get
       - list
-      - watch
-      - create
-      - update
       - patch
-      - delete
+      - update
+      - watch
+  - apiGroups:
+      - config.terraform.padok.cloud
+    resources:
+      - terraformruns/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - config.terraform.padok.cloud
+    resources:
+      - terraformruns/status
+    verbs:
+      - get
+      - patch
+      - update
