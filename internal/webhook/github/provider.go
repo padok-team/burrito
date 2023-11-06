@@ -70,7 +70,7 @@ func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
 			ID:       strconv.FormatInt(payload.PullRequest.Number, 10),
 			URL:      event.NormalizeUrl(payload.Repository.HTMLURL),
 			Revision: payload.PullRequest.Head.Ref,
-			Action:   payload.Action,
+			Action:   getNormalizedAction(payload.Action),
 			Base:     payload.PullRequest.Base.Ref,
 			Commit:   payload.PullRequest.Head.Sha,
 		}
@@ -78,4 +78,15 @@ func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
 		return nil, errors.New("unsupported Event")
 	}
 	return e, nil
+}
+
+func getNormalizedAction(action string) string {
+	switch action {
+	case "opened", "reopened":
+		return event.PullRequestOpened
+	case "closed":
+		return event.PullRequestClosed
+	default:
+		return action
+	}
 }
