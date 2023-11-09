@@ -67,7 +67,7 @@ type Reconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.WithContext(ctx)
-	log.Infof("starting reconciliation...")
+	log.Infof("starting reconciliation for run %s/%s ...", req.Namespace, req.Name)
 	run := &configv1alpha1.TerraformRun{}
 	err := r.Client.Get(ctx, req.NamespacedName, run)
 	if errors.IsNotFound(err) {
@@ -103,7 +103,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Errorf("could not update run %s status: %s", run.Name, err)
 	}
-	log.Infof("finished reconciliation cycle for run %s", run.Name)
+	log.Infof("finished reconciliation cycle for run %s/%s", run.Namespace, run.Name)
 	return result, nil
 }
 

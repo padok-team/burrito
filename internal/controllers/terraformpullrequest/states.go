@@ -9,7 +9,6 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -33,7 +32,7 @@ func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformP
 		return &Idle{}, conditions
 	case isLastCommitDiscovered && areLayersStillPlanning:
 		log.Infof("pull request %s layers are still planning, waiting", pr.Name)
-		return &Idle{}, conditions
+		return &Planning{}, conditions
 	case isLastCommitDiscovered && !areLayersStillPlanning && !isCommentUpToDate:
 		log.Infof("pull request %s layers have finished, posting comment", pr.Name)
 		return &CommentNeeded{}, conditions
@@ -51,10 +50,23 @@ func (s *Idle) getHandler() func(ctx context.Context, r *Reconciler, repository 
 	}
 }
 
+type Planning struct{}
+
+func (s *Planning) getHandler() func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+	}
+}
+
 type DiscoveryNeeded struct{}
 
 func (s *DiscoveryNeeded) getHandler() func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ctrl.Result {
+		// Delete already existing temporary layers
+		err := r.deleteTempLayers(ctx, pr)
+		if err != nil {
+			log.Errorf("failed to delete temp layers for pull request %s: %s", pr.Name, err)
+		}
 		layers, err := r.getAffectedLayers(repository, pr)
 		if err != nil {
 			log.Errorf("failed to get affected layers for pull request %s: %s", pr.Name, err)
@@ -63,19 +75,12 @@ func (s *DiscoveryNeeded) getHandler() func(ctx context.Context, r *Reconciler, 
 		newLayers := generateTempLayers(pr, layers)
 		for _, layer := range newLayers {
 			err := r.Client.Create(ctx, &layer)
-			if errors.IsAlreadyExists(err) {
-				log.Infof("layer %s already exists, updating it", layer.Name)
-				err = r.Client.Update(ctx, &layer)
-				if err != nil {
-					log.Errorf("failed to update layer %s: %s", layer.Name, err)
-					return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
-				}
-			}
 			if err != nil {
 				log.Errorf("failed to create layer %s: %s", layer.Name, err)
 				return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 			}
 		}
+		// TODO: setting this annotation triggers another reconciliation cycle while this one is still running, which is not ideal
 		err = annotations.Add(ctx, r.Client, pr, map[string]string{annotations.LastDiscoveredCommit: pr.Annotations[annotations.LastBranchCommit]})
 		if err != nil {
 			log.Errorf("failed to add annotation %s to pull request %s: %s", annotations.LastDiscoveredCommit, pr.Name, err)
