@@ -2100,6 +2100,8 @@ spec:
                 type: array
               lastResult:
                 type: string
+              lastRun:
+                type: string
               state:
                 type: string
             type: object

@@ -113,8 +113,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		lastResult = []byte("Error getting last Result")
 	}
-	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult)}
-	result := state.getHandler()(ctx, r, layer, repository)
+	result, run := state.getHandler()(ctx, r, layer, repository)
+	runStatus := ""
+	if run != nil {
+		runStatus = run.Name
+	}
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult), LastRun: runStatus}
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
 		log.Errorf("could not update layer %s status: %s", layer.Name, err)
