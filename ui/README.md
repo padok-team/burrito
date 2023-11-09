@@ -1,27 +1,22 @@
-# React + TypeScript + Vite
+# Burrito UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<img src="https://raw.githubusercontent.com/padok-team/burrito/main/ui/public/favicon.svg" alt="Burrito Logo" width="600" />
 
-Currently, two official plugins are available:
+Web UI for [Burrito](https://github.com/padok-team/burrito).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting started
 
-## Expanding the ESLint configuration
+1. Install [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com).
+2. Run `yarn install` to install local prerequisites.
+3. Run `yarn start` to launch the dev UI server.
+4. Run `yarn build` to bundle static resources into the `./dist` directory.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Build Docker production image
 
-- Configure the top-level `parserOptions` property like this:
+Run the following commands to build the Docker image:
 
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```bash
+TAG=latest # or any other tag
+BURRITO_API_BASE_URL=https://burrito.example.cloud/api # or any other API base URL
+docker build -t burrito-ui:$TAG --build-arg API_BASE_URL=$BURRITO_API_BASE_URL .
 ```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
