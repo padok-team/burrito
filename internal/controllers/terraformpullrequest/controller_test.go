@@ -79,6 +79,7 @@ var _ = BeforeSuite(func() {
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	Expect(err).NotTo(HaveOccurred())
 	utils.LoadResources(k8sClient, "testdata")
 	statuses := []StatusUpdate{
 		{
@@ -97,7 +98,8 @@ var _ = BeforeSuite(func() {
 			},
 		},
 	}
-	initStatus(k8sClient, statuses)
+	err = initStatus(k8sClient, statuses)
+	Expect(err).NotTo(HaveOccurred())
 	reconciler = &controller.Reconciler{
 		Client:  k8sClient,
 		Config:  config.TestConfig(),
