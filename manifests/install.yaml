@@ -1447,6 +1447,10 @@ spec:
                   - type
                   type: object
                 type: array
+              lastCommentedCommit:
+                type: string
+              lastDiscoveredCommit:
+                type: string
               state:
                 type: string
             type: object

@@ -80,6 +80,24 @@ var _ = BeforeSuite(func() {
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	utils.LoadResources(k8sClient, "testdata")
+	statuses := []StatusUpdate{
+		{
+			Name:      "pr-nominal-case-3",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformPullRequestStatus{
+				LastDiscoveredCommit: "04410b5b7d90b82ad658b86564a9aa4bce411ac9",
+				LastCommentedCommit:  "04410b5b7d90b82ad658b86564a9aa4bce411ac9",
+			},
+		},
+		{
+			Name:      "pr-nominal-case-2",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformPullRequestStatus{
+				LastDiscoveredCommit: "04410b5b7d90b82ad658b86564a9aa4bce411ac9",
+			},
+		},
+	}
+	initStatus(k8sClient, statuses)
 	reconciler = &controller.Reconciler{
 		Client:  k8sClient,
 		Config:  config.TestConfig(),
@@ -92,6 +110,39 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 })
+
+type StatusUpdate struct {
+	Name      string
+	Namespace string
+	Status    configv1alpha1.TerraformPullRequestStatus
+}
+
+func updateStatus(c client.Client, name string, namespace string, status configv1alpha1.TerraformPullRequestStatus) error {
+	pr := &configv1alpha1.TerraformPullRequest{}
+	err := c.Get(context.Background(), types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}, pr)
+	if err != nil {
+		return err
+	}
+	pr.Status = status
+	err = c.Status().Update(context.Background(), pr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initStatus(c client.Client, statuses []StatusUpdate) error {
+	for _, status := range statuses {
+		err := updateStatus(c, status.Name, status.Namespace, status.Status)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.TerraformPullRequest, error, error) {
 	result, reconcileError := reconciler.Reconcile(context.TODO(), reconcile.Request{
@@ -138,7 +189,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 			})
 			Context("Has discovered commit annotation", func() {
 				It("Should return true", func() {
-					pr.Annotations[annotations.LastDiscoveredCommit] = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
+					pr.Status.LastDiscoveredCommit = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
 					_, value := reconciler.IsLastCommitDiscovered(pr)
 					Expect(value).To(BeTrue())
 				})
@@ -161,7 +212,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 				})
 				Context("Has discovered annotation", func() {
 					It("Should return false", func() {
-						pr.Annotations[annotations.LastDiscoveredCommit] = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
+						pr.Status.LastDiscoveredCommit = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
 						_, value := reconciler.IsCommentUpToDate(pr)
 						Expect(value).To(BeFalse())
 					})
@@ -169,16 +220,16 @@ var _ = Describe("TerraformPullRequest controller", func() {
 			})
 			Context("Has discovered annotation and commented annotation equals", func() {
 				It("Should return true", func() {
-					pr.Annotations[annotations.LastDiscoveredCommit] = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
-					pr.Annotations[annotations.LastCommentedCommit] = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
+					pr.Status.LastDiscoveredCommit = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
+					pr.Status.LastCommentedCommit = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
 					_, value := reconciler.IsCommentUpToDate(pr)
 					Expect(value).To(BeTrue())
 				})
 			})
 			Context("Has discovered annotation and commented annotation different", func() {
 				It("Should return false", func() {
-					pr.Annotations[annotations.LastDiscoveredCommit] = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
-					pr.Annotations[annotations.LastCommentedCommit] = "old"
+					pr.Status.LastDiscoveredCommit = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
+					pr.Status.LastCommentedCommit = "old"
 					_, value := reconciler.IsCommentUpToDate(pr)
 					Expect(value).To(BeFalse())
 				})
@@ -187,7 +238,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 		Describe("AreLayersStillPlanning", func() {
 			var layer *configv1alpha1.TerraformLayer
 			BeforeEach(func() {
-				pr.Annotations[annotations.LastDiscoveredCommit] = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
+				pr.Status.LastDiscoveredCommit = "04410b5b7d90b82ad658b86564a9aa4bce411ac9"
 				layer = &configv1alpha1.TerraformLayer{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-layer",
@@ -208,7 +259,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 			Context("PR annotations", func() {
 				Context("No discovered commit annotation", func() {
 					It("Should return true", func() {
-						delete(pr.Annotations, annotations.LastDiscoveredCommit)
+						pr.Status.LastDiscoveredCommit = ""
 						condition, value := reconciler.AreLayersStillPlanning(pr)
 						Expect(condition.Reason).To(Equal("NoCommitDiscovered"))
 						Expect(value).To(BeTrue())
@@ -224,7 +275,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 				})
 				Context("Discovered and Last Branch different", func() {
 					It("Should return false", func() {
-						pr.Annotations[annotations.LastDiscoveredCommit] = "other"
+						pr.Status.LastDiscoveredCommit = "other"
 						condition, value := reconciler.AreLayersStillPlanning(pr)
 						Expect(condition.Reason).To(Equal("StillNeedsDiscovery"))
 						Expect(value).To(BeTrue())
@@ -301,7 +352,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 				})
 				It("should have a LastDiscoveredCommit annotation", func() {
-					Expect(pr.Annotations[annotations.LastDiscoveredCommit]).To(Equal(pr.Annotations[annotations.LastBranchCommit]))
+					Expect(pr.Status.LastDiscoveredCommit).To(Equal(pr.Annotations[annotations.LastBranchCommit]))
 				})
 				It("should have created 2 temp layers", func() {
 					layers, err := controller.GetLinkedLayers(k8sClient, pr)
@@ -330,7 +381,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 				})
 				It("should have a LastCommentedCommit annotation", func() {
-					Expect(pr.Annotations[annotations.LastCommentedCommit]).To(Equal(pr.Annotations[annotations.LastDiscoveredCommit]))
+					Expect(pr.Status.LastCommentedCommit).To(Equal(pr.Status.LastDiscoveredCommit))
 				})
 			})
 			Describe("When a TerraformPullRequest has all its comment up to date", Ordered, func() {
@@ -375,7 +426,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 				})
 				It("should have a LastDiscoveredCommit annotation", func() {
-					Expect(pr.Annotations[annotations.LastDiscoveredCommit]).To(Equal(pr.Annotations[annotations.LastBranchCommit]))
+					Expect(pr.Status.LastDiscoveredCommit).To(Equal(pr.Annotations[annotations.LastBranchCommit]))
 				})
 				It("should not have created temp layers", func() {
 					layers, err := controller.GetLinkedLayers(k8sClient, pr)
@@ -425,7 +476,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					Expect(pr.Status.State).To(Equal("DiscoveryNeeded"))
 				})
 				It("should not have a LastDiscoveredCommit annotation", func() {
-					Expect(pr.Annotations).NotTo(HaveKey(annotations.LastDiscoveredCommit))
+					Expect(pr.Status.LastDiscoveredCommit).To(Equal(""))
 				})
 			})
 		})

@@ -63,7 +63,6 @@ metadata:
     app.kubernetes.io/instance: in-cluster-burrito
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
-    pullrequest.terraform.padok.cloud/last-discovered-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
   provider: mock
   branch: feature-branch-2
@@ -106,8 +105,6 @@ metadata:
     app.kubernetes.io/instance: in-cluster-burrito
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
-    pullrequest.terraform.padok.cloud/last-discovered-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
-    pullrequest.terraform.padok.cloud/last-commented-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
   provider: mock
   branch: feature-branch-3

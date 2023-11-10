@@ -18,11 +18,7 @@ const (
 	LastBranchCommit   string = "webhook.terraform.padok.cloud/branch-commit"
 	LastRelevantCommit string = "webhook.terraform.padok.cloud/relevant-commit"
 
-	ForceApply string = "notifications.terraform.padok.cloud/force-apply"
-
-	LastDiscoveredCommit string = "pullrequest.terraform.padok.cloud/last-discovered-commit"
-	LastCommentedCommit  string = "pullrequest.terraform.padok.cloud/last-commented-commit"
-
+	ForceApply              string = "notifications.terraform.padok.cloud/force-apply"
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 )
 
