@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// go:embed dist
+//go:embed all:dist
 var content embed.FS
 
 type Server struct {
