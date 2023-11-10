@@ -61,11 +61,17 @@ func (s *Server) Exec() {
 	log.Infof("starting burrito server...")
 	e := echo.New()
 	e.Use(middleware.Logger())
-	e.Use(middleware.CORS())
+	e.Use(middleware.StaticWithConfig(
+		middleware.StaticConfig{
+			Root:  "dist",
+			Index: "index.html",
+			HTML5: true,
+		},
+	))
 	e.GET("/healthz", handleHealthz)
-	e.POST("/webhook", s.Webhook.GetHttpHandler())
-	e.GET("/layers", s.API.LayersHandler)
-	e.GET("/repositories", s.API.RepositoriesHandler)
+	e.POST("/api/webhook", s.Webhook.GetHttpHandler())
+	e.GET("/api/layers", s.API.LayersHandler)
+	e.GET("/api/repositories", s.API.RepositoriesHandler)
 	e.Logger.Fatal(e.Start(s.config.Server.Addr))
 	log.Infof("burrito server started on addr %s", s.config.Server.Addr)
 }
