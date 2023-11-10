@@ -1,6 +1,7 @@
 package server
 
 import (
+	"embed"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -18,18 +19,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// go:embed dist
+var content embed.FS
+
 type Server struct {
-	config  *config.Config
-	Webhook *webhook.Webhook
-	API     *api.API
-	client  client.Client
+	config       *config.Config
+	Webhook      *webhook.Webhook
+	API          *api.API
+	staticAssets http.FileSystem
+	client       client.Client
 }
 
 func New(c *config.Config) *Server {
 	return &Server{
-		config:  c,
-		Webhook: webhook.New(c),
-		API:     api.New(c),
+		config:       c,
+		Webhook:      webhook.New(c),
+		API:          api.New(c),
+		staticAssets: http.FS(content),
 	}
 }
 
@@ -63,9 +69,10 @@ func (s *Server) Exec() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.StaticWithConfig(
 		middleware.StaticConfig{
-			Root:  "dist",
-			Index: "index.html",
-			HTML5: true,
+			Filesystem: s.staticAssets,
+			Root:       "dist",
+			Index:      "index.html",
+			HTML5:      true,
 		},
 	))
 	e.GET("/healthz", handleHealthz)
