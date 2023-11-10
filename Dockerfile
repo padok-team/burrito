@@ -1,3 +1,19 @@
+# Build Burrito UI
+
+FROM docker.io/library/node:20.9.0@sha256:cb7cd40ba6483f37f791e1aace576df449fc5f75332c19ff59e2c6064797160e AS builder-ui
+
+WORKDIR /workspace
+# Copy the node modules manifests
+COPY ui/package.json ui/yarn.lock ./
+# Install build dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy the UI source
+COPY ui .
+# Set the API base URL
+ENV VITE_API_BASE_URL=/api
+RUN yarn build
+
 # Build the manager binary
 FROM docker.io/library/golang:1.20.7@sha256:bc5f0b5e43282627279fe5262ae275fecb3d2eae3b33977a7fd200c7a760d6f1 as builder
 ARG TARGETOS
@@ -20,6 +36,8 @@ COPY main.go main.go
 COPY api/ api/
 COPY internal/ internal/
 COPY cmd/ cmd/
+# Copy the UI build artifacts
+COPY --from=builder-ui /workspace/dist internal/server/dist
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
