@@ -26,9 +26,9 @@ config:
       # -- By default, the controller will watch all namespaces
       namespaces: []
       timers:
-        driftDetection: 20m
-        onError: 1m
-        waitAction: 1m
+        driftDetection: 1h
+        onError: 30s
+        waitAction: 15s
         failureGracePeriod: 15s
       terraformMaxRetries: 5
       types: ["layer", "repository", "run", "pullrequest"]
