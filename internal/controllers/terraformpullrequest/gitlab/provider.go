@@ -9,6 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
@@ -86,18 +87,6 @@ func (g *Gitlab) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 }
 
 func getGitlabNamespacedName(url string) string {
-	normalizedUrl := normalizeUrl(url)
+	normalizedUrl := utils.NormalizeUrl(url)
 	return strings.Join(strings.Split(normalizedUrl[8:], "/")[1:], "/")
-}
-
-func normalizeUrl(url string) string {
-	if strings.Contains(url, "https://") {
-		return url
-	}
-	// All SSH URL from GitLab are like "git@<URL>:<owner>/<repo>.git"
-	// We split on ":" then remove ".git" by removing the last characters
-	// To handle enterprise GitLab on premise, we dynamically get "padok.gitlab.com"
-	// By removing "git@" at the beginning of the string
-	split := strings.Split(url, ":")
-	return fmt.Sprintf("https://%s/%s", split[0][4:], split[1][:len(split[1])-4])
 }

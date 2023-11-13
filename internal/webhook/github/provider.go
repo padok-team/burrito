@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	utils "github.com/padok-team/burrito/internal/utils/url"
+
 	"github.com/go-playground/webhooks/github"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/webhook/event"
@@ -51,7 +53,7 @@ func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 		e = &event.PushEvent{
-			URL:      event.NormalizeUrl(payload.Repository.HTMLURL),
+			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
 			Revision: event.ParseRevision(payload.Ref),
 			ChangeInfo: event.ChangeInfo{
 				ShaBefore: payload.Before,
@@ -68,7 +70,7 @@ func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
 		e = &event.PullRequestEvent{
 			Provider: "github",
 			ID:       strconv.FormatInt(payload.PullRequest.Number, 10),
-			URL:      event.NormalizeUrl(payload.Repository.HTMLURL),
+			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
 			Revision: payload.PullRequest.Head.Ref,
 			Action:   getNormalizedAction(payload.Action),
 			Base:     payload.PullRequest.Base.Ref,
