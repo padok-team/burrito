@@ -81,10 +81,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRepository: %s", err)
 		return ctrl.Result{}, err
 	}
-	state, conditions := r.GetState(ctx, pr)
-	result := state.getHandler()(ctx, r, repository, pr)
-
-	pr.Status = configv1alpha1.TerraformPullRequestStatus{Conditions: conditions, State: getStateString(state)}
+	state := r.GetState(ctx, pr)
+	result := state.Handler(ctx, r, repository, pr)
+	pr.Status = state.Status
 	err = r.Client.Status().Update(ctx, pr)
 	if err != nil {
 		log.Errorf("could not update pull request %s status: %s", pr.Name, err)

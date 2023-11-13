@@ -34,8 +34,10 @@ type TerraformPullRequestSpec struct {
 
 // TerraformPullRequestStatus defines the observed state of TerraformPullRequest
 type TerraformPullRequestStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	State      string             `json:"state,omitempty"`
+	Conditions           []metav1.Condition `json:"conditions,omitempty"`
+	State                string             `json:"state,omitempty"`
+	LastDiscoveredCommit string             `json:"lastDiscoveredCommit,omitempty"`
+	LastCommentedCommit  string             `json:"lastCommentedCommit,omitempty"`
 }
 
 // +kubebuilder:object:root=true

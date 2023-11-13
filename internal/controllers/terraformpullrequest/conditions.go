@@ -15,8 +15,8 @@ func (r *Reconciler) IsLastCommitDiscovered(pr *configv1alpha1.TerraformPullRequ
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	lastDiscoveredCommit, ok := pr.Annotations[annotations.LastDiscoveredCommit]
-	if !ok {
+	lastDiscoveredCommit := pr.Status.LastDiscoveredCommit
+	if lastDiscoveredCommit == "" {
 		condition.Reason = "NoCommitDiscovered"
 		condition.Message = "Controller hasn't discovered any commit yet."
 		condition.Status = metav1.ConditionFalse
@@ -50,7 +50,7 @@ func (r *Reconciler) AreLayersStillPlanning(pr *configv1alpha1.TerraformPullRequ
 	}
 	layers, err := GetLinkedLayers(r.Client, pr)
 
-	lastDiscoveredCommit, okDiscoveredCommit := pr.Annotations[annotations.LastDiscoveredCommit]
+	lastDiscoveredCommit := pr.Status.LastDiscoveredCommit
 	prLastBranchCommit, okPRBranchCommit := pr.Annotations[annotations.LastBranchCommit]
 
 	if !okPRBranchCommit {
@@ -60,7 +60,7 @@ func (r *Reconciler) AreLayersStillPlanning(pr *configv1alpha1.TerraformPullRequ
 		return condition, true
 	}
 
-	if !okDiscoveredCommit {
+	if lastDiscoveredCommit == "" {
 		condition.Reason = "NoCommitDiscovered"
 		condition.Message = "Controller hasn't discovered any commit yet."
 		condition.Status = metav1.ConditionTrue
@@ -114,15 +114,15 @@ func (r *Reconciler) IsCommentUpToDate(pr *configv1alpha1.TerraformPullRequest) 
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	lastDiscoveredCommit, ok := pr.Annotations[annotations.LastDiscoveredCommit]
-	if !ok {
-		condition.Reason = "Unknown"
-		condition.Message = "This should not have happened"
+	lastDiscoveredCommit := pr.Status.LastDiscoveredCommit
+	if lastDiscoveredCommit == "" {
+		condition.Reason = "UnDiscovered"
+		condition.Message = "Pull request has not been discovered yet."
 		condition.Status = metav1.ConditionUnknown
 		return condition, true
 	}
-	lastCommentedCommit, ok := pr.Annotations[annotations.LastCommentedCommit]
-	if !ok {
+	lastCommentedCommit := pr.Status.LastCommentedCommit
+	if lastCommentedCommit == "" {
 		condition.Reason = "NoCommentSent"
 		condition.Message = "No comment has ever been sent"
 		condition.Status = metav1.ConditionFalse
