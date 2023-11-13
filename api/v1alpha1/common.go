@@ -46,6 +46,7 @@ type OnErrorRemediationStrategy struct {
 type TerraformConfig struct {
 	Version          string           `json:"version,omitempty"`
 	TerragruntConfig TerragruntConfig `json:"terragrunt,omitempty"`
+	NoLock           bool             `json:"lock,omitempty"`
 }
 
 type TerragruntConfig struct {

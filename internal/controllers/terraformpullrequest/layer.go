@@ -61,9 +61,11 @@ func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.Terr
 	return false
 }
 
-func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []configv1alpha1.TerraformLayer) []configv1alpha1.TerraformLayer {
+func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, repository *configv1alpha1.TerraformRepository, layers []configv1alpha1.TerraformLayer) []configv1alpha1.TerraformLayer {
 	list := []configv1alpha1.TerraformLayer{}
 	for _, layer := range layers {
+		terraformConfig := layer.Spec.TerraformConfig.DeepCopy()
+		terraformConfig.NoLock = true
 		new := configv1alpha1.TerraformLayer{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:    layer.ObjectMeta.Namespace,
@@ -87,7 +89,7 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 			Spec: configv1alpha1.TerraformLayerSpec{
 				Path:            layer.Spec.Path,
 				Branch:          pr.Spec.Branch,
-				TerraformConfig: layer.Spec.TerraformConfig,
+				TerraformConfig: *terraformConfig,
 				Repository:      layer.Spec.Repository,
 				RemediationStrategy: configv1alpha1.RemediationStrategy{
 					AutoApply: false,

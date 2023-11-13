@@ -71,13 +71,15 @@ type Initial struct{}
 func (s *Initial) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
 		log := log.WithContext(ctx)
-		err := lock.CreateLock(ctx, r.Client, layer, run)
-		if err != nil {
-			log.Errorf("could not set lock on run %s for layer %s, requeuing resource: %s", run.Name, layer.Name, err)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
+		if !layer.Spec.TerraformConfig.NoLock {
+			err := lock.CreateLock(ctx, r.Client, layer, run)
+			if err != nil {
+				log.Errorf("could not set lock on run %s for layer %s, requeuing resource: %s", run.Name, layer.Name, err)
+				return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
+			}
 		}
 		pod := r.getPod(run, layer, repo)
-		err = r.Client.Create(ctx, &pod)
+		err := r.Client.Create(ctx, &pod)
 		if err != nil {
 			log.Errorf("failed to create pod for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
