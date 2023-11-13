@@ -31,7 +31,9 @@ const Layers: React.FC = () => {
   const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
   const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
 
-  const layersQuery = useQuery(reactQueryKeys.layers, fetchLayers, {
+  const layersQuery = useQuery({
+    queryKey: reactQueryKeys.layers,
+    queryFn: fetchLayers,
     select: (data) => ({
       ...data,
       results: data.results

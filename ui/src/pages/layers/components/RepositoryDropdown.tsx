@@ -21,18 +21,16 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
 }) => {
   const [search, setSearch] = useState<string>("");
 
-  const repositoriesQuery = useQuery(
-    reactQueryKeys.repositories,
-    fetchRepositories,
-    {
-      select: (data) => ({
-        ...data,
-        results: data.results.filter((r) =>
-          r.name.toLowerCase().includes(search.toLowerCase())
-        ),
-      }),
-    }
-  );
+  const repositoriesQuery = useQuery({
+    queryKey: reactQueryKeys.repositories,
+    queryFn: fetchRepositories,
+    select: (data) => ({
+      ...data,
+      results: data.results.filter((r) =>
+        r.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    }),
+  });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
