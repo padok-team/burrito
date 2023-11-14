@@ -77,7 +77,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/hc-install v0.6.0
+	github.com/hashicorp/hc-install v0.6.1
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.19.0
 	github.com/imdario/mergo v0.3.15 // indirect
