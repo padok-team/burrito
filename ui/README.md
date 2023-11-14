@@ -8,7 +8,7 @@ Web UI for [Burrito](https://github.com/padok-team/burrito).
 
 1. Install [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com).
 2. Run `yarn install` to install local prerequisites.
-3. Run `yarn start` to launch the dev UI server.
+3. Run `yarn dev` to launch the dev UI server.
 4. Run `yarn build` to bundle static resources into the `./dist` directory.
 
 ## Build Docker production image
