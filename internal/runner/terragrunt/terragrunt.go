@@ -69,8 +69,11 @@ func (t *Terragrunt) Init(workingDir string) error {
 	return nil
 }
 
-func (t *Terragrunt) Plan() error {
+func (t *Terragrunt) Plan(lock bool) error {
 	options := append(t.getDefaultOptions("plan"), "-out", t.planArtifactPath)
+	if !lock {
+		options = append(options, "-lock=false")
+	}
 	cmd := exec.Command(t.execPath, options...)
 	verbose(cmd)
 	cmd.Dir = t.workingDir

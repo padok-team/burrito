@@ -61,11 +61,15 @@ func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.Terr
 	return false
 }
 
+func getBoolPointer(b bool) *bool {
+	return &b
+}
+
 func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, repository *configv1alpha1.TerraformRepository, layers []configv1alpha1.TerraformLayer) []configv1alpha1.TerraformLayer {
 	list := []configv1alpha1.TerraformLayer{}
 	for _, layer := range layers {
 		terraformConfig := layer.Spec.TerraformConfig.DeepCopy()
-		terraformConfig.NoLock = true
+		terraformConfig.NoLock = getBoolPointer(true)
 		new := configv1alpha1.TerraformLayer{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:    layer.ObjectMeta.Namespace,

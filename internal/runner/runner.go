@@ -48,7 +48,7 @@ type Runner struct {
 type TerraformExec interface {
 	Install() error
 	Init(string) error
-	Plan() error
+	Plan(bool) error
 	Apply() error
 	Show(string) ([]byte, error)
 }
@@ -215,7 +215,7 @@ func (r *Runner) plan() (string, error) {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return "", err
 	}
-	err := r.exec.Plan()
+	err := r.exec.Plan(!configv1alpha1.GetNoLock(r.repository, r.layer))
 	if err != nil {
 		log.Errorf("error executing terraform plan: %s", err)
 		return "", err

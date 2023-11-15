@@ -2016,6 +2016,8 @@ spec:
                 type: object
               terraform:
                 properties:
+                  noLock:
+                    type: boolean
                   terragrunt:
                     properties:
                       enabled:

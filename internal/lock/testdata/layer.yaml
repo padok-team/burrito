@@ -18,6 +18,30 @@ spec:
     version: 1.3.1
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: test-pr-layer
+  namespace: default
+  ownerReferences:
+  - apiVersion: config.terraform.padok.cloud/v1alpha1
+    kind: TerraformPullRequest
+    name: test-pr
+    uid: "1234567890"
+spec:
+  branch: main
+  path: test/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
 metadata:
   name: test-run
@@ -26,4 +50,15 @@ spec:
   action: plan
   layer:
     name: test
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: test-pr-layer-run
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: test-pr-layer
     namespace: default

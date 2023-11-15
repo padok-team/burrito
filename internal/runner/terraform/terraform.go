@@ -57,9 +57,14 @@ func (t *Terraform) Init(workingDir string) error {
 	return nil
 }
 
-func (t *Terraform) Plan() error {
+func (t *Terraform) Plan(lock bool) error {
 	t.verbose()
-	_, err := t.exec.Plan(context.Background(), tfexec.Out(t.planArtifactPath))
+	options := []tfexec.PlanOption{}
+	options = append(options, tfexec.Out(t.planArtifactPath))
+	if !lock {
+		options = append(options, tfexec.Lock(false))
+	}
+	_, err := t.exec.Plan(context.Background(), options...)
 	if err != nil {
 		return err
 	}

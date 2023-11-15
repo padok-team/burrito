@@ -46,7 +46,7 @@ type OnErrorRemediationStrategy struct {
 type TerraformConfig struct {
 	Version          string           `json:"version,omitempty"`
 	TerragruntConfig TerragruntConfig `json:"terragrunt,omitempty"`
-	NoLock           bool             `json:"lock,omitempty"`
+	NoLock           *bool            `json:"noLock,omitempty"`
 }
 
 type TerragruntConfig struct {
@@ -68,6 +68,17 @@ func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer
 		version = layer.Spec.TerraformConfig.TerragruntConfig.Version
 	}
 	return version
+}
+
+func GetNoLock(repository *TerraformRepository, layer *TerraformLayer) bool {
+	noLock := false
+	if repository.Spec.TerraformConfig.NoLock != nil {
+		noLock = *repository.Spec.TerraformConfig.NoLock
+	}
+	if layer.Spec.TerraformConfig.NoLock != nil {
+		noLock = *layer.Spec.TerraformConfig.NoLock
+	}
+	return noLock
 }
 
 func GetTerragruntEnabled(repository *TerraformRepository, layer *TerraformLayer) bool {

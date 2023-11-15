@@ -84,7 +84,7 @@ func discoveryNeededHandler(ctx context.Context, r *Reconciler, repository *conf
 		log.Errorf("failed to get affected layers for pull request %s: %s", pr.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 	}
-	newLayers := generateTempLayers(pr, layers)
+	newLayers := generateTempLayers(pr, repository, layers)
 	for _, layer := range newLayers {
 		err := r.Client.Create(ctx, &layer)
 		if err != nil {

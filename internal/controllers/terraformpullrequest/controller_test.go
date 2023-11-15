@@ -356,10 +356,12 @@ var _ = Describe("TerraformPullRequest controller", func() {
 				It("should have a LastDiscoveredCommit annotation", func() {
 					Expect(pr.Status.LastDiscoveredCommit).To(Equal(pr.Annotations[annotations.LastBranchCommit]))
 				})
-				It("should have created 2 temp layers", func() {
+				It("should have created 2 temp layers with NoLock true", func() {
 					layers, err := controller.GetLinkedLayers(k8sClient, pr)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(layers)).To(Equal(2))
+					Expect(*layers[0].Spec.TerraformConfig.NoLock).To(BeTrue())
+					Expect(*layers[1].Spec.TerraformConfig.NoLock).To(BeTrue())
 				})
 			})
 			Describe("When a TerraformPullRequest has all its layers planned", Ordered, func() {

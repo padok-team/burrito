@@ -22,6 +22,7 @@ import (
 
 var cfg *rest.Config
 var k8sClient client.Client
+var errClient client.Client
 var testEnv *envtest.Environment
 
 func TestLock(t *testing.T) {
@@ -45,9 +46,9 @@ var _ = BeforeSuite(func() {
 
 	err = configv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-
 	//+kubebuilder:scaffold:scheme
-
+	errClient, err = client.New(&rest.Config{}, client.Options{Scheme: scheme.Scheme})
+	Expect(err).NotTo(HaveOccurred())
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	utils.LoadResources(k8sClient, "testdata")
 	Expect(err).NotTo(HaveOccurred())
@@ -55,49 +56,103 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = Describe("Lock", func() {
-	var layer *configv1alpha1.TerraformLayer
-	var run *configv1alpha1.TerraformRun
-	var getErrLayer error
-	var getErrRun error
+	var standardLayer *configv1alpha1.TerraformLayer
+	var prLayer *configv1alpha1.TerraformLayer
+	var standardRun *configv1alpha1.TerraformRun
+	var prRun *configv1alpha1.TerraformRun
+	var getErrStandardLayer error
+	var getErrStandardRun error
+	var getErrPrLayer error
+	var getErrPrRun error
 	Describe("Add check remove flow", Ordered, func() {
 		BeforeAll(func() {
-			layer = &configv1alpha1.TerraformLayer{}
-			getErrLayer = k8sClient.Get(context.TODO(), types.NamespacedName{
+			standardLayer = &configv1alpha1.TerraformLayer{}
+			getErrStandardLayer = k8sClient.Get(context.TODO(), types.NamespacedName{
 				Namespace: "default",
 				Name:      "test",
-			}, layer)
-			run = &configv1alpha1.TerraformRun{}
-			getErrRun = k8sClient.Get(context.TODO(), types.NamespacedName{
+			}, standardLayer)
+			standardRun = &configv1alpha1.TerraformRun{}
+			getErrStandardRun = k8sClient.Get(context.TODO(), types.NamespacedName{
 				Namespace: "default",
 				Name:      "test-run",
-			}, run)
+			}, standardRun)
+			prLayer = &configv1alpha1.TerraformLayer{}
+			getErrPrLayer = k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test-pr-layer",
+			}, prLayer)
+			prRun = &configv1alpha1.TerraformRun{}
+			getErrPrRun = k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test-pr-layer-run",
+			}, prRun)
 		})
 		It("layer and run should exist", func() {
-			Expect(getErrLayer).NotTo(HaveOccurred())
-			Expect(getErrRun).NotTo(HaveOccurred())
+			Expect(getErrStandardLayer).NotTo(HaveOccurred())
+			Expect(getErrStandardRun).NotTo(HaveOccurred())
+			Expect(getErrPrLayer).NotTo(HaveOccurred())
+			Expect(getErrPrRun).NotTo(HaveOccurred())
 		})
 		It("should return false since layer is not locked", func() {
-			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, layer)
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, standardLayer)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(locked).To(Equal(false))
 		})
 		It("should not return error when creating Lease object", func() {
-			err := lock.CreateLock(context.TODO(), k8sClient, layer, run)
+			err := lock.CreateLock(context.TODO(), k8sClient, standardLayer, standardRun)
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("should return true since layer is locked", func() {
-			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, layer)
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, standardLayer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(locked).To(Equal(true))
+		})
+		It("should return true since pr layer is locked by main layer", func() {
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, prLayer)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(locked).To(Equal(true))
 		})
 		It("should not return error when deleting Lease object", func() {
-			err := lock.DeleteLock(context.TODO(), k8sClient, layer, run)
+			err := lock.DeleteLock(context.TODO(), k8sClient, standardLayer, standardRun)
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("should return false since layer is not locked anymore", func() {
-			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, layer)
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, standardLayer)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(locked).To(Equal(false))
+		})
+		It("should return false since pr layer is not locked", func() {
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, prLayer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(locked).To(Equal(false))
+		})
+		It("should not return error when creating Lease object", func() {
+			err := lock.CreateLock(context.TODO(), k8sClient, prLayer, prRun)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should return true since pr layer is locked", func() {
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, prLayer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(locked).To(Equal(true))
+		})
+		It("should not return error when deleting Lease object", func() {
+			err := lock.DeleteLock(context.TODO(), k8sClient, prLayer, prRun)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should return false since pr layer is not locked anymore", func() {
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, prLayer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(locked).To(Equal(false))
+		})
+		It("should return true and an error with a broken client", func() {
+			locked, err := lock.IsLayerLocked(context.TODO(), errClient, standardLayer)
+			Expect(err).To(HaveOccurred())
+			Expect(locked).To(Equal(true))
+		})
+		It("should return true and an error with a broken client", func() {
+			locked, err := lock.IsLayerLocked(context.TODO(), errClient, prLayer)
+			Expect(err).To(HaveOccurred())
+			Expect(locked).To(Equal(true))
 		})
 	})
 })

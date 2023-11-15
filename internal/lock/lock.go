@@ -14,6 +14,7 @@ import (
 )
 
 const lockPrefix string = "burrito-layer-lock"
+const prLockPrefix string = "burrito-pr-layer-lock"
 
 func hash(s string) uint32 {
 	h := fnv.New32a()
@@ -21,13 +22,28 @@ func hash(s string) uint32 {
 	return h.Sum32()
 }
 
+func isPrLayer(layer *configv1alpha1.TerraformLayer) bool {
+	if len(layer.GetOwnerReferences()) == 0 {
+		return false
+	}
+
+	return layer.GetOwnerReferences()[0].Kind == "TerraformPullRequest"
+}
+
 func getLeaseName(layer *configv1alpha1.TerraformLayer) string {
 	return fmt.Sprintf("%s-%d", lockPrefix, hash(layer.Spec.Repository.Name+layer.Spec.Repository.Namespace+layer.Spec.Path))
+}
+
+func getPullRequestLeaseName(layer *configv1alpha1.TerraformLayer) string {
+	return fmt.Sprintf("%s-%d", prLockPrefix, hash(layer.Spec.Repository.Name+layer.Spec.Repository.Namespace+layer.Spec.Path))
 }
 
 func getLeaseLock(layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) *coordination.Lease {
 	identity := "burrito-controller"
 	name := getLeaseName(layer)
+	if isPrLayer(layer) {
+		name = getPullRequestLeaseName(layer)
+	}
 	lease := &coordination.Lease{
 		Spec: coordination.LeaseSpec{
 			HolderIdentity: &identity,
@@ -46,8 +62,25 @@ func getLeaseLock(layer *configv1alpha1.TerraformLayer, run *configv1alpha1.Terr
 	return lease
 }
 
-func IsLayerLocked(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer) (bool, error) {
-	err := c.Get(ctx, types.NamespacedName{
+func isPullRequestLockPresent(layer *configv1alpha1.TerraformLayer, c client.Client) (bool, error) {
+	if !isPrLayer(layer) {
+		return false, nil
+	}
+	err := c.Get(context.Background(), types.NamespacedName{
+		Name:      getPullRequestLeaseName(layer),
+		Namespace: layer.Namespace,
+	}, &coordination.Lease{})
+	if errors.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return true, err
+	}
+	return true, nil
+}
+
+func isDefaultLockPresent(layer *configv1alpha1.TerraformLayer, c client.Client) (bool, error) {
+	err := c.Get(context.Background(), types.NamespacedName{
 		Name:      getLeaseName(layer),
 		Namespace: layer.Namespace,
 	}, &coordination.Lease{})
@@ -55,9 +88,18 @@ func IsLayerLocked(ctx context.Context, c client.Client, layer *configv1alpha1.T
 		return false, nil
 	}
 	if err != nil {
-		return false, err
+		return true, err
 	}
 	return true, nil
+}
+
+func IsLayerLocked(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer) (bool, error) {
+	prLocked, err1 := isPullRequestLockPresent(layer, c)
+	locked, err2 := isDefaultLockPresent(layer, c)
+	if err1 != nil || err2 != nil {
+		return true, fmt.Errorf("could not check lock status: %s, %s", err1, err2)
+	}
+	return locked || prLocked, nil
 }
 
 func CreateLock(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) error {
