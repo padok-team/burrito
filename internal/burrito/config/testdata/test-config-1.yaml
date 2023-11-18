@@ -27,7 +27,9 @@ controller:
   healthProbeBindAddress: ":8081"
   kubernetesWebhookPort: 9443
   githubConfig:
-    apiToken: "github-token"
+    appId: 123456
+    installationId: 12345678
+    privateKey: "private-key"
   gitlabConfig:
     apiToken: "gitlab-token"
     url: "https://gitlab.example.com"

@@ -70,7 +70,7 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			KubernetesWebhookPort:  9443,
 			GithubConfig: config.GithubConfig{
 				AppId:          123456,
-				InstallationId: 123456,
+				InstallationId: 12345678,
 				PrivateKey:     "private-key",
 			},
 			GitlabConfig: config.GitlabConfig{
@@ -207,7 +207,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			KubernetesWebhookPort:  9443,
 			GithubConfig: config.GithubConfig{
 				AppId:          123456,
-				InstallationId: 123456,
+				InstallationId: 12345678,
 				PrivateKey:     "private-key",
 			},
 			GitlabConfig: config.GitlabConfig{
