@@ -3,6 +3,7 @@ module github.com/padok-team/burrito
 go 1.19
 
 require (
+	github.com/bradleyfalzon/ghinstallation/v2 v2.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/terraform-json v0.17.1
 	github.com/onsi/ginkgo/v2 v2.13.1
@@ -28,7 +29,9 @@ require (
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
+	github.com/google/go-github/v56 v56.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect

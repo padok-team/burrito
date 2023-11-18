@@ -69,7 +69,9 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			HealthProbeBindAddress: ":8081",
 			KubernetesWebhookPort:  9443,
 			GithubConfig: config.GithubConfig{
-				APIToken: "github-token",
+				AppId:          123456,
+				InstallationId: 123456,
+				PrivateKey:     "private-key",
 			},
 			GitlabConfig: config.GitlabConfig{
 				APIToken: "gitlab-token",
@@ -204,7 +206,9 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			HealthProbeBindAddress: ":8081",
 			KubernetesWebhookPort:  9443,
 			GithubConfig: config.GithubConfig{
-				APIToken: "pr-github-token",
+				AppId:          123456,
+				InstallationId: 123456,
+				PrivateKey:     "private-key",
 			},
 			GitlabConfig: config.GitlabConfig{
 				APIToken: "mr-gitlab-token",
