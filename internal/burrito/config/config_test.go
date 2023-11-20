@@ -148,7 +148,9 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_FAILUREGRACEPERIOD", "1m", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TERRAFORMMAXRETRIES", "32", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_LEADERELECTION_ID", "other-leader-id", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN", "pr-github-token", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APPID", "123456", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID", "12345678", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY", "private-key", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN", "mr-gitlab-token", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITLABCONFIG_URL", "https://gitlab.com", &envVarList)
 	// Server

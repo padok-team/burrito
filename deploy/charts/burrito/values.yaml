@@ -39,8 +39,12 @@ config:
       healthProbeBindAddress: ":8081"
       kubernetesWebhookPort: 9443
       githubConfig:
-        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable
-        apiToken: ""
+        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APPID environment variable
+        appId: ""
+        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID environment variable
+        installationId: ""
+        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY environment variable
+        privateKey: ""
       gitlabConfig:
         # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
         apiToken: ""
