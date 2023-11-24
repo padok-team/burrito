@@ -45,7 +45,7 @@ With those 3 conditions, we defined 3 states:
 
 ## Configuration
 
-### GitHub
+### GitHub with a dedicated GitHub App
 
 #### Create the GitHub App
 
@@ -121,6 +121,39 @@ stringData:
     -----END RSA PRIVATE KEY-----
 ```
 
+### GitHub with a personal access token
+
+#### Generate a personal access token
+
+You need a personal access token to configure Burrito. You can generate a personal access token in your GitHub account.
+
+Follow the instructions in the GitHub documentation for [creating a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token):
+
+- It should be a **fine-grained token**.
+- **Permissions**: Configure the following **Repository Permissions**.
+  - **Metadata**: Select Read-only.
+  - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
+- Under **Repository access**, select which repositories you want the token to access.
+
+#### Configure Burrito
+
+Add the following environment variables to your Burrito controller deployment:
+
+- `BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN`: The personal access token of your GitHub app.
+
+For example:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-github-config
+  namespace: burrito
+type: Opaque
+stringData:
+  BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN: github_pat_123456
+```
+
 ### GitLab
 
 #### Generate a private token
@@ -153,5 +186,6 @@ stringData:
 |     `BURRITO_CONTROLLER_GITHUBCONFIG_APPID`      |     the GtiHub App ID to send comment to GitHub's API      |
 | `BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID` | the GitHub Installation ID to send comment to GitHub's API |
 |   `BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY`   | the GitHub App private key to send comment to GitHub's API |
+|    `BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN`    |       the API token to send comment to GitHub's API        |
 |    `BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN`    |       the API token to send comment to GitLab's API        |
 |      `BURRITO_CONTROLLER_GITLABCONFIG_URL`       |               the URL of the GitLab instance               |
