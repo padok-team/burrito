@@ -30,6 +30,7 @@ controller:
     appId: 123456
     installationId: 12345678
     privateKey: "private-key"
+    apiToken: "github-token"
   gitlabConfig:
     apiToken: "gitlab-token"
     url: "https://gitlab.example.com"

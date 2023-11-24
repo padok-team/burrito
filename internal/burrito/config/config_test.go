@@ -72,6 +72,7 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				AppId:          123456,
 				InstallationId: 12345678,
 				PrivateKey:     "private-key",
+				APIToken:       "github-token",
 			},
 			GitlabConfig: config.GitlabConfig{
 				APIToken: "gitlab-token",
@@ -151,6 +152,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APPID", "123456", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID", "12345678", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY", "private-key", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN", "pr-github-token", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN", "mr-gitlab-token", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITLABCONFIG_URL", "https://gitlab.com", &envVarList)
 	// Server
@@ -211,6 +213,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 				AppId:          123456,
 				InstallationId: 12345678,
 				PrivateKey:     "private-key",
+				APIToken:       "pr-github-token",
 			},
 			GitlabConfig: config.GitlabConfig{
 				APIToken: "mr-gitlab-token",

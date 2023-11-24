@@ -48,6 +48,7 @@ type GithubConfig struct {
 	AppId          int64  `mapstructure:"appId"`
 	InstallationId int64  `mapstructure:"installationId"`
 	PrivateKey     string `mapstructure:"privateKey"`
+	APIToken       string `mapstructure:"apiToken"`
 }
 
 type GitlabConfig struct {

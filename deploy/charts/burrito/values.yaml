@@ -45,6 +45,8 @@ config:
         installationId: ""
         # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY environment variable
         privateKey: ""
+        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable
+        apiToken: ""
       gitlabConfig:
         # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
         apiToken: ""
