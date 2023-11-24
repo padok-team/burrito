@@ -15,28 +15,44 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 )
 
 type Github struct {
 	*github.Client
 }
 
-func (g *Github) IsConfigPresent(c *config.Config) bool {
+func (g *Github) IsAppConfigPresent(c *config.Config) bool {
 	return c.Controller.GithubConfig.AppId != 0 && c.Controller.GithubConfig.InstallationId != 0 && len(c.Controller.GithubConfig.PrivateKey) != 0
 }
 
+func (g *Github) IsAPITokenConfigPresent(c *config.Config) bool {
+	return len(c.Controller.GithubConfig.APIToken) != 0
+}
+
 func (g *Github) Init(c *config.Config) error {
-	if !g.IsConfigPresent(c) {
+	if g.IsAppConfigPresent(c) {
+		itr, err := ghinstallation.New(http.DefaultTransport, c.Controller.GithubConfig.AppId, c.Controller.GithubConfig.InstallationId, []byte(c.Controller.GithubConfig.PrivateKey))
+
+		if err != nil {
+			return errors.New("error while creating github installation client: " + err.Error())
+		}
+
+		g.Client = github.NewClient(&http.Client{Transport: itr})
+		return nil
+	} else if g.IsAPITokenConfigPresent(c) {
+		ctx := context.Background()
+
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: c.Controller.GithubConfig.APIToken},
+		)
+		tc := oauth2.NewClient(ctx, ts)
+
+		g.Client = github.NewClient(tc)
+		return nil
+	} else {
 		return errors.New("github config is not present")
 	}
-	itr, err := ghinstallation.New(http.DefaultTransport, c.Controller.GithubConfig.AppId, c.Controller.GithubConfig.InstallationId, []byte(c.Controller.GithubConfig.PrivateKey))
-
-	if err != nil {
-		return errors.New("error while creating github installation client: " + err.Error())
-	}
-
-	g.Client = github.NewClient(&http.Client{Transport: itr})
-	return nil
 }
 
 func (g *Github) IsFromProvider(pr *configv1alpha1.TerraformPullRequest) bool {
