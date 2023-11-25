@@ -11,7 +11,7 @@
 <details>
 <summary>Plan</summary>
 
-```
+```terraform
 {{ .PrettyPlan }}
 ```
 </details>
