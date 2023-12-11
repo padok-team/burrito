@@ -14,8 +14,18 @@ import (
 type Config struct {
 	Runner     RunnerConfig     `mapstructure:"runner"`
 	Controller ControllerConfig `mapstructure:"controller"`
+	GCS        GCSConfig        `mapstructure:"gcs"`
+	S3         S3Config         `mapstructure:"s3"`
 	Redis      Redis            `mapstructure:"redis"`
 	Server     ServerConfig     `mapstructure:"server"`
+}
+
+type GCSConfig struct {
+	Bucket string `mapstructure:"bucket"`
+}
+
+type S3Config struct {
+	Bucket string `mapstructure:"bucket"`
 }
 
 type WebhookConfig struct {
