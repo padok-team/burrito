@@ -17,7 +17,7 @@ type Storage struct {
 	Client *gcs.Client
 }
 
-func New(config config.GCSConfig) (*Storage, error) {
+func New(config config.GCS) (*Storage, error) {
 	ctx := context.Background()
 	client, err := gcs.NewClient(ctx)
 	if err != nil {
@@ -75,6 +75,13 @@ func (s *Storage) GetPlanArtifactBin(run *configv1alpha1.TerraformRun) ([]byte, 
 }
 
 // Gets a file in the bucket in the below specified path:
+// /results/{layer}/{run}/plan.pretty
+func (s *Storage) GetPrettyPlan(run *configv1alpha1.TerraformRun) ([]byte, error) {
+	path := fmt.Sprintf("/results/%s-%s/%s-%s/plan.pretty", run.Spec.Layer.Namespace, run.Spec.Layer.Name, run.Namespace, run.Name)
+	return s.getFile(path)
+}
+
+// Gets a file in the bucket in the below specified path:
 // /git/{repository}/{branch}/{commit}.bundle
 func (s *Storage) GetGitBundle(repository *configv1alpha1.TerraformRepository, commit string, branch string) ([]byte, error) {
 	path := fmt.Sprintf("/git/%s-%s/%s/%s.bundle", repository.Namespace, repository.Name, branch, commit)
@@ -100,6 +107,13 @@ func (s *Storage) PutPlanArtifactJson(run *configv1alpha1.TerraformRun, artifact
 func (s *Storage) PutPlanArtifactBin(run *configv1alpha1.TerraformRun, artifact []byte) error {
 	path := fmt.Sprintf("/results/%s-%s/%s-%s/plan.bin", run.Spec.Layer.Namespace, run.Spec.Layer.Name, run.Namespace, run.Name)
 	return s.putFile(path, artifact)
+}
+
+// Puts a file in the bucket in the below specified path:
+// /results/{layer}/{run}/plan.pretty
+func (s *Storage) PutPrettyPlan(run *configv1alpha1.TerraformRun, prettyPlan []byte) error {
+	path := fmt.Sprintf("/results/%s-%s/%s-%s/plan.pretty", run.Spec.Layer.Namespace, run.Spec.Layer.Name, run.Namespace, run.Name)
+	return s.putFile(path, prettyPlan)
 }
 
 // Puts a file in the bucket in the below specified path:

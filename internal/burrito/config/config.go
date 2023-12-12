@@ -14,17 +14,21 @@ import (
 type Config struct {
 	Runner     RunnerConfig     `mapstructure:"runner"`
 	Controller ControllerConfig `mapstructure:"controller"`
-	GCS        GCSConfig        `mapstructure:"gcs"`
-	S3         S3Config         `mapstructure:"s3"`
-	Redis      Redis            `mapstructure:"redis"`
+	Storage    StorageConfig    `mapstructure:"storage"`
 	Server     ServerConfig     `mapstructure:"server"`
 }
 
-type GCSConfig struct {
+type StorageConfig struct {
+	GCS   GCS   `mapstructure:"gcs"`
+	S3    S3    `mapstructure:"s3"`
+	Redis Redis `mapstructure:"redis"`
+}
+
+type GCS struct {
 	Bucket string `mapstructure:"bucket"`
 }
 
-type S3Config struct {
+type S3 struct {
 	Bucket string `mapstructure:"bucket"`
 }
 
@@ -184,11 +188,13 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 
 func TestConfig() *Config {
 	return &Config{
-		Redis: Redis{
-			Hostname:   "localhost",
-			ServerPort: 6379,
-			Password:   "",
-			Database:   0,
+		Storage: StorageConfig{
+			Redis: Redis{
+				Hostname:   "localhost",
+				ServerPort: 6379,
+				Password:   "",
+				Database:   0,
+			},
 		},
 		Controller: ControllerConfig{
 			TerraformMaxRetries: 5,

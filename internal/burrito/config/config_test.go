@@ -76,11 +76,13 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				URL:      "https://gitlab.example.com",
 			},
 		},
-		Redis: config.Redis{
-			Hostname:   "burrito-redis.namespace",
-			ServerPort: 5000,
-			Database:   0,
-			Password:   "testPassword",
+		Storage: config.StorageConfig{
+			Redis: config.Redis{
+				Hostname:   "burrito-redis.namespace",
+				ServerPort: 5000,
+				Database:   0,
+				Password:   "testPassword",
+			},
 		},
 		Server: config.ServerConfig{
 			Addr: ":9090",
@@ -211,11 +213,13 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 				URL:      "https://gitlab.com",
 			},
 		},
-		Redis: config.Redis{
-			Hostname:   "other-redis",
-			ServerPort: 8000,
-			Database:   1,
-			Password:   "otherPassword",
+		Storage: config.StorageConfig{
+			Redis: config.Redis{
+				Hostname:   "other-redis",
+				ServerPort: 8000,
+				Database:   1,
+				Password:   "otherPassword",
+			},
 		},
 		Server: config.ServerConfig{
 			Addr: ":8090",

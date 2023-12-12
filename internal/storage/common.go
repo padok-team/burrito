@@ -42,10 +42,12 @@ type Storage interface {
 	GetLogs(run *configv1alpha1.TerraformRun, limit int) ([]byte, error)
 	GetPlanArtifactJson(run *configv1alpha1.TerraformRun) ([]byte, error)
 	GetPlanArtifactBin(run *configv1alpha1.TerraformRun) ([]byte, error)
+	GetPrettyPlan(run *configv1alpha1.TerraformRun) ([]byte, error)
 	GetGitBundle(repository *configv1alpha1.TerraformRepository, commit string, branch string) ([]byte, error)
 	PutLogs(run *configv1alpha1.TerraformRun, logs []byte) error
 	PutPlanArtifactJson(run *configv1alpha1.TerraformRun, artifact []byte) error
 	PutPlanArtifactBin(run *configv1alpha1.TerraformRun, artifact []byte) error
+	PutPrettyPlan(run *configv1alpha1.TerraformRun, prettyPlan []byte) error
 	PutGitBundle(repository *configv1alpha1.TerraformRepository, commit string, branch string, bundle []byte) error
 }
 

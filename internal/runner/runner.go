@@ -11,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	b64 "encoding/base64"
-	"encoding/json"
 
 	"github.com/go-git/go-git/v5"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -232,26 +231,13 @@ func (r *Runner) plan() (string, error) {
 	}
 	prettyPlanKey := storage.GenerateKey(storage.LastPrettyPlan, r.layer)
 	log.Infof("setting pretty plan into storage at key %s", prettyPlanKey)
-	err = r.storage.Set(prettyPlanKey, prettyPlan, 3600)
+	err = r.storage.PutPrettyPlan(r.layer, prettyPlan)
 	if err != nil {
-		log.Errorf("could not put pretty plan in cache: %s", err)
+		log.Errorf("could not put pretty plan in storage: %s", err)
 	}
-	plan := &tfjson.Plan{}
-	err = json.Unmarshal(planJsonBytes, plan)
+	err = r.storage.PutPlanArtifactJson(r.layer, planJsonBytes)
 	if err != nil {
-		log.Errorf("error parsing terraform json plan: %s", err)
-		return "", err
-	}
-	_, shortDiff := getDiff(plan)
-	planJsonKey := storage.GenerateKey(storage.LastPlannedArtifactJson, r.layer)
-	log.Infof("setting plan json into storage at key %s", planJsonKey)
-	err = r.storage.Set(planJsonKey, planJsonBytes, 3600)
-	if err != nil {
-		log.Errorf("could not put plan json in cache: %s", err)
-	}
-	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(shortDiff), 3600)
-	if err != nil {
-		log.Errorf("could not put short plan in cache: %s", err)
+		log.Errorf("could not put plan json in storage: %s", err)
 	}
 	planBin, err := os.ReadFile(PlanArtifact)
 	if err != nil {
@@ -261,9 +247,9 @@ func (r *Runner) plan() (string, error) {
 	sum := sha256.Sum256(planBin)
 	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
 	log.Infof("setting plan binary into storage at key %s", planBinKey)
-	err = r.storage.Set(planBinKey, planBin, 3600)
+	err = r.storage.PutPlanArtifactBin(r.layer, planBin)
 	if err != nil {
-		log.Errorf("could not put plan binary in cache: %s", err)
+		log.Errorf("could not put plan binary in storage: %s", err)
 		return "", err
 	}
 	log.Infof("terraform plan ran successfully")
