@@ -13,6 +13,10 @@ import (
 	"github.com/padok-team/burrito/internal/runner/terraform"
 )
 
+const (
+	BinWorkDir = "/runner/bin"
+)
+
 type Terragrunt struct {
 	execPath         string
 	planArtifactPath string
@@ -122,7 +126,7 @@ func downloadTerragrunt(version string) (string, error) {
 	}
 	defer response.Body.Close()
 
-	filename := fmt.Sprintf("terragrunt_%s", cpuArch)
+	filename := fmt.Sprintf("%s/terragrunt_%s", BinWorkDir, cpuArch)
 	file, err := os.Create(filename)
 	if err != nil {
 		return "", err
