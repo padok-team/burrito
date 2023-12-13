@@ -76,8 +76,8 @@ func (r *Reconciler) IsLastRelevantCommitPlanned(t *configv1alpha1.TerraformLaye
 	}
 	lastRelevantCommit, ok := t.Annotations[annotations.LastRelevantCommit]
 	if !ok {
-		condition.Reason = "NoCommitReceived"
-		condition.Message = "No commit has been received from webhook"
+		condition.Reason = "NoRelevantCommitReceived"
+		condition.Message = "No relevant commit has been received from webhook, letting drift detection take a decision"
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
@@ -87,8 +87,35 @@ func (r *Reconciler) IsLastRelevantCommitPlanned(t *configv1alpha1.TerraformLaye
 		condition.Status = metav1.ConditionTrue
 		return condition, true
 	}
+	lastBranchCommitDate, ok := t.Annotations[annotations.LastBranchCommitDate]
+	if !ok {
+		condition.Reason = "NoDatePresent"
+		condition.Message = "The last received branch commit does not have a date, can't take a decision"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+	lastPlanDate, err := time.Parse(time.UnixDate, t.Annotations[annotations.LastPlanDate])
+	if err != nil {
+		condition.Reason = "ParseError"
+		condition.Message = "Could not parse time from annotation, this is likely a bug, considering layer has been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	lastBranchCommitDateParsed, err := time.Parse(time.UnixDate, lastBranchCommitDate)
+	if err != nil {
+		condition.Reason = "ParseError"
+		condition.Message = "Could not parse time from annotation, this is likely a bug, considering layer has been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if lastPlanDate.After(lastBranchCommitDateParsed) {
+		condition.Reason = "LastPlanIsMoreRecentThanLastBranchCommit"
+		condition.Message = "The last plan is more recent than the last branch commit, considering layer has been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
 	condition.Reason = "LastRelevantCommitNotPlanned"
-	condition.Message = "The last received relevant commit has not been planned yet"
+	condition.Message = "The last relevant commit has not been planned yet"
 	condition.Status = metav1.ConditionFalse
 	return condition, false
 }
