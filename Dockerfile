@@ -53,7 +53,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 
 FROM docker.io/library/alpine:3.18.2@sha256:82d1e9d7ed48a7523bdebc18cf6290bdb97b82302a8a9c27d4fe885949ea94d1
 
-WORKDIR /repository
+WORKDIR /home/burrito
 
 # Install required packages
 RUN apk add --update --no-cache git bash openssh
@@ -70,7 +70,7 @@ RUN addgroup \
   adduser \
   --disabled-password \
   --no-create-home \
-  --home /home/burrito \
+  --home $(pwd) \
   --uid $UID \
   --ingroup $GROUP \
   $USER
@@ -79,7 +79,6 @@ RUN addgroup \
 COPY --from=builder /workspace/bin/burrito /usr/local/bin/burrito
 
 RUN chmod +x /usr/local/bin/burrito
-RUN chown -R burrito:burrito /repository
 
 # Use an unprivileged user
 USER 65532:65532
