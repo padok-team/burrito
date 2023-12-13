@@ -159,10 +159,6 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{
-				Name:         "repository",
-				VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}},
-			},
-			{
 				Name: "ssh-known-hosts",
 				VolumeSource: corev1.VolumeSource{
 					ConfigMap: &corev1.ConfigMapVolumeSource{
@@ -178,15 +174,10 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 		ServiceAccountName: "burrito-runner",
 		Containers: []corev1.Container{
 			{
-				Name:       "runner",
-				Image:      fmt.Sprintf("ghcr.io/padok-team/burrito:%s", version.Version),
-				WorkingDir: "/repository",
-				Args:       []string{"runner", "start"},
+				Name:  "runner",
+				Image: fmt.Sprintf("ghcr.io/padok-team/burrito:%s", version.Version),
+				Args:  []string{"runner", "start"},
 				VolumeMounts: []corev1.VolumeMount{
-					{
-						Name:      "repository",
-						MountPath: "/repository",
-					},
 					{
 						MountPath: "/home/burrito/.ssh/known_hosts",
 						Name:      "ssh-known-hosts",
