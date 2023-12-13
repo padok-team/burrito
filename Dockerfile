@@ -78,7 +78,7 @@ RUN addgroup \
 # Copy the binary to the production image from the builder stage
 COPY --from=builder /workspace/bin/burrito /usr/local/bin/burrito
 
-RUN mkdir -p /runner
+RUN mkdir -p /runner/bin
 RUN chmod +x /usr/local/bin/burrito
 RUN chown -R burrito:burrito /runner
 
