@@ -33,7 +33,7 @@ import (
 )
 
 const PlanArtifact string = "/tmp/plan.out"
-const WorkingDir string = "/repository"
+const WorkingDir string = "/runner/repository"
 
 type Runner struct {
 	config        *config.Config
