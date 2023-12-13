@@ -1,0 +1,31 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
+  name: webhook-issue-case-1
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/apply-commit: f4f5c237f34bac134e4503c40de9d142c1e04077
+    runner.terraform.padok.cloud/apply-date: Sun May  7 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/apply-sum: AuP6pMNxWsD842wy0qabSZKnxZvxF9JCX8HW1nFeL1I=
+    webhook.terraform.padok.cloud/branch-commit: f4f5c237f34bac134e4503c40de9d142c1e04077
+    webhook.terraform.padok.cloud/branch-commit-date: Sun May  7 11:21:53 UTC 2023
+    webhook.terraform.padok.cloud/relevant-commit: f4f5c237f34bac134e4503c40de9d142c1e04077
+    webhook.terraform.padok.cloud/relevant-commit-date: Sun May  7 11:21:53 UTC 2023
+spec:
+  branch: main
+  path: webhook-issue-case-1/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1

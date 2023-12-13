@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
@@ -20,6 +21,7 @@ type PushEvent struct {
 }
 
 func (e *PushEvent) Handle(c client.Client) error {
+	date := time.Now().Format(time.UnixDate)
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := c.List(context.Background(), repositories)
 	if err != nil {
@@ -42,6 +44,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 	for _, repo := range affectedRepositories {
 		ann := map[string]string{}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
+		ann[annotations.LastBranchCommitDate] = date
 		err := annotations.Add(context.TODO(), c, &repo, ann)
 		if err != nil {
 			log.Errorf("could not add annotation to terraform repository %s", err)
@@ -57,10 +60,12 @@ func (e *PushEvent) Handle(c client.Client) error {
 			continue
 		}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
+		ann[annotations.LastBranchCommitDate] = date
 
 		if controller.LayerFilesHaveChanged(layer, e.Changes) {
 			log.Infof("layer %s is affected by push event", layer.Name)
 			ann[annotations.LastRelevantCommit] = e.ChangeInfo.ShaAfter
+			ann[annotations.LastRelevantCommitDate] = date
 		}
 
 		err := annotations.Add(context.TODO(), c, &layer, ann)
@@ -73,6 +78,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 	for _, pr := range e.getAffectedPullRequests(prs.Items, affectedRepositories) {
 		ann := map[string]string{}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
+		ann[annotations.LastBranchCommitDate] = date
 		err := annotations.Add(context.TODO(), c, &pr, ann)
 		if err != nil {
 			log.Errorf("could not add annotation to terraform pr %s", err)

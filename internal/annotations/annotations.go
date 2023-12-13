@@ -15,8 +15,10 @@ const (
 	LastPlanSum     string = "runner.terraform.padok.cloud/plan-sum"
 	Lock            string = "runner.terraform.padok.cloud/lock"
 
-	LastBranchCommit   string = "webhook.terraform.padok.cloud/branch-commit"
-	LastRelevantCommit string = "webhook.terraform.padok.cloud/relevant-commit"
+	LastBranchCommit       string = "webhook.terraform.padok.cloud/branch-commit"
+	LastBranchCommitDate   string = "webhook.terraform.padok.cloud/branch-commit-date"
+	LastRelevantCommit     string = "webhook.terraform.padok.cloud/relevant-commit"
+	LastRelevantCommitDate string = "webhook.terraform.padok.cloud/relevant-commit-date"
 
 	ForceApply              string = "notifications.terraform.padok.cloud/force-apply"
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"

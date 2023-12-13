@@ -1,1 +1,19 @@
 ---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: non-existent-repository
+  namespace: default
+spec:
+  branch: main
+  path: nominal-case-one/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: non-existent
+    namespace: default
+  terraform:
+    terragrunt:
+      enabled: true
+      version: 0.45.4
+    version: 1.3.1

@@ -368,6 +368,74 @@ var _ = Describe("Layer", func() {
 			})
 		})
 	})
+	Describe("Webhook issues", func() {
+		Describe("When a TerraformLayer is reconciled", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "webhook-issue-case-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in ApplyNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should have created a plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(1))
+				Expect(runs.Items[0].Spec.Action).To(Equal("apply"))
+			})
+		})
+	})
+	Describe("Error cases", func() {
+		Describe("When a TerraformLayer does not exist", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "non-existent-layer",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name)
+			})
+			It("should not exists", func() {
+				Expect(err).To(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should not set Requeue", func() {
+				Expect(result.Requeue).To(Equal(false))
+				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
+			})
+		})
+		Describe("When a TerraformLayer does not have a TerraformRepository", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "non-existent-repository",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name)
+			})
+			It("should exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should return an error", func() {
+				Expect(reconcileError).To(HaveOccurred())
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
+	})
 	// TODO: test cleanup of runs
 	Describe("Cleanup case", func() {
 
