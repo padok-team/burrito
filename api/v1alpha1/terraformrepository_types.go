@@ -42,7 +42,14 @@ type TerraformRepositoryRepository struct {
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	Conditions     []metav1.Condition      `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	State          string                  `json:"state,omitempty"`
+	BranchStatuses map[string]BranchStatus `json:"branch,omitempty"`
+}
+
+type BranchStatus struct {
+	Commit   string `json:"commit,omitempty"`
+	LastPull string `json:"lastPull,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -69,4 +76,21 @@ type TerraformRepositoryList struct {
 
 func init() {
 	SchemeBuilder.Register(&TerraformRepository{}, &TerraformRepositoryList{})
+}
+
+// Workaround needed for envtest which does not populate the TypeMeta structure
+// See https://github.com/kubernetes-sigs/controller-runtime/issues/1870
+func (r *TerraformRepository) GetAPIVersion() string {
+	if r.APIVersion == "" {
+		return "config.terraform.padok.cloud/v1alpha1"
+	}
+	return r.APIVersion
+}
+
+// Same as above
+func (r *TerraformRepository) GetKind() string {
+	if r.Kind == "" {
+		return "TerraformRepository"
+	}
+	return r.Kind
 }

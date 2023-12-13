@@ -8,8 +8,10 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/storage"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	s3 "github.com/aws/aws-sdk-go/service/s3"
 )
@@ -34,6 +36,14 @@ func (s *Storage) getFile(path string) ([]byte, error) {
 		Key:    aws.String(path),
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			if aerr.Code() == s3.ErrCodeNoSuchKey {
+				return nil, &storage.StorageError{
+					Err: err,
+					Nil: true,
+				}
+			}
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()

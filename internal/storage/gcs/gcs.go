@@ -8,6 +8,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/storage"
 
 	gcs "cloud.google.com/go/storage"
 )
@@ -32,6 +33,12 @@ func New(config config.GCS) (*Storage, error) {
 func (s *Storage) getFile(path string) ([]byte, error) {
 	reader, err := s.Client.Bucket(s.Bucket).Object(path).NewReader(context.Background())
 	if err != nil {
+		if err == gcs.ErrObjectNotExist {
+			return nil, &storage.StorageError{
+				Err: err,
+				Nil: true,
+			}
+		}
 		return nil, err
 	}
 	defer reader.Close()

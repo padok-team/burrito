@@ -46,8 +46,15 @@ type TerraformLayerRepository struct {
 type TerraformLayerStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 	State      string             `json:"state,omitempty"`
-	LastResult string             `json:"lastResult,omitempty"`
-	LastRun    string             `json:"lastRun,omitempty"`
+	Plan       ActionStatus       `json:"plan,omitempty"`
+	Apply      ActionStatus       `json:"apply,omitempty"`
+	CurrentRun string             `json:"currentRun,omitempty"`
+}
+
+type ActionStatus struct {
+	Date   string `json:"date,omitempty"`
+	Commit string `json:"commit,omitempty"`
+	Run    string `json:"run,omitempty"`
 }
 
 // +kubebuilder:object:root=true

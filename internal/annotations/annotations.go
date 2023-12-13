@@ -7,16 +7,8 @@ import (
 )
 
 const (
-	LastApplySum    string = "runner.terraform.padok.cloud/apply-sum"
-	LastApplyDate   string = "runner.terraform.padok.cloud/apply-date"
-	LastApplyCommit string = "runner.terraform.padok.cloud/apply-commit"
-	LastPlanCommit  string = "runner.terraform.padok.cloud/plan-commit"
-	LastPlanDate    string = "runner.terraform.padok.cloud/plan-date"
-	LastPlanSum     string = "runner.terraform.padok.cloud/plan-sum"
-	Lock            string = "runner.terraform.padok.cloud/lock"
-
-	LastBranchCommit   string = "webhook.terraform.padok.cloud/branch-commit"
-	LastRelevantCommit string = "webhook.terraform.padok.cloud/relevant-commit"
+	LastBranchCommit   string = "repository.terraform.padok.cloud/branch-commit"
+	LastRelevantCommit string = "repository.terraform.padok.cloud/relevant-commit"
 
 	ForceApply              string = "notifications.terraform.padok.cloud/force-apply"
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"

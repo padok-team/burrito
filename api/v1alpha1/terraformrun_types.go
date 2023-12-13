@@ -27,6 +27,7 @@ import (
 type TerraformRunSpec struct {
 	Action string            `json:"action,omitempty"`
 	Layer  TerraformRunLayer `json:"layer,omitempty"`
+	Commit string            `json:"commit,omitempty"`
 }
 
 type TerraformRunLayer struct {

@@ -3,6 +3,9 @@ kind: TerraformLayer
 metadata:
   name: nominal-case-1
   namespace: default
+annotations:
+  repository.terraform.padok.cloud/relevant-commit:
+  repository.terraform.padok.cloud/branch-commit:
 spec:
   branch: main
   path: nominal-case-one/

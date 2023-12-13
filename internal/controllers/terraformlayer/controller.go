@@ -22,7 +22,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/lock"
 	"github.com/padok-team/burrito/internal/storage"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -81,15 +80,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Errorf("failed to get TerraformLayer: %s", err)
 		return ctrl.Result{}, err
-	}
-	locked, err := lock.IsLayerLocked(ctx, r.Client, layer)
-	if err != nil {
-		log.Errorf("failed to get Lease Resource: %s", err)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
-	}
-	if locked {
-		log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Infof("getting Linked TerraformRepository to layer %s", layer.Name)

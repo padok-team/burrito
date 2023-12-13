@@ -39,7 +39,7 @@ const (
 )
 
 type Storage interface {
-	GetLogs(run *configv1alpha1.TerraformRun, limit int) ([]byte, error)
+	GetLogs(run *configv1alpha1.TerraformRun) ([]byte, error)
 	GetPlanArtifactJson(run *configv1alpha1.TerraformRun) ([]byte, error)
 	GetPlanArtifactBin(run *configv1alpha1.TerraformRun) ([]byte, error)
 	GetPrettyPlan(run *configv1alpha1.TerraformRun) ([]byte, error)

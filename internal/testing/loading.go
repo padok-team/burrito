@@ -72,7 +72,6 @@ func parseResources(path string) ([]client.Object, error) {
 			continue
 		}
 		list = append(list, obj.(client.Object))
-
 	}
 	return list, nil
 }

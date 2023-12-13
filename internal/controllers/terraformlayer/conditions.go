@@ -11,31 +11,98 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) HasBeenInitialized(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
-		Type:               "IsPlanArtifactUpToDate",
+		Type:               "HasBeenPlannedOnLastRelevantCommit",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionFalse,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	value, ok := t.Annotations[annotations.LastBranchCommit]
+	if !ok || value == "" {
+		condition.Reason = "NoAnnotation"
+		condition.Message = "No annotation present on layer"
+		return condition, false
+	}
+	condition.Reason = "HasBeenInitialized"
+	condition.Message = "Layer has been initialized"
+	condition.Status = metav1.ConditionTrue
+	return condition, true
+}
+
+func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsRunning",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	value, ok := t.Annotations[annotations.LastPlanDate]
-	if !ok {
-		condition.Reason = "NoPlanHasRunYet"
-		condition.Message = "No plan has run on this layer yet"
+	if t.Status.CurrentRun == "" {
+		condition.Reason = "NoCurrentRun"
+		condition.Message = "No TerraformRun is currently running"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	planHash, ok := t.Annotations[annotations.LastPlanSum]
-	if !ok || planHash == "" {
-		condition.Reason = "LastPlanFailed"
-		condition.Message = "Last plan run has failed"
+	condition.Reason = "IsRunning"
+	condition.Message = "A TerraformRun is currently running"
+	condition.Status = metav1.ConditionTrue
+	return condition, true
+}
+
+func (r *Reconciler) HasBeenPlannedOnLastRelevantCommit(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "HasBeenPlannedOnLastRelevantCommit",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionFalse,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	if t.Status.Plan.Commit == "" {
+		condition.Reason = "NeverPlanned"
+		condition.Message = "Layer has never been planned"
+		return condition, false
+	}
+	if t.Annotations[annotations.LastBranchCommit] == t.Status.Plan.Commit {
+		condition.Reason = "PlannedOnLastBranchCommit"
+		condition.Message = "The last branch commit has been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	value, ok := t.Annotations[annotations.LastRelevantCommit]
+	if ok {
+		if value == t.Status.Plan.Commit {
+			condition.Reason = "PlannedOnLastRelevantCommit"
+			condition.Message = "The last relevant commit has been planned"
+			condition.Status = metav1.ConditionTrue
+			return condition, true
+		}
+		condition.Reason = "NotPlannedOnLastRelevantCommit"
+		condition.Message = "The last relevant commit has not been planned"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	lastPlanDate, err := time.Parse(time.UnixDate, value)
+	condition.Reason = "NoRelevantCommit"
+	condition.Message = "No relevant commit for layer, passing to drift detection to determine if it needs planning"
+	condition.Status = metav1.ConditionUnknown
+	return condition, true
+}
+
+func (r *Reconciler) ShouldBeCheckedForDrift(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "ShouldBeCheckedForDrift",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	if t.Status.Plan.Commit == "" {
+		condition.Reason = "NeverPlanned"
+		condition.Message = "Layer has never been planned"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	lastPlanDate, err := time.Parse(time.UnixDate, t.Status.Plan.Date)
 	if err != nil {
 		condition.Reason = "ParseError"
-		condition.Message = "Could not parse time from annotation"
+		condition.Message = "Could not parse time from status"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
@@ -53,81 +120,33 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	return condition, false
 }
 
-func (r *Reconciler) IsLastRelevantCommitPlanned(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) ShouldBeApplied(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
-		Type:               "IsLastRelevantCommitPlanned",
+		Type:               "ShouldBeApplied",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
-	lastPlannedCommit, ok := t.Annotations[annotations.LastPlanCommit]
-	if !ok {
-		condition.Reason = "NoPlanHasRunYet"
-		condition.Message = "No plan has run on this layer yet"
-		condition.Status = metav1.ConditionTrue
-		return condition, true
-	}
-	lastBranchCommit, ok := t.Annotations[annotations.LastBranchCommit]
-	if !ok {
-		condition.Reason = "NoCommitReceived"
-		condition.Message = "No commit has been received from webhook"
-		condition.Status = metav1.ConditionTrue
-		return condition, true
-	}
-	lastRelevantCommit, ok := t.Annotations[annotations.LastRelevantCommit]
-	if !ok {
-		condition.Reason = "NoCommitReceived"
-		condition.Message = "No commit has been received from webhook"
-		condition.Status = metav1.ConditionTrue
-		return condition, true
-	}
-	if lastPlannedCommit == lastBranchCommit || lastPlannedCommit == lastRelevantCommit {
-		condition.Reason = "LastRelevantCommitPlanned"
-		condition.Message = "The last relevant commit has already been planned"
-		condition.Status = metav1.ConditionTrue
-		return condition, true
-	}
-	condition.Reason = "LastRelevantCommitNotPlanned"
-	condition.Message = "The last received relevant commit has not been planned yet"
-	condition.Status = metav1.ConditionFalse
-	return condition, false
-}
-
-func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
-	condition := metav1.Condition{
-		Type:               "IsApplyUpToDate",
-		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
-		Status:             metav1.ConditionUnknown,
-		LastTransitionTime: metav1.NewTime(time.Now()),
-	}
-	planHash, ok := t.Annotations[annotations.LastPlanSum]
-	if !ok || planHash == "" {
-		condition.Reason = "NoPlanHasRunYet"
-		condition.Message = "No plan has run on this layer yet"
-		condition.Status = metav1.ConditionTrue
-		return condition, true
-	}
-	applyHash, ok := t.Annotations[annotations.LastApplySum]
-	if !ok {
-		condition.Reason = "NoApplyHasRun"
-		condition.Message = "Apply has not run yet but a plan is available, launching apply"
+	if t.Status.Plan.Commit == "" {
+		condition.Reason = "NeverPlanned"
+		condition.Message = "Layer has never been planned"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	if applyHash == "" {
-		condition.Reason = "LastApplyFailed"
-		condition.Message = "Last apply run has failed."
+	if t.Status.Apply.Commit == "" {
+		condition.Reason = "NeverApplied"
+		condition.Message = "Layer has never been applied"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if t.Status.Apply.Commit == t.Status.Plan.Commit {
+		condition.Reason = "AlreadyApplied"
+		condition.Message = "Layer has already been applied"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
-	if applyHash != planHash {
-		condition.Reason = "NewPlanAvailable"
-		condition.Message = "Apply will run."
-		condition.Status = metav1.ConditionFalse
-		return condition, false
-	}
-	condition.Reason = "ApplyUpToDate"
-	condition.Message = "Last planned artifact is the same as the last applied one"
+	condition.Reason = "ShouldBeApplied"
+	condition.Message = "Layer should be applied"
 	condition.Status = metav1.ConditionTrue
 	return condition, true
 }

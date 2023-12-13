@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
 	"os"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -33,6 +34,8 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	"github.com/padok-team/burrito/internal/controllers/terraformrun"
+	"github.com/padok-team/burrito/internal/storage"
+	"github.com/padok-team/burrito/internal/storage/gcs"
 	"github.com/padok-team/burrito/internal/storage/redis"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -64,6 +67,30 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+}
+
+func GetStorage(c *config.Config) (storage.Storage, error) {
+	providers := 0
+	provider := ""
+	if c.Storage.GCS.Bucket != "" {
+		providers++
+		provider := "gcs"
+	}
+	if c.Storage.S3.Bucket != "" {
+		providers++
+		provider := "s3"
+	}
+	if providers > 1 {
+		return nil, fmt.Errorf("only one storage provider can be configured")
+	}
+	switch provider {
+	case "gcs":
+		return gcs.New(c.Storage.GCS)
+	case "s3":
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("no storage provider configured")
+	}
 }
 
 func (c *Controllers) Exec() {
