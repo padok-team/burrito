@@ -20,6 +20,7 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -48,8 +49,18 @@ type Reconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.WithContext(ctx)
-
-	// TODO(user): your logic here
+	log.Infof("starting reconciliation for layer %s/%s ...", req.Namespace, req.Name)
+	repository := &configv1alpha1.TerraformRepository{}
+	err := r.Client.Get(ctx, req.NamespacedName, repository)
+	if errors.IsNotFound(err) {
+		log.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
+		return ctrl.Result{}, nil
+	}
+	if err != nil {
+		log.Errorf("failed to get TerraformRepository: %s", err)
+		return ctrl.Result{}, err
+	}
+	state := r.GetState(ctx, repository)
 
 	return ctrl.Result{}, nil
 }
