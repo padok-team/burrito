@@ -21,18 +21,15 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
       variant={variant}
       className={twMerge("items-center justify-center p-4 gap-4", className)}
     >
-      <span
+      <Toggle
         className={`
           text-base
           font-normal
           ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}
         `}
-      >
-        {variant === "dark" ? "Disable" : "Enable"} Dark Mode
-      </span>
-      <Toggle
         checked={theme === "dark"}
         onChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+        label={`${variant === "dark" ? "Disable" : "Enable"} Dark Mode`}
       />
     </Box>
   );
