@@ -102,11 +102,13 @@ const Layers: React.FC = () => {
                 text-base
                 font-semibold
                 ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
-            `}
+              `}
             >
-              {`${
-                layersQuery.isSuccess ? layersQuery.data.results.length : 0
-              } layers`}
+              {`
+                ${
+                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                } layers
+              `}
             </span>
             <span
               className={`
@@ -124,7 +126,7 @@ const Layers: React.FC = () => {
                 text-base
                 font-medium
                 ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
-            `}
+              `}
             >
               Filter by
             </span>
@@ -152,23 +154,16 @@ const Layers: React.FC = () => {
                 />
               </Dropdown>
             </div>
-            <div className="flex flex-row items-center gap-[7px]">
-              <span
-                className={`
-                  text-sm
-                  font-medium
-                  ${
-                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
-                  }
-                `}
-              >
-                Hide Pull Requests
-              </span>
-              <Toggle
-                checked={hidePRFilter}
-                onChange={() => setHidePRFilter(!hidePRFilter)}
-              />
-            </div>
+            <Toggle
+              className={`
+                text-sm
+                font-medium
+                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              `}
+              checked={hidePRFilter}
+              onChange={() => setHidePRFilter(!hidePRFilter)}
+              label="Hide Pull Requests"
+            />
           </div>
           <div className="flex flex-row items-center gap-2">
             <NavigationButton
