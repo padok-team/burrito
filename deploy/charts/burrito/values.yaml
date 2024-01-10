@@ -70,7 +70,7 @@ redis:
   deployment:
     image:
       repository: redis
-      tag: "7.0.12-alpine"
+      tag: "7.2.4-alpine"
       pullPolicy: Always
     args: []
     podSecurityContext:
