@@ -5,15 +5,15 @@ import { Link, LinkProps } from "react-router-dom";
 
 export interface NavigationLinkProps {
   className?: string;
-  value: React.ReactNode;
   to: LinkProps["to"];
+  children: React.ReactNode;
   disabled?: boolean;
 }
 
 const NavigationLink: React.FC<NavigationLinkProps> = ({
   className,
-  value,
   to,
+  children,
   disabled,
 }) => {
   return !disabled ? (
@@ -48,7 +48,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
           className
         )}
       >
-        {value}
+        {children}
       </div>
     </Link>
   ) : (
@@ -59,7 +59,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
         className
       )}
     >
-      {value}
+      {children}
     </div>
   );
 };
