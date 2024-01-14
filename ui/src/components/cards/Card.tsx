@@ -1,14 +1,14 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "react-tooltip";
+import { Link } from "react-router-dom";
 
 import Tag from "@/components/tags/Tag";
-import NavigationLink from "@/components/navigation/NavigationLink";
 import SyncIcon from "@/assets/icons/SyncIcon";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
-import EyeIcon from "@/assets/icons/EyeIcon";
+import WindowIcon from "@/assets/icons/WindowIcon";
 
 import { Layer } from "@/clients/layers/types";
 
@@ -52,17 +52,6 @@ const Card: React.FC<CardProps> = ({
             />
           ))}
       </div>
-    );
-  };
-
-  const getLink = () => {
-    return (
-      <NavigationLink to="/logs">
-        <div className="flex items-center space-x-0.5">
-          <span className="text-sm font-semibold">see logs</span>
-          <EyeIcon height={20} width={20} />
-        </div>
-      </NavigationLink>
     );
   };
 
@@ -127,7 +116,6 @@ const Card: React.FC<CardProps> = ({
           ["Branch", branch],
           ["Path", path],
           ["Last result", lastResult],
-          ["", getLink()],
         ].map(([label, value], index) => (
           <React.Fragment key={index}>
             <span
@@ -164,6 +152,11 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
+      <Link to={""}>
+        <div className="hover:bg-primary-300 rounded-full transition-colors duration-300">
+          <WindowIcon className="p-2 fill-blue-500" width={40} height={40} />
+        </div>
+      </Link>
       <Tooltip
         opacity={1}
         id="card-tooltip"
