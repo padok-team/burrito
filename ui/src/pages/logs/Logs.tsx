@@ -13,6 +13,7 @@ import Toggle from "@/components/buttons/Toggle";
 import RunCard from "@/components/cards/RunCard";
 
 import RepositoryDropdown from "@/pages/components/RepositoryDropdown";
+import DateDropdown from "@/pages/logs/components/DateDropdown";
 
 import SearchIcon from "@/assets/icons/SearchIcon";
 
@@ -23,6 +24,9 @@ const Logs: React.FC = () => {
   const [search, setSearch] = useState<string>("");
   const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
   const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
+  const [dateFilter, setDateFilter] = useState<
+    "ascending" | "descending" | null
+  >(null);
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -124,8 +128,16 @@ const Logs: React.FC = () => {
                   onChange={setRepositoryFilter}
                 />
               </Dropdown>
-              <Dropdown variant={theme} label="Date">
-                <></>
+              <Dropdown
+                variant={theme}
+                label="Date"
+                filled={dateFilter !== null}
+              >
+                <DateDropdown
+                  variant={theme}
+                  filter={dateFilter}
+                  onChange={setDateFilter}
+                />
               </Dropdown>
             </div>
             <Toggle
