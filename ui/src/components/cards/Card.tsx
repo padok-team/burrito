@@ -153,7 +153,18 @@ const Card: React.FC<CardProps> = ({
         ))}
       </div>
       <Link to={""}>
-        <div className="hover:bg-primary-300 rounded-full transition-colors duration-300">
+        <div
+          className={`
+            ${
+              variant === "light"
+                ? "hover:bg-primary-300 "
+                : "hover:bg-nuances-black"
+            }
+            rounded-full
+            transition-colors
+            duration-300
+          `}
+        >
           <WindowIcon className="p-2 fill-blue-500" width={40} height={40} />
         </div>
       </Link>
