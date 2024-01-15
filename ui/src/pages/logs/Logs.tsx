@@ -12,6 +12,8 @@ import Dropdown from "@/components/inputs/Dropdown";
 import Toggle from "@/components/buttons/Toggle";
 import RunCard from "@/components/cards/RunCard";
 
+import RepositoryDropdown from "@/pages/components/RepositoryDropdown";
+
 import SearchIcon from "@/assets/icons/SearchIcon";
 
 import { Layer } from "@/clients/layers/types";
@@ -20,15 +22,22 @@ const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const [search, setSearch] = useState<string>("");
   const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
+  const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
     queryFn: fetchLayers,
     select: (data) => ({
       ...data,
-      results: data.results.filter((layer) =>
-        layer.name.toLowerCase().includes(search.toLowerCase())
-      ),
+      results: data.results
+        .filter((layer) =>
+          layer.name.toLowerCase().includes(search.toLowerCase())
+        )
+        .filter(
+          (layer) =>
+            repositoryFilter.length === 0 ||
+            repositoryFilter.includes(layer.repository)
+        ),
     }),
   });
 
@@ -104,8 +113,16 @@ const Logs: React.FC = () => {
               Filter by
             </span>
             <div className="flex flex-row items-center gap-2">
-              <Dropdown variant={theme} label="Repository">
-                <></>
+              <Dropdown
+                variant={theme}
+                label="Repository"
+                filled={repositoryFilter.length !== 0}
+              >
+                <RepositoryDropdown
+                  variant={theme}
+                  filter={repositoryFilter}
+                  onChange={setRepositoryFilter}
+                />
               </Dropdown>
               <Dropdown variant={theme} label="Date">
                 <></>

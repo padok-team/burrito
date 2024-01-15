@@ -16,7 +16,7 @@ import Card from "@/components/cards/Card";
 import Table from "@/components/tables/Table";
 
 import StateDropdown from "@/pages/layers/components/StateDropdown";
-import RepositoriesDropdown from "@/pages/layers/components/RepositoriesDropdown";
+import RepositoriesDropdown from "@/pages/components/RepositoriesDropdown";
 
 import { LayerState } from "@/clients/layers/types";
 
