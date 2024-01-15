@@ -9,13 +9,16 @@ import { Layer } from "@/clients/layers/types";
 export interface RunCardProps {
   className?: string;
   variant?: "light" | "dark";
-  active?: boolean;
+  isActive?: boolean;
+  onClick?: () => void;
   layer: Layer;
 }
 
 const RunCard: React.FC<RunCardProps> = ({
   className,
   variant = "light",
+  isActive,
+  onClick,
   layer: { name, namespace, isRunning },
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -27,17 +30,27 @@ const RunCard: React.FC<RunCardProps> = ({
         gap-4
         p-4
         truncate
+        cursor-pointer
         outline
         outline-1
-        outline-primary-500
-        rounded-2xl`,
-        variant === "light" ? "text-nuances-black" : "text-nuances-50",
+        rounded-2xl
+        transition-shadow
+        duration-700`,
+        variant === "light"
+          ? "bg-primary-100 text-nuances-black outline-primary-500 hover:bg-nuances-white"
+          : "bg-nuances-black text-nuances-50 outline-nuances-50 hover:bg-nuances-400",
+        isActive &&
+          (variant === "light"
+            ? "bg-nuances-white shadow-light"
+            : "bg-nuances-400 shadow-dark"),
+        isActive && "outline-0",
         isRunning &&
           `outline-4 ${
             variant === "light" ? "outline-blue-400" : "outline-blue-500"
           }`,
         className
       )}
+      onClick={onClick}
     >
       <div className="flex flex-col gap-2">
         <div className="flex justify-between">
