@@ -33,6 +33,22 @@ const Card: React.FC<CardProps> = ({
     isPR,
   },
 }) => {
+  const styles = {
+    base: {
+      light: `bg-nuances-white
+        shadow-light`,
+
+      dark: `bg-nuances-400
+        shadow-dark`,
+    },
+
+    isRunning: {
+      light: `outline-blue-400`,
+
+      dark: `outline-blue-500`,
+    },
+  };
+
   const getTag = () => {
     return (
       <div className="flex items-center">
@@ -64,14 +80,8 @@ const Card: React.FC<CardProps> = ({
         rounded-2xl
         p-6
         gap-4
-        ${variant === "light" ? "bg-nuances-white" : "bg-nuances-400"}
-        ${variant === "light" ? "shadow-light" : "shadow-dark"}
-        ${
-          isRunning &&
-          `outline outline-4 ${
-            variant === "light" ? "outline-blue-400" : "outline-blue-500"
-          }`
-        }`,
+        ${styles.base[variant]}`,
+        isRunning && `outline outline-4 ${styles.isRunning[variant]}`,
         className
       )}
     >

@@ -22,6 +22,35 @@ const RunCard: React.FC<RunCardProps> = ({
   layer: { name, namespace, isRunning },
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const styles = {
+    base: {
+      light: `bg-primary-100
+        text-nuances-black
+        outline-primary-500
+        hover:bg-nuances-white`,
+
+      dark: `bg-nuances-black
+        text-nuances-50
+        outline-nuances-50
+        hover:bg-nuances-400`,
+    },
+
+    isActive: {
+      light: `bg-nuances-white
+        shadow-light`,
+
+      dark: `bg-nuances-400
+        shadow-dark`,
+    },
+
+    isRunning: {
+      light: `outline-blue-400`,
+
+      dark: `outline-blue-500`,
+    },
+  };
+
   return (
     <div
       className={twMerge(
@@ -35,19 +64,10 @@ const RunCard: React.FC<RunCardProps> = ({
         outline-1
         rounded-2xl
         transition-shadow
-        duration-700`,
-        variant === "light"
-          ? "bg-primary-100 text-nuances-black outline-primary-500 hover:bg-nuances-white"
-          : "bg-nuances-black text-nuances-50 outline-nuances-50 hover:bg-nuances-400",
-        isActive &&
-          (variant === "light"
-            ? "bg-nuances-white shadow-light"
-            : "bg-nuances-400 shadow-dark"),
-        isActive && "outline-0",
-        isRunning &&
-          `outline-4 ${
-            variant === "light" ? "outline-blue-400" : "outline-blue-500"
-          }`,
+        duration-700
+        ${styles.base[variant]}`,
+        isActive && `outline-0 ${styles.isActive[variant]}`,
+        isRunning && `outline-4 ${styles.isRunning[variant]}`,
         className
       )}
       onClick={onClick}
