@@ -8,12 +8,12 @@ import {
 } from "@tanstack/react-table";
 import { Tooltip } from "react-tooltip";
 
-import Tag from "@/components/tags/Tag";
 import TableLoader from "@/components/loaders/TableLoader";
+import Running from "@/components/widgets/Running";
+import Tag from "@/components/widgets/Tag";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
-import SyncIcon from "@/assets/icons/SyncIcon";
 
 import { Layer, LayerState } from "@/clients/layers/types";
 
@@ -82,14 +82,7 @@ const Table: React.FC<TableProps> = ({
                 }
               `}
             >
-              <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
-                <span className="text-sm font-semibold">Running</span>
-                <SyncIcon
-                  className="animate-spin-slow"
-                  height={16}
-                  width={16}
-                />
-              </div>
+              <Running />
             </div>
           )}
         </div>

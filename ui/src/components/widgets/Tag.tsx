@@ -9,13 +9,13 @@ export interface TagProps {
 const Tag: React.FC<TagProps> = ({ variant }) => {
   const styles = {
     success: `bg-status-success-default
-    text-nuances-black`,
+      text-nuances-black`,
     warning: `bg-status-warning-default
-    text-nuances-black`,
+      text-nuances-black`,
     error: `bg-status-error-default
-    text-nuances-white`,
+      text-nuances-white`,
     disabled: `bg-nuances-50
-    text-nuances-200`,
+      text-nuances-200`,
   };
 
   const getContent = () => {
