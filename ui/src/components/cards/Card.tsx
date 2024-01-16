@@ -1,14 +1,13 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "react-tooltip";
-import { Link } from "react-router-dom";
 
 import Tag from "@/components/tags/Tag";
+import LogsButton from "@/components/buttons/LogsButton";
 import SyncIcon from "@/assets/icons/SyncIcon";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
-import WindowIcon from "@/assets/icons/WindowIcon";
 
 import { Layer } from "@/clients/layers/types";
 
@@ -142,7 +141,7 @@ const Card: React.FC<CardProps> = ({
               className={`
                 text-base
                 font-semibold
-                ${label !== "" && "truncate"}
+                truncate
                 ${
                   variant === "light" ? "text-nuances-black" : "text-nuances-50"
                 }
@@ -162,22 +161,7 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
-      <Link to={""}>
-        <div
-          className={`
-            ${
-              variant === "light"
-                ? "hover:bg-primary-300 "
-                : "hover:bg-nuances-black"
-            }
-            rounded-full
-            transition-colors
-            duration-300
-          `}
-        >
-          <WindowIcon className="p-2 fill-blue-500" width={40} height={40} />
-        </div>
-      </Link>
+      <LogsButton variant={variant} />
       <Tooltip
         opacity={1}
         id="card-tooltip"
