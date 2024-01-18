@@ -1,4 +1,5 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchLayers } from "@/clients/layers/client";
@@ -25,11 +26,36 @@ import BarsIcon from "@/assets/icons/BarsIcon";
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
-  const [search, setSearch] = useState<string>("");
   const [view, setView] = useState<"grid" | "table">("grid");
-  const [stateFilter, setStateFilter] = useState<LayerState[]>([]);
-  const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
+  const [searchParams, setSerchParams] = useSearchParams();
   const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
+
+  const search = useMemo<string>(() => searchParams.get("search") || "", [searchParams]);
+
+  const setSearch = useCallback((search: string) => {
+    searchParams.set("search", search);
+    setSerchParams(searchParams);
+  }, [searchParams, setSerchParams]);
+
+  const stateFilter = useMemo<LayerState[]>(() => {
+    const param = searchParams.get("state");
+    return (param ? param.split(",") : []) as LayerState[];
+  }, [searchParams]);
+
+  const setStateFilter = useCallback((stateFilter: LayerState[]) => {
+    searchParams.set("state", stateFilter.join(","));
+    setSerchParams(searchParams);
+  }, [searchParams, setSerchParams]);
+
+  const repositoryFilter = useMemo<string[]>(() => {
+    const param = searchParams.get("repositories");
+    return param ? param.split(",") : [];
+  }, [searchParams]);
+
+  const setRepositoryFilter = useCallback((repositoryFilter: string[]) => {
+      searchParams.set("repositories", repositoryFilter.join(","));
+      setSerchParams(searchParams);
+  }, [searchParams, setSerchParams]);
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
