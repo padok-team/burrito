@@ -27,6 +27,7 @@ const Logs: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<
     "ascending" | "descending" | null
   >(null);
+  const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -41,7 +42,8 @@ const Logs: React.FC = () => {
           (layer) =>
             repositoryFilter.length === 0 ||
             repositoryFilter.includes(layer.repository)
-        ),
+        )
+        .filter((layer) => !hidePRFilter || !layer.isPR),
     }),
   });
 
@@ -93,7 +95,9 @@ const Logs: React.FC = () => {
               `}
             >
               {`
-                0 logs
+                ${
+                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                } layers
               `}
             </span>
             <span
@@ -146,7 +150,9 @@ const Logs: React.FC = () => {
                 font-medium
                 ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
               `}
-              label="Show running logs"
+              checked={hidePRFilter}
+              onChange={() => setHidePRFilter(!hidePRFilter)}
+              label="Hide Pull Requests"
             />
           </div>
         </div>
