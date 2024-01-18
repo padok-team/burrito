@@ -7,16 +7,16 @@ import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import Button from "@/components/buttons/Button";
-import Input from "@/components/inputs/Input";
-import Dropdown from "@/components/inputs/Dropdown";
-import Toggle from "@/components/buttons/Toggle";
+import Button from "@/components/core/Button";
+import Input from "@/components/core/Input";
+import Dropdown from "@/components/core/Dropdown";
+import Toggle from "@/components/core/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
 import Table from "@/components/tables/Table";
 
-import StateDropdown from "@/pages/layers/components/StateDropdown";
-import RepositoriesDropdown from "@/pages/components/RepositoriesDropdown";
+import StateDropdown from "@/components/dropdowns/StateDropdown";
+import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
 
 import { LayerState } from "@/clients/layers/types";
 

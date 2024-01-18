@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 
-import Box from "@/components/misc/Box";
+import Box from "@/components/core/Box";
 
 import AngleDownIcon from "@/assets/icons/AngleDownIcon";
 

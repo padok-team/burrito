@@ -6,14 +6,14 @@ import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import Button from "@/components/buttons/Button";
-import Input from "@/components/inputs/Input";
-import Dropdown from "@/components/inputs/Dropdown";
-import Toggle from "@/components/buttons/Toggle";
+import Button from "@/components/core/Button";
+import Input from "@/components/core/Input";
+import Dropdown from "@/components/core/Dropdown";
+import Toggle from "@/components/core/Toggle";
 import RunCard from "@/components/cards/RunCard";
 
-import RepositoryDropdown from "@/pages/components/RepositoryDropdown";
-import DateDropdown from "@/pages/logs/components/DateDropdown";
+import RepositoryDropdown from "@/components/dropdowns/RepositoryDropdown";
+import DateDropdown from "@/components/dropdowns/DateDropdown";
 
 import SearchIcon from "@/assets/icons/SearchIcon";
 

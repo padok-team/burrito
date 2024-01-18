@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchRepositories } from "@/clients/repositories/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
-import Box from "@/components/misc/Box";
-import Input from "@/components/inputs/Input";
-import Checkbox from "@/components/checkboxes/Checkbox";
+import Box from "@/components/core/Box";
+import Input from "@/components/core/Input";
+import Checkbox from "@/components/core/Checkbox";
 
 export interface RepositoriesDropdownProps {
   variant?: "light" | "dark";

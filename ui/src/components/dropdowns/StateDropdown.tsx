@@ -1,7 +1,7 @@
 import React from "react";
 
-import Box from "@/components/misc/Box";
-import Checkbox from "@/components/checkboxes/Checkbox";
+import Box from "@/components/core/Box";
+import Checkbox from "@/components/core/Checkbox";
 
 import { LayerState } from "@/clients/layers/types";
 

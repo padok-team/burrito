@@ -1,7 +1,7 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
 
-import Dropdown from "@/components/inputs/Dropdown";
+import Dropdown from "@/components/core/Dropdown";
 import CopyIcon from "@/assets/icons/CopyIcon";
 import DownloadAltIcon from "@/assets/icons/DownloadAltIcon";
 
