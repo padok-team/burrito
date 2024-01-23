@@ -28,12 +28,18 @@ const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchParams, setSerchParams] = useSearchParams();
-  const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
 
   const search = useMemo<string>(() => searchParams.get("search") || "", [searchParams]);
 
   const setSearch = useCallback((search: string) => {
     searchParams.set("search", search);
+    setSerchParams(searchParams);
+  }, [searchParams, setSerchParams]);
+
+  const hidePRFilter = useMemo<boolean>(() => searchParams.get("hidepr") !== "false", [searchParams]);
+
+  const setHidePRFilter = useCallback((hidePRFilter: boolean) => {
+    searchParams.set("hidepr", hidePRFilter.toString());
     setSerchParams(searchParams);
   }, [searchParams, setSerchParams]);
 
