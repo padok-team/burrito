@@ -11,6 +11,7 @@ import Input from "@/components/core/Input";
 import Dropdown from "@/components/core/Dropdown";
 import Toggle from "@/components/core/Toggle";
 import RunCard from "@/components/cards/RunCard";
+import LogsTerminal from "@/components/tools/LogsTerminal";
 
 import RepositoryDropdown from "@/components/dropdowns/RepositoryDropdown";
 import DateDropdown from "@/components/dropdowns/DateDropdown";
@@ -28,6 +29,18 @@ const Logs: React.FC = () => {
     "ascending" | "descending" | null
   >(null);
   const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
+
+  const layer: Layer = {
+    name: "fail-terragrunt",
+    namespace: "burrito-examples",
+    state: "success",
+    repository: "test",
+    path: "test",
+    branch: "test",
+    lastResult: "success",
+    isPR: false,
+    isRunning: false,
+  };
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -48,10 +61,9 @@ const Logs: React.FC = () => {
   });
 
   return (
-    <div className="relative flex flex-col flex-grow h-screen gap-3 overflow-auto">
+    <div className="flex flex-col flex-1 h-screen min-w-0">
       <div
         className={`
-          sticky
           top-0
           z-10
           flex
@@ -157,21 +169,28 @@ const Logs: React.FC = () => {
           </div>
         </div>
       </div>
-      {layersQuery.isLoading && <></>}
-      {layersQuery.isError && <></>}
-      {layersQuery.isSuccess && (
-        <div className="flex flex-col gap-4 p-6">
-          {layersQuery.data.results.map((layer, index) => (
-            <RunCard
-              key={index}
-              variant={theme}
-              isActive={activeLayer?.name === layer.name}
-              onClick={() => setActiveLayer(layer)}
-              layer={layer}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex flex-row gap-6 p-6 overflow-auto">
+        {layersQuery.isLoading && <></>}
+        {layersQuery.isError && <></>}
+        {layersQuery.isSuccess && (
+          <div className="flex flex-col w-1/3 h-fit gap-6">
+            {layersQuery.data.results.map((layer, index) => (
+              <RunCard
+                key={index}
+                variant={theme}
+                isActive={activeLayer?.name === layer.name}
+                onClick={() => setActiveLayer(layer)}
+                layer={layer}
+              />
+            ))}
+          </div>
+        )}
+        <LogsTerminal
+          className="flex-1 min-w-0 sticky top-0"
+          layer={layer}
+          variant={theme}
+        />
+      </div>
     </div>
   );
 };
