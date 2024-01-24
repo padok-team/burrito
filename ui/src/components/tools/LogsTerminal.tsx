@@ -121,20 +121,26 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       </div>
       <div className="pb-4 overflow-auto">
         <table>
-          {example_logs.results.map((log, i) => (
-            <tr>
-              <td
-                className={`
-                text-sm
-                px-4
-                ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
-                `}
-              >
-                {i + 1}
-              </td>
-              <td>{log}</td>
-            </tr>
-          ))}
+          <tbody>
+            {example_logs.results.map((log, i) => (
+              <tr key={i}>
+                <td
+                  className={`
+                    text-sm
+                    px-4
+                    ${
+                      variant === "light"
+                        ? "text-primary-600"
+                        : "text-nuances-300"
+                    }
+                  `}
+                >
+                  {i + 1}
+                </td>
+                <td>{log}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
