@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 
 import { fetchLayers } from "@/clients/layers/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
@@ -22,13 +23,76 @@ import { Layer } from "@/clients/layers/types";
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
-  const [search, setSearch] = useState<string>("");
-  const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
-  const [repositoryFilter, setRepositoryFilter] = useState<string[]>([]);
-  const [dateFilter, setDateFilter] = useState<
-    "ascending" | "descending" | null
-  >(null);
-  const [hidePRFilter, setHidePRFilter] = useState<boolean>(true);
+  const [searchParams, setSerchParams] = useSearchParams();
+
+  const search = useMemo<string>(
+    () => searchParams.get("search") || "",
+    [searchParams]
+  );
+
+  const setSearch = useCallback(
+    (search: string) => {
+      searchParams.set("search", search);
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
+
+  const repositoryFilter = useMemo<string[]>(() => {
+    const param = searchParams.get("repositories");
+    return param ? param.split(",") : [];
+  }, [searchParams]);
+
+  const setRepositoryFilter = useCallback(
+    (repositoryFilter: string[]) => {
+      searchParams.set("repositories", repositoryFilter.join(","));
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
+
+  const dateFilter = useMemo<"ascending" | "descending" | null>(() => {
+    const param = searchParams.get("date");
+    return param === "ascending"
+      ? "ascending"
+      : param === "descending"
+      ? "descending"
+      : null;
+  }, [searchParams]);
+
+  const setDateFilter = useCallback(
+    (dateFilter: "ascending" | "descending" | null) => {
+      searchParams.set("date", dateFilter || "");
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
+
+  const hidePRFilter = useMemo<boolean>(
+    () => searchParams.get("hidepr") !== "false",
+    [searchParams]
+  );
+
+  const setHidePRFilter = useCallback(
+    (hidePRFilter: boolean) => {
+      searchParams.set("hidepr", hidePRFilter.toString());
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
+
+  const activeLayer = useMemo<string | null>(() => {
+    const param = searchParams.get("layer");
+    return param ? param : null;
+  }, [searchParams]);
+
+  const setActiveLayer = useCallback(
+    (activeLayer: string | null) => {
+      searchParams.set("layer", activeLayer || "");
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
 
   const layer: Layer = {
     name: "fail-terragrunt",
@@ -86,13 +150,13 @@ const Logs: React.FC = () => {
             Logs
           </h1>
           <Button variant={theme === "light" ? "primary" : "secondary"}>
-            Refresh logs
+            Refresh layers
           </Button>
         </div>
         <Input
           variant={theme}
           className="w-full"
-          placeholder="Search into logs"
+          placeholder="Search into layers"
           leftIcon={<SearchIcon />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -178,8 +242,10 @@ const Logs: React.FC = () => {
               <RunCard
                 key={index}
                 variant={theme}
-                isActive={activeLayer?.name === layer.name}
-                onClick={() => setActiveLayer(layer)}
+                isActive={activeLayer === `${layer.namespace}/${layer.name}`}
+                onClick={() =>
+                  setActiveLayer(`${layer.namespace}/${layer.name}`)
+                }
                 layer={layer}
               />
             ))}
