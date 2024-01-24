@@ -87,7 +87,15 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
         <div className="flex flex-row items-center gap-4">
           <span className="text-lg font-black">{name}</span>
           <span className="text-base font-semibold">{namespace}</span>
-          <Dropdown label="Latest attempt" variant={variant}>
+          <Dropdown
+            className={
+              variant === "light"
+                ? "bg-primary-300 text-primary-600 fill-primary-600"
+                : "bg-nuances-300 text-nuances-400 fill-nuances-400"
+            }
+            label="Latest attempt"
+            variant={variant}
+          >
             <></>
           </Dropdown>
         </div>
