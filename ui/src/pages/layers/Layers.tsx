@@ -29,39 +29,57 @@ const Layers: React.FC = () => {
   const [view, setView] = useState<"grid" | "table">("grid");
   const [searchParams, setSerchParams] = useSearchParams();
 
-  const search = useMemo<string>(() => searchParams.get("search") || "", [searchParams]);
+  const search = useMemo<string>(
+    () => searchParams.get("search") || "",
+    [searchParams]
+  );
 
-  const setSearch = useCallback((search: string) => {
-    searchParams.set("search", search);
-    setSerchParams(searchParams);
-  }, [searchParams, setSerchParams]);
-
-  const hidePRFilter = useMemo<boolean>(() => searchParams.get("hidepr") !== "false", [searchParams]);
-
-  const setHidePRFilter = useCallback((hidePRFilter: boolean) => {
-    searchParams.set("hidepr", hidePRFilter.toString());
-    setSerchParams(searchParams);
-  }, [searchParams, setSerchParams]);
+  const setSearch = useCallback(
+    (search: string) => {
+      searchParams.set("search", search);
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
 
   const stateFilter = useMemo<LayerState[]>(() => {
     const param = searchParams.get("state");
     return (param ? param.split(",") : []) as LayerState[];
   }, [searchParams]);
 
-  const setStateFilter = useCallback((stateFilter: LayerState[]) => {
-    searchParams.set("state", stateFilter.join(","));
-    setSerchParams(searchParams);
-  }, [searchParams, setSerchParams]);
+  const setStateFilter = useCallback(
+    (stateFilter: LayerState[]) => {
+      searchParams.set("state", stateFilter.join(","));
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
 
   const repositoryFilter = useMemo<string[]>(() => {
     const param = searchParams.get("repositories");
     return param ? param.split(",") : [];
   }, [searchParams]);
 
-  const setRepositoryFilter = useCallback((repositoryFilter: string[]) => {
+  const setRepositoryFilter = useCallback(
+    (repositoryFilter: string[]) => {
       searchParams.set("repositories", repositoryFilter.join(","));
       setSerchParams(searchParams);
-  }, [searchParams, setSerchParams]);
+    },
+    [searchParams, setSerchParams]
+  );
+
+  const hidePRFilter = useMemo<boolean>(
+    () => searchParams.get("hidepr") !== "false",
+    [searchParams]
+  );
+
+  const setHidePRFilter = useCallback(
+    (hidePRFilter: boolean) => {
+      searchParams.set("hidepr", hidePRFilter.toString());
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -86,10 +104,9 @@ const Layers: React.FC = () => {
   });
 
   return (
-    <div className="relative flex flex-col flex-grow h-screen gap-3 overflow-auto">
+    <div className="flex flex-col flex-1 h-screen min-w-0">
       <div
         className={`
-          sticky
           top-0
           z-10
           flex
@@ -213,20 +230,22 @@ const Layers: React.FC = () => {
           </div>
         </div>
       </div>
-      {layersQuery.isLoading && <></>}
-      {layersQuery.isError && <></>}
-      {layersQuery.isSuccess &&
-        (view === "grid" ? (
-          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-            {layersQuery.data.results.map((layer, index) => (
-              <Card key={index} variant={theme} layer={layer} />
-            ))}
-          </div>
-        ) : view === "table" ? (
-          <Table variant={theme} data={layersQuery.data.results} />
-        ) : (
-          <></>
-        ))}
+      <div className="relative overflow-auto">
+        {layersQuery.isLoading && <></>}
+        {layersQuery.isError && <></>}
+        {layersQuery.isSuccess &&
+          (view === "grid" ? (
+            <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+              {layersQuery.data.results.map((layer, index) => (
+                <Card key={index} variant={theme} layer={layer} />
+              ))}
+            </div>
+          ) : view === "table" ? (
+            <Table variant={theme} data={layersQuery.data.results} />
+          ) : (
+            <></>
+          ))}
+      </div>
     </div>
   );
 };
