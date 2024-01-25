@@ -9,6 +9,7 @@ export type Layer = {
   repository: string;
   branch: string;
   path: string;
+  runCount: number;
   lastResult: string;
   isRunning: boolean;
   isPR: boolean;

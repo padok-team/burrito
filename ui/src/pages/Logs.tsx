@@ -101,6 +101,7 @@ const Logs: React.FC = () => {
     repository: "test",
     path: "test",
     branch: "test",
+    runCount: 12,
     lastResult: "success",
     isPR: false,
     isRunning: false,

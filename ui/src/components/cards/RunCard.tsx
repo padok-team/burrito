@@ -19,7 +19,7 @@ const RunCard: React.FC<RunCardProps> = ({
   variant = "light",
   isActive,
   onClick,
-  layer: { name, namespace, isRunning },
+  layer: { name, namespace, isRunning, runCount },
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -96,8 +96,7 @@ const RunCard: React.FC<RunCardProps> = ({
           Runs
         </span>
         <div className="flex items-center">
-          {/* TODO - Replace with actual value */}
-          <span className="font-semibold">34</span>
+          <span className="font-semibold">{runCount}</span>
           <AngleDownIcon
             className={`
               fill-blue-500
