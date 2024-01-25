@@ -73,6 +73,10 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
     ],
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(example_logs.results.join("\n"));
+  };
+
   return (
     <div
       className={twMerge(
@@ -100,8 +104,13 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           </Dropdown>
         </div>
         <div className="flex flex-row items-center gap-4">
-          <CopyIcon height={30} width={30} />
-          <DownloadAltIcon height={30} width={30} />
+          <CopyIcon
+            className="cursor-pointer"
+            height={30}
+            width={30}
+            onClick={handleCopy}
+          />
+          <DownloadAltIcon className="cursor-pointer" height={30} width={30} />
         </div>
       </div>
       <hr
