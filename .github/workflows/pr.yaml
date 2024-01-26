@@ -1,80 +1,69 @@
-name: Release
+name: [Pull Request] Continuous Integration
 
 on:
-  push:
-    tags:
-    - 'v*'
+  pull_request:
+    branches:
+    - main
 
 env:
   GO_VERSION: 1.19
   BUILD_PLATFORMS: linux/amd64,linux/arm64
 
-permissions:
-  contents: write
-  packages: write
-
 jobs:
-  goreleaser:
+  unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
-    environment: production
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Cache envtest binaries
+      uses: actions/cache@v3
       with:
-        fetch-depth: 0
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-    - name: Fetch all tags
-      run: git fetch --force --tags
-
-    - name: Set up Go
+        path: ./bin/
+        key: binaries
+    - name: Setup Golang
       uses: actions/setup-go@v4
       with:
         go-version: "${{ env.GO_VERSION }}"
+    - name: Install envtest
+      run: make envtest
+    - name: Setup envtest
+      run: ./bin/setup-envtest use
+    - name: Run tests
+      run: make test
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
 
-    - name: Get ldflags env values
-      run: |
-        echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-        echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-        echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
-
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@v3
-      with:
-        distribution: goreleaser
-        version: latest
-        args: release --clean
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  version:
+  check-codegen:
+    name: Check Codegen
     runs-on: ubuntu-latest
-    environment: production
-    env:
-      CHART_PATH: ./deploy/charts/burrito
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Setup Golang
+      uses: actions/setup-go@v4
       with:
-        fetch-depth: 0
-        ref: main
-
-    - name: Bump VERSION file
+        go-version: "${{ env.GO_VERSION }}"
+    - name: Generate manifests
+      run: make manifests
+    - name: Check nothing has changed
       run: |
-        echo ${{ github.ref_name }} > VERSION
+        git diff --exit-code ./manifests
 
-    - name: Bump Helm Chart versions
-      run: |
-        export CHART_VERSION=$(echo ${{ github.ref_name }} | sed 's/v//g')
-        export APP_VERSION=${{ github.ref_name }}
-        yq -i '.version = env(CHART_VERSION)' $CHART_PATH/Chart.yaml
-        yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
-
-    - name: Commit version to repository
-      uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: "chore(release): bump version to ${{ github.ref_name }}"
-        push_options: --force
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.53
+          args: --timeout=5m
 
   build-and-push:
     name: Build & Push
@@ -118,7 +107,6 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v4
       with:
-        push: true
         provenance: false
         platforms: ${{ env.BUILD_PLATFORMS }}
         build-args: |
