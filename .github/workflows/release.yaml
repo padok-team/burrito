@@ -11,6 +11,7 @@ env:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   goreleaser:
