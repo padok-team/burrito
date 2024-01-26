@@ -62,15 +62,6 @@ func (a *API) LayersHandler(c echo.Context) error {
 }
 
 func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
-	repository := &configv1alpha1.TerraformRepository{}
-	err := a.Client.Get(context.Background(), client.ObjectKey{
-		Namespace: layer.Spec.Repository.Namespace,
-		Name:      layer.Spec.Repository.Name,
-	}, repository)
-	if err != nil {
-		log.Errorf("could not get terraform repository: %s", err)
-		return "Unknown"
-	}
 	state := "success"
 	switch {
 	case len(layer.Status.Conditions) == 0:
