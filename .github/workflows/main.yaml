@@ -1,12 +1,12 @@
-name: Continuous Integration
+name: [Main] Continuous Integration
 
 on:
   push:
     branches:
     - main
-  pull_request:
-    branches:
-    - main
+
+permissions:
+  packages: write
 
 env:
   GO_VERSION: 1.19
