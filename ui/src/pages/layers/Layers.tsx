@@ -255,8 +255,14 @@ const Layers: React.FC = () => {
           </div>
         ) : view === "table" ? (
           <div>
-            {layersQuery.isSuccess && (
+            {layersQuery.isLoading ? (
+              <Table variant={theme} isLoading data={[]} />
+            ) : layersQuery.isError ? (
+              <span>An error has occurred</span>
+            ) : layersQuery.isSuccess ? (
               <Table variant={theme} data={layersQuery.data.results} />
+            ) : (
+              <></>
             )}
           </div>
         ) : (
