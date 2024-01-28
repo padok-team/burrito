@@ -23,6 +23,7 @@ import { LayerState } from "@/clients/layers/types";
 import SearchIcon from "@/assets/icons/SearchIcon";
 import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
+import CardLoader from "@/components/loaders/CardLoader";
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -230,21 +231,37 @@ const Layers: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="relative overflow-auto">
-        {layersQuery.isLoading && <></>}
-        {layersQuery.isError && <></>}
-        {layersQuery.isSuccess &&
-          (view === "grid" ? (
-            <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
-              {layersQuery.data.results.map((layer, index) => (
+      <div
+        className={`
+          relative
+          ${layersQuery.isSuccess ? "overflow-auto" : "overflow-hidden"}
+        `}
+      >
+        {view === "grid" ? (
+          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+            {layersQuery.isLoading ? (
+              Array.from({ length: 100 }).map((_, index) => (
+                <CardLoader key={index} variant={theme} />
+              ))
+            ) : layersQuery.isError ? (
+              <span>An error has occurred</span>
+            ) : layersQuery.isSuccess ? (
+              layersQuery.data.results.map((layer, index) => (
                 <Card key={index} variant={theme} layer={layer} />
-              ))}
-            </div>
-          ) : view === "table" ? (
-            <Table variant={theme} data={layersQuery.data.results} />
-          ) : (
-            <></>
-          ))}
+              ))
+            ) : (
+              <></>
+            )}
+          </div>
+        ) : view === "table" ? (
+          <div>
+            {layersQuery.isSuccess && (
+              <Table variant={theme} data={layersQuery.data.results} />
+            )}
+          </div>
+        ) : (
+          <></>
+        )}
       </div>
     </div>
   );
