@@ -9,6 +9,7 @@ import {
 import { Tooltip } from "react-tooltip";
 
 import Tag from "@/components/tags/Tag";
+import TableLoader from "@/components/loaders/TableLoader";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
@@ -19,12 +20,14 @@ import { Layer, LayerState } from "@/clients/layers/types";
 export interface TableProps {
   className?: string;
   variant?: "light" | "dark";
+  isLoading?: boolean;
   data: Layer[];
 }
 
 const Table: React.FC<TableProps> = ({
   className,
   variant = "light",
+  isLoading,
   data,
 }) => {
   const columnHelper = createColumnHelper<Layer>();
@@ -211,78 +214,137 @@ const Table: React.FC<TableProps> = ({
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className={twMerge(
-                `h-full
-                ${styles.row.base[variant]}`,
-                row.original.isRunning &&
-                  `rounded-2xl
-                  outline
-                  outline-4
-                  -outline-offset-4
-                  ${styles.row.running[variant]}`
-              )}
-            >
-              {row.getVisibleCells().map((cell, index) => (
-                <td
-                  key={cell.id}
+          {isLoading
+            ? Array.from({ length: 100 }).map((_, index) => (
+                <tr
+                  key={index}
                   className={twMerge(
-                    `relative
-                    text-left
-                    h-full
-                    text-base
-                    font-semibold
-                    px-6
-                    py-4`,
-                    cell.row.original.isRunning &&
-                      "first:rounded-l-2xl last:rounded-r-2xl"
+                    `h-full
+                    ${styles.row.base[variant]}`
                   )}
-                  data-tooltip-id="table-tooltip"
-                  data-tooltip-content={
-                    cell.column.id === "lastResult" &&
-                    cell.row.original.isRunning
-                      ? (cell.getValue() as string)
-                      : null
-                  }
                 >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  {index === 0 ? (
-                    <hr
-                      className={`
-                        absolute
-                        right-0
-                        bottom-0
-                        w-[calc(100%_-_25px)]
-                        ${styles.separator[variant]}
-                      `}
-                    />
-                  ) : index === row.getVisibleCells().length - 1 ? (
-                    <hr
-                      className={`
-                        absolute
-                        left-0
-                        bottom-0
-                        w-[calc(100%_-_25px)]
-                        ${styles.separator[variant]}
-                      `}
-                    />
-                  ) : (
-                    <hr
-                      className={`
-                        absolute
-                        bottom-0
-                        left-0
-                        w-full
-                        ${styles.separator[variant]}
-                      `}
-                    />
+                  {table.getAllColumns().map((_, index) => (
+                    <td
+                      key={index}
+                      className={`relative
+                        text-left
+                        h-full
+                        text-base
+                        font-semibold
+                        px-6
+                        py-4`}
+                    >
+                      <TableLoader variant={variant} />
+                      {index === 0 ? (
+                        <hr
+                          className={`
+                            absolute
+                            right-0
+                            bottom-0
+                            w-[calc(100%_-_25px)]
+                            ${styles.separator[variant]}
+                          `}
+                        />
+                      ) : index === table.getAllColumns().length - 1 ? (
+                        <hr
+                          className={`
+                            absolute
+                            left-0
+                            bottom-0
+                            w-[calc(100%_-_25px)]
+                            ${styles.separator[variant]}
+                          `}
+                        />
+                      ) : (
+                        <hr
+                          className={`
+                            absolute
+                            bottom-0
+                            left-0
+                            w-full
+                            ${styles.separator[variant]}
+                          `}
+                        />
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            : table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className={twMerge(
+                    `h-full
+                  ${styles.row.base[variant]}`,
+                    row.original.isRunning &&
+                      `rounded-2xl
+                      outline
+                      outline-4
+                      -outline-offset-4
+                      ${styles.row.running[variant]}`
                   )}
-                </td>
+                >
+                  {row.getVisibleCells().map((cell, index) => (
+                    <td
+                      key={cell.id}
+                      className={twMerge(
+                        `relative
+                        text-left
+                        h-full
+                        text-base
+                        font-semibold
+                        px-6
+                        py-4`,
+                        cell.row.original.isRunning &&
+                          "first:rounded-l-2xl last:rounded-r-2xl"
+                      )}
+                      data-tooltip-id="table-tooltip"
+                      data-tooltip-content={
+                        cell.column.id === "lastResult" &&
+                        cell.row.original.isRunning
+                          ? (cell.getValue() as string)
+                          : null
+                      }
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                      {index === 0 ? (
+                        <hr
+                          className={`
+                            absolute
+                            right-0
+                            bottom-0
+                            w-[calc(100%_-_25px)]
+                            ${styles.separator[variant]}
+                          `}
+                        />
+                      ) : index === row.getVisibleCells().length - 1 ? (
+                        <hr
+                          className={`
+                            absolute
+                            left-0
+                            bottom-0
+                            w-[calc(100%_-_25px)]
+                            ${styles.separator[variant]}
+                          `}
+                        />
+                      ) : (
+                        <hr
+                          className={`
+                            absolute
+                            bottom-0
+                            left-0
+                            w-full
+                            ${styles.separator[variant]}
+                          `}
+                        />
+                      )}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
         </tbody>
       </table>
       <Tooltip
