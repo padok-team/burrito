@@ -18,6 +18,8 @@ import LogsTerminal from "@/components/tools/LogsTerminal";
 
 import SearchIcon from "@/assets/icons/SearchIcon";
 
+import { Layer } from "@/clients/layers/types";
+
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const [searchParams, setSerchParams] = useSearchParams();
@@ -91,6 +93,19 @@ const Logs: React.FC = () => {
     [searchParams, setSerchParams]
   );
 
+  const activeRun = useMemo<string | null>(() => {
+    const param = searchParams.get("run");
+    return param ? param : null;
+  }, [searchParams]);
+
+  const setActiveRun = useCallback(
+    (activeRun: string | null) => {
+      searchParams.set("run", activeRun || "");
+      setSerchParams(searchParams);
+    },
+    [searchParams, setSerchParams]
+  );
+
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
     queryFn: fetchLayers,
@@ -108,6 +123,17 @@ const Logs: React.FC = () => {
         .filter((layer) => !hidePRFilter || !layer.isPR),
     }),
   });
+
+  const handleActive = (layer: Layer) => {
+    setActiveLayer(`${layer.namespace}/${layer.name}`);
+    if (layer.latestRuns.length > 0) {
+      setActiveRun(
+        `${layer.namespace}/${layer.name}-${layer.latestRuns[0].action}-${layer.latestRuns[0].commit}`
+      );
+    } else {
+      setActiveRun(null);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
@@ -228,9 +254,7 @@ const Logs: React.FC = () => {
                 key={index}
                 variant={theme}
                 isActive={activeLayer === `${layer.namespace}/${layer.name}`}
-                onClick={() =>
-                  setActiveLayer(`${layer.namespace}/${layer.name}`)
-                }
+                onClick={() => handleActive(layer)}
                 layer={layer}
               />
             ))}
@@ -238,11 +262,13 @@ const Logs: React.FC = () => {
         )}
         {layersQuery.isSuccess &&
           activeLayer &&
+          activeRun &&
           ((activeLayerObject) =>
             activeLayerObject && (
               <LogsTerminal
                 className="flex-1 min-w-0 sticky top-0"
                 layer={activeLayerObject}
+                run={activeRun}
                 variant={theme}
               />
             ))(

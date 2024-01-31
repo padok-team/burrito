@@ -13,12 +13,14 @@ export interface LogsTerminalProps {
   className?: string;
   variant?: "light" | "dark";
   layer: Layer;
+  run: string;
 }
 
 const LogsTerminal: React.FC<LogsTerminalProps> = ({
   className,
   variant = "light",
   layer: { namespace, name },
+  run,
 }) => {
   const styles = {
     light: `bg-nuances-50
@@ -73,7 +75,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           >
             <AttemptsDropdown
               variant={variant}
-              runId="runId" // TODO: replace with real runId
+              runId={run}
               select={selectedAttempts}
               onChange={setSelectedAttempts}
             />
