@@ -19,7 +19,7 @@ const RunCard: React.FC<RunCardProps> = ({
   variant = "light",
   isActive,
   onClick,
-  layer: { name, namespace, isRunning, runCount },
+  layer: { name, namespace, isRunning, runCount, latestRuns },
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -120,16 +120,11 @@ const RunCard: React.FC<RunCardProps> = ({
         `}
       >
         <div className="flex flex-col gap-1 pt-4">
-          {/* TODO - Replace with actual runs */}
-          <span>Run 1 - 12/01/2024</span>
-          <span>Run 2 - 12/01/2024</span>
-          <span>Run 3 - 12/01/2024</span>
-          <span>Run 4 - 12/01/2024</span>
-          <span>Run 5 - 12/01/2024</span>
-          <span>Run 6 - 12/01/2024</span>
-          <span>Run 7 - 12/01/2024</span>
-          <span>Run 8 - 12/01/2024</span>
-          <span>Run 9 - 12/01/2024</span>
+          {latestRuns.map((run, index) => (
+            <span key={index} className="hover:underline cursor-pointer">
+              {run.commit} - {run.date} - {run.action}
+            </span>
+          ))}
         </div>
       </div>
     </div>

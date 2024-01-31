@@ -102,6 +102,7 @@ const Logs: React.FC = () => {
     path: "test",
     branch: "test",
     runCount: 12,
+    latestRuns: [],
     lastResult: "success",
     isPR: false,
     isRunning: false,
