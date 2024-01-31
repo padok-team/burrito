@@ -10,16 +10,13 @@ import { ThemeContext } from "@/contexts/ThemeContext";
 import Button from "@/components/core/Button";
 import Input from "@/components/core/Input";
 import Dropdown from "@/components/core/Dropdown";
+import RepositoryDropdown from "@/components/dropdowns/RepositoryDropdown";
+import DateDropdown from "@/components/dropdowns/DateDropdown";
 import Toggle from "@/components/core/Toggle";
 import RunCard from "@/components/cards/RunCard";
 import LogsTerminal from "@/components/tools/LogsTerminal";
 
-import RepositoryDropdown from "@/components/dropdowns/RepositoryDropdown";
-import DateDropdown from "@/components/dropdowns/DateDropdown";
-
 import SearchIcon from "@/assets/icons/SearchIcon";
-
-import { Layer } from "@/clients/layers/types";
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -93,20 +90,6 @@ const Logs: React.FC = () => {
     },
     [searchParams, setSerchParams]
   );
-
-  const layer: Layer = {
-    name: "fail-terragrunt",
-    namespace: "burrito-examples",
-    state: "success",
-    repository: "test",
-    path: "test",
-    branch: "test",
-    runCount: 12,
-    latestRuns: [],
-    lastResult: "success",
-    isPR: false,
-    isRunning: false,
-  };
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -253,11 +236,20 @@ const Logs: React.FC = () => {
             ))}
           </div>
         )}
-        <LogsTerminal
-          className="flex-1 min-w-0 sticky top-0"
-          layer={layer}
-          variant={theme}
-        />
+        {layersQuery.isSuccess &&
+          activeLayer &&
+          ((activeLayerObject) =>
+            activeLayerObject && (
+              <LogsTerminal
+                className="flex-1 min-w-0 sticky top-0"
+                layer={activeLayerObject}
+                variant={theme}
+              />
+            ))(
+            layersQuery.data.results.find(
+              (layer) => `${layer.namespace}/${layer.name}` === activeLayer
+            )
+          )}
       </div>
     </div>
   );
