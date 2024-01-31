@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 import Dropdown from "@/components/core/Dropdown";
+import AttemptsDropdown from "@/components/dropdowns/AttemptsDropdown";
 import AttemptButton from "@/components/buttons/AttemptButton";
 import CopyIcon from "@/assets/icons/CopyIcon";
 import DownloadAltIcon from "@/assets/icons/DownloadAltIcon";
@@ -30,43 +31,12 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       border-nuances-black`,
   };
 
+  const [selectedAttempts, setSelectedAttempts] = useState<number[]>([0]);
+  const [activeAttempt, setActiveAttempt] = useState<number>(0);
+
   const example_logs = {
+    // TODO: replace with real logs
     results: [
-      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
       "INFO:root:This is a log message\n",
       "WARNING:root:This is a warning message\n",
       "ERROR:root:This is an error message\n",
@@ -100,7 +70,12 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
             label="Latest attempt"
             variant={variant}
           >
-            <></>
+            <AttemptsDropdown
+              variant={variant}
+              runId="runId" // TODO: replace with real runId
+              select={selectedAttempts}
+              onChange={setSelectedAttempts}
+            />
           </Dropdown>
         </div>
         <div className="flex flex-row items-center gap-4">
@@ -120,21 +95,23 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           ${variant === "light" ? "border-primary-600" : "border-nuances-300"}
         `}
       />
-      <div className="flex flex-row items-center gap-1 p-4">
-        <AttemptButton
-          variant={variant}
-          attempt={1}
-          isActive={true}
-          onClick={() => console.log("active")}
-          onClose={() => console.log("close")}
-        />
-        <AttemptButton
-          variant={variant}
-          attempt={2}
-          isActive={false}
-          onClick={() => console.log("active")}
-          onClose={() => console.log("close")}
-        />
+      <div className="flex flex-row items-center gap-1 p-4 overflow-auto">
+        {selectedAttempts
+          .sort((a, b) => b - a)
+          .map((attempt) => (
+            <AttemptButton
+              key={attempt}
+              variant={variant}
+              attempt={attempt + 1}
+              isActive={attempt === activeAttempt}
+              onClick={() => setActiveAttempt(attempt)}
+              onClose={() => {
+                setSelectedAttempts((selectedAttempts) =>
+                  selectedAttempts.filter((a) => a !== attempt)
+                );
+              }}
+            />
+          ))}
       </div>
       <div className="pb-4 overflow-auto">
         <table>
