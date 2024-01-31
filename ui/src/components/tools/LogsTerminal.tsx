@@ -68,6 +68,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
                 : "bg-nuances-300 text-nuances-400 fill-nuances-400"
             }
             label="Latest attempt"
+            filled={selectedAttempts.length > 0}
             variant={variant}
           >
             <AttemptsDropdown

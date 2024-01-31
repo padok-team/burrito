@@ -73,7 +73,8 @@ const Dropdown: React.FC<DropdownProps> = ({
       text-nuances-200
       fill-nuances-200
       hover:outline-0
-      focus:outline-0`,
+      focus:outline-0
+      cursor-default`,
   };
 
   return (
@@ -99,9 +100,9 @@ const Dropdown: React.FC<DropdownProps> = ({
         focus:outline
         focus:outline-2
         ${styles.base[variant]}`,
+        className,
         filled && styles.filled[variant],
-        disabled && styles.disabled,
-        className
+        disabled && styles.disabled
       )}
       tabIndex={0}
       onMouseDown={handleClick}
@@ -111,7 +112,6 @@ const Dropdown: React.FC<DropdownProps> = ({
     >
       {label}
       <AngleDownIcon className="pointer-events-none" />
-
       {open && (
         <Box
           className={`
