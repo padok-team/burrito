@@ -13,6 +13,7 @@ import Dropdown from "@/components/core/Dropdown";
 import RepositoryDropdown from "@/components/dropdowns/RepositoryDropdown";
 import DateDropdown from "@/components/dropdowns/DateDropdown";
 import Toggle from "@/components/core/Toggle";
+import RunCardLoader from "@/components/loaders/RunCardLoader";
 import RunCard from "@/components/cards/RunCard";
 import LogsTerminal from "@/components/tools/LogsTerminal";
 
@@ -160,7 +161,11 @@ const Logs: React.FC = () => {
           >
             Logs
           </h1>
-          <Button variant={theme === "light" ? "primary" : "secondary"}>
+          <Button
+            variant={theme === "light" ? "primary" : "secondary"}
+            isLoading={layersQuery.isRefetching}
+            onClick={() => layersQuery.refetch()}
+          >
             Refresh layers
           </Button>
         </div>
@@ -244,38 +249,101 @@ const Logs: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-row gap-6 p-6 overflow-auto">
-        {layersQuery.isLoading && <></>}
-        {layersQuery.isError && <></>}
-        {layersQuery.isSuccess && (
-          <div className="flex flex-col w-1/3 h-fit gap-6">
-            {layersQuery.data.results.map((layer, index) => (
-              <RunCard
-                key={index}
-                variant={theme}
-                isActive={activeLayer === `${layer.namespace}/${layer.name}`}
-                onClick={() => handleActive(layer)}
-                layer={layer}
-              />
-            ))}
-          </div>
-        )}
-        {layersQuery.isSuccess &&
-          activeLayer &&
-          activeRun &&
-          ((activeLayerObject) =>
-            activeLayerObject && (
-              <LogsTerminal
-                className="flex-1 min-w-0 sticky top-0"
-                layer={activeLayerObject}
-                run={activeRun}
-                variant={theme}
-              />
-            ))(
-            layersQuery.data.results.find(
-              (layer) => `${layer.namespace}/${layer.name}` === activeLayer
+      <div
+        className={`
+          flex
+          flex-row
+          gap-6
+          p-6
+          ${layersQuery.isSuccess ? "overflow-auto" : "overflow-hidden"}
+        `}
+      >
+        <div className="flex flex-col w-1/3 h-fit gap-6">
+          {layersQuery.isLoading ? (
+            Array.from({ length: 100 }).map((_, index) => (
+              <RunCardLoader key={index} variant={theme} />
+            ))
+          ) : layersQuery.isError ? (
+            <span
+              className={`
+                text-lg
+                font-semibold
+                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              `}
+            >
+              An error has occurred
+            </span>
+          ) : layersQuery.isSuccess ? (
+            layersQuery.data.results.length > 0 ? (
+              layersQuery.data.results.map((layer, index) => (
+                <RunCard
+                  key={index}
+                  variant={theme}
+                  isActive={activeLayer === `${layer.namespace}/${layer.name}`}
+                  onClick={() => handleActive(layer)}
+                  layer={layer}
+                />
+              ))
+            ) : (
+              <span
+                className={`
+                text-lg
+                font-semibold
+                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              `}
+              >
+                No layers found
+              </span>
             )
+          ) : (
+            <></>
           )}
+        </div>
+        {layersQuery.isSuccess &&
+          layersQuery.data.results.length > 0 &&
+          (activeLayer ? (
+            activeRun ? (
+              ((activeLayerObject) =>
+                activeLayerObject && (
+                  <LogsTerminal
+                    className="flex-1 min-w-0 sticky top-0"
+                    layer={activeLayerObject}
+                    run={activeRun}
+                    variant={theme}
+                  />
+                ))(
+                layersQuery.data.results.find(
+                  (layer) => `${layer.namespace}/${layer.name}` === activeLayer
+                )
+              )
+            ) : (
+              <div className="flex items-center justify-center flex-1 min-w-0 sticky top-0">
+                <span
+                  className={`
+                  text-xl
+                  font-black
+                  ${
+                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                  }
+                `}
+                >
+                  There is no run for this layer...
+                </span>
+              </div>
+            )
+          ) : (
+            <div className="flex items-center justify-center flex-1 min-w-0 sticky top-0">
+              <span
+                className={`
+                text-xl
+                font-black
+                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              `}
+              >
+                Select a layer...
+              </span>
+            </div>
+          ))}
       </div>
     </div>
   );

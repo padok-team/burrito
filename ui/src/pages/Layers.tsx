@@ -238,17 +238,43 @@ const Layers: React.FC = () => {
         `}
       >
         {view === "grid" ? (
-          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 gap-6">
             {layersQuery.isLoading ? (
               Array.from({ length: 100 }).map((_, index) => (
                 <CardLoader key={index} variant={theme} />
               ))
             ) : layersQuery.isError ? (
-              <span>An error has occurred</span>
+              <span
+                className={`
+                  text-lg
+                  font-semibold
+                  ${
+                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                  }
+                `}
+              >
+                An error has occurred.
+              </span>
             ) : layersQuery.isSuccess ? (
-              layersQuery.data.results.map((layer, index) => (
-                <Card key={index} variant={theme} layer={layer} />
-              ))
+              layersQuery.data.results.length > 0 ? (
+                layersQuery.data.results.map((layer, index) => (
+                  <Card key={index} variant={theme} layer={layer} />
+                ))
+              ) : (
+                <span
+                  className={`
+                    text-lg
+                    font-semibold
+                    ${
+                      theme === "light"
+                        ? "text-nuances-black"
+                        : "text-nuances-50"
+                    }
+                  `}
+                >
+                  No layers found
+                </span>
+              )
             ) : (
               <></>
             )}
@@ -258,9 +284,37 @@ const Layers: React.FC = () => {
             {layersQuery.isLoading ? (
               <Table variant={theme} isLoading data={[]} />
             ) : layersQuery.isError ? (
-              <span>An error has occurred</span>
+              <span
+                className={`
+                  text-lg
+                  font-semibold
+                  ${
+                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                  }
+                `}
+              >
+                An error has occurred.
+              </span>
             ) : layersQuery.isSuccess ? (
-              <Table variant={theme} data={layersQuery.data.results} />
+              layersQuery.data.results.length > 0 ? (
+                <Table variant={theme} data={layersQuery.data.results} />
+              ) : (
+                <div className="p-6">
+                  <span
+                    className={`
+                    text-lg
+                    font-semibold
+                    ${
+                      theme === "light"
+                        ? "text-nuances-black"
+                        : "text-nuances-50"
+                    }
+                  `}
+                  >
+                    No layers found
+                  </span>
+                </div>
+              )
             ) : (
               <></>
             )}
