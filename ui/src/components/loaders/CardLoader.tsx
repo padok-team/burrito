@@ -17,7 +17,7 @@ const CardLoader: React.FC<CardLoaderProps> = ({ className, variant }) => {
   return (
     <div
       className={twMerge(
-        `h-[275px]
+        `h-[332px]
         rounded-2xl
         animate-pulse
         ${styles[variant]}`,
