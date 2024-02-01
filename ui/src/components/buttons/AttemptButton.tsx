@@ -63,7 +63,7 @@ const AttemptButton: React.FC<AttemptButtonProps> = ({
       )}
       onClick={onClick}
     >
-      <span>Attempt {attempt}</span>
+      <span className="whitespace-nowrap">Attempt {attempt}</span>
       <TimesIcon className="cursor-pointer" onClick={handleClose} />
     </div>
   );
