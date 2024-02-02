@@ -59,7 +59,8 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
         className
       )}
     >
-      <div className="flex flex-row justify-between items-center p-4">
+      {/* TODO: add overflow-auto to the div below, need to make proper floating dropdowns before */}
+      <div className="flex flex-row justify-between items-center gap-16 p-4">
         <div className="flex flex-row items-center gap-4">
           <span className="text-lg font-black">{name}</span>
           <span className="text-base font-semibold">{namespace}</span>
