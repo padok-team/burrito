@@ -3,6 +3,7 @@ export type Layers = {
 };
 
 export type Layer = {
+  id: string;
   namespace: string;
   name: string;
   state: LayerState;
@@ -19,6 +20,7 @@ export type Layer = {
 export type LayerState = "success" | "warning" | "error" | "disabled";
 
 export type Run = {
+  id: string;
   commit: string;
   date: string;
   action: string;

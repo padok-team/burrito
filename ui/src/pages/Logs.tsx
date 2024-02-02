@@ -126,11 +126,9 @@ const Logs: React.FC = () => {
   });
 
   const handleActive = (layer: Layer) => {
-    setActiveLayer(`${layer.namespace}/${layer.name}`);
+    setActiveLayer(layer.id);
     if (layer.latestRuns.length > 0) {
-      setActiveRun(
-        `${layer.namespace}/${layer.name}-${layer.latestRuns[0].action}-${layer.latestRuns[0].commit}`
-      );
+      setActiveRun(layer.latestRuns[0].id);
     } else {
       setActiveRun(null);
     }
@@ -279,7 +277,7 @@ const Logs: React.FC = () => {
                 <RunCard
                   key={index}
                   variant={theme}
-                  isActive={activeLayer === `${layer.namespace}/${layer.name}`}
+                  isActive={activeLayer === layer.id}
                   onClick={() => handleActive(layer)}
                   layer={layer}
                 />
@@ -313,7 +311,7 @@ const Logs: React.FC = () => {
                   />
                 ))(
                 layersQuery.data.results.find(
-                  (layer) => `${layer.namespace}/${layer.name}` === activeLayer
+                  (layer) => layer.id === activeLayer
                 )
               )
             ) : (
