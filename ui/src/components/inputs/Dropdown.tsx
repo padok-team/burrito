@@ -90,6 +90,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         rounded-lg
         text-base
         font-medium
+        whitespace-nowrap
         cursor-pointer
         outline-primary-600
         outline-offset-0

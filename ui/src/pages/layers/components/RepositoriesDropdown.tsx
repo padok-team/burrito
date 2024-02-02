@@ -71,7 +71,6 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
       />
       <Input
         variant={variant}
-        className="w-[200px] mx-2"
         placeholder="Search repositories"
         value={search}
         onChange={handleSearch}
