@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import SyncIcon from "@/assets/icons/SyncIcon";
+import Running from "@/components/widgets/Running";
+
 import AngleDownIcon from "@/assets/icons/AngleDownIcon";
 
 import { Layer } from "@/clients/layers/types";
@@ -73,16 +74,11 @@ const RunCard: React.FC<RunCardProps> = ({
       onClick={onClick}
     >
       <div className="flex flex-col gap-2">
-        <div className="flex justify-between">
-          <span className="text-lg font-black">{name}</span>
-          {isRunning && (
-            <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
-              <span className="text-sm font-semibold">Running</span>
-              <SyncIcon className="animate-spin-slow" height={16} width={16} />
-            </div>
-          )}
+        <div className="flex justify-between gap-4">
+          <span className="text-lg font-black truncate">{name}</span>
+          {isRunning && <Running />}
         </div>
-        <span className="text-base font-semibold">{namespace}</span>
+        <span className="text-base font-semibold truncate">{namespace}</span>
       </div>
       <div
         className="flex gap-2 cursor-pointer"

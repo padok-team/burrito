@@ -90,7 +90,7 @@ const Card: React.FC<CardProps> = ({
           items-center
           justify-between
           self-stretch
-          gap-3
+          gap-4
         `}
       >
         <span
