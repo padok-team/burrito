@@ -9,6 +9,8 @@ import { reactQueryKeys } from "@/clients/reactQueryConfig";
 import Dropdown from "@/components/core/Dropdown";
 import AttemptsDropdown from "@/components/dropdowns/AttemptsDropdown";
 import AttemptButton from "@/components/buttons/AttemptButton";
+
+import SyncIcon from "@/assets/icons/SyncIcon";
 import CopyIcon from "@/assets/icons/CopyIcon";
 import DownloadAltIcon from "@/assets/icons/DownloadAltIcon";
 
@@ -111,6 +113,15 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           </Dropdown>
         </div>
         <div className="flex flex-row items-center gap-4">
+          <SyncIcon
+            className={`
+              cursor-pointer
+              ${logsQuery.isRefetching && "animate-spin-slow"}
+            `}
+            height={30}
+            width={30}
+            onClick={() => logsQuery.refetch()}
+          />
           <CopyIcon
             className="cursor-pointer"
             height={30}
@@ -144,8 +155,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       <div className="pb-4 overflow-auto">
         <table>
           <tbody>
-            {selectedAttempts.length > 0 &&
-              activeAttempt &&
+            {activeAttempt &&
               logsQuery.isSuccess &&
               logsQuery.data.results.map((log, i) => (
                 <tr key={i}>
