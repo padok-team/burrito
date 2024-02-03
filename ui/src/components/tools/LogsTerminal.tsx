@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
+import { useQuery } from "@tanstack/react-query";
+
+import { fetchAttempts } from "@/clients/runs/client";
+import { fetchLogs } from "@/clients/logs/client";
+import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import Dropdown from "@/components/core/Dropdown";
 import AttemptsDropdown from "@/components/dropdowns/AttemptsDropdown";
@@ -33,20 +38,43 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       border-nuances-black`,
   };
 
-  const [selectedAttempts, setSelectedAttempts] = useState<number[]>([0]);
-  const [activeAttempt, setActiveAttempt] = useState<number>(0);
+  const [selectedAttempts, setSelectedAttempts] = useState<number[]>([]);
+  const [activeAttempt, setActiveAttempt] = useState<number | null>(null);
 
-  const example_logs = {
-    // TODO: replace with real logs
-    results: [
-      "INFO:root:This is a log message\n",
-      "WARNING:root:This is a warning message\n",
-      "ERROR:root:This is an error message\n",
-    ],
-  };
+  const attemptsQuery = useQuery({
+    queryKey: reactQueryKeys.attempts(run),
+    queryFn: () => fetchAttempts(run),
+  });
+
+  const logsQuery = useQuery({
+    queryKey: reactQueryKeys.logs(run, activeAttempt),
+    queryFn: () => fetchLogs(run, activeAttempt),
+    enabled: activeAttempt !== null,
+  });
+
+  useEffect(() => {
+    setSelectedAttempts([]);
+    setActiveAttempt(null);
+
+    if (attemptsQuery.isSuccess && attemptsQuery.data.count > 0) {
+      setSelectedAttempts([attemptsQuery.data.count - 1]);
+      setActiveAttempt(attemptsQuery.data.count - 1);
+    }
+  }, [attemptsQuery.isSuccess, attemptsQuery.data?.count]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(example_logs.results.join("\n"));
+    if (logsQuery.isSuccess) {
+      navigator.clipboard.writeText(logsQuery.data.results.join("\n")); // TODO: check if this works properly
+    }
+  };
+
+  const handleClose = (attempt: number) => {
+    setSelectedAttempts((selectedAttempts) =>
+      selectedAttempts.filter((a) => a !== attempt)
+    );
+    setActiveAttempt((activeAttempt) =>
+      activeAttempt === attempt ? null : activeAttempt
+    );
   };
 
   return (
@@ -109,35 +137,34 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
               attempt={attempt + 1}
               isActive={attempt === activeAttempt}
               onClick={() => setActiveAttempt(attempt)}
-              onClose={() => {
-                setSelectedAttempts((selectedAttempts) =>
-                  selectedAttempts.filter((a) => a !== attempt)
-                );
-              }}
+              onClose={() => handleClose(attempt)}
             />
           ))}
       </div>
       <div className="pb-4 overflow-auto">
         <table>
           <tbody>
-            {example_logs.results.map((log, i) => (
-              <tr key={i}>
-                <td
-                  className={`
-                    text-sm
-                    px-4
-                    ${
-                      variant === "light"
-                        ? "text-primary-600"
-                        : "text-nuances-300"
-                    }
-                  `}
-                >
-                  {i + 1}
-                </td>
-                <td>{log}</td>
-              </tr>
-            ))}
+            {selectedAttempts.length > 0 &&
+              activeAttempt &&
+              logsQuery.isSuccess &&
+              logsQuery.data.results.map((log, i) => (
+                <tr key={i}>
+                  <td
+                    className={`
+                      text-sm
+                      px-4
+                      ${
+                        variant === "light"
+                          ? "text-primary-600"
+                          : "text-nuances-300"
+                      }
+                    `}
+                  >
+                    {i + 1}
+                  </td>
+                  <td>{log}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
