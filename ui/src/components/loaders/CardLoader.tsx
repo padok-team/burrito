@@ -7,7 +7,7 @@ export interface CardLoaderProps {
 }
 
 const CardLoader: React.FC<CardLoaderProps> = ({ className, variant }) => {
-  const style = {
+  const styles = {
     light: `bg-[linear-gradient(270deg,_#D8EBFF_0%,_#ECF5FF_100%)]
       shadow-light`,
     dark: `bg-[linear-gradient(270deg,_#252525_0%,_rgba(68,_67,_67,_0.24)_100%)]
@@ -20,7 +20,7 @@ const CardLoader: React.FC<CardLoaderProps> = ({ className, variant }) => {
         `h-[275px]
         rounded-2xl
         animate-pulse
-        ${style[variant]}`,
+        ${styles[variant]}`,
         className
       )}
     ></div>

@@ -16,7 +16,7 @@ import Card from "@/components/cards/Card";
 import Table from "@/components/tables/Table";
 
 import StateDropdown from "@/pages/layers/components/StateDropdown";
-import RepositoryDropdown from "@/pages/layers/components/RepositoryDropdown";
+import RepositoriesDropdown from "@/pages/layers/components/RepositoriesDropdown";
 
 import { LayerState } from "@/clients/layers/types";
 
@@ -197,7 +197,7 @@ const Layers: React.FC = () => {
                 label="Repository"
                 filled={repositoryFilter.length !== 0}
               >
-                <RepositoryDropdown
+                <RepositoriesDropdown
                   variant={theme}
                   filter={repositoryFilter}
                   onChange={setRepositoryFilter}

@@ -8,13 +8,13 @@ import Box from "@/components/misc/Box";
 import Input from "@/components/inputs/Input";
 import Checkbox from "@/components/checkboxes/Checkbox";
 
-export interface RepositoryDropdownProps {
+export interface RepositoriesDropdownProps {
   variant?: "light" | "dark";
   filter: string[];
   onChange: (filter: string[]) => void;
 }
 
-const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
+const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
   variant,
   filter,
   onChange,
@@ -60,7 +60,7 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
           ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
         `}
       >
-        Repository
+        Repositories
       </span>
       <hr
         className={`
@@ -72,7 +72,7 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
       <Input
         variant={variant}
         className="w-[200px] mx-2"
-        placeholder="Search repository"
+        placeholder="Search repositories"
         value={search}
         onChange={handleSearch}
       />
@@ -118,4 +118,4 @@ const RepositoryDropdown: React.FC<RepositoryDropdownProps> = ({
   );
 };
 
-export default RepositoryDropdown;
+export default RepositoriesDropdown;

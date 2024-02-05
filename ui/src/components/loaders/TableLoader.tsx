@@ -7,7 +7,7 @@ export interface TableLoaderProps {
 }
 
 const TableLoader: React.FC<TableLoaderProps> = ({ className, variant }) => {
-  const style = {
+  const styles = {
     light: `bg-[linear-gradient(270deg,_#D8EBFF_0%,_#ECF5FF_100%)]`,
     dark: `bg-[linear-gradient(270deg,_#252525_0%,_rgba(68,_67,_67,_0.24)_100%)]`,
   };
@@ -18,7 +18,7 @@ const TableLoader: React.FC<TableLoaderProps> = ({ className, variant }) => {
         `h-4
         rounded-full
         animate-pulse
-        ${style[variant]}`,
+        ${styles[variant]}`,
         className
       )}
     ></div>
