@@ -279,6 +279,7 @@ const Logs: React.FC = () => {
                   variant={theme}
                   isActive={activeLayer === layer.id}
                   onClick={() => handleActive(layer)}
+                  setActiveRun={setActiveRun}
                   layer={layer}
                 />
               ))

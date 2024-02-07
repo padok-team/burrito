@@ -12,6 +12,7 @@ export interface RunCardProps {
   variant?: "light" | "dark";
   isActive?: boolean;
   onClick?: () => void;
+  setActiveRun?: (activeRun: string) => void;
   layer: Layer;
 }
 
@@ -20,9 +21,18 @@ const RunCard: React.FC<RunCardProps> = ({
   variant = "light",
   isActive,
   onClick,
+  setActiveRun,
   layer: { name, namespace, isRunning, runCount, latestRuns },
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleActiveRun = (
+    event: React.MouseEvent<HTMLSpanElement>,
+    activeRun: string
+  ) => {
+    event.stopPropagation();
+    setActiveRun && setActiveRun(activeRun);
+  };
 
   const styles = {
     base: {
@@ -116,7 +126,11 @@ const RunCard: React.FC<RunCardProps> = ({
       >
         <div className="flex flex-col gap-1 pt-4">
           {latestRuns.map((run, index) => (
-            <span key={index} className="hover:underline cursor-pointer">
+            <span
+              key={index}
+              className="cursor-pointer hover:underline"
+              onClick={(event) => handleActiveRun(event, run.id)}
+            >
               {run.commit} - {run.date} - {run.action}
             </span>
           ))}
