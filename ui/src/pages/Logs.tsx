@@ -10,7 +10,7 @@ import { ThemeContext } from "@/contexts/ThemeContext";
 import Button from "@/components/core/Button";
 import Input from "@/components/core/Input";
 import Dropdown from "@/components/core/Dropdown";
-import RepositoryDropdown from "@/components/dropdowns/RepositoryDropdown";
+import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
 import DateDropdown from "@/components/dropdowns/DateDropdown";
 import Toggle from "@/components/core/Toggle";
 import RunCardLoader from "@/components/loaders/RunCardLoader";
@@ -216,7 +216,7 @@ const Logs: React.FC = () => {
                 label="Repository"
                 filled={repositoryFilter.length !== 0}
               >
-                <RepositoryDropdown
+                <RepositoriesDropdown
                   variant={theme}
                   filter={repositoryFilter}
                   onChange={setRepositoryFilter}
