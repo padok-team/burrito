@@ -81,7 +81,7 @@ const RunCard: React.FC<RunCardProps> = ({
         <span className="text-base font-semibold truncate">{namespace}</span>
       </div>
       <div
-        className="flex gap-2 cursor-pointer"
+        className="flex items-center gap-2 w-fit cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span
@@ -91,19 +91,18 @@ const RunCard: React.FC<RunCardProps> = ({
         >
           Runs
         </span>
-        <div className="flex items-center">
-          <span className="font-semibold">{runCount}</span>
-          <AngleDownIcon
-            className={`
-              fill-blue-500
-              ${isExpanded && "transform -rotate-180"}
-              transition-transform
-              duration-500
-            `}
-            height={20}
-            width={20}
-          />
-        </div>
+        <span className="font-semibold">{runCount}</span>
+        <AngleDownIcon
+          className={`
+            -ml-2
+            fill-blue-500
+            ${isExpanded && "transform -rotate-180"}
+            transition-transform
+            duration-500
+          `}
+          height={20}
+          width={20}
+        />
       </div>
       <div
         // TODO - adjust animation with the number of runs
