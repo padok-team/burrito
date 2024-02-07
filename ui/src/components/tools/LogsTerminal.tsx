@@ -155,7 +155,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       <div className="pb-4 overflow-auto">
         <table>
           <tbody>
-            {activeAttempt &&
+            {activeAttempt !== null &&
               logsQuery.isSuccess &&
               logsQuery.data.results.map((log, i) => (
                 <tr key={i}>
