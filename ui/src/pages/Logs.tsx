@@ -125,9 +125,11 @@ const Logs: React.FC = () => {
     }),
   });
 
-  const handleActive = (layer: Layer) => {
+  const handleActive = (layer: Layer, run?: string) => {
     setActiveLayer(layer.id);
-    if (layer.latestRuns.length > 0) {
+    if (run) {
+      setActiveRun(run);
+    } else if (layer.latestRuns.length > 0) {
       setActiveRun(layer.latestRuns[0].id);
     } else {
       setActiveRun(null);
@@ -279,7 +281,7 @@ const Logs: React.FC = () => {
                   variant={theme}
                   isActive={activeLayer === layer.id}
                   onClick={() => handleActive(layer)}
-                  setActiveRun={setActiveRun}
+                  handleActive={handleActive}
                   layer={layer}
                 />
               ))
