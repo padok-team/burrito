@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 import { useQuery } from "@tanstack/react-query";
+import { Tooltip } from "react-tooltip";
 
 import { fetchAttempts } from "@/clients/runs/client";
 import { fetchLogs } from "@/clients/logs/client";
@@ -42,6 +43,8 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
 
   const [selectedAttempts, setSelectedAttempts] = useState<number[]>([]);
   const [activeAttempt, setActiveAttempt] = useState<number | null>(null);
+  const [displayLogsCopiedTooltip, setDisplayLogsCopiedTooltip] =
+    useState<boolean>(false);
 
   const attemptsQuery = useQuery({
     queryKey: reactQueryKeys.attempts(run),
@@ -67,6 +70,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
   const handleCopy = () => {
     if (logsQuery.isSuccess) {
       navigator.clipboard.writeText(logsQuery.data.results.join("")); // TODO: check if this works properly
+      setDisplayLogsCopiedTooltip(true);
     }
   };
 
@@ -123,12 +127,18 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
             width={30}
             onClick={() => logsQuery.refetch()}
           />
-          <CopyIcon
-            className="cursor-pointer"
-            height={30}
-            width={30}
-            onClick={handleCopy}
-          />
+          <div
+            data-tooltip-id={"terminal-tooltip"}
+            data-tooltip-content={"Copied to clipboard"}
+            onMouseLeave={() => setDisplayLogsCopiedTooltip(false)}
+          >
+            <CopyIcon
+              className="cursor-pointer"
+              height={30}
+              width={30}
+              onClick={handleCopy}
+            />
+          </div>
           <DownloadAltIcon
             className="cursor-not-allowed" // TODO: add download functionality
             height={30}
@@ -183,6 +193,12 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           </tbody>
         </table>
       </div>
+      <Tooltip
+        id="terminal-tooltip"
+        isOpen={displayLogsCopiedTooltip}
+        opacity={1}
+        variant={variant === "light" ? "dark" : "light"}
+      />
     </div>
   );
 };
