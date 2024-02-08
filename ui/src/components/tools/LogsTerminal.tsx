@@ -51,16 +51,16 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
   const logsQuery = useQuery({
     queryKey: reactQueryKeys.logs(run, activeAttempt),
     queryFn: () => fetchLogs(run, activeAttempt),
-    enabled: activeAttempt !== null,
+    enabled: activeAttempt !== null && !attemptsQuery.isFetching,
   });
 
   useEffect(() => {
-    setSelectedAttempts([]);
     setActiveAttempt(null);
+    setSelectedAttempts([]);
 
     if (attemptsQuery.isSuccess && attemptsQuery.data.count > 0) {
-      setSelectedAttempts([attemptsQuery.data.count - 1]);
       setActiveAttempt(attemptsQuery.data.count - 1);
+      setSelectedAttempts([attemptsQuery.data.count - 1]);
     }
   }, [attemptsQuery.isSuccess, attemptsQuery.data?.count]);
 
