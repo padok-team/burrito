@@ -15,6 +15,7 @@ import (
 )
 
 type layer struct {
+	UID        string `json:"uid"`
 	Name       string `json:"name"`
 	Namespace  string `json:"namespace"`
 	Repository string `json:"repository"`
@@ -46,6 +47,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 	for _, l := range layers.Items {
 		layerRunning, runCount := a.getLayerRunInfo(l)
 		results = append(results, layer{
+			UID:        string(l.UID),
 			Name:       l.Name,
 			Namespace:  l.Namespace,
 			Repository: fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
@@ -58,7 +60,6 @@ func (a *API) LayersHandler(c echo.Context) error {
 			IsPR:       a.isLayerPR(l),
 		})
 	}
-	fmt.Printf("%v\n", results)
 	return c.JSON(http.StatusOK, &layersResponse{
 		Results: results,
 	},
