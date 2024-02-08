@@ -66,7 +66,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
 
   const handleCopy = () => {
     if (logsQuery.isSuccess) {
-      navigator.clipboard.writeText(logsQuery.data.results.join("\n")); // TODO: check if this works properly
+      navigator.clipboard.writeText(logsQuery.data.results.join("")); // TODO: check if this works properly
     }
   };
 
@@ -128,7 +128,11 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
             width={30}
             onClick={handleCopy}
           />
-          <DownloadAltIcon className="cursor-pointer" height={30} width={30} />
+          <DownloadAltIcon
+            className="cursor-not-allowed" // TODO: add download functionality
+            height={30}
+            width={30}
+          />
         </div>
       </div>
       <hr
