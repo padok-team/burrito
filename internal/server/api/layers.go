@@ -21,6 +21,7 @@ type layer struct {
 	Branch     string `json:"branch"`
 	Path       string `json:"path"`
 	State      string `json:"state"`
+	RunCount   int    `json:"runCount"`
 	LastResult string `json:"lastResult"`
 	IsRunning  bool   `json:"isRunning"`
 	IsPR       bool   `json:"isPR"`
@@ -43,6 +44,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 	}
 	results := []layer{}
 	for _, l := range layers.Items {
+		layerRunning, runCount := a.getLayerRunInfo(l)
 		results = append(results, layer{
 			Name:       l.Name,
 			Namespace:  l.Namespace,
@@ -50,11 +52,13 @@ func (a *API) LayersHandler(c echo.Context) error {
 			Branch:     l.Spec.Branch,
 			Path:       l.Spec.Path,
 			State:      a.getLayerState(l),
+			RunCount:   runCount,
 			LastResult: l.Status.LastResult,
-			IsRunning:  a.isLayerRunning(l),
+			IsRunning:  layerRunning,
 			IsPR:       a.isLayerPR(l),
 		})
 	}
+	fmt.Printf("%v\n", results)
 	return c.JSON(http.StatusOK, &layersResponse{
 		Results: results,
 	},
@@ -84,21 +88,25 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 	return state
 }
 
-func (a *API) isLayerRunning(layer configv1alpha1.TerraformLayer) bool {
+func (a *API) getLayerRunInfo(layer configv1alpha1.TerraformLayer) (layerRunning bool, runCount int) {
 	runs := &configv1alpha1.TerraformRunList{}
 	requirement, _ := labels.NewRequirement("burrito/managed-by", selection.Equals, []string{layer.Name})
 	selector := labels.NewSelector().Add(*requirement)
 	err := a.Client.List(context.Background(), runs, client.MatchingLabelsSelector{Selector: selector})
+	runCount = len(runs.Items)
 	if err != nil {
 		log.Errorf("could not list terraform runs, returning false: %s", err)
-		return false
+		layerRunning = false
+		return
 	}
 	for _, r := range runs.Items {
 		if r.Status.State == "Running" {
-			return true
+			layerRunning = true
+			return
 		}
 	}
-	return false
+	layerRunning = false
+	return
 }
 
 func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {
