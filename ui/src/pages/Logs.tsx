@@ -215,7 +215,7 @@ const Logs: React.FC = () => {
             <div className="flex flex-row items-center gap-2">
               <Dropdown
                 variant={theme}
-                label="Repository"
+                label="Repositories"
                 filled={repositoryFilter.length !== 0}
               >
                 <RepositoriesDropdown

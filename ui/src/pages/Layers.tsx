@@ -194,7 +194,7 @@ const Layers: React.FC = () => {
               </Dropdown>
               <Dropdown
                 variant={theme}
-                label="Repository"
+                label="Repositories"
                 filled={repositoryFilter.length !== 0}
               >
                 <RepositoriesDropdown
