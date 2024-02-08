@@ -85,6 +85,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
         `flex
         flex-col
         rounded-2xl
+        overflow-auto
         ${styles[variant]}`,
         className
       )}
