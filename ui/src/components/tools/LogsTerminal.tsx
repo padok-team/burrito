@@ -138,7 +138,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           ${variant === "light" ? "border-primary-600" : "border-nuances-300"}
         `}
       />
-      <div className="flex flex-row items-center gap-1 p-4 overflow-auto">
+      <div className="flex flex-row items-center gap-1 p-4 flex-shrink-0 overflow-auto">
         {selectedAttempts
           .sort((a, b) => b - a)
           .map((attempt) => (
