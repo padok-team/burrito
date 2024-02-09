@@ -36,6 +36,11 @@ const RunCard: React.FC<RunCardProps> = ({
     handleActive && handleActive(layer, run);
   };
 
+  const handleExpand = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
   const styles = {
     base: {
       light: `bg-primary-100
@@ -94,7 +99,7 @@ const RunCard: React.FC<RunCardProps> = ({
       </div>
       <div
         className="flex items-center gap-2 w-fit cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleExpand}
       >
         <span
           className={
