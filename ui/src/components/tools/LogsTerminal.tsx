@@ -43,6 +43,9 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
 
   const [selectedAttempts, setSelectedAttempts] = useState<number[]>([]);
   const [activeAttempt, setActiveAttempt] = useState<number | null>(null);
+  /* TODO: The states above should eventually be moved to search params.
+  An unresolved bug in the useSearchParams hook is causing rerenders which
+  triggers the useEffect and resets the selectedAttempts and activeAttempt states. */
   const [displayLogsCopiedTooltip, setDisplayLogsCopiedTooltip] =
     useState<boolean>(false);
 
@@ -61,11 +64,11 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
     setActiveAttempt(null);
     setSelectedAttempts([]);
 
-    if (attemptsQuery.isSuccess && attemptsQuery.data.count > 0) {
+    if (attemptsQuery.data && attemptsQuery.data.count > 0) {
       setActiveAttempt(attemptsQuery.data.count - 1);
       setSelectedAttempts([attemptsQuery.data.count - 1]);
     }
-  }, [attemptsQuery.isSuccess, attemptsQuery.data?.count]);
+  }, [attemptsQuery.data]);
 
   const handleCopy = () => {
     if (logsQuery.isSuccess) {
@@ -75,12 +78,8 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
   };
 
   const handleClose = (attempt: number) => {
-    setSelectedAttempts((selectedAttempts) =>
-      selectedAttempts.filter((a) => a !== attempt)
-    );
-    setActiveAttempt((activeAttempt) =>
-      activeAttempt === attempt ? null : activeAttempt
-    );
+    setSelectedAttempts(selectedAttempts.filter((a) => a !== attempt));
+    setActiveAttempt(activeAttempt === attempt ? null : activeAttempt);
   };
 
   return (
