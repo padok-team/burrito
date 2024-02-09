@@ -123,15 +123,17 @@ func (a *API) getLayerRunInfo(layer configv1alpha1.TerraformLayer) (layerRunning
 				return
 			}
 		}
-		latestRuns = append(latestRuns, run{
-			ID:         string(r.UID),
-			Name:       r.Name,
-			Namespace:  r.Namespace,
-			Action:     r.Spec.Action,
-			Status:     r.Status.State,
-			LastRun:    r.Status.LastRun,
-			Retries:    r.Status.Retries,
-		})
+		if (len(runs.Items)-1-i) < 5 {
+			latestRuns = append(latestRuns, run{
+				ID:         string(r.UID),
+				Name:       r.Name,
+				Namespace:  r.Namespace,
+				Action:     r.Spec.Action,
+				Status:     r.Status.State,
+				LastRun:    r.Status.LastRun,
+				Retries:    r.Status.Retries,
+			})
+		}
 	}
 	return
 }
