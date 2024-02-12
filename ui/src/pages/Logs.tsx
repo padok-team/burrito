@@ -1,6 +1,6 @@
 import React, { useContext, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 
 import { fetchLayers } from "@/clients/layers/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
@@ -23,7 +23,9 @@ import { Layer } from "@/clients/layers/types";
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
+  const { layerId, runId } = useParams();
   const [searchParams, setSerchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const search = useMemo<string>(
     () => searchParams.get("search") || "",
@@ -81,32 +83,6 @@ const Logs: React.FC = () => {
     [searchParams, setSerchParams]
   );
 
-  const activeLayer = useMemo<string | null>(() => {
-    const param = searchParams.get("layer");
-    return param ? param : null;
-  }, [searchParams]);
-
-  const setActiveLayer = useCallback(
-    (activeLayer: string | null) => {
-      searchParams.set("layer", activeLayer || "");
-      setSerchParams(searchParams);
-    },
-    [searchParams, setSerchParams]
-  );
-
-  const activeRun = useMemo<string | null>(() => {
-    const param = searchParams.get("run");
-    return param ? param : null;
-  }, [searchParams]);
-
-  const setActiveRun = useCallback(
-    (activeRun: string | null) => {
-      searchParams.set("run", activeRun || "");
-      setSerchParams(searchParams);
-    },
-    [searchParams, setSerchParams]
-  );
-
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
     queryFn: fetchLayers,
@@ -126,14 +102,15 @@ const Logs: React.FC = () => {
   });
 
   const handleActive = (layer: Layer, run?: string) => {
-    setActiveLayer(layer.id);
-    if (run) {
-      setActiveRun(run);
-    } else if (layer.latestRuns.length > 0) {
-      setActiveRun(layer.latestRuns[0].id);
-    } else {
-      setActiveRun(null);
-    }
+    navigate(
+      `/logs/${layer.id}${
+        run
+          ? `/${run}`
+          : layer.latestRuns.length > 0
+          ? `/${layer.latestRuns[0].id}`
+          : ""
+      }`
+    );
   };
 
   return (
@@ -279,7 +256,7 @@ const Logs: React.FC = () => {
                 <RunCard
                   key={index}
                   variant={theme}
-                  isActive={activeLayer === layer.id}
+                  isActive={layerId === layer.id}
                   onClick={() => handleActive(layer)}
                   handleActive={handleActive}
                   layer={layer}
@@ -302,20 +279,19 @@ const Logs: React.FC = () => {
         </div>
         {layersQuery.isSuccess &&
           layersQuery.data.results.length > 0 &&
-          (activeLayer ? (
-            activeRun ? (
+          (layerId &&
+          layersQuery.data.results.some((layer) => layer.id === layerId) ? (
+            runId ? (
               ((activeLayerObject) =>
                 activeLayerObject && (
                   <LogsTerminal
                     className="flex-1 min-w-0 sticky top-0"
                     layer={activeLayerObject}
-                    run={activeRun}
+                    run={runId}
                     variant={theme}
                   />
                 ))(
-                layersQuery.data.results.find(
-                  (layer) => layer.id === activeLayer
-                )
+                layersQuery.data.results.find((layer) => layer.id === layerId)
               )
             ) : (
               <div className="flex items-center justify-center flex-1 min-w-0 sticky top-0">
