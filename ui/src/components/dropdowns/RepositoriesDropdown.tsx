@@ -50,18 +50,15 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
   return (
     <Box
       variant={variant}
-      className="flex-col items-center justify-center gap-2"
+      className={`
+        flex-col
+        items-center
+        justify-center
+        gap-2
+        ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+      `}
     >
-      <span
-        className={`
-          self-start
-          mx-4
-          mt-2
-          ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
-        `}
-      >
-        Repositories
-      </span>
+      <span className="self-start mx-4 mt-2">Repositories</span>
       <hr
         className={`
           h-[1px]
