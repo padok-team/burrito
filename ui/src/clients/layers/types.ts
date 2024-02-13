@@ -11,6 +11,7 @@ export type Layer = {
   branch: string;
   path: string;
   runCount: number;
+  lastRunAt: string;
   latestRuns: Run[];
   lastResult: string;
   isRunning: boolean;

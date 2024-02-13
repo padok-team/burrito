@@ -97,7 +97,14 @@ const Logs: React.FC = () => {
             repositoryFilter.length === 0 ||
             repositoryFilter.includes(layer.repository)
         )
-        .filter((layer) => !hidePRFilter || !layer.isPR),
+        .filter((layer) => !hidePRFilter || !layer.isPR)
+        .sort((a, b) =>
+          dateFilter === "ascending"
+            ? new Date(a.lastRunAt).getTime() - new Date(b.lastRunAt).getTime()
+            : dateFilter === "descending"
+            ? new Date(b.lastRunAt).getTime() - new Date(a.lastRunAt).getTime()
+            : 0
+        ),
     }),
   });
 
