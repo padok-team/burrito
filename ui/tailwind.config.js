@@ -49,7 +49,7 @@ export default {
           light: "#FFFBDC",
         },
       },
-      overlay: "#00000040",
+      overlay: "#00000080",
     },
     boxShadow: {
       light: "0px 0px 32px 0px rgba(121, 140, 140, 0.16)",

@@ -48,7 +48,7 @@ const AttemptButton: React.FC<AttemptButtonProps> = ({
   };
 
   return (
-    <div
+    <button
       className={twMerge(
         `flex
         flex-row
@@ -65,7 +65,7 @@ const AttemptButton: React.FC<AttemptButtonProps> = ({
     >
       <span className="whitespace-nowrap">Attempt {attempt}</span>
       <TimesIcon className="cursor-pointer" onClick={handleClose} />
-    </div>
+    </button>
   );
 };
 

@@ -125,8 +125,6 @@ const Logs: React.FC = () => {
     <div className="flex flex-col flex-1 h-screen min-w-0">
       <div
         className={`
-          top-0
-          z-10
           flex
           flex-col
           p-6

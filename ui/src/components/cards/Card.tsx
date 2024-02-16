@@ -4,7 +4,7 @@ import { Tooltip } from "react-tooltip";
 
 import Running from "@/components/widgets/Running";
 import Tag from "@/components/widgets/Tag";
-import LogsButton from "@/components/buttons/LogsButton";
+import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
@@ -20,6 +20,7 @@ export interface CardProps {
 const Card: React.FC<CardProps> = ({
   className,
   variant = "light",
+  layer,
   layer: {
     name,
     namespace,
@@ -158,7 +159,9 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
-      <LogsButton variant={variant} />
+      {layer.latestRuns.length > 0 && (
+        <ModalLogsTerminal layer={layer} variant={variant} />
+      )}
       <Tooltip
         opacity={1}
         id="card-tooltip"

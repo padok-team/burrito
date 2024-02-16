@@ -9,7 +9,7 @@ import {
 import { Tooltip } from "react-tooltip";
 
 import TableLoader from "@/components/loaders/TableLoader";
-import LogsButton from "@/components/buttons/LogsButton";
+import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
 import Running from "@/components/widgets/Running";
 import Tag from "@/components/widgets/Tag";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
@@ -63,7 +63,8 @@ const Table: React.FC<TableProps> = ({
       cell: (result) => (
         <div className="relative flex items-center h-full">
           <span>{result.getValue()}</span>
-          {result.row.original === hoveredRow ? (
+          {result.row.original === hoveredRow &&
+          result.row.original.latestRuns.length > 0 ? (
             <div
               className={`
                 absolute
@@ -83,7 +84,10 @@ const Table: React.FC<TableProps> = ({
                 }
               `}
             >
-              <LogsButton variant={variant} />
+              <ModalLogsTerminal
+                layer={result.row.original}
+                variant={variant}
+              />
             </div>
           ) : result.row.original.isRunning ? (
             <div

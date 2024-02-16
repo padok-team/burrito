@@ -54,6 +54,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
         flex-col
         items-center
         justify-center
+        z-10
         gap-2
         ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
       `}
