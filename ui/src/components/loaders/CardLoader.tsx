@@ -3,10 +3,13 @@ import { twMerge } from "tailwind-merge";
 
 export interface CardLoaderProps {
   className?: string;
-  variant: "light" | "dark";
+  variant?: "light" | "dark";
 }
 
-const CardLoader: React.FC<CardLoaderProps> = ({ className, variant }) => {
+const CardLoader: React.FC<CardLoaderProps> = ({
+  className,
+  variant = "light",
+}) => {
   const styles = {
     light: `bg-[linear-gradient(270deg,_#D8EBFF_0%,_#ECF5FF_100%)]
       shadow-light`,

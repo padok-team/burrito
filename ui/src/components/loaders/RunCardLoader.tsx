@@ -3,12 +3,12 @@ import { twMerge } from "tailwind-merge";
 
 export interface RunCardLoaderProps {
   className?: string;
-  variant: "light" | "dark";
+  variant?: "light" | "dark";
 }
 
 const RunCardLoader: React.FC<RunCardLoaderProps> = ({
   className,
-  variant,
+  variant = "light",
 }) => {
   const style = {
     light: `bg-[linear-gradient(270deg,_#D8EBFF_0%,_#ECF5FF_100%)]
