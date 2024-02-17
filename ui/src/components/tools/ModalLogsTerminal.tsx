@@ -9,9 +9,11 @@ import {
   FloatingOverlay,
   FloatingPortal,
 } from "@floating-ui/react";
+import { useNavigate } from "react-router-dom";
 
 import LogsButton from "@/components/buttons/LogsButton";
 import LogsTerminal from "@/components/tools/LogsTerminal";
+import OpenInLogsButton from "@/components/buttons/OpenInLogsButton";
 
 import { Layer } from "@/clients/layers/types";
 
@@ -41,6 +43,12 @@ const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
     dismiss,
   ]);
 
+  const navigate = useNavigate();
+
+  const handleOpenInLogs = () => {
+    navigate(`/logs/${layer.id}/${layer.latestRuns[0].id}`);
+  };
+
   return (
     <>
       <LogsButton
@@ -55,12 +63,21 @@ const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
             lockScroll
           >
             <FloatingFocusManager context={context}>
-              <div ref={refs.setFloating} {...getFloatingProps()}>
+              <div
+                className="relative"
+                ref={refs.setFloating}
+                {...getFloatingProps()}
+              >
                 <LogsTerminal
                   layer={layer}
                   run={layer.latestRuns[0].id}
                   className="h-[70vh] w-[60vw]"
                   variant={variant}
+                />
+                <OpenInLogsButton
+                  className="absolute -top-14 right-0"
+                  variant={variant === "light" ? "primary" : "secondary"}
+                  onClick={handleOpenInLogs}
                 />
               </div>
             </FloatingFocusManager>
