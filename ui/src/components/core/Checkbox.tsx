@@ -4,24 +4,21 @@ import { twMerge } from "tailwind-merge";
 import CheckIcon from "@/assets/icons/CheckIcon";
 import MinusIcon from "@/assets/icons/MinusIcon";
 
-export interface CheckboxProps {
+export interface CheckboxProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   variant?: "light" | "dark";
   label: string;
-  checked?: boolean;
-  defaultChecked?: boolean;
-  disabled?: boolean;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  forwardedRef?: React.Ref<HTMLInputElement>;
 }
 
 const Checkbox: React.FC<CheckboxProps> = ({
   className,
   variant = "light",
   label,
-  checked,
-  defaultChecked,
   disabled,
-  onChange,
+  forwardedRef,
+  ...props
 }) => {
   const styles = {
     base: {
@@ -79,11 +76,8 @@ const Checkbox: React.FC<CheckboxProps> = ({
           disabled && styles.disabled
         )}
         type="checkbox"
-        tabIndex={0}
-        checked={checked}
-        defaultChecked={defaultChecked}
-        disabled={disabled}
-        onChange={onChange}
+        ref={forwardedRef}
+        {...props}
       />
       <CheckIcon
         className={`
