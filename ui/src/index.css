@@ -1,4 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 100 900;
+  src: url(fonts/Outfit.ttf) format("truetype");
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
