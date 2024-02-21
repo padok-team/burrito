@@ -14,24 +14,20 @@ import {
   FloatingPortal,
 } from "@floating-ui/react";
 
+import Dropdown from "@/components/core/Dropdown";
 import Checkbox from "@/components/core/Checkbox";
-import AngleDownIcon from "@/assets/icons/AngleDownIcon";
 
 const options = ["OK", "OutOfSync", "Error"];
 
 export interface NewDropdownProps {
   className?: string;
   variant?: "light" | "dark";
-  label: string;
-  filled?: boolean;
   disabled?: boolean;
 }
 
 const NewDropdown: React.FC<NewDropdownProps> = ({
   className,
   variant = "light",
-  label,
-  filled,
   disabled,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,10 +46,12 @@ const NewDropdown: React.FC<NewDropdownProps> = ({
     middleware: [offset(8)],
   });
 
-  const click = useClick(context, { event: "mousedown" });
-  const dismiss = useDismiss(context);
-  const role = useRole(context, { role: "listbox" });
+  const click = useClick(context, {
+    enabled: !disabled,
+    event: "mousedown",
+  });
   const listNavigation = useListNavigation(context, {
+    enabled: !disabled,
     listRef: listElementsRef,
     activeIndex,
     onNavigate: setActiveIndex,
@@ -67,9 +65,11 @@ const NewDropdown: React.FC<NewDropdownProps> = ({
       isTypingRef.current = typing;
     },
   });
+  const dismiss = useDismiss(context);
+  const role = useRole(context, { role: "listbox" });
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
-    [dismiss, role, listNavigation, click, typeahead]
+    [click, listNavigation, typeahead, dismiss, role]
   );
 
   const handleSelect = (index: number) => {
@@ -79,71 +79,25 @@ const NewDropdown: React.FC<NewDropdownProps> = ({
   };
 
   const styles = {
-    base: {
-      light: `bg-primary-400
-        text-primary-600
-        fill-primary-600`,
-
-      dark: `bg-nuances-400
-        text-nuances-300
-        fill-nuances-300`,
-    },
-
-    filled: {
-      light: `text-nuances-black`,
-      dark: `text-nuances-50`,
-    },
-
-    disabled: `bg-nuances-50
-      text-nuances-200
-      fill-nuances-200
-      hover:outline-0
-      focus:outline-0
-      cursor-default`,
-
-    children: {
-      light: `bg-nuances-white
-        shadow-light`,
-      dark: `bg-nuances-black
-        shadow-dark`,
-    },
+    light: `bg-nuances-white
+      text-primary-600
+      shadow-light`,
+    dark: `bg-nuances-black
+      text-nuances-300
+      shadow-dark`,
   };
 
   return (
     <>
-      <div
-        className={twMerge(
-          `relative
-          flex
-          flex-row
-          items-center
-          justify-center
-          h-8
-          p-2
-          gap-2
-          rounded-lg
-          text-base
-          font-medium
-          whitespace-nowrap
-          cursor-pointer
-          outline-primary-600
-          outline-offset-0
-          hover:outline
-          hover:outline-1
-          focus:outline
-          focus:outline-2
-          ${styles.base[variant]}`,
-          className,
-          filled && styles.filled[variant],
-          disabled && styles.disabled
-        )}
-        tabIndex={0}
-        ref={refs.setReference}
+      <Dropdown
+        className={className}
+        label="State"
+        filled={selectedIndices.length > 0}
+        disabled={disabled}
+        variant={variant}
+        forwardRef={refs.setReference}
         {...getReferenceProps()}
-      >
-        {label}
-        <AngleDownIcon className="pointer-events-none" />
-      </div>
+      />
       {isOpen && (
         <FloatingPortal>
           <FloatingFocusManager context={context} modal={false}>
@@ -155,11 +109,8 @@ const NewDropdown: React.FC<NewDropdownProps> = ({
                 rounded-lg
                 outline-none
                 px-4
-                py-2
-                ${
-                  variant === "light" ? "text-primary-600" : "text-nuances-300"
-                }`,
-                styles.children[variant]
+                py-2`,
+                styles[variant]
               )}
               {...getFloatingProps()}
             >

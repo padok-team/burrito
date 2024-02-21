@@ -7,7 +7,7 @@ import { fetchAttempts } from "@/clients/runs/client";
 import { fetchLogs } from "@/clients/logs/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
-import Dropdown from "@/components/core/Dropdown";
+import Dropdown from "@/components/core/DropdownOld";
 import AttemptsDropdown from "@/components/dropdowns/AttemptsDropdown";
 import AttemptButton from "@/components/buttons/AttemptButton";
 

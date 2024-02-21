@@ -9,7 +9,7 @@ import { ThemeContext } from "@/contexts/ThemeContext";
 
 import Button from "@/components/core/Button";
 import Input from "@/components/core/Input";
-import Dropdown from "@/components/core/Dropdown";
+import Dropdown from "@/components/core/DropdownOld";
 import Toggle from "@/components/core/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";

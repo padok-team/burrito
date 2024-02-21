@@ -1,7 +1,5 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { twMerge } from "tailwind-merge";
-
-import Box from "@/components/core/Box";
 
 import AngleDownIcon from "@/assets/icons/AngleDownIcon";
 
@@ -9,50 +7,20 @@ export interface DropdownProps {
   className?: string;
   variant?: "light" | "dark";
   label: string;
-  children: React.ReactNode;
   filled?: boolean;
   disabled?: boolean;
+  forwardRef?: (node: HTMLElement | null) => void;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
   className,
   variant = "light",
   label,
-  children,
   filled,
   disabled,
+  forwardRef,
+  ...props
 }) => {
-  const [open, setOpen] = useState(false);
-  const toggleRef = useRef<HTMLDivElement>(null);
-
-  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (toggleRef.current) {
-      if (event.target === toggleRef.current) {
-        setOpen(!open);
-      }
-    }
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (toggleRef.current) {
-      if (event.key === "Escape") {
-        toggleRef.current.blur();
-        setOpen(false);
-      } else if (event.key === " " || event.key === "Enter") {
-        if (toggleRef.current === document.activeElement) {
-          event.preventDefault();
-          setOpen(!open);
-        }
-      }
-    }
-  };
-
-  const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.contains(event.relatedTarget)) {
-      setOpen(false);
-    }
-  };
-
   const styles = {
     base: {
       light: `bg-primary-400
@@ -70,11 +38,11 @@ const Dropdown: React.FC<DropdownProps> = ({
     },
 
     disabled: `bg-nuances-50
-      text-nuances-200
-      fill-nuances-200
-      hover:outline-0
-      focus:outline-0
-      cursor-default`,
+        text-nuances-200
+        fill-nuances-200
+        hover:outline-0
+        focus:outline-0
+        cursor-default`,
   };
 
   return (
@@ -105,28 +73,11 @@ const Dropdown: React.FC<DropdownProps> = ({
         disabled && styles.disabled
       )}
       tabIndex={0}
-      onMouseDown={handleClick}
-      onKeyDown={handleKeyDown}
-      onBlur={handleBlur}
-      ref={toggleRef}
+      ref={forwardRef}
+      {...props}
     >
       {label}
-      <AngleDownIcon className="pointer-events-none" />
-      {open && (
-        <Box
-          className={`
-            absolute
-            left-0
-            top-10
-            items-center
-            justify-center
-            cursor-auto
-          `}
-          variant={variant}
-        >
-          {children}
-        </Box>
-      )}
+      <AngleDownIcon />
     </div>
   );
 };
