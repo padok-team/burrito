@@ -74,12 +74,13 @@ const Input: React.FC<InputProps> = ({
       className={twMerge(
         `font-normal
         text-base
+        w-full
         ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
         disabled && "text-nuances-300"
       )}
     >
       {label}
-      <div className="relative flex items-center">
+      <div className="relative flex items-center justify-center w-full">
         {leftIcon && (
           <div
             className={twMerge(
@@ -96,8 +97,7 @@ const Input: React.FC<InputProps> = ({
         )}
         <input
           className={twMerge(
-            `w-[300px]
-            my-1
+            `my-1
             px-4
             py-2
             h-10

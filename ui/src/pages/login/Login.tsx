@@ -29,8 +29,8 @@ const Login: React.FC = () => {
         `}
       >
         <div className="flex items-center justify-center">
-          <div className="flex flex-col items-start justify-center min-w-[300px] gap-10">
-            <div className="flex flex-col items-start gap-2">
+          <div className="flex flex-col items-start justify-center w-[300px] gap-10">
+            <div className="flex flex-col items-start gap-2 w-full">
               <Burrito height={64} width={64} />
               <span
                 className={`
@@ -46,22 +46,24 @@ const Login: React.FC = () => {
                 Welcome to Burrito
               </span>
             </div>
-            <div className="flex flex-col items-center justify-center gap-8">
+            <div className="flex flex-col items-center justify-center gap-8 w-full">
               <Input
-                className="min-w-full"
+                className="w-full"
                 variant={theme}
                 placeholder="Your email"
                 label="Email"
+                type="email"
               />
               <Input
-                className="min-w-full"
+                className="w-full"
                 variant={theme}
                 placeholder="Your password"
                 label="Password"
                 rightIcon={<EyeSlashIcon />}
+                type="password"
               />
               <Button
-                className="min-w-full"
+                className="w-full"
                 variant={theme === "light" ? "primary" : "secondary"}
                 onClick={() => navigate("/")}
               >
@@ -72,7 +74,7 @@ const Login: React.FC = () => {
                   flex
                   flex-row
                   items-center
-                  min-w-full
+                  w-full
                   gap-4
                   ${
                     theme === "light"
@@ -85,7 +87,7 @@ const Login: React.FC = () => {
                 <span>OR</span>
                 <hr className="w-full" />
               </div>
-              <div className="flex flex-col items-center justify-center min-w-full gap-4">
+              <div className="flex flex-col items-center justify-center w-full gap-4">
                 <SocialButton
                   className="w-full"
                   variant="github"
@@ -104,7 +106,7 @@ const Login: React.FC = () => {
                 flex-row
                 items-center
                 justify-center
-                min-w-full
+                w-full
                 gap-1
                 p-6
                 rounded-lg
