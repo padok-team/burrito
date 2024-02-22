@@ -196,17 +196,11 @@ const Logs: React.FC = () => {
               Filter by
             </span>
             <div className="flex flex-row items-center gap-2">
-              <Dropdown
+              <RepositoriesDropdown
                 variant={theme}
-                label="Repositories"
-                filled={repositoryFilter.length !== 0}
-              >
-                <RepositoriesDropdown
-                  variant={theme}
-                  filter={repositoryFilter}
-                  onChange={setRepositoryFilter}
-                />
-              </Dropdown>
+                selectedRepositories={repositoryFilter}
+                setSelectedRepositories={setRepositoryFilter}
+              />
               <Dropdown
                 variant={theme}
                 label="Date"

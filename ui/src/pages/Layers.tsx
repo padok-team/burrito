@@ -190,17 +190,11 @@ const Layers: React.FC = () => {
                   onChange={setStateFilter}
                 />
               </Dropdown>
-              <Dropdown
+              <RepositoriesDropdown
                 variant={theme}
-                label="Repositories"
-                filled={repositoryFilter.length !== 0}
-              >
-                <RepositoriesDropdown
-                  variant={theme}
-                  filter={repositoryFilter}
-                  onChange={setRepositoryFilter}
-                />
-              </Dropdown>
+                selectedRepositories={repositoryFilter}
+                setSelectedRepositories={setRepositoryFilter}
+              />
             </div>
             <Toggle
               className={`
