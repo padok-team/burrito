@@ -110,7 +110,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
         filled={selectedRepositories.length > 0}
         disabled={disabled}
         variant={variant}
-        forwardRef={refs.setReference}
+        ref={refs.setReference}
         {...getReferenceProps()}
       />
       {isOpen && (
