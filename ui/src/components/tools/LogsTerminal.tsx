@@ -7,7 +7,6 @@ import { fetchAttempts } from "@/clients/runs/client";
 import { fetchLogs } from "@/clients/logs/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
-import Dropdown from "@/components/core/DropdownOld";
 import AttemptsDropdown from "@/components/dropdowns/AttemptsDropdown";
 import AttemptButton from "@/components/buttons/AttemptButton";
 
@@ -94,27 +93,21 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       )}
     >
       {/* TODO: add overflow-auto to the div below, need to make proper floating dropdowns before */}
-      <div className="flex flex-row justify-between items-center gap-16 p-4">
+      <div className="flex flex-row justify-between items-center gap-16 p-4 overflow-auto flex-shrink-0">
         <div className="flex flex-row items-center gap-4">
           <span className="text-lg font-black">{name}</span>
           <span className="text-base font-semibold">{namespace}</span>
-          <Dropdown
+          <AttemptsDropdown
             className={
               variant === "light"
                 ? "bg-primary-300 text-primary-600 fill-primary-600"
                 : "bg-nuances-300 text-nuances-400 fill-nuances-400"
             }
-            label="Attempts"
-            filled={selectedAttempts.length > 0}
             variant={variant}
-          >
-            <AttemptsDropdown
-              variant={variant}
-              runId={run}
-              select={selectedAttempts}
-              onChange={setSelectedAttempts}
-            />
-          </Dropdown>
+            runId={run}
+            selectedAttempts={selectedAttempts}
+            setSelectedAttempts={setSelectedAttempts}
+          />
         </div>
         <div className="flex flex-row items-center gap-4">
           <SyncIcon
