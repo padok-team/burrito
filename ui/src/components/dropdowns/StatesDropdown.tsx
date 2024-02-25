@@ -10,6 +10,7 @@ import {
   useInteractions,
   FloatingFocusManager,
   offset,
+  flip,
   autoUpdate,
   FloatingPortal,
 } from "@floating-ui/react";
@@ -52,7 +53,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
-    middleware: [offset(8)],
+    middleware: [offset(8), flip()],
   });
 
   const click = useClick(context, {
