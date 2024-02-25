@@ -11,6 +11,7 @@ import {
   FloatingFocusManager,
   offset,
   flip,
+  size,
   autoUpdate,
   FloatingPortal,
 } from "@floating-ui/react";
@@ -51,7 +52,16 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
-    middleware: [offset(8), flip()],
+    middleware: [
+      offset(8),
+      flip(),
+      size({
+        apply({ availableHeight, elements }) {
+          elements.floating.style.maxHeight = `${availableHeight}px`;
+        },
+        padding: 8,
+      }),
+    ],
   });
 
   const click = useClick(context, {
@@ -120,7 +130,8 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
               ref={refs.setFloating}
               style={floatingStyles}
               className={twMerge(
-                `overflow-y-auto
+                `flex
+                flex-col
                 rounded-lg
                 outline-none
                 px-4
@@ -144,7 +155,7 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                   }
                 `}
               />
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 p-1 overflow-auto">
                 {attemptsQuery.isLoading && <span>Loading...</span>}
                 {attemptsQuery.isError && <span>An error occurred.</span>}
                 {attemptsQuery.isSuccess &&
