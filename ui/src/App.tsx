@@ -8,9 +8,10 @@ import {
 import ThemeProvider from "@/contexts/ThemeContext";
 
 import Layout from "@/layout/Layout";
-import Layers from "@/pages/layers/Layers";
-import Pulls from "@/pages/pulls/Pulls";
-import Login from "@/pages/login/Login";
+import Layers from "@/pages/Layers";
+import Pulls from "@/pages/Pulls";
+import Logs from "@/pages/Logs";
+import Login from "@/pages/Login";
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "pulls",
         element: <Pulls />,
+      },
+      {
+        path: "logs/:layerId?/:runId?",
+        element: <Logs />,
       },
     ],
   },

@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import TrafficCone from "./temp/TrafficCone";
+import TrafficCone from "@/components/temp/TrafficCone";
 
 const Pulls: React.FC = () => {
   const { theme } = useContext(ThemeContext);

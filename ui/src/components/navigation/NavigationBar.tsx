@@ -6,6 +6,7 @@ import ProfilePicture from "@/components/misc/ProfilePicture";
 import Burrito from "@/assets/illustrations/Burrito";
 import LayerGroupIcon from "@/assets/icons/LayerGroupIcon";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
+import WindowIcon from "@/assets/icons/WindowIcon";
 
 export interface NavigationBarProps {
   className?: string;
@@ -57,6 +58,14 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
             to="/pulls"
           >
             <CodeBranchIcon />
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              isActive ? "fill-inherit" : "fill-primary-600"
+            }
+            to="/logs"
+          >
+            <WindowIcon />
           </NavLink>
         </div>
       </div>

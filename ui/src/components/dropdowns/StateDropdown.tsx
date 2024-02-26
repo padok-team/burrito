@@ -1,7 +1,7 @@
 import React from "react";
 
-import Box from "@/components/misc/Box";
-import Checkbox from "@/components/checkboxes/Checkbox";
+import Box from "@/components/core/Box";
+import Checkbox from "@/components/core/Checkbox";
 
 import { LayerState } from "@/clients/layers/types";
 
@@ -30,18 +30,16 @@ const StateDropdown: React.FC<StateDropdownProps> = ({
   return (
     <Box
       variant={variant}
-      className="flex-col items-center justify-center gap-2"
+      className={`
+        flex-col
+        items-center
+        justify-center
+        z-10
+        gap-2
+        ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+      `}
     >
-      <span
-        className={`
-          self-start
-          mx-4
-          mt-2
-          ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
-        `}
-      >
-        State
-      </span>
+      <span className="self-start mx-4 mt-2">State</span>
       <hr
         className={`
           h-[1px]

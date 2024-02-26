@@ -12,7 +12,7 @@ const Layout: React.FC = () => {
       className={`
         flex
         ${theme === "light" ? "bg-primary-100" : "bg-nuances-black"}
-    `}
+      `}
     >
       <NavigationBar variant={theme} />
       <Outlet />

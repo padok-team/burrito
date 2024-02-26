@@ -7,16 +7,16 @@ import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import Button from "@/components/buttons/Button";
-import Input from "@/components/inputs/Input";
-import Dropdown from "@/components/inputs/Dropdown";
-import Toggle from "@/components/buttons/Toggle";
+import Button from "@/components/core/Button";
+import Input from "@/components/core/Input";
+import Dropdown from "@/components/core/Dropdown";
+import Toggle from "@/components/core/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
 import Table from "@/components/tables/Table";
 
-import StateDropdown from "@/pages/layers/components/StateDropdown";
-import RepositoriesDropdown from "@/pages/layers/components/RepositoriesDropdown";
+import StateDropdown from "@/components/dropdowns/StateDropdown";
+import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
 
 import { LayerState } from "@/clients/layers/types";
 
@@ -108,8 +108,6 @@ const Layers: React.FC = () => {
     <div className="flex flex-col flex-1 h-screen min-w-0">
       <div
         className={`
-          top-0
-          z-10
           flex
           flex-col
           p-6
@@ -194,7 +192,7 @@ const Layers: React.FC = () => {
               </Dropdown>
               <Dropdown
                 variant={theme}
-                label="Repository"
+                label="Repositories"
                 filled={repositoryFilter.length !== 0}
               >
                 <RepositoriesDropdown
@@ -238,17 +236,43 @@ const Layers: React.FC = () => {
         `}
       >
         {view === "grid" ? (
-          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 pt-3 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 gap-6">
             {layersQuery.isLoading ? (
               Array.from({ length: 100 }).map((_, index) => (
                 <CardLoader key={index} variant={theme} />
               ))
             ) : layersQuery.isError ? (
-              <span>An error has occurred</span>
+              <span
+                className={`
+                  text-lg
+                  font-semibold
+                  ${
+                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                  }
+                `}
+              >
+                An error has occurred.
+              </span>
             ) : layersQuery.isSuccess ? (
-              layersQuery.data.results.map((layer, index) => (
-                <Card key={index} variant={theme} layer={layer} />
-              ))
+              layersQuery.data.results.length > 0 ? (
+                layersQuery.data.results.map((layer, index) => (
+                  <Card key={index} variant={theme} layer={layer} />
+                ))
+              ) : (
+                <span
+                  className={`
+                    text-lg
+                    font-semibold
+                    ${
+                      theme === "light"
+                        ? "text-nuances-black"
+                        : "text-nuances-50"
+                    }
+                  `}
+                >
+                  No layers found
+                </span>
+              )
             ) : (
               <></>
             )}
@@ -258,9 +282,37 @@ const Layers: React.FC = () => {
             {layersQuery.isLoading ? (
               <Table variant={theme} isLoading data={[]} />
             ) : layersQuery.isError ? (
-              <span>An error has occurred</span>
+              <span
+                className={`
+                  text-lg
+                  font-semibold
+                  ${
+                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                  }
+                `}
+              >
+                An error has occurred.
+              </span>
             ) : layersQuery.isSuccess ? (
-              <Table variant={theme} data={layersQuery.data.results} />
+              layersQuery.data.results.length > 0 ? (
+                <Table variant={theme} data={layersQuery.data.results} />
+              ) : (
+                <div className="p-6">
+                  <span
+                    className={`
+                    text-lg
+                    font-semibold
+                    ${
+                      theme === "light"
+                        ? "text-nuances-black"
+                        : "text-nuances-50"
+                    }
+                  `}
+                  >
+                    No layers found
+                  </span>
+                </div>
+              )
             ) : (
               <></>
             )}

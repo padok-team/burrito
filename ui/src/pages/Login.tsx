@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import Input from "@/components/inputs/Input";
-import Button from "@/components/buttons/Button";
+import Input from "@/components/core/Input";
+import Button from "@/components/core/Button";
 import SocialButton from "@/components/buttons/SocialButton";
 
 import Burrito from "@/assets/illustrations/Burrito";

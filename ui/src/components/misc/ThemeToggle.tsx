@@ -3,8 +3,8 @@ import { twMerge } from "tailwind-merge";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
 
-import Box from "@/components/misc/Box";
-import Toggle from "@/components/buttons/Toggle";
+import Box from "@/components/core/Box";
+import Toggle from "@/components/core/Toggle";
 
 export interface ThemeToggleProps {
   className?: string;

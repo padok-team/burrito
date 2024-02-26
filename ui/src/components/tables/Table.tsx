@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import {
   createColumnHelper,
@@ -8,12 +8,13 @@ import {
 } from "@tanstack/react-table";
 import { Tooltip } from "react-tooltip";
 
-import Tag from "@/components/tags/Tag";
 import TableLoader from "@/components/loaders/TableLoader";
+import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
+import Running from "@/components/widgets/Running";
+import Tag from "@/components/widgets/Tag";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
-import SyncIcon from "@/assets/icons/SyncIcon";
 
 import { Layer, LayerState } from "@/clients/layers/types";
 
@@ -31,6 +32,7 @@ const Table: React.FC<TableProps> = ({
   data,
 }) => {
   const columnHelper = createColumnHelper<Layer>();
+  const [hoveredRow, setHoveredRow] = useState<Layer | null>(null);
 
   const columns = [
     columnHelper.accessor("isPR", {
@@ -61,7 +63,33 @@ const Table: React.FC<TableProps> = ({
       cell: (result) => (
         <div className="relative flex items-center h-full">
           <span>{result.getValue()}</span>
-          {result.row.original.isRunning && (
+          {result.row.original === hoveredRow &&
+          result.row.original.latestRuns.length > 0 ? (
+            <div
+              className={`
+                absolute
+                -right-5
+                flex
+                items-center
+                justify-end
+                h-[calc(100%_+_25px)]
+                min-w-full
+                w-full
+                pr-4
+                ${result.row.original.isRunning && "rounded-xl"}
+                ${
+                  variant === "light"
+                    ? "bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]"
+                    : "bg-[linear-gradient(270deg,_#252525_58.7%,_rgba(37,_37,_37,_0.00)_100%)]"
+                }
+              `}
+            >
+              <ModalLogsTerminal
+                layer={result.row.original}
+                variant={variant}
+              />
+            </div>
+          ) : result.row.original.isRunning ? (
             <div
               className={`
                 absolute
@@ -77,21 +105,14 @@ const Table: React.FC<TableProps> = ({
                 pointer-events-none
                 ${
                   variant === "light"
-                    ? "bg-[linear-gradient(270deg,_#FFF_56.84%,_rgba(255,_255,_255,_0.00)_100%)]"
-                    : "bg-[linear-gradient(270deg,_#000_56.84%,_rgba(0,_0,_0,_0.00)_100%)]"
+                    ? "bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]"
+                    : "bg-[linear-gradient(270deg,_#000_58.7%,_rgba(0,_0,_0,_0.00)_100%)]"
                 }
               `}
             >
-              <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
-                <span className="text-sm font-semibold">Running</span>
-                <SyncIcon
-                  className="animate-spin-slow"
-                  height={16}
-                  width={16}
-                />
-              </div>
+              <Running />
             </div>
-          )}
+          ) : null}
         </div>
       ),
     }),
@@ -283,6 +304,8 @@ const Table: React.FC<TableProps> = ({
                       -outline-offset-4
                       ${styles.row.running[variant]}`
                   )}
+                  onMouseEnter={() => setHoveredRow(row.original)}
+                  onMouseLeave={() => setHoveredRow(null)}
                 >
                   {row.getVisibleCells().map((cell, index) => (
                     <td

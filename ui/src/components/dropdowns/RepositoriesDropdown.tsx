@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchRepositories } from "@/clients/repositories/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
-import Box from "@/components/misc/Box";
-import Input from "@/components/inputs/Input";
-import Checkbox from "@/components/checkboxes/Checkbox";
+import Box from "@/components/core/Box";
+import Input from "@/components/core/Input";
+import Checkbox from "@/components/core/Checkbox";
 
 export interface RepositoriesDropdownProps {
   variant?: "light" | "dark";
@@ -50,18 +50,16 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
   return (
     <Box
       variant={variant}
-      className="flex-col items-center justify-center gap-2"
+      className={`
+        flex-col
+        items-center
+        justify-center
+        z-10
+        gap-2
+        ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+      `}
     >
-      <span
-        className={`
-          self-start
-          mx-4
-          mt-2
-          ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
-        `}
-      >
-        Repositories
-      </span>
+      <span className="self-start mx-4 mt-2">Repositories</span>
       <hr
         className={`
           h-[1px]

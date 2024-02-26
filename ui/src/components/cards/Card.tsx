@@ -2,8 +2,9 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "react-tooltip";
 
-import Tag from "@/components/tags/Tag";
-import SyncIcon from "@/assets/icons/SyncIcon";
+import Running from "@/components/widgets/Running";
+import Tag from "@/components/widgets/Tag";
+import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
@@ -19,6 +20,7 @@ export interface CardProps {
 const Card: React.FC<CardProps> = ({
   className,
   variant = "light",
+  layer,
   layer: {
     name,
     namespace,
@@ -31,6 +33,22 @@ const Card: React.FC<CardProps> = ({
     isPR,
   },
 }) => {
+  const styles = {
+    base: {
+      light: `bg-nuances-white
+        shadow-light`,
+
+      dark: `bg-nuances-400
+        shadow-dark`,
+    },
+
+    isRunning: {
+      light: `outline-blue-400`,
+
+      dark: `outline-blue-500`,
+    },
+  };
+
   const getTag = () => {
     return (
       <div className="flex items-center">
@@ -62,14 +80,8 @@ const Card: React.FC<CardProps> = ({
         rounded-2xl
         p-6
         gap-4
-        ${variant === "light" ? "bg-nuances-white" : "bg-nuances-400"}
-        ${variant === "light" ? "shadow-light" : "shadow-dark"}
-        ${
-          isRunning &&
-          `outline outline-4 ${
-            variant === "light" ? "outline-blue-400" : "outline-blue-500"
-          }`
-        }`,
+        ${styles.base[variant]}`,
+        isRunning && `outline outline-4 ${styles.isRunning[variant]}`,
         className
       )}
     >
@@ -79,7 +91,7 @@ const Card: React.FC<CardProps> = ({
           items-center
           justify-between
           self-stretch
-          gap-3
+          gap-4
         `}
       >
         <span
@@ -94,10 +106,7 @@ const Card: React.FC<CardProps> = ({
           {name}
         </span>
         {isRunning ? (
-          <div className="flex items-center gap-2 text-blue-500 fill-blue-500">
-            <span className="text-sm font-semibold">Running</span>
-            <SyncIcon className="animate-spin-slow" height={16} width={16} />
-          </div>
+          <Running />
         ) : isPR ? (
           <CodeBranchIcon
             className={`
@@ -150,6 +159,9 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
+      {layer.latestRuns.length > 0 && (
+        <ModalLogsTerminal layer={layer} variant={variant} />
+      )}
       <Tooltip
         opacity={1}
         id="card-tooltip"
