@@ -134,19 +134,18 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                 flex-col
                 rounded-lg
                 outline-none
-                px-4
-                py-2
+                p-2
                 z-20`,
                 styles[variant]
               )}
               {...getFloatingProps()}
             >
-              <span className="font-semibold">Attempts</span>
+              <span className="font-semibold px-2">Attempts</span>
               <hr
                 className={`
                   h-[1px]
                   w-auto
-                  -mx-4
+                  -mx-2
                   my-2
                   ${
                     variant === "light"
@@ -155,7 +154,7 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                   }
                 `}
               />
-              <div className="flex flex-col gap-1 p-1 overflow-auto">
+              <div className="flex flex-col gap-1 px-2 py-0.5 overflow-auto">
                 {attemptsQuery.isLoading && <span>Loading...</span>}
                 {attemptsQuery.isError && <span>An error occurred.</span>}
                 {attemptsQuery.isSuccess &&

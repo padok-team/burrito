@@ -139,18 +139,17 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                 flex-col
                 rounded-lg
                 outline-none
-                px-4
-                py-2`,
+                p-2`,
                 styles[variant]
               )}
               {...getFloatingProps()}
             >
-              <span className="font-semibold">Repositories</span>
+              <span className="font-semibold px-2">Repositories</span>
               <hr
                 className={`
                   h-[1px]
                   w-auto
-                  -mx-4
+                  -mx-2
                   my-2
                   ${
                     variant === "light"
@@ -161,7 +160,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
               />
               <Input
                 variant={variant}
-                className="-mx-2"
+                className="w-full"
                 placeholder="Search repositories"
                 value={search}
                 onChange={handleSearch}
@@ -170,7 +169,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                 className={`
                   h-[1px]
                   w-auto
-                  -mx-4
+                  -mx-2
                   my-2
                   ${
                     variant === "light"
@@ -179,7 +178,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                   }
                 `}
               />
-              <div className="flex flex-col gap-1 p-1 overflow-auto">
+              <div className="flex flex-col gap-1 px-2 py-0.5 overflow-auto">
                 {repositoriesQuery.isLoading && <span>Loading...</span>}
                 {repositoriesQuery.isError && <span>An error occurred.</span>}
                 {repositoriesQuery.isSuccess &&

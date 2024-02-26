@@ -131,18 +131,17 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
                 flex-col
                 rounded-lg
                 outline-none
-                px-4
-                py-2`,
+                p-2`,
                 styles[variant]
               )}
               {...getFloatingProps()}
             >
-              <span className="font-semibold">States</span>
+              <span className="font-semibold px-2">States</span>
               <hr
                 className={`
                   h-[1px]
                   w-auto
-                  -mx-4
+                  -mx-2
                   my-2
                   ${
                     variant === "light"
@@ -151,7 +150,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
                   }
                 `}
               />
-              <div className="flex flex-col gap-1 p-1 overflow-auto">
+              <div className="flex flex-col gap-1 px-2 py-0.5 overflow-auto">
                 {options.map(({ value, label }, index) => (
                   <Checkbox
                     key={value}

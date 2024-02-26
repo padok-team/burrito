@@ -126,18 +126,17 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
                 flex-col
                 rounded-lg
                 outline-none
-                px-4
-                py-2`,
+                p-2`,
                 styles[variant]
               )}
               {...getFloatingProps()}
             >
-              <span className="font-semibold">Date</span>
+              <span className="font-semibold px-2">Date</span>
               <hr
                 className={`
                   h-[1px]
                   w-auto
-                  -mx-4
+                  -mx-2
                   my-2
                   ${
                     variant === "light"
@@ -146,7 +145,7 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
                   }
                 `}
               />
-              <div className="flex flex-col gap-1 p-1 overflow-auto">
+              <div className="flex flex-col gap-1 px-2 py-0.5 overflow-auto">
                 {options.map(({ value, label }, index) => (
                   <Checkbox
                     key={value}
