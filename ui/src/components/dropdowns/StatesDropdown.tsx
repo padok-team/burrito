@@ -15,30 +15,32 @@ import {
   autoUpdate,
   FloatingPortal,
 } from "@floating-ui/react";
-import { useQuery } from "@tanstack/react-query";
-
-import { fetchAttempts } from "@/clients/runs/client";
-import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import Dropdown from "@/components/core/Dropdown";
 import Checkbox from "@/components/core/Checkbox";
 
-export interface AttemptsDropdownProps {
+import { LayerState } from "@/clients/layers/types";
+
+export interface StatesDropdownProps {
   className?: string;
   variant?: "light" | "dark";
   disabled?: boolean;
-  runId: string;
-  selectedAttempts: number[];
-  setSelectedAttempts: (attempts: number[]) => void;
+  selectedStates: LayerState[];
+  setSelectedStates: (states: LayerState[]) => void;
 }
 
-const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
+const options: Array<{ value: LayerState; label: string }> = [
+  { value: "success", label: "OK" },
+  { value: "warning", label: "OutOfSync" },
+  { value: "error", label: "Error" },
+];
+
+const StatesDropdown: React.FC<StatesDropdownProps> = ({
   className,
   variant = "light",
   disabled,
-  runId,
-  selectedAttempts,
-  setSelectedAttempts,
+  selectedStates,
+  setSelectedStates,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -90,16 +92,11 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
     [click, listNavigation, typeahead, dismiss, role]
   );
 
-  const attemptsQuery = useQuery({
-    queryKey: reactQueryKeys.attempts(runId),
-    queryFn: () => fetchAttempts(runId),
-  });
-
-  const handleSelect = (attempt: number) => {
-    if (selectedAttempts.includes(attempt)) {
-      setSelectedAttempts(selectedAttempts.filter((a) => a !== attempt));
+  const handleSelect = (state: LayerState) => {
+    if (selectedStates.includes(state)) {
+      setSelectedStates(selectedStates.filter((s) => s !== state));
     } else {
-      setSelectedAttempts([...selectedAttempts, attempt]);
+      setSelectedStates([...selectedStates, state]);
     }
   };
 
@@ -116,8 +113,8 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
     <>
       <Dropdown
         className={className}
-        label="Attempts"
-        filled={selectedAttempts.length > 0}
+        label="States"
+        filled={selectedStates.length > 0}
         disabled={disabled}
         variant={variant}
         ref={refs.setReference}
@@ -134,13 +131,12 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                 flex-col
                 rounded-lg
                 outline-none
-                p-2
-                z-20`,
+                p-2`,
                 styles[variant]
               )}
               {...getFloatingProps()}
             >
-              <span className="font-semibold px-2">Attempts</span>
+              <span className="font-semibold px-2">States</span>
               <hr
                 className={`
                   h-[1px]
@@ -155,48 +151,37 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                 `}
               />
               <div className="flex flex-col gap-1 px-2 py-0.5 overflow-auto">
-                {attemptsQuery.isLoading && <span>Loading...</span>}
-                {attemptsQuery.isError && <span>An error occurred.</span>}
-                {attemptsQuery.isSuccess &&
-                  (attemptsQuery.data.count !== 0 ? (
-                    Array.from({ length: attemptsQuery.data.count }).map(
-                      (_, index) => (
-                        <Checkbox
-                          key={index}
-                          role="option"
-                          variant={variant}
-                          label={`Attempt ${index + 1}`}
-                          checked={selectedAttempts.includes(index)}
-                          readOnly
-                          tabIndex={activeIndex === index ? 0 : -1}
-                          forwardedRef={(node) => {
-                            listElementsRef.current[index] = node;
-                            listContentRef.current[index] = `Attempt ${
-                              index + 1
-                            }`;
-                          }}
-                          {...getItemProps({
-                            onClick() {
-                              handleSelect(index);
-                            },
-                            onKeyDown(event) {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                handleSelect(index);
-                              }
+                {options.map(({ value, label }, index) => (
+                  <Checkbox
+                    key={value}
+                    role="option"
+                    variant={variant}
+                    label={label}
+                    checked={selectedStates.includes(value)}
+                    readOnly
+                    tabIndex={activeIndex === index ? 0 : -1}
+                    forwardedRef={(node) => {
+                      listElementsRef.current[index] = node;
+                      listContentRef.current[index] = label;
+                    }}
+                    {...getItemProps({
+                      onClick() {
+                        handleSelect(value);
+                      },
+                      onKeyDown(event) {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          handleSelect(value);
+                        }
 
-                              if (event.key === " " && !isTypingRef.current) {
-                                event.preventDefault();
-                                handleSelect(index);
-                              }
-                            },
-                          })}
-                        />
-                      )
-                    )
-                  ) : (
-                    <span>No attempts found.</span>
-                  ))}
+                        if (event.key === " " && !isTypingRef.current) {
+                          event.preventDefault();
+                          handleSelect(value);
+                        }
+                      },
+                    })}
+                  />
+                ))}
               </div>
             </div>
           </FloatingFocusManager>
@@ -206,4 +191,4 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
   );
 };
 
-export default AttemptsDropdown;
+export default StatesDropdown;

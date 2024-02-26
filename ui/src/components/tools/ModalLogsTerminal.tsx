@@ -59,7 +59,7 @@ const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
       <FloatingPortal>
         {isOpen && (
           <FloatingOverlay
-            className="grid place-items-center z-50 bg-overlay"
+            className="grid place-items-center z-10 bg-overlay"
             lockScroll
           >
             <FloatingFocusManager context={context}>

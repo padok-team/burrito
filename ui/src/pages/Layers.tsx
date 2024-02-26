@@ -9,21 +9,19 @@ import { ThemeContext } from "@/contexts/ThemeContext";
 
 import Button from "@/components/core/Button";
 import Input from "@/components/core/Input";
-import Dropdown from "@/components/core/Dropdown";
+import StatesDropdown from "@/components/dropdowns/StatesDropdown";
+import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
 import Toggle from "@/components/core/Toggle";
 import NavigationButton from "@/components/navigation/NavigationButton";
 import Card from "@/components/cards/Card";
 import Table from "@/components/tables/Table";
 
-import StateDropdown from "@/components/dropdowns/StateDropdown";
-import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
-
-import { LayerState } from "@/clients/layers/types";
-
 import SearchIcon from "@/assets/icons/SearchIcon";
 import AppsIcon from "@/assets/icons/AppsIcon";
 import BarsIcon from "@/assets/icons/BarsIcon";
 import CardLoader from "@/components/loaders/CardLoader";
+
+import { LayerState } from "@/clients/layers/types";
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -44,13 +42,13 @@ const Layers: React.FC = () => {
   );
 
   const stateFilter = useMemo<LayerState[]>(() => {
-    const param = searchParams.get("state");
+    const param = searchParams.get("states");
     return (param ? param.split(",") : []) as LayerState[];
   }, [searchParams]);
 
   const setStateFilter = useCallback(
     (stateFilter: LayerState[]) => {
-      searchParams.set("state", stateFilter.join(","));
+      searchParams.set("states", stateFilter.join(","));
       setSerchParams(searchParams);
     },
     [searchParams, setSerchParams]
@@ -179,28 +177,16 @@ const Layers: React.FC = () => {
               Filter by
             </span>
             <div className="flex flex-row items-center gap-2">
-              <Dropdown
+              <StatesDropdown
                 variant={theme}
-                label="State"
-                filled={stateFilter.length !== 0}
-              >
-                <StateDropdown
-                  variant={theme}
-                  filter={stateFilter}
-                  onChange={setStateFilter}
-                />
-              </Dropdown>
-              <Dropdown
+                selectedStates={stateFilter}
+                setSelectedStates={setStateFilter}
+              />
+              <RepositoriesDropdown
                 variant={theme}
-                label="Repositories"
-                filled={repositoryFilter.length !== 0}
-              >
-                <RepositoriesDropdown
-                  variant={theme}
-                  filter={repositoryFilter}
-                  onChange={setRepositoryFilter}
-                />
-              </Dropdown>
+                selectedRepositories={repositoryFilter}
+                setSelectedRepositories={setRepositoryFilter}
+              />
             </div>
             <Toggle
               className={`
