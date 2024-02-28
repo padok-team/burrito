@@ -192,7 +192,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                         checked={selectedRepositories.includes(repository.name)}
                         readOnly
                         tabIndex={activeIndex === index ? 0 : -1}
-                        forwardedRef={(node) => {
+                        ref={(node) => {
                           listElementsRef.current[index] = node;
                         }}
                         {...getItemProps({

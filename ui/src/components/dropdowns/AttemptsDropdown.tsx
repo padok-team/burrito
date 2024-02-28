@@ -169,7 +169,7 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                           checked={selectedAttempts.includes(index)}
                           readOnly
                           tabIndex={activeIndex === index ? 0 : -1}
-                          forwardedRef={(node) => {
+                          ref={(node) => {
                             listElementsRef.current[index] = node;
                             listContentRef.current[index] = `Attempt ${
                               index + 1

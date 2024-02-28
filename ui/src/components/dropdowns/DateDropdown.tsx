@@ -155,7 +155,7 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
                     checked={selectedSort === value}
                     readOnly
                     tabIndex={activeIndex === index ? 0 : -1}
-                    forwardedRef={(node) => {
+                    ref={(node) => {
                       listElementsRef.current[index] = node;
                       listContentRef.current[index] = label;
                     }}

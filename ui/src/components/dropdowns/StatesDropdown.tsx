@@ -160,7 +160,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
                     checked={selectedStates.includes(value)}
                     readOnly
                     tabIndex={activeIndex === index ? 0 : -1}
-                    forwardedRef={(node) => {
+                    ref={(node) => {
                       listElementsRef.current[index] = node;
                       listContentRef.current[index] = label;
                     }}
