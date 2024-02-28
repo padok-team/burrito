@@ -71,14 +71,13 @@ const Input: React.FC<InputProps> = ({
   };
 
   return (
-    <div>
+    <div className="w-full">
       {label && (
         <label
           className={twMerge(
             `block
             font-normal
             text-base
-            w-full
             mb-2
             ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
             disabled && "text-nuances-300"
@@ -108,6 +107,7 @@ const Input: React.FC<InputProps> = ({
             `px-4
             py-2
             h-10
+            w-full
             rounded-lg
             font-medium
             text-base
