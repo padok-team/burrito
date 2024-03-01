@@ -146,7 +146,7 @@ func newK8SClient() (client.Client, error) {
 
 func (r *Runner) install() error {
 	terraformVersion := configv1alpha1.GetTerraformVersion(r.repository, r.layer)
-	terraformExec := terraform.NewTerraform(terraformVersion, PlanArtifact)
+	terraformExec := terraform.NewTerraform(terraformVersion, PlanArtifact, r.config.Runner.RunnerBinaryPath)
 	terraformRuntime := "terraform"
 	if configv1alpha1.GetTerragruntEnabled(r.repository, r.layer) {
 		terraformRuntime = "terragrunt"
