@@ -118,31 +118,39 @@ func (t *Terragrunt) Show(mode string) ([]byte, error) {
 }
 
 func ensureTerragrunt(version string, runnerBinaryPath string) (string, error) {
-	runnerBinary := filepath.Join(runnerBinaryPath, "terragrunt")
-	info, err := os.Stat(runnerBinary)
-	if !os.IsNotExist(err) && !info.IsDir() {
-		hash, err := calculateFileSHA256(runnerBinary)
-		if err != nil {
-			return "", err
-		}
+	files, err := os.ReadDir(runnerBinaryPath)
+	if err != nil {
+		return "", err
+	}
 
-		trustedHash, err := getTerragruntSHA256(version)
-		if err != nil {
-			return "", err
-		}
+	trustedHash, err := getTerragruntSHA256(version)
+	if err != nil {
+		return "", err
+	}
 
-		if hash == trustedHash {
-			err = os.Chmod(runnerBinaryPath, 0755)
+	for _, file := range files {
+		if !file.IsDir() {
+			runnerBinaryFullPath := filepath.Join(runnerBinaryPath, file.Name())
+			hash, err := calculateFileSHA256(runnerBinaryFullPath)
 			if err != nil {
 				return "", err
 			}
-			log.Infof("Terragrunt binary found at %s, using it", runnerBinaryPath)
-			return filepath.Abs(runnerBinaryPath)
+
+			if hash == trustedHash {
+				err = os.Chmod(runnerBinaryFullPath, 0755)
+				if err != nil {
+					return "", err
+				}
+				log.Infof("Terragrunt binary found at %s, using it", runnerBinaryFullPath)
+				return filepath.Abs(runnerBinaryFullPath)
+			}
+
 		}
 	}
 
-	log.Infof("Terragrunt binary not found, downloading it. (Consider packaging binaries within your runner image to mitigate eventual network expenses)")
+	log.Infof("Terragrunt binary not found, downloading it... (Consider packaging binaries within your runner image to mitigate eventual network expenses)")
 	path, err := downloadTerragrunt(version, runnerBinaryPath)
+	log.Infof("Downloaded terragrunt binaries to %s", path)
 	if err != nil {
 		return "", err
 	}
