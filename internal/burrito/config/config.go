@@ -79,6 +79,7 @@ type RunnerConfig struct {
 	Layer                      Layer            `mapstructure:"layer"`
 	Repository                 RepositoryConfig `mapstructure:"repository"`
 	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
+	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`
 }
 
 type Layer struct {
