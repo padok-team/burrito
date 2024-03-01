@@ -157,7 +157,7 @@ func (r *Runner) install() error {
 		r.exec = terraformExec
 	case "terragrunt":
 		log.Infof("using terragrunt")
-		r.exec = terragrunt.NewTerragrunt(terraformExec, configv1alpha1.GetTerragruntVersion(r.repository, r.layer), PlanArtifact)
+		r.exec = terragrunt.NewTerragrunt(terraformExec, configv1alpha1.GetTerragruntVersion(r.repository, r.layer), PlanArtifact, r.config.Runner.RunnerBinaryPath)
 	}
 	err := r.exec.Install()
 	if err != nil {
