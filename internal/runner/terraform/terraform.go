@@ -47,8 +47,9 @@ func (t *Terraform) Install() error {
 		},
 	}
 	releases := releases.ExactVersion{
-		Product: product.Terraform,
-		Version: version,
+		Product:    product.Terraform,
+		Version:    version,
+		InstallDir: t.runnerBinaryPath,
 	}
 	execPath, err := i.Ensure(context.Background(), []src.Source{
 		&fs,
