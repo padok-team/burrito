@@ -90,6 +90,56 @@ redis:
         port: 6379
         targetPort: 6379
 
+hermitcrab:
+  enabled: false
+  metadata:
+    labels:
+      app.kubernetes.io/component: hermitcrab
+      app.kubernetes.io/name: burrito-hermitcrab
+  persistence:
+    enabled: true
+    size: 1Gi
+  deployment:
+    image:
+      pullPolicy: Always
+      repository: sealio/hermitcrab
+      tag: main
+    resources:
+      limits:
+        cpu: '2'
+        memory: '4Gi'
+      requests:
+        cpu: '500m'
+        memory: '512Mi'
+    ports:
+      - name: http
+        containerPort: 80
+      - name: https
+        containerPort: 443
+    startupProbe:
+      failureThreshold: 10
+      periodSeconds: 5
+      httpGet:
+        port: 80
+        path: /readyz
+    readinessProbe:
+      failureThreshold: 3
+      timeoutSeconds: 5
+      periodSeconds: 5
+      httpGet:
+        port: 80
+        path: /readyz
+    livenessProbe:
+      failureThreshold: 10
+      timeoutSeconds: 5
+      periodSeconds: 10
+      httpGet:
+        httpHeaders:
+          - name: "User-Agent"
+            value: ""
+        port: 80
+        path: /livez
+
 global:
   metadata:
     labels:
