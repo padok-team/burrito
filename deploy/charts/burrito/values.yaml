@@ -99,11 +99,20 @@ hermitcrab:
   persistence:
     enabled: true
     size: 1Gi
+  tls:
+    certManager:
+      use: true
+
   deployment:
     image:
       pullPolicy: Always
       repository: sealio/hermitcrab
       tag: main
+    env:
+      - name: SERVER_TLS_CERT_FILE
+        value: /etc/hermitcrab/tls/tls.crt
+      - name: SERVER_TLS_PRIVATE_KEY_FILE
+        value: /etc/hermitcrab/tls/tls.key
     resources:
       limits:
         cpu: '2'
