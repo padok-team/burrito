@@ -51,6 +51,9 @@ config:
         # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
         apiToken: ""
         url: ""
+    hermitcrab:
+      enabled: false
+      certificateSecretName: burrito-hermitcrab-tls
 
     # Burrito server configuration
     server:
@@ -91,7 +94,6 @@ redis:
         targetPort: 6379
 
 hermitcrab:
-  enabled: false
   metadata:
     labels:
       app.kubernetes.io/component: hermitcrab
@@ -99,11 +101,22 @@ hermitcrab:
   persistence:
     enabled: true
     size: 1Gi
+  tls:
+    certManager:
+      use: false
+      certificate:
+        spec: {}
+
   deployment:
     image:
       pullPolicy: Always
       repository: sealio/hermitcrab
       tag: main
+    env:
+      - name: SERVER_TLS_CERT_FILE
+        value: /etc/hermitcrab/tls/tls.crt
+      - name: SERVER_TLS_PRIVATE_KEY_FILE
+        value: /etc/hermitcrab/tls/tls.key
     resources:
       limits:
         cpu: '2'
@@ -190,6 +203,7 @@ controllers:
       initialDelaySeconds: 15
       periodSeconds: 20
     envFrom: []
+    env: []
   service:
     enabled: false
 
