@@ -4,7 +4,7 @@ kind: Kustomization
 images:
   - name: ghcr.io/padok-team/burrito
     newName: ghcr.io/padok-team/burrito
-    newTag: main
+    newTag: main@sha256:bab29aed871e6ab667d3ada444351c14ca0a50263ebbcb4746bd6c2de47ae453
 
 resources:
   - ./controllers

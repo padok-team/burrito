@@ -76,7 +76,7 @@ redis:
   deployment:
     image:
       repository: redis
-      tag: "7.2.4-alpine"
+      tag: "7.2.4-alpine@sha256:7635b0bfdd7dd8552b4b31d6541fef07b734614045b45a52fd5cc27c9dada9e2"
       pullPolicy: Always
     args: []
     podSecurityContext:
