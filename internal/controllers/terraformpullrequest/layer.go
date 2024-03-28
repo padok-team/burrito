@@ -91,6 +91,7 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 				Repository:      layer.Spec.Repository,
 				RemediationStrategy: configv1alpha1.RemediationStrategy{
 					AutoApply: false,
+					OnError:   layer.Spec.RemediationStrategy.OnError,
 				},
 				OverrideRunnerSpec: layer.Spec.OverrideRunnerSpec,
 			},
