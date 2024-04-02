@@ -19,7 +19,7 @@ Finally, currently, there is no easy way to navigate your Terraform state to tru
 
 - Planning continuously your Terraform code and run applies if needed
 - Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for Terraform ever again
-- Showing your state's modifications in a simple Web UI (not implemented yet)
+- Showing your state's modifications in a simple Web UI
 
 ## Getting started
 
