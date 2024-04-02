@@ -9,9 +9,9 @@
 ## Why burrito?
 
 [`terraform`](https://www.terraform.io/) is a tremendous tool to manage your infrastructure in IaC.
-But, it does not come up with an out-of the box solution for managing [state drift](https://developer.hashicorp.com/terraform/tutorials/state/resource-drift).
+However, it lacks built-in solutions for managing [state drift](https://developer.hashicorp.com/terraform/tutorials/state/resource-drift).
 
-Also, writing a CI/CD pipeline for Terraform can be painful and depends on the tool you are using.
+Additionally, configuring a CI/CD pipeline for Terraform can be challenging and often varies depending on the selected tools
 
 Finally, currently, there is no easy way to navigate your Terraform state to truly understand the modifications it undergoes when running `terraform apply`.
 
