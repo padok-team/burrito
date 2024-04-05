@@ -7,7 +7,9 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/version"
+	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -52,9 +54,78 @@ func (r *Reconciler) GetLinkedPods(run *configv1alpha1.TerraformRun) (*corev1.Po
 	return list, nil
 }
 
+func (r *Reconciler) ensureHermitcrabSecret(tenantNamespace string) error {
+	secret := &corev1.Secret{}
+	err := r.Client.Get(context.Background(), client.ObjectKey{Namespace: r.Config.Controller.MainNamespace,
+		Name: r.Config.Hermitcrab.CertificateSecretName}, secret)
+	if err != nil {
+		return err
+	}
+	if _, ok := secret.Data["ca.crt"]; !ok {
+		return fmt.Errorf("ca.crt not found in secret %s", r.Config.Hermitcrab.CertificateSecretName)
+	}
+	secret = &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      r.Config.Hermitcrab.CertificateSecretName,
+			Namespace: tenantNamespace,
+		},
+		Data: map[string][]byte{
+			"ca.crt": secret.Data["ca.crt"],
+		},
+	}
+	err = r.Client.Create(context.Background(), secret)
+	if err != nil && apierrors.IsAlreadyExists(err) {
+		err = r.Client.Update(context.Background(), secret)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	log.Infof("hermitcrab certificate is available in namespace %s", tenantNamespace)
+	return nil
+}
+
 func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.Pod {
 	defaultSpec := defaultPodSpec(r.Config, layer, repository)
 
+	if r.Config.Hermitcrab.Enabled {
+		err := r.ensureHermitcrabSecret(layer.Namespace)
+		if err != nil {
+			log.Errorf("failed to ensure HermitCrab secret in namespace %s: %s", layer.Namespace, err)
+		} else {
+			defaultSpec.Volumes = append(defaultSpec.Volumes, corev1.Volume{
+				Name: "hermitcrab-ca-cert",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: r.Config.Hermitcrab.CertificateSecretName,
+						Items: []corev1.KeyToPath{
+							{
+								Key:  "ca.crt",
+								Path: "hermitcrab-ca.crt",
+							},
+						},
+					},
+				},
+			})
+			defaultSpec.Containers[0].VolumeMounts = append(defaultSpec.Containers[0].VolumeMounts, corev1.VolumeMount{
+				MountPath: "/etc/ssl/certs/hermitcrab-ca.crt",
+				Name:      "hermitcrab-ca-cert",
+				SubPath:   "hermitcrab-ca.crt",
+			})
+
+			defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env,
+				corev1.EnvVar{
+					Name:  "HERMITCRAB_ENABLED",
+					Value: "true",
+				},
+				corev1.EnvVar{
+					Name:  "HERMITCRAB_URL",
+					Value: fmt.Sprintf("https://burrito-hermitcrab.%s.svc.cluster.local/v1/providers/", r.Config.Controller.MainNamespace),
+				},
+			)
+		}
+	}
 	switch Action(run.Spec.Action) {
 	case PlanAction:
 		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{

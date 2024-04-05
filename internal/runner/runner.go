@@ -199,6 +199,15 @@ func (r *Runner) init() error {
 	}
 	log.Infof("binaries successfully installed")
 
+	if os.Getenv("HERMITCRAB_ENABLED") == "true" {
+		log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
+		err := createNetworkMirrorConfig(os.Getenv("HERMITCRAB_URL"))
+		if err != nil {
+			log.Errorf("error creating network mirror configuration: %s", err)
+		}
+		log.Infof("network mirror configuration created")
+	}
+
 	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.layer.Spec.Path)
 	log.Infof("Launching terraform init in %s", workingDir)
 	err = r.exec.Init(workingDir)
@@ -323,4 +332,23 @@ func getDiff(plan *tfjson.Plan) (bool, string) {
 		diff = true
 	}
 	return diff, fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
+}
+
+func createNetworkMirrorConfig(endpoint string) error {
+	terraformrcContent := fmt.Sprintf(`
+provider_installation {
+  network_mirror {
+   url = "%s"
+  }
+}`, endpoint)
+	filePath := fmt.Sprintf("%s/config.tfrc", WorkingDir)
+	err := os.WriteFile(filePath, []byte(terraformrcContent), 0644)
+	if err != nil {
+		return err
+	}
+	err = os.Setenv("TF_CLI_CONFIG_FILE", filePath)
+	if err != nil {
+		return err
+	}
+	return nil
 }
