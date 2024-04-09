@@ -69,6 +69,10 @@ config:
     # Burrito runners configuration
     runner:
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
+      image:
+        repository: ghcr.io/padok-team/burrito
+        # tag: "" # By default, use the controller build version
+        pullPolicy: Always
 
 redis:
   enabled: true
