@@ -23,9 +23,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -48,8 +50,9 @@ func (c RealClock) Now() time.Time {
 // RunReconcilier reconciles a TerraformRun object
 type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Config *config.Config
+	Scheme   *runtime.Scheme
+	Config   *config.Config
+	Recorder record.EventRecorder
 	Clock
 }
 
@@ -85,10 +88,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	layer, err := r.getLinkedLayer(run)
 	if err != nil {
+		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not get linked layer")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	repo, err := r.getLinkedRepo(run, layer)
 	if err != nil {
+		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not get linked repository")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	state, conditions := r.GetState(ctx, run, layer, repo)
@@ -102,6 +107,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	err = r.Client.Status().Update(ctx, run)
 	if err != nil {
+		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not update run status")
 		log.Errorf("could not update run %s status: %s", run.Name, err)
 	}
 	log.Infof("finished reconciliation cycle for run %s/%s", run.Namespace, run.Name)

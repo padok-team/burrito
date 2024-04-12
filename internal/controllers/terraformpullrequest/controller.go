@@ -13,9 +13,11 @@ import (
 	"github.com/padok-team/burrito/internal/storage/redis"
 
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/gitlab"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -40,6 +42,7 @@ type Reconciler struct {
 	Config    *config.Config
 	Providers []Provider
 	Storage   storage.Storage
+	Recorder  record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformpullrequests,verbs=get;list;watch;create;update;patch;delete
@@ -86,6 +89,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	pr.Status = state.Status
 	err = r.Client.Status().Update(ctx, pr)
 	if err != nil {
+		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Could not update pull request status")
 		log.Errorf("could not update pull request %s status: %s", pr.Name, err)
 	}
 	log.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)

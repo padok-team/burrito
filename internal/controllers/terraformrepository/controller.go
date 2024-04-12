@@ -21,6 +21,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -30,7 +31,8 @@ import (
 // RepositoryReconciler reconciles a TerraformRepository object
 type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
