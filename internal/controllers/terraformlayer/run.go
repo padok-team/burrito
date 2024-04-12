@@ -8,6 +8,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -144,6 +145,7 @@ func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.Terr
 		return err
 	}
 	log.Infof("deleted %d runs for layer %s", len(toDelete), layer.Name)
+	r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Cleaned up old runs")
 	return nil
 }
 
