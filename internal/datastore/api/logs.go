@@ -17,7 +17,7 @@ type PutLogsRequest struct {
 	Content string `json:"content"`
 }
 
-func getArgs(c echo.Context) (string, string, string, string, error) {
+func getLogsArgs(c echo.Context) (string, string, string, string, error) {
 	namespace := c.QueryParam("namespace")
 	layer := c.QueryParam("layer")
 	run := c.QueryParam("run")
@@ -31,7 +31,7 @@ func getArgs(c echo.Context) (string, string, string, string, error) {
 func (a *API) GetLogsHandler(c echo.Context) error {
 	var err error
 	var content []byte
-	namespace, layer, run, attempt, err := getArgs(c)
+	namespace, layer, run, attempt, err := getLogsArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
@@ -56,7 +56,7 @@ func (a *API) GetLogsHandler(c echo.Context) error {
 func (a *API) PutLogsHandler(c echo.Context) error {
 	var err error
 	var content []byte
-	namespace, layer, run, attempt, err := getArgs(c)
+	namespace, layer, run, attempt, err := getLogsArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}

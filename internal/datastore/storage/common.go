@@ -82,44 +82,46 @@ func (s *Storage) PutLogs(namespace string, layer string, run string, attempt st
 	return s.Backend.Set(key, logs, 0)
 }
 
-func (s *Storage) GetPlan(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, PlanBinFile)
+func computePlanKey(namespace string, layer string, run string, attempt string, format string) string {
+	key := ""
+	prefix := fmt.Sprintf("/%s/%s/%s/%s", namespace, layer, run, attempt)
+	switch format {
+	case "json":
+		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
+	case "pretty":
+		key = fmt.Sprintf("%s/%s", prefix, PrettyPlanFile)
+	case "short":
+		key = fmt.Sprintf("%s/%s", prefix, ShortDiffFile)
+	default:
+		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
+	}
+	return key
+}
+
+func (s *Storage) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
+	key := computePlanKey(namespace, layer, run, attempt, format)
 	return s.Backend.Get(key)
 }
 
-func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, plan []byte) error {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, PlanBinFile)
-	return s.Backend.Set(key, plan, int(s.Config.Controller.Timers.DriftDetection.Seconds()))
-}
-
-func (s *Storage) GetPlanJson(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, PlanJsonFile)
+func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
+	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s", namespace, layer, run))
+	if err != nil {
+		return nil, err
+	}
+	if len(attempts) == 0 {
+		return nil, &StorageError{Nil: true}
+	}
+	attempt, err := getMax(attempts)
+	if err != nil {
+		return nil, err
+	}
+	key := computePlanKey(namespace, layer, run, strconv.Itoa(attempt), format)
 	return s.Backend.Get(key)
 }
 
-func (s *Storage) PutPlanJson(namespace string, layer string, run string, attempt string, plan []byte) error {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, PlanJsonFile)
-	return s.Backend.Set(key, plan, int(s.Config.Controller.Timers.DriftDetection.Seconds()))
-}
-
-func (s *Storage) GetPrettyPlan(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, PrettyPlanFile)
-	return s.Backend.Get(key)
-}
-
-func (s *Storage) PutPrettyPlan(namespace string, layer string, run string, attempt string, plan []byte) error {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, PrettyPlanFile)
-	return s.Backend.Set(key, plan, int(s.Config.Controller.Timers.DriftDetection.Seconds()))
-}
-
-func (s *Storage) GetShortDiff(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, ShortDiffFile)
-	return s.Backend.Get(key)
-}
-
-func (s *Storage) PutShortDiff(namespace string, layer string, run string, attempt string, diff []byte) error {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, ShortDiffFile)
-	return s.Backend.Set(key, diff, int(s.Config.Controller.Timers.DriftDetection.Seconds()))
+func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, format string, plan []byte) error {
+	key := computePlanKey(namespace, layer, run, attempt, format)
+	return s.Backend.Set(key, plan, 0)
 }
 
 type StorageError struct {
