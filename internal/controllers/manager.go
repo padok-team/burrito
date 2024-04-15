@@ -92,36 +92,40 @@ func (c *Controllers) Exec() {
 		switch ctrlType {
 		case "layer":
 			if err = (&terraformlayer.Reconciler{
-				Client:  mgr.GetClient(),
-				Scheme:  mgr.GetScheme(),
-				Config:  c.config,
-				Storage: redis.New(c.config.Redis),
+				Client:   mgr.GetClient(),
+				Scheme:   mgr.GetScheme(),
+				Config:   c.config,
+				Recorder: mgr.GetEventRecorderFor("Burrito"),
+				Storage:  redis.New(c.config.Redis),
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create layer controller: %s", err)
 			}
 			log.Infof("layer controller started successfully")
 		case "repository":
 			if err = (&terraformrepository.Reconciler{
-				Client: mgr.GetClient(),
-				Scheme: mgr.GetScheme(),
+				Client:   mgr.GetClient(),
+				Scheme:   mgr.GetScheme(),
+				Recorder: mgr.GetEventRecorderFor("Burrito"),
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create repository controller: %s", err)
 			}
 			log.Infof("repository controller started successfully")
 		case "run":
 			if err = (&terraformrun.Reconciler{
-				Client: mgr.GetClient(),
-				Scheme: mgr.GetScheme(),
-				Config: c.config,
+				Client:   mgr.GetClient(),
+				Scheme:   mgr.GetScheme(),
+				Recorder: mgr.GetEventRecorderFor("Burrito"),
+				Config:   c.config,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create run controller: %s", err)
 			}
 			log.Infof("run controller started successfully")
 		case "pullrequest":
 			if err = (&terraformpullrequest.Reconciler{
-				Client: mgr.GetClient(),
-				Scheme: mgr.GetScheme(),
-				Config: c.config,
+				Client:   mgr.GetClient(),
+				Scheme:   mgr.GetScheme(),
+				Recorder: mgr.GetEventRecorderFor("Burrito"),
+				Config:   c.config,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create pullrequest controller: %s", err)
 			}

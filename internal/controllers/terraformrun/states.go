@@ -9,6 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/lock"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -73,12 +74,14 @@ func (s *Initial) getHandler() Handler {
 		log := log.WithContext(ctx)
 		err := lock.CreateLock(ctx, r.Client, layer, run)
 		if err != nil {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could set lock on run")
 			log.Errorf("could not set lock on run %s for layer %s, requeuing resource: %s", run.Name, layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
 		}
 		pod := r.getPod(run, layer, repo)
 		err = r.Client.Create(ctx, &pod)
 		if err != nil {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Run", "Could not create pod for run")
 			log.Errorf("failed to create pod for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
 		}
@@ -87,6 +90,7 @@ func (s *Initial) getHandler() Handler {
 			LastRun:   r.Clock.Now().Format(time.UnixDate),
 			RunnerPod: pod.Name,
 		}
+		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for initial run", pod.Name))
 		// Minimal time (1s) to transit from Initial state to Running state
 		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
 	}
@@ -130,6 +134,7 @@ func (s *Retrying) getHandler() Handler {
 		pod := r.getPod(run, layer, repo)
 		err := r.Client.Create(ctx, &pod)
 		if err != nil {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Run", "Could not create retry pod for run")
 			log.Errorf("failed to create retry pod for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, runInfo
 		}
@@ -138,6 +143,7 @@ func (s *Retrying) getHandler() Handler {
 			LastRun:   r.Clock.Now().Format(time.UnixDate),
 			RunnerPod: pod.Name,
 		}
+		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for retry run", pod.Name))
 		// Minimal time (1s) to transit from Retrying state to Running state
 		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
 	}
@@ -151,6 +157,7 @@ func (s *Succeeded) getHandler() Handler {
 		log := log.WithContext(ctx)
 		err := lock.DeleteLock(ctx, r.Client, layer, run)
 		if err != nil {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not delete lock for run")
 			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
@@ -166,6 +173,7 @@ func (s *Failed) getHandler() Handler {
 		log := log.WithContext(ctx)
 		err := lock.DeleteLock(ctx, r.Client, layer, run)
 		if err != nil {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not delete lock for run")
 			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -29,6 +30,7 @@ func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepos
 		}
 	}
 	if provider == nil {
+		r.Recorder.Event(pr, corev1.EventTypeWarning, "Provider error", "Could not find provider (gitlab, github...)")
 		return nil, fmt.Errorf("could not find provider for pull request %s", pr.Name)
 	}
 	changes, err := provider.GetChanges(repository, pr)

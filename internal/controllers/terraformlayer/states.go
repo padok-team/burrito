@@ -7,6 +7,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -55,9 +56,11 @@ func (s *PlanNeeded) getHandler() Handler {
 		run := r.getRun(layer, repository, "plan")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Plan action")
 			log.Errorf("failed to create TerraformRun for Plan action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Plan action")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -75,9 +78,11 @@ func (s *ApplyNeeded) getHandler() Handler {
 		run := r.getRun(layer, repository, "apply")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action")
 			log.Errorf("failed to create TerraformRun for Apply action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }

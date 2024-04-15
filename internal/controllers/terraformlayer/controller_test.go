@@ -15,11 +15,13 @@ import (
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	storage "github.com/padok-team/burrito/internal/storage/mock"
 	utils "github.com/padok-team/burrito/internal/testing"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -73,6 +75,9 @@ var _ = BeforeSuite(func() {
 		Config:  config.TestConfig(),
 		Storage: storage.New(),
 		Clock:   &MockClock{},
+		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
+			Component: "burrito",
+		}),
 	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())

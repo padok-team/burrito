@@ -24,9 +24,11 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/lock"
 	"github.com/padok-team/burrito/internal/storage"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -50,9 +52,10 @@ func (c RealClock) Now() time.Time {
 // Reconciler reconciles a TerraformLayer object
 type Reconciler struct {
 	client.Client
-	Scheme  *runtime.Scheme
-	Config  *config.Config
-	Storage storage.Storage
+	Scheme   *runtime.Scheme
+	Config   *config.Config
+	Storage  storage.Storage
+	Recorder record.EventRecorder
 	Clock
 }
 
@@ -112,6 +115,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	state, conditions := r.GetState(ctx, layer)
 	lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, layer))
 	if err != nil {
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
 		lastResult = []byte("Error getting last Result")
 	}
 	result, run := state.getHandler()(ctx, r, layer, repository)
@@ -122,6 +126,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult), LastRun: runStatus}
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
+		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
 		log.Errorf("could not update layer %s status: %s", layer.Name, err)
 	}
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
