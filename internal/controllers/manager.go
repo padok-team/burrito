@@ -81,7 +81,7 @@ func (c *Controllers) Exec() {
 		LeaderElection:         c.config.Controller.LeaderElection.Enabled,
 		LeaderElectionID:       c.config.Controller.LeaderElection.ID,
 		Cache: cache.Options{
-			Namespaces: c.config.Controller.Namespaces,
+			Namespaces: append(c.config.Controller.Namespaces, c.config.Controller.MainNamespace),
 		},
 	})
 	if err != nil {

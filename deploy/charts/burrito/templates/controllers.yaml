@@ -1,5 +1,6 @@
 {{ $configChecksum := (include (print $.Template.BasePath "/config.yaml") . | sha256sum) }}
 {{ $sshKnownHostsChecksum := (include (print $.Template.BasePath "/ssh-known-hosts.yaml") . | sha256sum) }}
+{{- $baseEnv := list (dict "name" "BURRITO_CONTROLLER_MAINNAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace"))) -}}
 
 {{- with mergeOverwrite (deepCopy .Values.global) .Values.controllers }}
 apiVersion: apps/v1
@@ -52,7 +53,7 @@ spec:
           resources:
             {{- toYaml .deployment.resources | nindent 12 }}
           env:
-            {{- toYaml .deployment.env | nindent 12 }}
+            {{- concat $baseEnv .deployment.env | toYaml | nindent 12}}
           envFrom:
             {{- toYaml .deployment.envFrom | nindent 12 }}
           volumeMounts:
@@ -114,6 +115,24 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: burrito-controllers
+subjects:
+  - kind: ServiceAccount
+    name: burrito-controllers
+    namespace: {{ $.Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: burrito-controllers-secrets
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-controllers-secrets
 subjects:
   - kind: ServiceAccount
     name: burrito-controllers

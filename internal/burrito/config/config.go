@@ -16,6 +16,7 @@ type Config struct {
 	Controller ControllerConfig `mapstructure:"controller"`
 	Redis      Redis            `mapstructure:"redis"`
 	Server     ServerConfig     `mapstructure:"server"`
+	Hermitcrab HermitcrabConfig `mapstructure:"hermitcrab"`
 }
 
 type WebhookConfig struct {
@@ -32,6 +33,7 @@ type WebhookGitlabConfig struct {
 }
 
 type ControllerConfig struct {
+	MainNamespace          string               `mapstructure:"mainNamespace"`
 	Namespaces             []string             `mapstructure:"namespaces"`
 	Timers                 ControllerTimers     `mapstructure:"timers"`
 	TerraformMaxRetries    int                  `mapstructure:"terraformMaxRetries"`
@@ -92,6 +94,11 @@ type Redis struct {
 	ServerPort int    `mapstructure:"serverPort"`
 	Password   string `mapstructure:"password"`
 	Database   int    `mapstructure:"database"`
+}
+
+type HermitcrabConfig struct {
+	Enabled               bool   `mapstructure:"enabled"`
+	CertificateSecretName string `mapstructure:"certificateSecretName"`
 }
 
 type ServerConfig struct {

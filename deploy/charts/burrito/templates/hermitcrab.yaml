@@ -1,0 +1,109 @@
+{{- if .Values.config.burrito.hermitcrab.enabled }}
+{{- with mergeOverwrite (deepCopy .Values.global) .Values.hermitcrab }}
+{{- if .persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: burrito-hermitcrab
+  annotations:
+    {{- toYaml .metadata.annotations | nindent 4 }}
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .persistence.size }}
+  {{- if .persistence.storageClassName }}
+  storageClassName: {{ .persistence.storageClassName }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: burrito-hermitcrab
+spec:
+  selector:
+    {{- toYaml .metadata.labels | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burrito-hermitcrab
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- toYaml .metadata.labels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- toYaml .metadata.labels | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: hermitcrab
+          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag }}"
+          imagePullPolicy: {{ .deployment.image.pullPolicy }}
+          resources:
+            {{- toYaml .deployment.resources | nindent 12 }}
+          env:
+            {{- toYaml .deployment.env | nindent 12 }}
+          envFrom:
+            {{- toYaml .deployment.envFrom | nindent 12 }}
+          ports:
+            {{- toYaml .deployment.ports | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .deployment.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .deployment.readinessProbe | nindent 12 }}
+          volumeMounts:
+            {{- if .persistence.enabled }}
+            - name: data
+              mountPath: /var/run/hermitcrab
+            {{- end }}
+            {{- if .tls.certManager.use }}
+            - name: burrito-hermitcrab-tls
+              mountPath: /etc/hermitcrab/tls
+            {{- end }}
+            {{- if .deployment.extraVolumeMounts }}
+            {{- toYaml .deployment.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: burrito-hermitcrab
+        {{- end }}
+        {{- if .tls.certManager.use }}
+        - name: burrito-hermitcrab-tls
+          secret:
+            secretName: {{ $.Values.config.burrito.hermitcrab.certificateSecretName }}
+        {{- end }}
+        {{- if .deployment.extraVolumes }}
+        {{- toYaml .deployment.extraVolumes | nindent 8 }}
+        {{- end }}
+---
+{{- if .tls.certManager.use }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: burrito-hermitcrab
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+spec:
+  {{- toYaml .tls.certManager.certificate.spec | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
