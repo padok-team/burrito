@@ -8,8 +8,11 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-version"
+	install "github.com/hashicorp/hc-install"
+	"github.com/hashicorp/hc-install/fs"
 	"github.com/hashicorp/hc-install/product"
 	"github.com/hashicorp/hc-install/releases"
+	"github.com/hashicorp/hc-install/src"
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
@@ -18,12 +21,14 @@ type Terraform struct {
 	version          string
 	ExecPath         string
 	planArtifactPath string
+	runnerBinaryPath string
 }
 
-func NewTerraform(version, planArtifactPath string) *Terraform {
+func NewTerraform(version, planArtifactPath string, runnerBinaryPath string) *Terraform {
 	return &Terraform{
 		version:          version,
 		planArtifactPath: planArtifactPath,
+		runnerBinaryPath: runnerBinaryPath,
 	}
 }
 
@@ -32,11 +37,24 @@ func (t *Terraform) Install() error {
 	if err != nil {
 		return err
 	}
-	installer := &releases.ExactVersion{
+	i := install.NewInstaller()
+	version := version.Must(terraformVersion, nil)
+	fs := fs.ExactVersion{
 		Product: product.Terraform,
-		Version: version.Must(terraformVersion, nil),
+		Version: version,
+		ExtraPaths: []string{
+			t.runnerBinaryPath,
+		},
 	}
-	execPath, err := installer.Install(context.Background())
+	releases := releases.ExactVersion{
+		Product:    product.Terraform,
+		Version:    version,
+		InstallDir: t.runnerBinaryPath,
+	}
+	execPath, err := i.Ensure(context.Background(), []src.Source{
+		&fs,
+		&releases,
+	})
 	if err != nil {
 		return err
 	}

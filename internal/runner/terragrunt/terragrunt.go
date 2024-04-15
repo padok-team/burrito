@@ -1,6 +1,7 @@
 package terragrunt
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -9,12 +10,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/padok-team/burrito/internal/runner/terraform"
-)
-
-const (
-	BinWorkDir = "/runner/bin"
+	log "github.com/sirupsen/logrus"
 )
 
 type Terragrunt struct {
@@ -23,13 +22,15 @@ type Terragrunt struct {
 	version          string
 	workingDir       string
 	terraform        *terraform.Terraform
+	runnerBinaryPath string
 }
 
-func NewTerragrunt(terraformExec *terraform.Terraform, terragruntVersion, planArtifactPath string) *Terragrunt {
+func NewTerragrunt(terraformExec *terraform.Terraform, terragruntVersion, planArtifactPath string, runnerBinaryPath string) *Terragrunt {
 	return &Terragrunt{
 		version:          terragruntVersion,
 		terraform:        terraformExec,
 		planArtifactPath: planArtifactPath,
+		runnerBinaryPath: runnerBinaryPath,
 	}
 }
 
@@ -43,7 +44,8 @@ func (t *Terragrunt) Install() error {
 	if err != nil {
 		return err
 	}
-	path, err := downloadTerragrunt(t.version)
+
+	path, err := ensureTerragrunt(t.version, t.runnerBinaryPath)
 	if err != nil {
 		return err
 	}
@@ -115,7 +117,94 @@ func (t *Terragrunt) Show(mode string) ([]byte, error) {
 	return output, nil
 }
 
-func downloadTerragrunt(version string) (string, error) {
+func ensureTerragrunt(version string, runnerBinaryPath string) (string, error) {
+	files, err := os.ReadDir(runnerBinaryPath)
+	if err != nil {
+		return "", err
+	}
+
+	trustedHash, err := getTerragruntSHA256(version)
+	if err != nil {
+		return "", err
+	}
+
+	for _, file := range files {
+		if !file.IsDir() {
+			runnerBinaryFullPath := filepath.Join(runnerBinaryPath, file.Name())
+			hash, err := calculateFileSHA256(runnerBinaryFullPath)
+			if err != nil {
+				return "", err
+			}
+
+			if hash == trustedHash {
+				err = os.Chmod(runnerBinaryFullPath, 0755)
+				if err != nil {
+					return "", err
+				}
+				log.Infof("Terragrunt binary found at %s, using it", runnerBinaryFullPath)
+				return filepath.Abs(runnerBinaryFullPath)
+			}
+
+		}
+	}
+
+	log.Infof("Terragrunt binary not found, downloading it... (Consider packaging binaries within your runner image to mitigate eventual network expenses)")
+	path, err := downloadTerragrunt(version, runnerBinaryPath)
+	log.Infof("Downloaded terragrunt binaries to %s", path)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+func calculateFileSHA256(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+func getTerragruntSHA256(version string) (string, error) {
+	cpuArch := runtime.GOARCH
+	response, err := http.Get(fmt.Sprintf("https://github.com/gruntwork-io/terragrunt/releases/download/v%s/SHA256SUMS", version))
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	lines := strings.Split(string(body), "\n")
+	for _, line := range lines {
+		parts := strings.Fields(line)
+		if len(parts) != 2 {
+			continue
+		}
+		sha := parts[0]
+		filename := parts[1]
+
+		if strings.Contains(filename, fmt.Sprintf("linux_%s", cpuArch)) {
+			return sha, nil
+		}
+	}
+
+	return "", errors.New("could not find a hash for this architecture in SHA256SUMS file")
+}
+
+func downloadTerragrunt(version string, runnerBinaryPath string) (string, error) {
 	cpuArch := runtime.GOARCH
 
 	url := fmt.Sprintf("https://github.com/gruntwork-io/terragrunt/releases/download/v%s/terragrunt_linux_%s", version, cpuArch)
@@ -126,7 +215,7 @@ func downloadTerragrunt(version string) (string, error) {
 	}
 	defer response.Body.Close()
 
-	filename := fmt.Sprintf("%s/terragrunt_%s", BinWorkDir, cpuArch)
+	filename := fmt.Sprintf("%s/terragrunt_%s", runnerBinaryPath, cpuArch)
 	file, err := os.Create(filename)
 	if err != nil {
 		return "", err
