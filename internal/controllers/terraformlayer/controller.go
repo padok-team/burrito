@@ -22,8 +22,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/lock"
-	"github.com/padok-team/burrito/internal/storage"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,10 +52,10 @@ func (c RealClock) Now() time.Time {
 // Reconciler reconciles a TerraformLayer object
 type Reconciler struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Config   *config.Config
-	Storage  storage.Storage
-	Recorder record.EventRecorder
+	Scheme    *runtime.Scheme
+	Config    *config.Config
+	Recorder  record.EventRecorder
+	Datastore datastore.Client
 	Clock
 }
 
@@ -113,7 +113,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
 	}
 	state, conditions := r.GetState(ctx, layer)
-	lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, layer))
+	//TODO: handle attempt
+	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "0", "result")
 	if err != nil {
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
 		lastResult = []byte("Error getting last Result")

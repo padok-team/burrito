@@ -31,13 +31,13 @@ type layer struct {
 }
 
 type run struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Namespace  string `json:"namespace"`
-	Action     string `json:"action"`
-	Status     string `json:"status"`
-	LastRun    string `json:"lastRun"`
-	Retries    int    `json:"retries"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Action    string `json:"action"`
+	Status    string `json:"status"`
+	LastRun   string `json:"lastRun"`
+	Retries   int    `json:"retries"`
 }
 
 type layersResponse struct {
@@ -115,23 +115,23 @@ func (a *API) getLayerRunInfo(layer configv1alpha1.TerraformLayer) (layerRunning
 		return
 	}
 	lastRunAt = runs.Items[len(runs.Items)-1].Status.LastRun
-	for i := len(runs.Items)-1 ; i >= 0 ; i-- {
+	for i := len(runs.Items) - 1; i >= 0; i-- {
 		r := runs.Items[i]
 		if r.Status.State == "Running" {
 			layerRunning = true
-			if (len(runs.Items)-1-i) >= 5 {
+			if (len(runs.Items) - 1 - i) >= 5 {
 				return
 			}
 		}
-		if (len(runs.Items)-1-i) < 5 {
+		if (len(runs.Items) - 1 - i) < 5 {
 			latestRuns = append(latestRuns, run{
-				ID:         string(r.UID),
-				Name:       r.Name,
-				Namespace:  r.Namespace,
-				Action:     r.Spec.Action,
-				Status:     r.Status.State,
-				LastRun:    r.Status.LastRun,
-				Retries:    r.Status.Retries,
+				ID:        string(r.UID),
+				Name:      r.Name,
+				Namespace: r.Namespace,
+				Action:    r.Spec.Action,
+				Status:    r.Status.State,
+				LastRun:   r.Status.LastRun,
+				Retries:   r.Status.Retries,
 			})
 		}
 	}

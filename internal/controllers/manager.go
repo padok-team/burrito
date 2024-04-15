@@ -33,7 +33,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	"github.com/padok-team/burrito/internal/controllers/terraformrun"
-	"github.com/padok-team/burrito/internal/storage/redis"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
@@ -87,16 +87,17 @@ func (c *Controllers) Exec() {
 	if err != nil {
 		log.Fatalf("unable to start manager: %s", err)
 	}
+	datastoreClient := datastore.NewDefaultClient()
 
 	for _, ctrlType := range c.config.Controller.Types {
 		switch ctrlType {
 		case "layer":
 			if err = (&terraformlayer.Reconciler{
-				Client:   mgr.GetClient(),
-				Scheme:   mgr.GetScheme(),
-				Config:   c.config,
-				Recorder: mgr.GetEventRecorderFor("Burrito"),
-				Storage:  redis.New(c.config.Redis),
+				Client:    mgr.GetClient(),
+				Scheme:    mgr.GetScheme(),
+				Config:    c.config,
+				Recorder:  mgr.GetEventRecorderFor("Burrito"),
+				Datastore: datastoreClient,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create layer controller: %s", err)
 			}
@@ -122,10 +123,11 @@ func (c *Controllers) Exec() {
 			log.Infof("run controller started successfully")
 		case "pullrequest":
 			if err = (&terraformpullrequest.Reconciler{
-				Client:   mgr.GetClient(),
-				Scheme:   mgr.GetScheme(),
-				Recorder: mgr.GetEventRecorderFor("Burrito"),
-				Config:   c.config,
+				Client:    mgr.GetClient(),
+				Scheme:    mgr.GetScheme(),
+				Recorder:  mgr.GetEventRecorderFor("Burrito"),
+				Config:    c.config,
+				Datastore: datastoreClient,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create pullrequest controller: %s", err)
 			}

@@ -13,7 +13,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
-	storage "github.com/padok-team/burrito/internal/storage/mock"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -70,14 +70,14 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	utils.LoadResources(k8sClient, "testdata")
 	reconciler = &controller.Reconciler{
-		Client:  k8sClient,
-		Scheme:  scheme.Scheme,
-		Config:  config.TestConfig(),
-		Storage: storage.New(),
-		Clock:   &MockClock{},
+		Client: k8sClient,
+		Clock:  &MockClock{},
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
+		Scheme:    scheme.Scheme,
+		Config:    config.TestConfig(),
+		Datastore: datastore.NewMockClient(),
 	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
