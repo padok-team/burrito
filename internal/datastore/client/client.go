@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/padok-team/burrito/internal/datastore/api"
@@ -13,8 +14,8 @@ import (
 )
 
 const (
-	DefaultURL  = "https://datastore.burrito-system"
-	DefaultPath = "/var/run/secrets/token/burrito"
+	DefaultHostname = "datastore.burrito-system"
+	DefaultPath     = "/var/run/secrets/token/burrito"
 )
 
 type Client interface {
@@ -25,27 +26,48 @@ type Client interface {
 }
 
 type DefaultClient struct {
-	URL  string
-	Path string
+	Hostname string
+	Path     string
+	Scheme   string
 }
 
 func NewDefaultClient() *DefaultClient {
 	return &DefaultClient{
-		URL:  DefaultURL,
-		Path: DefaultPath,
+		Hostname: DefaultHostname,
+		Path:     DefaultPath,
+		Scheme:   "https",
 	}
 }
 
+func (c *DefaultClient) buildRequest(path string, queryParams url.Values, method string, body io.Reader) (*http.Request, error) {
+	url := fmt.Sprintf("%s://%s%s?%s", c.Scheme, c.Hostname, path, queryParams.Encode())
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+	token, err := os.ReadFile(c.Path)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", string(token))
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
 func (c *DefaultClient) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
-	queryParams := url.Values{
+	req, err := c.buildRequest("/plan", url.Values{
 		"namespace": {namespace},
 		"layer":     {layer},
 		"run":       {run},
 		"attempt":   {attempt},
 		"format":    {format},
+	}, http.MethodGet, nil)
+	if err != nil {
+		return nil, err
 	}
-	url := "https://" + c.URL + "/plan?" + queryParams.Encode()
-	resp, err := http.Get(url)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -72,18 +94,6 @@ func (c *DefaultClient) GetPlan(namespace string, layer string, run string, atte
 }
 
 func (c *DefaultClient) PutPlan(namespace string, layer string, run string, attempt string, format string, content []byte) error {
-	queryParams := url.Values{
-		"namespace": {namespace},
-		"layer":     {layer},
-		"run":       {run},
-		"attempt":   {attempt},
-		"format":    {format},
-	}
-	url := "https://" + c.URL + "/plan?" + queryParams.Encode()
-	req, err := http.NewRequest(http.MethodPut, url, nil)
-	if err != nil {
-		return err
-	}
 	requestBody := api.PutLogsRequest{
 		Content: string(content),
 	}
@@ -91,9 +101,21 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 	if err != nil {
 		return err
 	}
-	stringReader := strings.NewReader(string(body))
-	stringReadCloser := io.NopCloser(stringReader)
-	req.Body = stringReadCloser
+	req, err := c.buildRequest(
+		"/plan",
+		url.Values{
+			"namespace": {namespace},
+			"layer":     {layer},
+			"run":       {run},
+			"attempt":   {attempt},
+			"format":    {format},
+		},
+		http.MethodPut,
+		strings.NewReader(string(body)),
+	)
+	if err != nil {
+		return err
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -112,8 +134,16 @@ func (c *DefaultClient) GetLogs(namespace string, layer string, run string, atte
 		"run":       {run},
 		"attempt":   {attempt},
 	}
-	url := "https://" + c.URL + "/logs?" + queryParams.Encode()
-	resp, err := http.Get(url)
+	req, err := c.buildRequest(
+		"/logs",
+		queryParams,
+		http.MethodGet,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -140,17 +170,6 @@ func (c *DefaultClient) GetLogs(namespace string, layer string, run string, atte
 }
 
 func (c *DefaultClient) PutLogs(namespace string, layer string, run string, attempt string, content []byte) error {
-	queryParams := url.Values{
-		"namespace": {namespace},
-		"layer":     {layer},
-		"run":       {run},
-		"attempt":   {attempt},
-	}
-	url := "https://" + c.URL + "/logs?" + queryParams.Encode()
-	req, err := http.NewRequest(http.MethodPut, url, nil)
-	if err != nil {
-		return err
-	}
 	requestBody := api.PutLogsRequest{
 		Content: string(content),
 	}
@@ -158,9 +177,21 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 	if err != nil {
 		return err
 	}
-	stringReader := strings.NewReader(string(body))
-	stringReadCloser := io.NopCloser(stringReader)
-	req.Body = stringReadCloser
+	queryParams := url.Values{
+		"namespace": {namespace},
+		"layer":     {layer},
+		"run":       {run},
+		"attempt":   {attempt},
+	}
+	req, err := c.buildRequest(
+		"/logs",
+		queryParams,
+		http.MethodPut,
+		strings.NewReader(string(body)),
+	)
+	if err != nil {
+		return err
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
