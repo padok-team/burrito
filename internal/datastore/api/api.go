@@ -7,7 +7,7 @@ import (
 
 type API struct {
 	config  *config.Config
-	Storage *storage.Storage
+	Storage storage.Storage
 }
 
 func New(c *config.Config) *API {

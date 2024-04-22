@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/padok-team/burrito/internal/datastore/storage"
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 type GetPlanResponse struct {
@@ -45,7 +45,7 @@ func (a *API) GetPlanHandler(c echo.Context) error {
 	} else {
 		content, err = a.Storage.GetPlan(namespace, layer, run, attempt, format)
 	}
-	if storage.NotFound(err) {
+	if storageerrors.NotFound(err) {
 		return c.String(http.StatusNotFound, "No logs for this attempt")
 	}
 	if err != nil {
@@ -62,6 +62,9 @@ func (a *API) PutPlanHandler(c echo.Context) error {
 	namespace, layer, run, attempt, format, err := getPlanArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
+	}
+	if attempt == "" || format == "" {
+		return c.String(http.StatusBadRequest, "missing query parameters")
 	}
 	request := PutPlanRequest{}
 	if err := c.Bind(&request); err != nil {

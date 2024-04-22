@@ -2,13 +2,12 @@ package storage
 
 import (
 	"fmt"
-	"hash/fnv"
 	"strconv"
 	"strings"
 
-	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/storage/azure"
+	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	"github.com/padok-team/burrito/internal/datastore/storage/gcs"
 	"github.com/padok-team/burrito/internal/datastore/storage/s3"
 )
@@ -26,16 +25,23 @@ type Storage struct {
 	Config  config.Config
 }
 
-func New(config config.Config) *Storage {
+type StorageBackend interface {
+	Get(key string) ([]byte, error)
+	Set(key string, value []byte, ttl int) error
+	Delete(key string) error
+	List(prefix string) ([]string, error)
+}
+
+func New(config config.Config) Storage {
 	switch {
 	case config.Datastore.Storage.Azure.Container != "":
-		return &Storage{Backend: azure.New(config.Datastore.Storage.Azure)}
+		return Storage{Backend: azure.New(config.Datastore.Storage.Azure)}
 	case config.Datastore.Storage.GCS.Bucket != "":
-		return &Storage{Backend: gcs.New(config.Datastore.Storage.GCS)}
+		return Storage{Backend: gcs.New(config.Datastore.Storage.GCS)}
 	case config.Datastore.Storage.S3.Bucket != "":
-		return &Storage{Backend: s3.New(config.Datastore.Storage.S3)}
+		return Storage{Backend: s3.New(config.Datastore.Storage.S3)}
 	}
-	return &Storage{}
+	return Storage{}
 }
 
 func last(a []string) string {
@@ -62,12 +68,12 @@ func (s *Storage) GetLogs(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]byte, error) {
-	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s", namespace, layer, run))
+	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s/", namespace, layer, run))
 	if err != nil {
 		return nil, err
 	}
 	if len(attempts) == 0 {
-		return nil, &StorageError{Nil: true}
+		return nil, &errors.StorageError{Nil: true}
 	}
 	attempt, err := getMax(attempts)
 	if err != nil {
@@ -92,6 +98,8 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 		key = fmt.Sprintf("%s/%s", prefix, PrettyPlanFile)
 	case "short":
 		key = fmt.Sprintf("%s/%s", prefix, ShortDiffFile)
+	case "bin":
+		key = fmt.Sprintf("%s/%s", prefix, PlanBinFile)
 	default:
 		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
 	}
@@ -104,12 +112,12 @@ func (s *Storage) GetPlan(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
-	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s", namespace, layer, run))
+	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s/", namespace, layer, run))
 	if err != nil {
 		return nil, err
 	}
 	if len(attempts) == 0 {
-		return nil, &StorageError{Nil: true}
+		return nil, &errors.StorageError{Nil: true}
 	}
 	attempt, err := getMax(attempts)
 	if err != nil {
@@ -122,53 +130,4 @@ func (s *Storage) GetLatestPlan(namespace string, layer string, run string, form
 func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, format string, plan []byte) error {
 	key := computePlanKey(namespace, layer, run, attempt, format)
 	return s.Backend.Set(key, plan, 0)
-}
-
-type StorageError struct {
-	Err error
-	Nil bool
-}
-
-func (s *StorageError) Error() string {
-	return s.Err.Error()
-}
-
-func NotFound(err error) bool {
-	ce, ok := err.(*StorageError)
-	if ok {
-		return ce.Nil
-	}
-	return false
-}
-
-func (c *StorageError) NotFound() bool {
-	return c.Nil
-}
-
-type Prefix string
-
-const (
-	LastPlannedArtifactBin  Prefix = "plannedArtifactBin"
-	RunMessage              Prefix = "runMessage"
-	LastPlannedArtifactJson Prefix = "plannedArtifactJson"
-	LastPlanResult          Prefix = "planResult"
-	LastPrettyPlan          Prefix = "prettyPlan"
-)
-
-type StorageBackend interface {
-	Get(key string) ([]byte, error)
-	Set(key string, value []byte, ttl int) error
-	Delete(key string) error
-	List(prefix string) ([]string, error)
-}
-
-func GenerateKey(prefix Prefix, layer *configv1alpha1.TerraformLayer) string {
-	toHash := layer.Spec.Repository.Name + layer.Spec.Repository.Namespace + layer.Spec.Path + layer.Spec.Branch
-	return fmt.Sprintf("%s-%d", prefix, hash(toHash))
-}
-
-func hash(s string) uint32 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	return h.Sum32()
 }

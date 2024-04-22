@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/padok-team/burrito/internal/datastore/storage"
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 type GetLogsResponse struct {
@@ -41,15 +41,13 @@ func (a *API) GetLogsHandler(c echo.Context) error {
 	} else {
 		content, err = a.Storage.GetLogs(namespace, layer, run, attempt)
 	}
-	if storage.NotFound(err) {
+	if storageerrors.NotFound(err) {
 		return c.String(http.StatusNotFound, "No logs for this attempt")
 	}
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "could not get logs, there's an issue with the storage backend")
 	}
-	for _, line := range strings.Split(string(content), "\n") {
-		response.Results = append(response.Results, line)
-	}
+	response.Results = append(response.Results, strings.Split(string(content), "\n")...)
 	return c.JSON(http.StatusOK, &response)
 }
 
@@ -57,6 +55,9 @@ func (a *API) PutLogsHandler(c echo.Context) error {
 	var err error
 	var content []byte
 	namespace, layer, run, attempt, err := getLogsArgs(c)
+	if attempt == "" {
+		return c.String(http.StatusBadRequest, "missing query parameters")
+	}
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}

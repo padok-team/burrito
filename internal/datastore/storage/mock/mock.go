@@ -1,9 +1,10 @@
 package mock
 
 import (
-	"errors"
+	"fmt"
+	"strings"
 
-	"github.com/padok-team/burrito/internal/datastore/storage"
+	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 type Mock struct {
@@ -19,8 +20,8 @@ func New() *Mock {
 func (s *Mock) Get(key string) ([]byte, error) {
 	val, ok := s.data[key]
 	if !ok {
-		return nil, &storage.StorageError{
-			Err: errors.New("key not found"),
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("%s", "Not found"),
 			Nil: true,
 		}
 	}
@@ -37,12 +38,13 @@ func (s *Mock) Delete(key string) error {
 	return nil
 }
 
-func (a *Mock) List(string) ([]string, error) {
-	keys := make([]string, len(a.data))
-	i := 0
+func (a *Mock) List(prefix string) ([]string, error) {
+	keys := []string{}
 	for k := range a.data {
-		keys[i] = k
-		i++
+		if !strings.HasPrefix(k, prefix) {
+			continue
+		}
+		keys = append(keys, strings.Split(strings.TrimPrefix(k, prefix), "/")[0])
 	}
 	return keys, nil
 }
