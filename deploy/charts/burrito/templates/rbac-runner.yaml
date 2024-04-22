@@ -1,0 +1,29 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: runner
+    app.kubernetes.io/name: burrito-runner
+    app.kubernetes.io/part-of: burrito
+  name: burrito-runner
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - delete
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformlayers
+  verbs:
+  - get
+  - patch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformrepositories
+  verbs:
+  - get

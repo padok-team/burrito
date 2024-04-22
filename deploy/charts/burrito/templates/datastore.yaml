@@ -1,9 +1,10 @@
-{{- if .Values.redis.enabled }}
-{{- with mergeOverwrite (deepCopy .Values.global) .Values.redis }}
+{{ $configChecksum := (include (print $.Template.BasePath "/config.yaml") . | sha256sum) }}
+
+{{- with mergeOverwrite (deepCopy .Values.global) .Values.datastore }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: burrito-redis
+  name: burrito-datastore
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
   labels:
@@ -18,6 +19,7 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/burrito-config: {{ $configChecksum }}
         {{- toYaml .deployment.podAnnotations | nindent 8 }}
       labels:
         {{- toYaml .metadata.labels | nindent 8 }}
@@ -26,18 +28,18 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: burrito-redis
+      serviceAccountName: burrito-datastore
       securityContext:
         {{- toYaml .deployment.podSecurityContext | nindent 8 }}
       containers:
-        - name: redis
+        - name: burrito
           command:
             {{- toYaml .deployment.command | nindent 12 }}
           args:
             {{- toYaml .deployment.args | nindent 12 }}
           securityContext:
             {{- toYaml .deployment.securityContext | nindent 12 }}
-          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag }}"
+          image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag | default $.Chart.AppVersion }}"
           imagePullPolicy: {{ .deployment.image.pullPolicy }}
           ports:
             {{- toYaml .deployment.ports | nindent 12 }}
@@ -51,6 +53,10 @@ spec:
             {{- toYaml .deployment.env | nindent 12 }}
           envFrom:
             {{- toYaml .deployment.envFrom | nindent 12 }}
+          volumeMounts:
+            - name: burrito-config
+              mountPath: /etc/burrito
+              readOnly: true
       {{- with .deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -63,12 +69,16 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: burrito-config
+          configMap:
+            name: burrito-config
 {{- if .service.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: burrito-redis
+  name: burrito-datastore
   labels:
     {{- toYaml .metadata.labels | nindent 4}}
   annotations:
@@ -84,27 +94,26 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: burrito-redis
+  name: burrito-datastore
   labels:
     {{- toYaml .metadata.labels | nindent 4 }}
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  name: burrito-redis
+  name: burrito-datastore
   labels:
     {{- toYaml .metadata.labels | nindent 4 }}
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: burrito-redis
+  kind: ClusterRole
+  name: system:auth-delegator
 subjects:
   - kind: ServiceAccount
-    name: burrito-redis
+    name: burrito-datastore
     namespace: {{ $.Release.Namespace }}
-{{- end }}
 {{- end }}

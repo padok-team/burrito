@@ -1,0 +1,91 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: burrito-server
+    app.kubernetes.io/part-of: burrito
+  name: burrito-server
+rules:
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformlayers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformrepositories
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformlayers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformpullrequests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformpullrequests/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformpullrequests/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformruns
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformruns/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
+  - terraformruns/status
+  verbs:
+  - get
+  - patch
+  - update
