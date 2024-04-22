@@ -20,7 +20,6 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
-	"github.com/padok-team/burrito/internal/datastore/storage"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -282,8 +281,7 @@ func (r *Runner) apply() (string, error) {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return "", err
 	}
-	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
-	log.Infof("getting plan binary in cache at key %s", planBinKey)
+	log.Info("getting plan binary in datastore at key")
 	plan, err := r.datastore.GetPlan(r.layer.Namespace, r.layer.Name, r.run.Spec.Artifact.Run, r.run.Spec.Artifact.Attempt, "bin")
 	if err != nil {
 		log.Errorf("could not get plan artifact: %s", err)

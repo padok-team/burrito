@@ -21,7 +21,9 @@ type Config struct {
 }
 
 type DatastoreConfig struct {
-	Storage StorageConfig `mapstructure:"storage"`
+	Addr                      string        `mapstructure:"addr"`
+	Storage                   StorageConfig `mapstructure:"storage"`
+	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
 }
 
 type StorageConfig struct {
@@ -39,7 +41,8 @@ type S3Config struct {
 }
 
 type AzureConfig struct {
-	Container string `mapstructure:"container"`
+	StorageAccount string `mapstructure:"storageAccount"`
+	Container      string `mapstructure:"container"`
 }
 
 type WebhookConfig struct {

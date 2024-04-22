@@ -113,8 +113,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
 	}
 	state, conditions := r.GetState(ctx, layer)
-	//TODO: handle attempt
-	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "0", "result")
+	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "", "short")
 	if err != nil {
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
 		lastResult = []byte("Error getting last Result")

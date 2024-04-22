@@ -40,13 +40,11 @@ func NewDefaultComment(layers []configv1alpha1.TerraformLayer, datastore datasto
 func (c *DefaultComment) Generate(commit string) (string, error) {
 	var reportedLayers []ReportedLayer
 	for _, layer := range c.layers {
-		//TODO: handle attempt
-		plan, err := c.datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "0", "pretty")
+		plan, err := c.datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "", "pretty")
 		if err != nil {
 			return "", err
 		}
-		//TODO: handle attempt
-		shortDiff, err := c.datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "0", "short")
+		shortDiff, err := c.datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun, "", "short")
 		if err != nil {
 			return "", err
 		}
