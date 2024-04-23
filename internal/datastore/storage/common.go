@@ -131,3 +131,9 @@ func (s *Storage) PutPlan(namespace string, layer string, run string, attempt st
 	key := computePlanKey(namespace, layer, run, attempt, format)
 	return s.Backend.Set(key, plan, 0)
 }
+
+func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, error) {
+	key := fmt.Sprintf("/%s/%s/%s", namespace, layer, run)
+	attempts, err := s.Backend.List(key)
+	return len(attempts), err
+}

@@ -35,7 +35,7 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 		log.Infof("layer %s needs to be applied, acquiring lock and creating a new runner", layer.Name)
 		return &ApplyNeeded{}, conditions
 	default:
-		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is an intended behavior.", layer.Name)
+		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is not an intended behavior.", layer.Name)
 		return &Idle{}, conditions
 	}
 }

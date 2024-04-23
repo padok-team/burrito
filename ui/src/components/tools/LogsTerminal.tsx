@@ -49,13 +49,13 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
     useState<boolean>(false);
 
   const attemptsQuery = useQuery({
-    queryKey: reactQueryKeys.attempts(run),
-    queryFn: () => fetchAttempts(run),
+    queryKey: reactQueryKeys.attempts(namespace, name, run),
+    queryFn: () => fetchAttempts(namespace, name, run),
   });
 
   const logsQuery = useQuery({
-    queryKey: reactQueryKeys.logs(run, activeAttempt),
-    queryFn: () => fetchLogs(run, activeAttempt),
+    queryKey: reactQueryKeys.logs(namespace, name, run, activeAttempt),
+    queryFn: () => fetchLogs(namespace, name, run, activeAttempt),
     enabled: activeAttempt !== null && !attemptsQuery.isFetching,
   });
 

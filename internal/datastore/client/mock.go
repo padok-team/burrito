@@ -22,3 +22,7 @@ func (c *MockClient) GetLogs(namespace string, layer string, run string, attempt
 func (c *MockClient) PutLogs(namespace string, layer string, run string, attempt string, content []byte) error {
 	return nil
 }
+
+func (c *MockClient) GetAttempts(namespace string, layer string, run string) (int, error) {
+	return 0, nil
+}

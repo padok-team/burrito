@@ -2110,7 +2110,31 @@ spec:
               lastResult:
                 type: string
               lastRun:
-                type: string
+                properties:
+                  action:
+                    type: string
+                  commit:
+                    type: string
+                  date:
+                    format: date-time
+                    type: string
+                  name:
+                    type: string
+                type: object
+              latestRuns:
+                items:
+                  properties:
+                    action:
+                      type: string
+                    commit:
+                      type: string
+                    date:
+                      format: date-time
+                      type: string
+                    name:
+                      type: string
+                  type: object
+                type: array
               state:
                 type: string
             type: object

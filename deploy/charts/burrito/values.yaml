@@ -179,6 +179,10 @@ global:
     envFrom: []
   service:
     enabled: true
+  serviceAccount:
+    metadata:
+      annotations: {}
+      labels: {}
 
 controllers:
   metadata:

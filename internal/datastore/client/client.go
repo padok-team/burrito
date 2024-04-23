@@ -1,6 +1,7 @@
 package client
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,19 +24,26 @@ type Client interface {
 	PutPlan(namespace string, layer string, run string, attempt string, format string, content []byte) error
 	GetLogs(namespace string, layer string, run string, attempt string) ([]string, error)
 	PutLogs(namespace string, layer string, run string, attempt string, content []byte) error
+	GetAttempts(namespace string, layer string, run string) (int, error)
 }
 
 type DefaultClient struct {
 	Hostname string
 	Path     string
 	Scheme   string
+	client   *http.Client
 }
 
 func NewDefaultClient() *DefaultClient {
 	return &DefaultClient{
 		Hostname: DefaultHostname,
 		Path:     DefaultPath,
-		Scheme:   "https",
+		Scheme:   "http",
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
 	}
 }
 
@@ -67,7 +75,7 @@ func (c *DefaultClient) GetPlan(namespace string, layer string, run string, atte
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +124,7 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -143,7 +151,7 @@ func (c *DefaultClient) GetLogs(namespace string, layer string, run string, atte
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +200,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 	if err != nil {
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -201,4 +209,38 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		return fmt.Errorf("could not put logs, there's an issue with the storage backend")
 	}
 	return nil
+}
+
+func (c *DefaultClient) GetAttempts(namespace string, layer string, run string) (int, error) {
+	req, err := c.buildRequest(
+		"/attempts",
+		url.Values{
+			"namespace": {namespace},
+			"layer":     {layer},
+			"run":       {run},
+		},
+		http.MethodGet,
+		nil,
+	)
+	if err != nil {
+		return 0, err
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("could not get attempts, there's an issue with the storage backend")
+	}
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	jresp := api.GetAttemptsResponse{}
+	err = json.Unmarshal(b, &jresp)
+	if err != nil {
+		return 0, err
+	}
+	return jresp.Attempts, nil
 }

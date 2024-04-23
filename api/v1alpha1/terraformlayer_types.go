@@ -44,10 +44,18 @@ type TerraformLayerRepository struct {
 
 // TerraformLayerStatus defines the observed state of TerraformLayer
 type TerraformLayerStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	State      string             `json:"state,omitempty"`
-	LastResult string             `json:"lastResult,omitempty"`
-	LastRun    string             `json:"lastRun,omitempty"`
+	Conditions []metav1.Condition  `json:"conditions,omitempty"`
+	State      string              `json:"state,omitempty"`
+	LastResult string              `json:"lastResult,omitempty"`
+	LastRun    TerraformLayerRun   `json:"lastRun,omitempty"`
+	LatestRuns []TerraformLayerRun `json:"latestRuns,omitempty"`
+}
+
+type TerraformLayerRun struct {
+	Name   string      `json:"name,omitempty"`
+	Commit string      `json:"commit,omitempty"`
+	Date   metav1.Time `json:"date,omitempty"`
+	Action string      `json:"action,omitempty"`
 }
 
 // +kubebuilder:object:root=true
