@@ -92,7 +92,7 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 				TerraformConfig: layer.Spec.TerraformConfig,
 				Repository:      layer.Spec.Repository,
 				RemediationStrategy: configv1alpha1.RemediationStrategy{
-					AutoApply: false,
+					AutoApply: &[]bool{false}[0],
 				},
 				OverrideRunnerSpec: layer.Spec.OverrideRunnerSpec,
 			},

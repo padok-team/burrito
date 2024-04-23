@@ -36,7 +36,7 @@ type RunHistoryPolicy struct {
 }
 
 type RemediationStrategy struct {
-	AutoApply                bool                       `json:"autoApply,omitempty"`
+	AutoApply                *bool                      `json:"autoApply,omitempty"`
 	ApplyWithoutPlanArtifact *bool                      `json:"applyWithoutPlanArtifact,omitempty"`
 	OnError                  OnErrorRemediationStrategy `json:"onError,omitempty"`
 }
@@ -120,17 +120,15 @@ func GetApplyWithoutPlanArtifactEnabled(repository *TerraformRepository, layer *
 	return enabled
 }
 
-func GetRemediationStrategy(repo *TerraformRepository, layer *TerraformLayer) RemediationStrategy {
-	result := RemediationStrategy{
-		AutoApply: false,
+func GetAutoApplyEnabled(repo *TerraformRepository, layer *TerraformLayer) bool {
+	enabled := false
+	if repo.Spec.RemediationStrategy.AutoApply != nil {
+		enabled = *repo.Spec.RemediationStrategy.AutoApply
 	}
-	if repo.Spec.RemediationStrategy.AutoApply {
-		result.AutoApply = true
+	if layer.Spec.RemediationStrategy.AutoApply != nil {
+		enabled = *layer.Spec.RemediationStrategy.AutoApply
 	}
-	if layer.Spec.RemediationStrategy.AutoApply {
-		result.AutoApply = true
-	}
-	return result
+	return enabled
 }
 
 func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObjectReference {
