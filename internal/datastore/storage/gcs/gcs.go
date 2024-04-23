@@ -2,7 +2,7 @@ package gcs
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 
 	"cloud.google.com/go/storage"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -33,7 +33,7 @@ func (a *GCS) Get(key string) ([]byte, error) {
 	}
 	defer reader.Close()
 
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}

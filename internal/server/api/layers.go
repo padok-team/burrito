@@ -115,13 +115,6 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 	return state
 }
 
-func (a *API) getLayerRunState(layer configv1alpha1.TerraformLayer) string {
-	if len(layer.Status.LatestRuns) == 0 {
-		return "disabled"
-	}
-	return layer.Status.LatestRuns[0].Action
-}
-
 func (a *API) getLatestRun(layer configv1alpha1.TerraformLayer) (configv1alpha1.TerraformRun, error) {
 	run := &configv1alpha1.TerraformRun{}
 	err := a.Client.Get(context.Background(), types.NamespacedName{
