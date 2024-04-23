@@ -9,7 +9,6 @@ import { ThemeContext } from "@/contexts/ThemeContext";
 
 import Button from "@/components/core/Button";
 import Input from "@/components/core/Input";
-import Dropdown from "@/components/core/Dropdown";
 import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
 import DateDropdown from "@/components/dropdowns/DateDropdown";
 import Toggle from "@/components/core/Toggle";
@@ -196,28 +195,16 @@ const Logs: React.FC = () => {
               Filter by
             </span>
             <div className="flex flex-row items-center gap-2">
-              <Dropdown
+              <RepositoriesDropdown
                 variant={theme}
-                label="Repositories"
-                filled={repositoryFilter.length !== 0}
-              >
-                <RepositoriesDropdown
-                  variant={theme}
-                  filter={repositoryFilter}
-                  onChange={setRepositoryFilter}
-                />
-              </Dropdown>
-              <Dropdown
+                selectedRepositories={repositoryFilter}
+                setSelectedRepositories={setRepositoryFilter}
+              />
+              <DateDropdown
                 variant={theme}
-                label="Date"
-                filled={dateFilter !== null}
-              >
-                <DateDropdown
-                  variant={theme}
-                  filter={dateFilter}
-                  onChange={setDateFilter}
-                />
-              </Dropdown>
+                selectedSort={dateFilter}
+                setSelectedSort={setDateFilter}
+              />
             </div>
             <Toggle
               className={`

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useId } from "react";
 import { twMerge } from "tailwind-merge";
 
 import ExclamationTriangleIcon from "@/assets/icons/ExclamationTriangleIcon";
@@ -32,6 +32,7 @@ const Input: React.FC<InputProps> = ({
   disabled,
   onChange,
 }) => {
+  const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleEscape = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -70,16 +71,22 @@ const Input: React.FC<InputProps> = ({
   };
 
   return (
-    <label
-      className={twMerge(
-        `font-normal
-        text-base
-        w-full
-        ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
-        disabled && "text-nuances-300"
+    <div className="w-full">
+      {label && (
+        <label
+          className={twMerge(
+            `block
+            font-normal
+            text-base
+            mb-2
+            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
+            disabled && "text-nuances-300"
+          )}
+          htmlFor={inputId}
+        >
+          {label}
+        </label>
       )}
-    >
-      {label}
       <div className="relative flex items-center justify-center w-full">
         {leftIcon && (
           <div
@@ -97,10 +104,10 @@ const Input: React.FC<InputProps> = ({
         )}
         <input
           className={twMerge(
-            `my-1
-            px-4
+            `px-4
             py-2
             h-10
+            w-full
             rounded-lg
             font-medium
             text-base
@@ -120,6 +127,7 @@ const Input: React.FC<InputProps> = ({
             disabled && styles.disabled,
             className
           )}
+          id={inputId}
           type={type}
           placeholder={placeholder}
           disabled={disabled}
@@ -160,8 +168,10 @@ const Input: React.FC<InputProps> = ({
       {caption && (
         <span
           className={twMerge(
-            `font-normal
+            `block
+            font-normal
             text-sm
+            mt-2
             ${variant === "light" ? "text-primary-600" : "text-nuances-300"}`,
             error && "text-status-error-default",
             disabled && "text-nuances-300"
@@ -170,7 +180,7 @@ const Input: React.FC<InputProps> = ({
           {caption}
         </span>
       )}
-    </label>
+    </div>
   );
 };
 

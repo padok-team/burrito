@@ -19,25 +19,28 @@ import {
 import Dropdown from "@/components/core/Dropdown";
 import Checkbox from "@/components/core/Checkbox";
 
-export interface DateDropdownProps {
+import { LayerState } from "@/clients/layers/types";
+
+export interface StatesDropdownProps {
   className?: string;
   variant?: "light" | "dark";
   disabled?: boolean;
-  selectedSort: "ascending" | "descending" | null;
-  setSelectedSort: (sort: "ascending" | "descending" | null) => void;
+  selectedStates: LayerState[];
+  setSelectedStates: (states: LayerState[]) => void;
 }
 
-const options: Array<{ value: "ascending" | "descending"; label: string }> = [
-  { value: "descending", label: "Recent to old" },
-  { value: "ascending", label: "Old to recent" },
+const options: Array<{ value: LayerState; label: string }> = [
+  { value: "success", label: "OK" },
+  { value: "warning", label: "OutOfSync" },
+  { value: "error", label: "Error" },
 ];
 
-const DateDropdown: React.FC<DateDropdownProps> = ({
+const StatesDropdown: React.FC<StatesDropdownProps> = ({
   className,
   variant = "light",
   disabled,
-  selectedSort,
-  setSelectedSort,
+  selectedStates,
+  setSelectedStates,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -72,13 +75,11 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
     listRef: listElementsRef,
     activeIndex: activeIndex,
     onNavigate: setActiveIndex,
-    selectedIndex: options.findIndex((option) => option.value === selectedSort),
   });
   const typeahead = useTypeahead(context, {
     enabled: !disabled,
     listRef: listContentRef,
     activeIndex: activeIndex,
-    selectedIndex: options.findIndex((option) => option.value === selectedSort),
     onMatch: setActiveIndex,
     onTypingChange(isTyping) {
       isTypingRef.current = isTyping;
@@ -91,8 +92,12 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
     [click, listNavigation, typeahead, dismiss, role]
   );
 
-  const handleSelect = (sort: "ascending" | "descending") => {
-    setSelectedSort(selectedSort === sort ? null : sort);
+  const handleSelect = (state: LayerState) => {
+    if (selectedStates.includes(state)) {
+      setSelectedStates(selectedStates.filter((s) => s !== state));
+    } else {
+      setSelectedStates([...selectedStates, state]);
+    }
   };
 
   const styles = {
@@ -108,8 +113,8 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
     <>
       <Dropdown
         className={className}
-        label="Date"
-        filled={selectedSort !== null}
+        label="States"
+        filled={selectedStates.length > 0}
         disabled={disabled}
         variant={variant}
         ref={refs.setReference}
@@ -131,7 +136,7 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
               )}
               {...getFloatingProps()}
             >
-              <span className="font-semibold px-2">Date</span>
+              <span className="font-semibold px-2">States</span>
               <hr
                 className={`
                   h-[1px]
@@ -152,7 +157,7 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
                     role="option"
                     variant={variant}
                     label={label}
-                    checked={selectedSort === value}
+                    checked={selectedStates.includes(value)}
                     readOnly
                     tabIndex={activeIndex === index ? 0 : -1}
                     ref={(node) => {
@@ -186,4 +191,4 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
   );
 };
 
-export default DateDropdown;
+export default StatesDropdown;

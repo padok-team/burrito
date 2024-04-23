@@ -19,109 +19,104 @@ const Login: React.FC = () => {
     <div className="flex h-screen">
       <div
         className={`
-          inline-block
-          justify-center
-          overflow-y-scroll
+          flex
+          p-16
           w-[500px]
           min-w-[500px]
-          p-6
+          overflow-auto
           ${theme === "light" ? "bg-nuances-white" : "bg-nuances-black"}
         `}
       >
-        <div className="flex items-center justify-center">
-          <div className="flex flex-col items-start justify-center w-[300px] gap-10">
-            <div className="flex flex-col items-start gap-2 w-full">
-              <Burrito height={64} width={64} />
-              <span
-                className={`
-                  text-3xl
-                  font-extrabold
-                  ${
-                    theme === "light"
-                      ? "text-nuances-black"
-                      : "text-nuances-white"
-                  }
-                `}
-              >
-                Welcome to Burrito
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-8 w-full">
-              <Input
-                className="w-full"
-                variant={theme}
-                placeholder="Your email"
-                label="Email"
-                type="email"
-              />
-              <Input
-                className="w-full"
-                variant={theme}
-                placeholder="Your password"
-                label="Password"
-                rightIcon={<EyeSlashIcon />}
-                type="password"
-              />
-              <Button
-                className="w-full"
-                variant={theme === "light" ? "primary" : "secondary"}
-                onClick={() => navigate("/")}
-              >
-                Login
-              </Button>
-              <div
-                className={`
-                  flex
-                  flex-row
-                  items-center
-                  w-full
-                  gap-4
-                  ${
-                    theme === "light"
-                      ? "text-nuances-black border-nuances-black"
-                      : "text-nuances-white border-nuances-white"
-                  }
-                `}
-              >
-                <hr className="w-full" />
-                <span>OR</span>
-                <hr className="w-full" />
-              </div>
-              <div className="flex flex-col items-center justify-center w-full gap-4">
-                <SocialButton
-                  className="w-full"
-                  variant="github"
-                  onClick={() => navigate("/")}
-                />
-                <SocialButton
-                  className="w-full"
-                  variant="gitlab"
-                  onClick={() => navigate("/")}
-                />
-              </div>
-            </div>
+        <div className="flex flex-col items-center justify-center gap-10 w-[300px] m-auto">
+          <div className="flex flex-col items-start gap-2 w-full">
+            <Burrito height={64} width={64} />
+            <span
+              className={`
+                text-3xl
+                font-extrabold
+                ${
+                  theme === "light"
+                    ? "text-nuances-black"
+                    : "text-nuances-white"
+                }
+              `}
+            >
+              Welcome to Burrito
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center gap-8 w-full">
+            <Input
+              variant={theme}
+              placeholder="Your email"
+              label="Email"
+              type="email"
+            />
+            <Input
+              variant={theme}
+              placeholder="Your password"
+              label="Password"
+              rightIcon={<EyeSlashIcon />}
+              type="password"
+            />
+            <Button
+              className="w-full"
+              variant={theme === "light" ? "primary" : "secondary"}
+              onClick={() => navigate("/")}
+            >
+              Login
+            </Button>
             <div
               className={`
                 flex
                 flex-row
                 items-center
-                justify-center
                 w-full
-                gap-1
-                p-6
-                rounded-lg
+                gap-4
                 ${
                   theme === "light"
-                    ? "bg-primary-400 text-nuances-black"
-                    : "bg-nuances-400 text-nuances-50"
+                    ? "text-nuances-black border-nuances-black"
+                    : "text-nuances-white border-nuances-white"
                 }
               `}
             >
-              <span className="text-base font-normal">
-                Don't have an account ?
-              </span>
-              <span className="text-base font-semibold">Sign up</span>
+              <hr className="w-full" />
+              <span>OR</span>
+              <hr className="w-full" />
             </div>
+            <div className="flex flex-col items-center justify-center gap-4 w-full">
+              <SocialButton
+                className="w-full"
+                variant="github"
+                onClick={() => navigate("/")}
+              />
+              <SocialButton
+                className="w-full"
+                variant="gitlab"
+                onClick={() => navigate("/")}
+              />
+            </div>
+          </div>
+          <div
+            className={`
+              flex
+              flex-row
+              items-center
+              justify-center
+              gap-1
+              w-full
+              p-6
+              rounded-lg
+              ${
+                theme === "light"
+                  ? "bg-primary-400 text-nuances-black"
+                  : "bg-nuances-400 text-nuances-50"
+              }
+            `}
+          >
+            <span className="text-base font-normal">
+              Don't have an account ?
+            </span>
+            <span className="text-base font-semibold">Sign up</span>
           </div>
         </div>
       </div>
