@@ -10,7 +10,7 @@ metadata:
     runner.terraform.padok.cloud/failure: "1"
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: ""
+    runner.terraform.padok.cloud/plan-run: ""
 spec:
   branch: main
   path: error-case-one/
@@ -36,10 +36,10 @@ metadata:
     runner.terraform.padok.cloud/failure: "1"
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/plan-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
     runner.terraform.padok.cloud/apply-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/apply-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/apply-sum: ""
+    runner.terraform.padok.cloud/apply-run: ""
 spec:
   branch: main
   path: error-case-two/
@@ -65,7 +65,7 @@ metadata:
     runner.terraform.padok.cloud/failure: "1"
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  7 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: ""
+    runner.terraform.padok.cloud/plan-run: ""
 spec:
   branch: main
   path: error-case-three/
@@ -91,10 +91,10 @@ metadata:
     runner.terraform.padok.cloud/failure: "1"
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:15:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/plan-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
     runner.terraform.padok.cloud/apply-commit: 840046e9db8c1348445d0018c86347967b066df0
     runner.terraform.padok.cloud/apply-date: Sun May  8 11:20:53 UTC 2023
-    runner.terraform.padok.cloud/apply-sum: ""
+    runner.terraform.padok.cloud/apply-run: ""
 spec:
   branch: main
   path: error-case-four/

@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +31,12 @@ func GetDefaultLabels(layer *configv1alpha1.TerraformLayer) map[string]string {
 }
 
 func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) configv1alpha1.TerraformRun {
+	artifact := configv1alpha1.Artifact{}
+	if action == ApplyAction {
+		run := strings.Split(layer.Annotations[annotations.LastPlanRun], "/")
+		artifact.Attempt = run[1]
+		artifact.Run = run[0]
+	}
 	return configv1alpha1.TerraformRun{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-%s-", layer.Name, action),
@@ -49,6 +57,7 @@ func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, repository *co
 				Name:      layer.Name,
 				Namespace: layer.Namespace,
 			},
+			Artifact: artifact,
 		},
 	}
 }

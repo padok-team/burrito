@@ -25,7 +25,7 @@ metadata:
   annotations:
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/plan-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
 spec:
   branch: main
   path: nominal-case-two/
@@ -48,7 +48,7 @@ metadata:
   annotations:
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/plan-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
 spec:
   branch: main
   path: nominal-case-three/
@@ -73,10 +73,10 @@ metadata:
   annotations:
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/plan-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
     runner.terraform.padok.cloud/apply-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/apply-date: Sun May  8 11:21:53 UTC 2023
-    runner.terraform.padok.cloud/apply-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/apply-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
 spec:
   branch: main
   path: nominal-case-four/
@@ -147,10 +147,10 @@ metadata:
   annotations:
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 10:21:53 UTC 2023
-    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/plan-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
     runner.terraform.padok.cloud/apply-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/apply-date: Sun May  8 10:21:53 UTC 2023
-    runner.terraform.padok.cloud/apply-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/apply-run: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
 spec:
   branch: main
   path: nominal-case-six/

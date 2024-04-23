@@ -106,10 +106,10 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 	case layer.Status.State == "PlanNeeded":
 		state = "warning"
 	}
-	if layer.Annotations[annotations.LastPlanSum] == "" {
+	if layer.Annotations[annotations.LastPlanRun] == "" {
 		state = "error"
 	}
-	if layer.Annotations[annotations.LastApplySum] != "" && layer.Annotations[annotations.LastApplySum] == "" {
+	if layer.Annotations[annotations.LastApplyRun] != "" && layer.Annotations[annotations.LastApplyRun] == "" {
 		state = "error"
 	}
 	return state

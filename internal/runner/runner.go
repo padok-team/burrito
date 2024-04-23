@@ -62,7 +62,6 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() error {
-	var sum string
 	var commit string
 	ann := map[string]string{}
 
@@ -77,16 +76,16 @@ func (r *Runner) Exec() error {
 
 	switch r.config.Runner.Action {
 	case "plan":
-		sum, err = r.plan()
+		_, err = r.plan()
 		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 		if err == nil {
 			ann[annotations.LastPlanCommit] = commit
 		}
-		ann[annotations.LastPlanSum] = sum
+		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
 	case "apply":
-		sum, err = r.apply()
+		_, err = r.apply()
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
-		ann[annotations.LastApplySum] = sum
+		ann[annotations.LastApplyRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
 		if err == nil {
 			ann[annotations.LastApplyCommit] = commit
 		}
