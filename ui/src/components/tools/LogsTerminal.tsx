@@ -104,6 +104,8 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
             }
             variant={variant}
             runId={run}
+            namespace={namespace}
+            layer={name}
             selectedAttempts={selectedAttempts}
             setSelectedAttempts={setSelectedAttempts}
           />
