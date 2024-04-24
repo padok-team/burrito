@@ -1,6 +1,6 @@
 package burrito
 
 func (app *App) StartDatastore() error {
-	app.Controllers.Exec()
+	app.Datastore.Exec()
 	return nil
 }
