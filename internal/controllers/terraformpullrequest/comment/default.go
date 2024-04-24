@@ -5,7 +5,7 @@ import (
 	"text/template"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/storage"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 
 	_ "embed"
 )
@@ -23,30 +23,28 @@ type ReportedLayer struct {
 }
 
 type DefaultComment struct {
-	layers  []configv1alpha1.TerraformLayer
-	storage storage.Storage
+	layers    []configv1alpha1.TerraformLayer
+	datastore datastore.Client
 }
 
 type DefaultCommentInput struct {
 }
 
-func NewDefaultComment(layers []configv1alpha1.TerraformLayer, storage storage.Storage) *DefaultComment {
+func NewDefaultComment(layers []configv1alpha1.TerraformLayer, datastore datastore.Client) *DefaultComment {
 	return &DefaultComment{
-		layers:  layers,
-		storage: storage,
+		layers:    layers,
+		datastore: datastore,
 	}
 }
 
 func (c *DefaultComment) Generate(commit string) (string, error) {
 	var reportedLayers []ReportedLayer
 	for _, layer := range c.layers {
-		prettyPlanKey := storage.GenerateKey(storage.LastPrettyPlan, &layer)
-		plan, err := c.storage.Get(prettyPlanKey)
+		plan, err := c.datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "pretty")
 		if err != nil {
 			return "", err
 		}
-		shortDiffKey := storage.GenerateKey(storage.LastPlanResult, &layer)
-		shortDiff, err := c.storage.Get(shortDiffKey)
+		shortDiff, err := c.datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
 		if err != nil {
 			return "", err
 		}

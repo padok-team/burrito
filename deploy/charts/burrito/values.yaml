@@ -13,14 +13,6 @@ config:
 
   # -- Burrito configuration in YAML format
   burrito:
-    # -- Redis connection configuration
-    redis:
-      hostname: "burrito-redis"
-      port: 6379
-      database: 0
-      # -- Prefer override with the BURRITO_REDIS_PASSWORD environment variable
-      password: ""
-
     # Burrito controller configuration
     controller:
       # -- By default, the controller will watch all namespaces
@@ -54,6 +46,14 @@ config:
     hermitcrab:
       enabled: false
       certificateSecretName: burrito-hermitcrab-tls
+    
+    datastore:
+      serviceAccounts: []
+      storage:
+        gcs: {}
+        azure: {}
+        aws: {}
+      addr: ":8080"
 
     # Burrito server configuration
     server:
@@ -70,28 +70,28 @@ config:
     runner:
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
-redis:
-  enabled: true
-  metadata:
-    labels:
-      app.kubernetes.io/component: redis
-      app.kubernetes.io/name: burrito-redis
-  deployment:
-    image:
-      repository: redis
-      tag: "7.2.4-alpine"
-      pullPolicy: Always
-    args: []
-    podSecurityContext:
-      runAsNonRoot: true
-      runAsUser: 999
-      seccompProfile:
-        type: RuntimeDefault
-  service:
-    ports:
-      - name: tcp-redis
-        port: 6379
-        targetPort: 6379
+# redis:
+#   enabled: true
+#   metadata:
+#     labels:
+#       app.kubernetes.io/component: redis
+#       app.kubernetes.io/name: burrito-redis
+#   deployment:
+#     image:
+#       repository: redis
+#       tag: "7.2.4-alpine"
+#       pullPolicy: Always
+#     args: []
+#     podSecurityContext:
+#       runAsNonRoot: true
+#       runAsUser: 999
+#       seccompProfile:
+#         type: RuntimeDefault
+#   service:
+#     ports:
+#       - name: tcp-redis
+#         port: 6379
+#         targetPort: 6379
 
 hermitcrab:
   metadata:
@@ -179,6 +179,10 @@ global:
     envFrom: []
   service:
     enabled: true
+  serviceAccount:
+    metadata:
+      annotations: {}
+      labels: {}
 
 controllers:
   metadata:
@@ -249,5 +253,37 @@ server:
     ingressClassName: nginx
     host: burrito.example.com
     tls: []
+
+datastore:
+  metadata:
+    labels:
+      app.kubernetes.io/component: datastore
+      app.kubernetes.io/name: burrito-datastore
+  deployment:
+    podAnnotations:
+      kubectl.kubernetes.io/default-container: burrito
+    command: ["burrito"]
+    args: ["datastore", "start"]
+    ports:
+      - name: http
+        containerPort: 8080
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    readinessProbe:
+      httpGet:
+        path: /readyz
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    envFrom: []
+  service:
+    ports:
+    - name: http
+      port: 80
+      targetPort: http
 
 tenants: []

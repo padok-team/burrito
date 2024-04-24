@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type layer struct {
@@ -31,13 +30,10 @@ type layer struct {
 }
 
 type run struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Namespace  string `json:"namespace"`
-	Action     string `json:"action"`
-	Status     string `json:"status"`
-	LastRun    string `json:"lastRun"`
-	Retries    int    `json:"retries"`
+	Name   string `json:"id"`
+	Commit string `json:"commit"`
+	Date   string `json:"date"`
+	Action string `json:"action"`
 }
 
 type layersResponse struct {
@@ -57,7 +53,10 @@ func (a *API) LayersHandler(c echo.Context) error {
 	}
 	results := []layer{}
 	for _, l := range layers.Items {
-		layerRunning, runCount, latestRuns, lastRunAt := a.getLayerRunInfo(l)
+		run, err := a.getLatestRun(l)
+		if err != nil {
+			log.Errorf("could not get latest run for layer %s: %s", l.Name, err)
+		}
 		results = append(results, layer{
 			UID:        string(l.UID),
 			Name:       l.Name,
@@ -66,18 +65,31 @@ func (a *API) LayersHandler(c echo.Context) error {
 			Branch:     l.Spec.Branch,
 			Path:       l.Spec.Path,
 			State:      a.getLayerState(l),
-			RunCount:   runCount,
-			LastRunAt:  lastRunAt,
+			RunCount:   len(l.Status.LatestRuns),
+			LastRunAt:  l.Status.LastRun.Date.Format(time.RFC3339),
 			LastResult: l.Status.LastResult,
-			IsRunning:  layerRunning,
+			IsRunning:  run.Status.State != "Succeeded" && run.Status.State != "Failed",
 			IsPR:       a.isLayerPR(l),
-			LatestRuns: latestRuns,
+			LatestRuns: transformLatestRuns(l.Status.LatestRuns),
 		})
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
 		Results: results,
 	},
 	)
+}
+
+func transformLatestRuns(runs []configv1alpha1.TerraformLayerRun) []run {
+	results := []run{}
+	for _, r := range runs {
+		results = append(results, run{
+			Name:   r.Name,
+			Commit: r.Commit,
+			Date:   r.Date.Format(time.RFC3339),
+			Action: r.Action,
+		})
+	}
+	return results
 }
 
 func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
@@ -94,48 +106,25 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 	case layer.Status.State == "PlanNeeded":
 		state = "warning"
 	}
-	if layer.Annotations[annotations.LastPlanSum] == "" {
+	if layer.Annotations[annotations.LastPlanRun] == "" {
 		state = "error"
 	}
-	if layer.Annotations[annotations.LastApplySum] != "" && layer.Annotations[annotations.LastApplySum] == "" {
+	if layer.Annotations[annotations.LastApplyRun] != "" && layer.Annotations[annotations.LastApplyRun] == "" {
 		state = "error"
 	}
 	return state
 }
 
-func (a *API) getLayerRunInfo(layer configv1alpha1.TerraformLayer) (layerRunning bool, runCount int, latestRuns []run, lastRunAt string) {
-	runs := &configv1alpha1.TerraformRunList{}
-	requirement, _ := labels.NewRequirement("burrito/managed-by", selection.Equals, []string{layer.Name})
-	selector := labels.NewSelector().Add(*requirement)
-	err := a.Client.List(context.Background(), runs, client.MatchingLabelsSelector{Selector: selector})
-	runCount = len(runs.Items)
-	layerRunning = false
+func (a *API) getLatestRun(layer configv1alpha1.TerraformLayer) (configv1alpha1.TerraformRun, error) {
+	run := &configv1alpha1.TerraformRun{}
+	err := a.Client.Get(context.Background(), types.NamespacedName{
+		Namespace: layer.Namespace,
+		Name:      layer.Status.LastRun.Name,
+	}, run)
 	if err != nil {
-		log.Errorf("could not list terraform runs, returning false: %s", err)
-		return
+		log.Errorf("could not get latest run for layer %s: %s", layer.Name, err)
 	}
-	lastRunAt = runs.Items[len(runs.Items)-1].Status.LastRun
-	for i := len(runs.Items)-1 ; i >= 0 ; i-- {
-		r := runs.Items[i]
-		if r.Status.State == "Running" {
-			layerRunning = true
-			if (len(runs.Items)-1-i) >= 5 {
-				return
-			}
-		}
-		if (len(runs.Items)-1-i) < 5 {
-			latestRuns = append(latestRuns, run{
-				ID:         string(r.UID),
-				Name:       r.Name,
-				Namespace:  r.Namespace,
-				Action:     r.Spec.Action,
-				Status:     r.Status.State,
-				LastRun:    r.Status.LastRun,
-				Retries:    r.Status.Retries,
-			})
-		}
-	}
-	return
+	return *run, err
 }
 
 func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {

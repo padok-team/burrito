@@ -12,11 +12,20 @@ Tenant Namespaces
 {{- $_ := set $config.controller "namespaces" (default $tenantNamespaces $config.controller.namespaces) }}
 
 {{/*
-Redis Hostname
+Datastore Authorized Service Accounts
 */}}
-{{- if .Values.redis.enabled }}
-{{- $_ := set $config.redis "hostname" (printf "%s.%s" "burrito-redis" .Release.Namespace) }}
+{{- $datastoreAuthorizedServiceAccounts := list }}
+{{- range $tenant := .Values.tenants }}
+{{- range $sa := $tenant.serviceAccounts }}
+{{- $serviceAccount := printf "%s/%s" $tenant.namespace.name $sa.name }}
+{{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $serviceAccount }}
 {{- end }}
+{{- end }}
+{{- $controller := printf "%s/%s" .Release.Namespace "burrito-controller" }}
+{{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $controller }}
+{{- $server := printf "%s/%s" .Release.Namespace "burrito-server" }}
+{{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $server }}
+{{- $_ := set $config.datastore "serviceAccounts" $datastoreAuthorizedServiceAccounts }}
 
 apiVersion: v1
 kind: ConfigMap

@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/storage"
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 type Storage struct {
@@ -27,13 +27,13 @@ func New(config config.Redis) *Storage {
 func (s *Storage) Get(key string) ([]byte, error) {
 	val, err := s.Client.Get(context.TODO(), key).Result()
 	if err == redis.Nil {
-		return nil, &storage.StorageError{
+		return nil, &storageerrors.StorageError{
 			Err: err,
 			Nil: true,
 		}
 	}
 	if err != nil {
-		return nil, &storage.StorageError{
+		return nil, &storageerrors.StorageError{
 			Err: err,
 			Nil: false,
 		}

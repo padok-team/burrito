@@ -9,8 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/github"
-	"github.com/padok-team/burrito/internal/storage"
-	"github.com/padok-team/burrito/internal/storage/redis"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/gitlab"
 	corev1 "k8s.io/api/core/v1"
@@ -41,8 +40,8 @@ type Reconciler struct {
 	Scheme    *runtime.Scheme
 	Config    *config.Config
 	Providers []Provider
-	Storage   storage.Storage
 	Recorder  record.EventRecorder
+	Datastore datastore.Client
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformpullrequests,verbs=get;list;watch;create;update;patch;delete
@@ -110,7 +109,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		providers = append(providers, p)
 	}
 	r.Providers = providers
-	r.Storage = redis.New(r.Config.Redis)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformPullRequest{}).
 		WithEventFilter(ignorePredicate()).

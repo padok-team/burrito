@@ -79,6 +79,9 @@ func (s *Server) Exec() {
 	e.POST("/api/webhook", s.Webhook.GetHttpHandler())
 	e.GET("/api/layers", s.API.LayersHandler)
 	e.GET("/api/repositories", s.API.RepositoriesHandler)
+	e.GET("/api/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
+	e.GET("/api/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
+
 	e.Logger.Fatal(e.Start(s.config.Server.Addr))
 	log.Infof("burrito server started on addr %s", s.config.Server.Addr)
 }

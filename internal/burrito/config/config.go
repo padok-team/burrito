@@ -14,9 +14,35 @@ import (
 type Config struct {
 	Runner     RunnerConfig     `mapstructure:"runner"`
 	Controller ControllerConfig `mapstructure:"controller"`
+	Datastore  DatastoreConfig  `mapstructure:"datastore"`
 	Redis      Redis            `mapstructure:"redis"`
 	Server     ServerConfig     `mapstructure:"server"`
 	Hermitcrab HermitcrabConfig `mapstructure:"hermitcrab"`
+}
+
+type DatastoreConfig struct {
+	Addr                      string        `mapstructure:"addr"`
+	Storage                   StorageConfig `mapstructure:"storage"`
+	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
+}
+
+type StorageConfig struct {
+	GCS   GCSConfig   `mapstructure:"gcs"`
+	S3    S3Config    `mapstructure:"s3"`
+	Azure AzureConfig `mapstructure:"azure"`
+}
+
+type GCSConfig struct {
+	Bucket string `mapstructure:"bucket"`
+}
+
+type S3Config struct {
+	Bucket string `mapstructure:"bucket"`
+}
+
+type AzureConfig struct {
+	StorageAccount string `mapstructure:"storageAccount"`
+	Container      string `mapstructure:"container"`
 }
 
 type WebhookConfig struct {
@@ -79,6 +105,7 @@ type RepositoryConfig struct {
 type RunnerConfig struct {
 	Action                     string           `mapstructure:"action"`
 	Layer                      Layer            `mapstructure:"layer"`
+	RunID                      string           `mapstructure:"id"`
 	Repository                 RepositoryConfig `mapstructure:"repository"`
 	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
 	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`

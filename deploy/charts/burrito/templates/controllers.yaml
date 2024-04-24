@@ -82,10 +82,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: burrito-controllers
+  {{- with mergeOverwrite (deepCopy .metadata) .serviceAccount.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4}}
+    {{- toYaml .labels | nindent 4}}
   annotations:
-    {{- toYaml .metadata.annotations | nindent 4}}
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   type: {{ .type }}
   ports:

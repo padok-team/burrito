@@ -22,8 +22,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/lock"
-	"github.com/padok-team/burrito/internal/storage"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,10 +52,10 @@ func (c RealClock) Now() time.Time {
 // Reconciler reconciles a TerraformLayer object
 type Reconciler struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Config   *config.Config
-	Storage  storage.Storage
-	Recorder record.EventRecorder
+	Scheme    *runtime.Scheme
+	Config    *config.Config
+	Recorder  record.EventRecorder
+	Datastore datastore.Client
 	Clock
 }
 
@@ -113,17 +113,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
 	}
 	state, conditions := r.GetState(ctx, layer)
-	lastResult, err := r.Storage.Get(storage.GenerateKey(storage.LastPlanResult, layer))
+	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
 	if err != nil {
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
 		lastResult = []byte("Error getting last Result")
 	}
 	result, run := state.getHandler()(ctx, r, layer, repository)
-	runStatus := ""
+	lastRun := layer.Status.LastRun
+	runHistory := layer.Status.LatestRuns
 	if run != nil {
-		runStatus = run.Name
+		lastRun = getRun(*run)
+		runHistory = updateLatestRuns(runHistory, *run)
 	}
-	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult), LastRun: runStatus}
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult), LastRun: lastRun, LatestRuns: runHistory}
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
 		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
@@ -131,6 +133,32 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
 	return result, nil
+}
+
+func getRun(run configv1alpha1.TerraformRun) configv1alpha1.TerraformLayerRun {
+	return configv1alpha1.TerraformLayerRun{
+		Name:   run.Name,
+		Commit: "",
+		Date:   run.CreationTimestamp,
+		Action: run.Spec.Action,
+	}
+}
+
+func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha1.TerraformRun) []configv1alpha1.TerraformLayerRun {
+	var oldestRun *configv1alpha1.TerraformLayerRun
+	var oldestRunIndex int
+	newRun := getRun(run)
+	for i, r := range runs {
+		if r.Date.Before(&oldestRun.Date) {
+			oldestRun = &r
+			oldestRunIndex = i
+		}
+	}
+	if oldestRun == nil || len(runs) < 5 {
+		return append(runs, newRun)
+	}
+	rs := append(runs[:oldestRunIndex], runs[oldestRunIndex+1:]...)
+	return append(rs, newRun)
 }
 
 // SetupWithManager sets up the controller with the Manager.

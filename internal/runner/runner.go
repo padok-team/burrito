@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -18,8 +19,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/storage"
-	"github.com/padok-team/burrito/internal/storage/redis"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,9 +38,10 @@ const WorkingDir string = "/runner/repository"
 type Runner struct {
 	config        *config.Config
 	exec          TerraformExec
-	storage       storage.Storage
+	datastore     datastore.Client
 	client        client.Client
 	layer         *configv1alpha1.TerraformLayer
+	run           *configv1alpha1.TerraformRun
 	repository    *configv1alpha1.TerraformRepository
 	gitRepository *git.Repository
 }
@@ -55,12 +56,12 @@ type TerraformExec interface {
 
 func New(c *config.Config) *Runner {
 	return &Runner{
-		config: c,
+		config:    c,
+		datastore: datastore.NewDefaultClient(),
 	}
 }
 
 func (r *Runner) Exec() error {
-	var sum string
 	var commit string
 	ann := map[string]string{}
 
@@ -75,16 +76,16 @@ func (r *Runner) Exec() error {
 
 	switch r.config.Runner.Action {
 	case "plan":
-		sum, err = r.plan()
+		_, err = r.plan()
 		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 		if err == nil {
 			ann[annotations.LastPlanCommit] = commit
 		}
-		ann[annotations.LastPlanSum] = sum
+		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
 	case "apply":
-		sum, err = r.apply()
+		_, err = r.apply()
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
-		ann[annotations.LastApplySum] = sum
+		ann[annotations.LastApplyRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
 		if err == nil {
 			ann[annotations.LastApplyCommit] = commit
 		}
@@ -167,7 +168,6 @@ func (r *Runner) install() error {
 }
 
 func (r *Runner) init() error {
-	r.storage = redis.New(r.config.Redis)
 	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
 	cl, err := newK8SClient()
 	if err != nil {
@@ -239,11 +239,10 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("error getting terraform pretty plan: %s", err)
 		return "", err
 	}
-	prettyPlanKey := storage.GenerateKey(storage.LastPrettyPlan, r.layer)
-	log.Infof("setting pretty plan into storage at key %s", prettyPlanKey)
-	err = r.storage.Set(prettyPlanKey, prettyPlan, 3600)
+	log.Infof("sending plan to datastore")
+	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "pretty", prettyPlan)
 	if err != nil {
-		log.Errorf("could not put pretty plan in cache: %s", err)
+		log.Errorf("could not put pretty plan in datastore: %s", err)
 	}
 	plan := &tfjson.Plan{}
 	err = json.Unmarshal(planJsonBytes, plan)
@@ -252,15 +251,13 @@ func (r *Runner) plan() (string, error) {
 		return "", err
 	}
 	_, shortDiff := getDiff(plan)
-	planJsonKey := storage.GenerateKey(storage.LastPlannedArtifactJson, r.layer)
-	log.Infof("setting plan json into storage at key %s", planJsonKey)
-	err = r.storage.Set(planJsonKey, planJsonBytes, 3600)
+	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "json", planJsonBytes)
 	if err != nil {
-		log.Errorf("could not put plan json in cache: %s", err)
+		log.Errorf("could not put json plan in datastore: %s", err)
 	}
-	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(shortDiff), 3600)
+	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "short", []byte(shortDiff))
 	if err != nil {
-		log.Errorf("could not put short plan in cache: %s", err)
+		log.Errorf("could not put short plan in datastore: %s", err)
 	}
 	planBin, err := os.ReadFile(PlanArtifact)
 	if err != nil {
@@ -268,9 +265,7 @@ func (r *Runner) plan() (string, error) {
 		return "", err
 	}
 	sum := sha256.Sum256(planBin)
-	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
-	log.Infof("setting plan binary into storage at key %s", planBinKey)
-	err = r.storage.Set(planBinKey, planBin, 3600)
+	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "bin", planBin)
 	if err != nil {
 		log.Errorf("could not put plan binary in cache: %s", err)
 		return "", err
@@ -285,9 +280,8 @@ func (r *Runner) apply() (string, error) {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return "", err
 	}
-	planBinKey := storage.GenerateKey(storage.LastPlannedArtifactBin, r.layer)
-	log.Infof("getting plan binary in cache at key %s", planBinKey)
-	plan, err := r.storage.Get(planBinKey)
+	log.Info("getting plan binary in datastore at key")
+	plan, err := r.datastore.GetPlan(r.layer.Namespace, r.layer.Name, r.run.Spec.Artifact.Run, r.run.Spec.Artifact.Attempt, "bin")
 	if err != nil {
 		log.Errorf("could not get plan artifact: %s", err)
 		return "", err
@@ -303,10 +297,6 @@ func (r *Runner) apply() (string, error) {
 	if err != nil {
 		log.Errorf("error executing terraform apply: %s", err)
 		return "", err
-	}
-	err = r.storage.Set(storage.GenerateKey(storage.LastPlanResult, r.layer), []byte(fmt.Sprintf("Apply: %s", time.Now())), 3600)
-	if err != nil {
-		log.Errorf("an error occurred during apply result storage: %s", err)
 	}
 	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil

@@ -28,6 +28,8 @@ export interface AttemptsDropdownProps {
   variant?: "light" | "dark";
   disabled?: boolean;
   runId: string;
+  namespace: string;
+  layer: string;
   selectedAttempts: number[];
   setSelectedAttempts: (attempts: number[]) => void;
 }
@@ -36,6 +38,8 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
   className,
   variant = "light",
   disabled,
+  namespace,
+  layer,
   runId,
   selectedAttempts,
   setSelectedAttempts,
@@ -91,8 +95,8 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
   );
 
   const attemptsQuery = useQuery({
-    queryKey: reactQueryKeys.attempts(runId),
-    queryFn: () => fetchAttempts(runId),
+    queryKey: reactQueryKeys.attempts(namespace, layer, runId),
+    queryFn: () => fetchAttempts(namespace, layer, runId),
   });
 
   const handleSelect = (attempt: number) => {

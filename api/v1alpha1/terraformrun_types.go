@@ -25,8 +25,14 @@ import (
 
 // TerraformRunSpec defines the desired state of TerraformRun
 type TerraformRunSpec struct {
-	Action string            `json:"action,omitempty"`
-	Layer  TerraformRunLayer `json:"layer,omitempty"`
+	Action   string            `json:"action,omitempty"`
+	Artifact Artifact          `json:"artifact,omitempty"`
+	Layer    TerraformRunLayer `json:"layer,omitempty"`
+}
+
+type Artifact struct {
+	Run     string `json:"run,omitempty"`
+	Attempt string `json:"attempt,omitempty"`
 }
 
 type TerraformRunLayer struct {
@@ -36,11 +42,12 @@ type TerraformRunLayer struct {
 
 // TerraformRunStatus defines the observed state of TerraformRun
 type TerraformRunStatus struct {
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	State      string             `json:"state,omitempty"`
-	Retries    int                `json:"retries"`
-	LastRun    string             `json:"lastRun,omitempty"`
-	RunnerPod  string             `json:"runnerPod,omitempty"`
+	Conditions   []metav1.Condition `json:"conditions,omitempty"`
+	State        string             `json:"state,omitempty"`
+	Retries      int                `json:"retries"`
+	LastRun      string             `json:"lastRun,omitempty"`
+	RunnerPod    string             `json:"runnerPod,omitempty"`
+	PlanArtifact string             `json:"planArtifact,omitempty"`
 }
 
 // +kubebuilder:object:root=true
