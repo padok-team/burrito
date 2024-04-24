@@ -79,7 +79,7 @@ spec:
         - name: burrito-config
           configMap:
             name: burrito-config
-        - name: token-vol
+        - name: burrito-token
           projected:
             sources:
             - serviceAccountToken:
