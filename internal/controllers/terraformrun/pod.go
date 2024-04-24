@@ -87,7 +87,7 @@ func (r *Reconciler) ensureHermitcrabSecret(tenantNamespace string) error {
 }
 
 func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.Pod {
-	defaultSpec := defaultPodSpec(r.Config, layer, repository)
+	defaultSpec := defaultPodSpec(r.Config, layer, repository, run)
 
 	if r.Config.Hermitcrab.Enabled {
 		err := r.ensureHermitcrabSecret(layer.Namespace)
@@ -226,7 +226,7 @@ func mergeMaps(a, b map[string]string) map[string]string {
 	return result
 }
 
-func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.PodSpec {
+func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, run *configv1alpha1.TerraformRun) corev1.PodSpec {
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{
@@ -294,11 +294,15 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 					},
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAME",
-						Value: layer.GetObjectMeta().GetName(),
+						Value: layer.Name,
 					},
 					{
 						Name:  "BURRITO_RUNNER_LAYER_NAMESPACE",
-						Value: layer.GetObjectMeta().GetNamespace(),
+						Value: layer.Namespace,
+					},
+					{
+						Name:  "BURRITO_RUNNER_RUN",
+						Value: run.Name,
 					},
 					{
 						Name:  "SSH_KNOWN_HOSTS",

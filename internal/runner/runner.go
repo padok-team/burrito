@@ -106,7 +106,7 @@ func (r *Runner) Exec() error {
 	return err
 }
 
-func (r *Runner) getLayerAndRepository() error {
+func (r *Runner) getResources() error {
 	layer := &configv1alpha1.TerraformLayer{}
 	log.Infof("getting layer %s/%s", r.config.Runner.Layer.Namespace, r.config.Runner.Layer.Name)
 	err := r.client.Get(context.TODO(), types.NamespacedName{
@@ -118,6 +118,16 @@ func (r *Runner) getLayerAndRepository() error {
 	}
 	log.Infof("successfully retrieved layer")
 	r.layer = layer
+	r.run = &configv1alpha1.TerraformRun{}
+	log.Infof("getting run %s/%s", layer.Namespace, layer.Status.LastRun.Name)
+	err = r.client.Get(context.TODO(), types.NamespacedName{
+		Namespace: layer.Namespace,
+		Name:      r.config.Runner.Run,
+	}, r.run)
+	if err != nil {
+		return err
+	}
+	log.Infof("successfully retrieved run")
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Infof("getting repo %s/%s", layer.Spec.Repository.Namespace, layer.Spec.Repository.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{
@@ -175,7 +185,7 @@ func (r *Runner) init() error {
 		return err
 	}
 	r.client = cl
-	err = r.getLayerAndRepository()
+	err = r.getResources()
 	if err != nil {
 		log.Errorf("error getting kubernetes resources: %s", err)
 		return err

@@ -105,7 +105,7 @@ type RepositoryConfig struct {
 type RunnerConfig struct {
 	Action                     string           `mapstructure:"action"`
 	Layer                      Layer            `mapstructure:"layer"`
-	RunID                      string           `mapstructure:"id"`
+	Run                        string           `mapstructure:"run"`
 	Repository                 RepositoryConfig `mapstructure:"repository"`
 	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
 	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`
