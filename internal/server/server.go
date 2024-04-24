@@ -66,7 +66,6 @@ func (s *Server) Exec() {
 	s.Webhook.Client = s.client
 	log.Infof("starting burrito server...")
 	e := echo.New()
-	e.Use(middleware.Logger())
 	e.Use(middleware.StaticWithConfig(
 		middleware.StaticConfig{
 			Filesystem: s.staticAssets,
@@ -75,12 +74,14 @@ func (s *Server) Exec() {
 			HTML5:      true,
 		},
 	))
+	api := e.Group("/api")
+	api.Use(middleware.Logger())
 	e.GET("/healthz", handleHealthz)
-	e.POST("/api/webhook", s.Webhook.GetHttpHandler())
-	e.GET("/api/layers", s.API.LayersHandler)
-	e.GET("/api/repositories", s.API.RepositoriesHandler)
-	e.GET("/api/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
-	e.GET("/api/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
+	api.POST("/webhook", s.Webhook.GetHttpHandler())
+	api.GET("/layers", s.API.LayersHandler)
+	api.GET("/repositories", s.API.RepositoriesHandler)
+	api.GET("/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
+	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
 
 	e.Logger.Fatal(e.Start(s.config.Server.Addr))
 	log.Infof("burrito server started on addr %s", s.config.Server.Addr)

@@ -35,12 +35,11 @@ func (s *Datastore) Exec() {
 	authz.SetAudience("burrito")
 	log.Infof("starting burrito datastore...")
 	e := echo.New()
-	e.Use(middleware.Logger())
-
 	healthz := e.Group("/healthz")
 	healthz.GET("", handleHealthz)
 
 	api := e.Group("/api")
+	api.Use(middleware.Logger())
 	api.Use(authz.Process)
 	api.GET("/logs", s.API.GetLogsHandler)
 	api.PUT("/logs", s.API.PutLogsHandler)
