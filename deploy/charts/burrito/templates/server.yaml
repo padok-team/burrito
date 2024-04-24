@@ -59,6 +59,9 @@ spec:
             - name: burrito-config
               mountPath: /etc/burrito
               readOnly: true
+            - name: burrito-token
+              mountPath: /var/run/secrets/token
+              readOnly: true
       {{- with .deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -75,6 +78,13 @@ spec:
         - name: burrito-config
           configMap:
             name: burrito-config
+        - name: token-vol
+          projected:
+            sources:
+            - serviceAccountToken:
+                audience: burrito
+                expirationSeconds: 3600
+                path: burrito
 {{- if .service.enabled }}
 ---
 apiVersion: v1

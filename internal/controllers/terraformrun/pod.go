@@ -240,6 +240,22 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 					},
 				},
 			},
+			{
+				Name: "burrito-token",
+				VolumeSource: corev1.VolumeSource{
+					Projected: &corev1.ProjectedVolumeSource{
+						Sources: []corev1.VolumeProjection{
+							{
+								ServiceAccountToken: &corev1.ServiceAccountTokenProjection{
+									Audience:          "burrito",
+									ExpirationSeconds: &[]int64{3600}[0],
+									Path:              "burrito",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		RestartPolicy:      corev1.RestartPolicyNever,
 		ServiceAccountName: "burrito-runner",
@@ -253,6 +269,10 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 						MountPath: "/home/burrito/.ssh/known_hosts",
 						Name:      "ssh-known-hosts",
 						SubPath:   "known_hosts",
+					},
+					{
+						MountPath: "/var/run/secrets/token",
+						Name:      "burrito-token",
 					},
 				},
 				Env: []corev1.EnvVar{
