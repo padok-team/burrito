@@ -10,8 +10,8 @@ import (
 
 func BuildDatastoreCmd(app *burrito.App) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "runner",
-		Short: "cmd to use burrito's runner",
+		Use:   "datastore",
+		Short: "cmd to use burrito's datastore",
 	}
 	cmd.AddCommand(buildDatastoreStartCmd(app))
 	return cmd
