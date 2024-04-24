@@ -28,6 +28,8 @@ export interface AttemptsDropdownProps {
   variant?: "light" | "dark";
   disabled?: boolean;
   runId: string;
+  namespace: string;
+  layer: string;
   selectedAttempts: number[];
   setSelectedAttempts: (attempts: number[]) => void;
 }
