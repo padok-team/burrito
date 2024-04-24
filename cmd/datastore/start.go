@@ -15,7 +15,7 @@ func buildDatastoreStartCmd(app *burrito.App) *cobra.Command {
 		// Do not display usage on program error
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return app.StartRunner()
+			return app.StartDatastore()
 		},
 	}
 	cmd.Flags().StringVar(&app.Config.Server.Addr, "addr", ":8080", "addr the datastore listens on")

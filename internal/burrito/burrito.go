@@ -6,6 +6,7 @@ import (
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers"
+	"github.com/padok-team/burrito/internal/datastore"
 	"github.com/padok-team/burrito/internal/runner"
 	"github.com/padok-team/burrito/internal/server"
 )
@@ -16,6 +17,7 @@ type App struct {
 	Runner      Runner
 	Controllers Controllers
 	Server      Server
+	Datastore   Datastore
 
 	Out io.Writer
 	Err io.Writer
@@ -33,6 +35,10 @@ type Controllers interface {
 	Exec()
 }
 
+type Datastore interface {
+	Exec()
+}
+
 func New() (*App, error) {
 	c := &config.Config{}
 	app := &App{
@@ -40,6 +46,7 @@ func New() (*App, error) {
 		Runner:      runner.New(c),
 		Controllers: controllers.New(c),
 		Server:      server.New(c),
+		Datastore:   datastore.New(c),
 		Out:         os.Stdout,
 		Err:         os.Stderr,
 	}
