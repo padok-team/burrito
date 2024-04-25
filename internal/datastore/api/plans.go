@@ -73,7 +73,7 @@ func (a *API) PutPlanHandler(c echo.Context) error {
 	content = []byte(request.Plan)
 	err = a.Storage.PutPlan(namespace, layer, run, attempt, format, content)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend")
+		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend: "+err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
