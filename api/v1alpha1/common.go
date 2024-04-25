@@ -13,6 +13,7 @@ const (
 type OverrideRunnerSpec struct {
 	ImagePullSecrets   []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	Image              string                        `json:"image,omitempty"`
+	ImagePullPolicy    corev1.PullPolicy             `json:"imagePullPolicy,omitempty"`
 	Tolerations        []corev1.Toleration           `json:"tolerations,omitempty"`
 	NodeSelector       map[string]string             `json:"nodeSelector,omitempty"`
 	ServiceAccountName string                        `json:"serviceAccountName,omitempty"`
@@ -94,6 +95,7 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 		Resources:          mergeResources(repository.Spec.OverrideRunnerSpec.Resources, layer.Spec.OverrideRunnerSpec.Resources),
 		EnvFrom:            mergeEnvFrom(repository.Spec.OverrideRunnerSpec.EnvFrom, layer.Spec.OverrideRunnerSpec.EnvFrom),
 		Image:              chooseString(repository.Spec.OverrideRunnerSpec.Image, layer.Spec.OverrideRunnerSpec.Image),
+		ImagePullPolicy:    chooseImagePullPolicy(repository.Spec.OverrideRunnerSpec.ImagePullPolicy, layer.Spec.OverrideRunnerSpec.ImagePullPolicy),
 		ServiceAccountName: chooseString(repository.Spec.OverrideRunnerSpec.ServiceAccountName, layer.Spec.OverrideRunnerSpec.ServiceAccountName),
 		ImagePullSecrets:   mergeImagePullSecrets(repository.Spec.OverrideRunnerSpec.ImagePullSecrets, layer.Spec.OverrideRunnerSpec.ImagePullSecrets),
 	}
@@ -138,6 +140,13 @@ func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObj
 
 func chooseString(a, b string) string {
 	if len(b) > 0 {
+		return b
+	}
+	return a
+}
+
+func chooseImagePullPolicy(a, b corev1.PullPolicy) corev1.PullPolicy {
+	if b != "" {
 		return b
 	}
 	return a

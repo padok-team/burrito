@@ -187,6 +187,7 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 	defaultSpec.Containers[0].Resources = overrideSpec.Resources
 	defaultSpec.Containers[0].EnvFrom = append(defaultSpec.Containers[0].EnvFrom, overrideSpec.EnvFrom...)
 	defaultSpec.ImagePullSecrets = append(defaultSpec.ImagePullSecrets, overrideSpec.ImagePullSecrets...)
+	defaultSpec.Containers[0].ImagePullPolicy = overrideSpec.ImagePullPolicy
 
 	if len(overrideSpec.ServiceAccountName) > 0 {
 		defaultSpec.ServiceAccountName = overrideSpec.ServiceAccountName
@@ -261,9 +262,10 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 		ServiceAccountName: "burrito-runner",
 		Containers: []corev1.Container{
 			{
-				Name:  "runner",
-				Image: fmt.Sprintf("ghcr.io/padok-team/burrito:%s", version.Version),
-				Args:  []string{"runner", "start"},
+				Name:            "runner",
+				Image:           fmt.Sprintf("ghcr.io/padok-team/burrito:%s", version.Version),
+				ImagePullPolicy: corev1.PullIfNotPresent,
+				Args:            []string{"runner", "start"},
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						MountPath: "/home/burrito/.ssh/known_hosts",

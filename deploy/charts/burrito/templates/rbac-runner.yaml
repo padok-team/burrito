@@ -24,6 +24,12 @@ rules:
 - apiGroups:
   - config.terraform.padok.cloud
   resources:
+  - terraformruns
+  verbs:
+  - get
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
   - terraformrepositories
   verbs:
   - get
