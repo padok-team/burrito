@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	DefaultHostname = "datastore.burrito-system"
+	DefaultHostname = "burrito-datastore.burrito-system"
 	DefaultPath     = "/var/run/secrets/token/burrito"
 )
 

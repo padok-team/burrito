@@ -79,12 +79,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: burrito-datastore
-  {{- with mergeOverwrite (deepCopy .metadata) .serviceAccount.metadata }}
   labels:
-    {{- toYaml .labels | nindent 4}}
+    {{- toYaml .metadata.labels | nindent 4}}
   annotations:
-    {{- toYaml .annotations | nindent 4}}
-  {{- end }}
+    {{- toYaml .metadata.annotations | nindent 4}}
 spec:
   type: {{ .type }}
   ports:
@@ -97,10 +95,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: burrito-datastore
+  {{- with mergeOverwrite (deepCopy .metadata) .serviceAccount.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4 }}
   annotations:
-    {{- toYaml .metadata.annotations | nindent 4 }}
+    {{- toYaml .annotations | nindent 4 }}
+  {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
