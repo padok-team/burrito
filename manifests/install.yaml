@@ -205,6 +205,9 @@ spec:
                     type: array
                   image:
                     type: string
+                  imagePullPolicy:
+                    description: PullPolicy describes a policy for if/when to pull a container image
+                    type: string
                   imagePullSecrets:
                     items:
                       description: |-
@@ -2364,6 +2367,9 @@ spec:
                       type: object
                     type: array
                   image:
+                    type: string
+                  imagePullPolicy:
+                    description: PullPolicy describes a policy for if/when to pull a container image
                     type: string
                   imagePullSecrets:
                     items:
