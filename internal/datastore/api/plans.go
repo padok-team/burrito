@@ -54,8 +54,7 @@ func (a *API) PutPlanHandler(c echo.Context) error {
 	if attempt == "" || format == "" {
 		return c.String(http.StatusBadRequest, "missing query parameters")
 	}
-
-	_, err = c.Request().Body.Read(content)
+	c.Bind(&content)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "could not read request body: "+err.Error())
 	}

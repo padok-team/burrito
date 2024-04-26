@@ -57,7 +57,7 @@ func (a *API) PutLogsHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-	_, err = c.Request().Body.Read(content)
+	c.Bind(&content)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "could not read request body: "+err.Error())
 	}
