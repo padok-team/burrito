@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/padok-team/burrito/internal/datastore/api"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
@@ -119,7 +119,7 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 			"format":    {format},
 		},
 		http.MethodPut,
-		strings.NewReader(string(body)),
+		bytes.NewBuffer(body),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
@@ -200,7 +200,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		"/api/logs",
 		queryParams,
 		http.MethodPut,
-		strings.NewReader(string(body)),
+		bytes.NewBuffer(body),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
