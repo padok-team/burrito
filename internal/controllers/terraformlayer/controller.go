@@ -26,6 +26,7 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -145,7 +146,9 @@ func getRun(run configv1alpha1.TerraformRun) configv1alpha1.TerraformLayerRun {
 }
 
 func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha1.TerraformRun) []configv1alpha1.TerraformLayerRun {
-	var oldestRun *configv1alpha1.TerraformLayerRun
+	oldestRun := &configv1alpha1.TerraformLayerRun{
+		Date: metav1.NewTime(time.Now()),
+	}
 	var oldestRunIndex int
 	newRun := getRun(run)
 	for i, r := range runs {
