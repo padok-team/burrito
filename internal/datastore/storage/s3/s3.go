@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/aws/aws-sdk-go/aws/session"
 	storage "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/padok-team/burrito/internal/burrito/config"
 )
@@ -12,14 +13,17 @@ import (
 
 type S3 struct {
 	// GCS Blob Storage client
-	Client storage.S3
+	Client *storage.S3
 	Config config.S3Config
 }
 
 // New creates a new Google Cloud Storage client
 func New(config config.S3Config) *S3 {
+	session := session.Must(session.NewSession())
+	client := storage.New(session)
 	return &S3{
 		Config: config,
+		Client: client,
 	}
 }
 
