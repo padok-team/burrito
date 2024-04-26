@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	// LastApplySum    string = "runner.terraform.padok.cloud/apply-sum"
+	LastApplySum    string = "runner.terraform.padok.cloud/apply-sum"
 	LastApplyDate   string = "runner.terraform.padok.cloud/apply-date"
 	LastApplyCommit string = "runner.terraform.padok.cloud/apply-commit"
-	LastApplyRun    string = "runner.terraform.padok.cloud/apply-run"
-	LastPlanCommit  string = "runner.terraform.padok.cloud/plan-commit"
-	LastPlanDate    string = "runner.terraform.padok.cloud/plan-date"
-	// LastPlanSum     string = "runner.terraform.padok.cloud/plan-sum"
-	LastPlanRun string = "runner.terraform.padok.cloud/plan-run"
-	Lock        string = "runner.terraform.padok.cloud/lock"
+	// LastApplyRun    string = "runner.terraform.padok.cloud/apply-run"
+	LastPlanCommit string = "runner.terraform.padok.cloud/plan-commit"
+	LastPlanDate   string = "runner.terraform.padok.cloud/plan-date"
+	LastPlanSum    string = "runner.terraform.padok.cloud/plan-sum"
+	LastPlanRun    string = "runner.terraform.padok.cloud/plan-run"
+	Lock           string = "runner.terraform.padok.cloud/lock"
 
 	LastBranchCommit       string = "webhook.terraform.padok.cloud/branch-commit"
 	LastBranchCommitDate   string = "webhook.terraform.padok.cloud/branch-commit-date"

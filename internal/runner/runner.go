@@ -76,16 +76,17 @@ func (r *Runner) Exec() error {
 
 	switch r.config.Runner.Action {
 	case "plan":
-		_, err = r.plan()
+		sum, err := r.plan()
 		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 		if err == nil {
 			ann[annotations.LastPlanCommit] = commit
 		}
 		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
+		ann[annotations.LastPlanSum] = sum
 	case "apply":
-		_, err = r.apply()
+		sum, err := r.apply()
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
-		ann[annotations.LastApplyRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
+		ann[annotations.LastApplySum] = sum
 		if err == nil {
 			ann[annotations.LastApplyCommit] = commit
 		}
