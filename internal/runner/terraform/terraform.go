@@ -84,9 +84,14 @@ func (t *Terraform) Plan() error {
 	return nil
 }
 
-func (t *Terraform) Apply() error {
+func (t *Terraform) Apply(usePlanArtifact bool) error {
 	t.verbose()
-	err := t.exec.Apply(context.Background(), tfexec.DirOrPlan(t.planArtifactPath))
+	applyOpts := []tfexec.ApplyOption{}
+	if usePlanArtifact {
+		applyOpts = append(applyOpts, tfexec.DirOrPlan(t.planArtifactPath))
+	}
+
+	err := t.exec.Apply(context.Background(), applyOpts...)
 	if err != nil {
 		return err
 	}

@@ -86,8 +86,12 @@ func (t *Terragrunt) Plan() error {
 	return nil
 }
 
-func (t *Terragrunt) Apply() error {
-	options := append(t.getDefaultOptions("apply"), t.planArtifactPath)
+func (t *Terragrunt) Apply(usePlanArtifact bool) error {
+	options := append(t.getDefaultOptions("apply"), "-auto-approve")
+	if usePlanArtifact {
+		options = append(options, t.planArtifactPath)
+	}
+
 	cmd := exec.Command(t.execPath, options...)
 	verbose(cmd)
 	cmd.Dir = t.workingDir

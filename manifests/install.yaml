@@ -1239,6 +1239,8 @@ spec:
                 type: string
               remediationStrategy:
                 properties:
+                  applyWithoutPlanArtifact:
+                    type: boolean
                   autoApply:
                     type: boolean
                   onError:
@@ -2685,6 +2687,8 @@ spec:
                 type: object
               remediationStrategy:
                 properties:
+                  applyWithoutPlanArtifact:
+                    type: boolean
                   autoApply:
                     type: boolean
                   onError:
