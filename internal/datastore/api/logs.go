@@ -13,10 +13,6 @@ type GetLogsResponse struct {
 	Results []string `json:"results"`
 }
 
-type PutLogsRequest struct {
-	Content string `json:"content"`
-}
-
 func getLogsArgs(c echo.Context) (string, string, string, string, error) {
 	namespace := c.QueryParam("namespace")
 	layer := c.QueryParam("layer")
@@ -61,11 +57,10 @@ func (a *API) PutLogsHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-	request := PutLogsRequest{}
-	if err := c.Bind(&request); err != nil {
-		return c.String(http.StatusBadRequest, "could not read request body")
+	_, err = c.Request().Body.Read(content)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "could not read request body: "+err.Error())
 	}
-	content = []byte(request.Content)
 	err = a.Storage.PutLogs(namespace, layer, run, attempt, content)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend")

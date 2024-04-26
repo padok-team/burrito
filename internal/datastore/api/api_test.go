@@ -2,6 +2,7 @@
 package api_test
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,7 +43,8 @@ var _ = BeforeSuite(func() {
 })
 
 func getContext(method string, path string, params map[string]string, body []byte) echo.Context {
-	req := httptest.NewRequest(method, path, nil)
+	buf := bytes.NewBuffer(body)
+	req := httptest.NewRequest(method, path, buf)
 	rec := httptest.NewRecorder()
 	context := e.NewContext(req, rec)
 	for k, v := range params {
@@ -186,7 +188,7 @@ var _ = Describe("Datastore API", func() {
 	Describe("Write", func() {
 		Describe("Logs", func() {
 			It("should return 200 OK", func() {
-				body := []byte(`{"content": "test1"}`)
+				body := []byte(`test1`)
 				context := getContext(http.MethodPut, "/logs", map[string]string{
 					"namespace": "default",
 					"layer":     "test1",
@@ -200,13 +202,14 @@ var _ = Describe("Datastore API", func() {
 		})
 		Describe("Plans", func() {
 			It("should return 200 OK", func() {
+				body := []byte(`test1`)
 				context := getContext(http.MethodPut, "/plans", map[string]string{
 					"namespace": "default",
 					"layer":     "test1",
 					"run":       "test1",
 					"attempt":   "0",
 					"format":    "json",
-				}, nil)
+				}, body)
 				err := API.PutPlanHandler(context)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(context.Response().Status).To(Equal(http.StatusOK))

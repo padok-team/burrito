@@ -8,15 +8,6 @@ import (
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
-type GetPlanResponse struct {
-	Plan   []byte `json:"plan"`
-	Format string `json:"format"`
-}
-
-type PutPlanRequest struct {
-	Plan []byte `json:"content"`
-}
-
 func getPlanArgs(c echo.Context) (string, string, string, string, string, error) {
 	namespace := c.QueryParam("namespace")
 	layer := c.QueryParam("layer")
@@ -39,7 +30,6 @@ func (a *API) GetPlanHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-	response := GetPlanResponse{}
 	if attempt == "" {
 		content, err = a.Storage.GetLatestPlan(namespace, layer, run, format)
 	} else {
@@ -51,9 +41,7 @@ func (a *API) GetPlanHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "could not get logs, there's an issue with the storage backend")
 	}
-	response.Plan = content
-	response.Format = format
-	return c.JSON(http.StatusOK, &response)
+	return c.Blob(http.StatusOK, "application/octet-stream", content)
 }
 
 func (a *API) PutPlanHandler(c echo.Context) error {
@@ -66,11 +54,11 @@ func (a *API) PutPlanHandler(c echo.Context) error {
 	if attempt == "" || format == "" {
 		return c.String(http.StatusBadRequest, "missing query parameters")
 	}
-	request := PutPlanRequest{}
-	if err := c.Bind(&request); err != nil {
-		return c.String(http.StatusBadRequest, "could not read request body")
+
+	_, err = c.Request().Body.Read(content)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "could not read request body: "+err.Error())
 	}
-	content = []byte(request.Plan)
 	err = a.Storage.PutPlan(namespace, layer, run, attempt, format, content)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend: "+err.Error())

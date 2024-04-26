@@ -93,22 +93,10 @@ func (c *DefaultClient) GetPlan(namespace string, layer string, run string, atte
 	if err != nil {
 		return nil, err
 	}
-	jresp := api.GetPlanResponse{}
-	err = json.Unmarshal(b, &jresp)
-	if err != nil {
-		return nil, err
-	}
-	return jresp.Plan, nil
+	return b, nil
 }
 
 func (c *DefaultClient) PutPlan(namespace string, layer string, run string, attempt string, format string, content []byte) error {
-	requestBody := api.PutLogsRequest{
-		Content: string(content),
-	}
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		return err
-	}
 	req, err := c.buildRequest(
 		"/api/plans",
 		url.Values{
@@ -119,7 +107,7 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 			"format":    {format},
 		},
 		http.MethodPut,
-		bytes.NewBuffer(body),
+		bytes.NewBuffer(content),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
@@ -183,13 +171,6 @@ func (c *DefaultClient) GetLogs(namespace string, layer string, run string, atte
 }
 
 func (c *DefaultClient) PutLogs(namespace string, layer string, run string, attempt string, content []byte) error {
-	requestBody := api.PutLogsRequest{
-		Content: string(content),
-	}
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		return err
-	}
 	queryParams := url.Values{
 		"namespace": {namespace},
 		"layer":     {layer},
@@ -200,7 +181,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		"/api/logs",
 		queryParams,
 		http.MethodPut,
-		bytes.NewBuffer(body),
+		bytes.NewBuffer(content),
 	)
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
