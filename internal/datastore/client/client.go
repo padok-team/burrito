@@ -65,7 +65,7 @@ func (c *DefaultClient) buildRequest(path string, queryParams url.Values, method
 }
 
 func (c *DefaultClient) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
-	req, err := c.buildRequest("/plan", url.Values{
+	req, err := c.buildRequest("/api/plans", url.Values{
 		"namespace": {namespace},
 		"layer":     {layer},
 		"run":       {run},
@@ -110,7 +110,7 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 		return err
 	}
 	req, err := c.buildRequest(
-		"/plan",
+		"/api/plans",
 		url.Values{
 			"namespace": {namespace},
 			"layer":     {layer},
@@ -147,7 +147,7 @@ func (c *DefaultClient) GetLogs(namespace string, layer string, run string, atte
 		"attempt":   {attempt},
 	}
 	req, err := c.buildRequest(
-		"/logs",
+		"/api/logs",
 		queryParams,
 		http.MethodGet,
 		nil,
@@ -196,7 +196,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		"attempt":   {attempt},
 	}
 	req, err := c.buildRequest(
-		"/logs",
+		"/api/logs",
 		queryParams,
 		http.MethodPut,
 		strings.NewReader(string(body)),
@@ -217,7 +217,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 
 func (c *DefaultClient) GetAttempts(namespace string, layer string, run string) (int, error) {
 	req, err := c.buildRequest(
-		"/attempts",
+		"/api/attempts",
 		url.Values{
 			"namespace": {namespace},
 			"layer":     {layer},
