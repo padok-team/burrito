@@ -121,6 +121,7 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 		http.MethodPut,
 		strings.NewReader(string(body)),
 	)
+	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return err
 	}
@@ -201,6 +202,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		http.MethodPut,
 		strings.NewReader(string(body)),
 	)
+	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return err
 	}

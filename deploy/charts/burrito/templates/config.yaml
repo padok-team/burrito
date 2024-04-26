@@ -21,7 +21,7 @@ Datastore Authorized Service Accounts
 {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $serviceAccount }}
 {{- end }}
 {{- end }}
-{{- $controller := printf "%s/%s" .Release.Namespace "burrito-controller" }}
+{{- $controller := printf "%s/%s" .Release.Namespace "burrito-controllers" }}
 {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $controller }}
 {{- $server := printf "%s/%s" .Release.Namespace "burrito-server" }}
 {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $server }}
