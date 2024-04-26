@@ -11,6 +11,7 @@ import (
 	v1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	client "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type (
@@ -23,8 +24,17 @@ type (
 )
 
 func NewAuthz() *Authz {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	clientset, err := client.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 	return &Authz{
-		Cache: cache.New(5*time.Minute, 10*time.Minute),
+		Cache:  cache.New(5*time.Minute, 10*time.Minute),
+		Client: *clientset,
 	}
 }
 
