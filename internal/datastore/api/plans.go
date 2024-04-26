@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -46,7 +47,6 @@ func (a *API) GetPlanHandler(c echo.Context) error {
 
 func (a *API) PutPlanHandler(c echo.Context) error {
 	var err error
-	var content []byte
 	namespace, layer, run, attempt, format, err := getPlanArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -54,7 +54,7 @@ func (a *API) PutPlanHandler(c echo.Context) error {
 	if attempt == "" || format == "" {
 		return c.String(http.StatusBadRequest, "missing query parameters")
 	}
-	c.Bind(&content)
+	content, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "could not read request body: "+err.Error())
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -49,7 +50,6 @@ func (a *API) GetLogsHandler(c echo.Context) error {
 
 func (a *API) PutLogsHandler(c echo.Context) error {
 	var err error
-	var content []byte
 	namespace, layer, run, attempt, err := getLogsArgs(c)
 	if attempt == "" {
 		return c.String(http.StatusBadRequest, "missing query parameters")
@@ -57,7 +57,7 @@ func (a *API) PutLogsHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-	c.Bind(&content)
+	content, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "could not read request body: "+err.Error())
 	}
