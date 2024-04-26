@@ -5,6 +5,7 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/padok-team/burrito/internal/utils/authz"
+	"github.com/patrickmn/go-cache"
 	v1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,13 +73,15 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 	Expect(err).NotTo(HaveOccurred())
-
-	Authz = authz.NewAuthz()
-	Expect(err).NotTo(HaveOccurred())
 	Client, err = client.NewForConfig(cfg)
+
+	Authz = &authz.Authz{
+		Cache:    cache.New(5*time.Minute, 10*time.Minute),
+		Client:   *Client,
+		Audience: "datastore",
+	}
 	Expect(err).NotTo(HaveOccurred())
-	Authz.Client = *Client
-	Authz.SetAudience("datastore")
+	Expect(err).NotTo(HaveOccurred())
 	Authz.AddServiceAccount("default", "authorized")
 	createServiceAccount("default", "unauthorized")
 	createServiceAccount("default", "authorized")
