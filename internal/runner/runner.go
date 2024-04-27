@@ -50,7 +50,7 @@ type TerraformExec interface {
 	Install() error
 	Init(string) error
 	Plan() error
-	Apply() error
+	Apply(bool) error
 	Show(string) ([]byte, error)
 }
 
@@ -304,7 +304,12 @@ func (r *Runner) apply() (string, error) {
 		return "", err
 	}
 	log.Print("launching terraform apply")
-	err = r.exec.Apply()
+	if configv1alpha1.GetApplyWithoutPlanArtifactEnabled(r.repository, r.layer) {
+		log.Infof("applying without reusing plan artifact from previous plan run")
+		err = r.exec.Apply(false)
+	} else {
+		err = r.exec.Apply(true)
+	}
 	if err != nil {
 		log.Errorf("error executing terraform apply: %s", err)
 		return "", err

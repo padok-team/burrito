@@ -2004,6 +2004,8 @@ spec:
                 type: string
               remediationStrategy:
                 properties:
+                  applyWithoutPlanArtifact:
+                    type: boolean
                   autoApply:
                     type: boolean
                   onError:

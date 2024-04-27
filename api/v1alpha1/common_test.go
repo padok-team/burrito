@@ -230,6 +230,84 @@ func TestGetTerragruntEnabled(t *testing.T) {
 	}
 }
 
+func TestGetApplyWithoutPlanArtifactEnabled(t *testing.T) {
+	tt := []struct {
+		name       string
+		repository *configv1alpha1.TerraformRepository
+		layer      *configv1alpha1.TerraformLayer
+		expected   bool
+	}{
+		{
+			"OnlyRepositoryEnabling",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						ApplyWithoutPlanArtifact: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			true,
+		},
+		{
+			"OnlyLayerEnabling",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						ApplyWithoutPlanArtifact: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		{
+			"DisabledInRepositoryEnabledInLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						ApplyWithoutPlanArtifact: &[]bool{false}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						ApplyWithoutPlanArtifact: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		{
+			"EnabledInRepositoryDisabledInLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						ApplyWithoutPlanArtifact: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						ApplyWithoutPlanArtifact: &[]bool{false}[0],
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetApplyWithoutPlanArtifactEnabled(tc.repository, tc.layer)
+			if tc.expected != result {
+				t.Errorf("different enabled status computed: expected %t go %t", tc.expected, result)
+			}
+		})
+	}
+}
+
 func TestOverrideRunnerSpec(t *testing.T) {
 	tt := []struct {
 		name         string
