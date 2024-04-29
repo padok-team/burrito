@@ -70,8 +70,8 @@ type ApplyNeeded struct{}
 func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
-		remediationStrategy := configv1alpha1.GetRemediationStrategy(repository, layer)
-		if !remediationStrategy.AutoApply {
+		autoApply := configv1alpha1.GetAutoApplyEnabled(repository, layer)
+		if !autoApply {
 			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
