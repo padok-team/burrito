@@ -26,6 +26,7 @@ rules:
   - ""
   resources:
   - pods
+  - pods/logs
   verbs:
   - create
   - delete
