@@ -8,23 +8,19 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Attempt struct {
-	AttemptNumber string `param:"attempt"`
-	Namespace     string `param:"namespace"`
-	Layer         string `param:"layer"`
-	Run           string `param:"run"`
-}
-
 type GetLogsResponse struct {
 	Results []string `json:"results"`
 }
 
 func getLogsArgs(c echo.Context) (string, string, string, string, error) {
-	attempt := Attempt{}
-	if err := c.Bind(attempt); err != nil {
+	namespace := c.Param("namespace")
+	layer := c.Param("layer")
+	run := c.Param("run")
+	attempt := c.Param("attempt")
+	if namespace == "" || layer == "" || run == "" || attempt == "" {
 		return "", "", "", "", fmt.Errorf("missing query parameters")
 	}
-	return attempt.Namespace, attempt.Layer, attempt.Run, attempt.AttemptNumber, nil
+	return namespace, layer, run, attempt, nil
 }
 
 // logs/${namespace}/${layer}/${runId}/${attemptId}

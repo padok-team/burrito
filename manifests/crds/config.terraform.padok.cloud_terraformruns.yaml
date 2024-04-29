@@ -77,6 +77,17 @@ spec:
           status:
             description: TerraformRunStatus defines the observed state of TerraformRun
             properties:
+              attempts:
+                items:
+                  properties:
+                    logsUploaded:
+                      type: boolean
+                    number:
+                      type: integer
+                    podName:
+                      type: string
+                  type: object
+                type: array
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
@@ -147,8 +158,6 @@ spec:
                   type: object
                 type: array
               lastRun:
-                type: string
-              planArtifact:
                 type: string
               retries:
                 type: integer

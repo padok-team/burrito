@@ -18,6 +18,7 @@ type RunInfo struct {
 	Retries   int
 	LastRun   string
 	RunnerPod string
+	NewPod    bool
 }
 
 func getRunInfo(run *configv1alpha1.TerraformRun) RunInfo {
@@ -89,6 +90,7 @@ func (s *Initial) getHandler() Handler {
 			Retries:   0,
 			LastRun:   r.Clock.Now().Format(time.UnixDate),
 			RunnerPod: pod.Name,
+			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for initial run", pod.Name))
 		// Minimal time (1s) to transit from Initial state to Running state
@@ -142,6 +144,7 @@ func (s *Retrying) getHandler() Handler {
 			Retries:   runInfo.Retries + 1,
 			LastRun:   r.Clock.Now().Format(time.UnixDate),
 			RunnerPod: pod.Name,
+			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for retry run", pod.Name))
 		// Minimal time (1s) to transit from Retrying state to Running state

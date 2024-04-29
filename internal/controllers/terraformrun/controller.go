@@ -19,9 +19,13 @@ package terraformrun
 import (
 	"context"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	logClient "k8s.io/client-go/kubernetes"
+
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -50,9 +54,11 @@ func (c RealClock) Now() time.Time {
 // RunReconcilier reconciles a TerraformRun object
 type Reconciler struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Config   *config.Config
-	Recorder record.EventRecorder
+	K8SLogClient *logClient.Clientset
+	Scheme       *runtime.Scheme
+	Config       *config.Config
+	Recorder     record.EventRecorder
+	Datastore    datastore.Client
 	Clock
 }
 
@@ -98,12 +104,26 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	state, conditions := r.GetState(ctx, run, layer, repo)
 	result, runInfo := state.getHandler()(ctx, r, run, layer, repo)
+	if runInfo.NewPod {
+		attempt := configv1alpha1.Attempt{
+			PodName:      runInfo.RunnerPod,
+			LogsUploaded: false,
+			Number:       runInfo.Retries,
+		}
+		run.Status.Attempts = append(run.Status.Attempts, attempt)
+	}
 	run.Status = configv1alpha1.TerraformRunStatus{
 		Conditions: conditions,
 		State:      getStateString(state),
 		Retries:    runInfo.Retries,
 		LastRun:    runInfo.LastRun,
 		RunnerPod:  runInfo.RunnerPod,
+		Attempts:   run.Status.Attempts,
+	}
+	err = r.uploadLogs(run)
+	if err != nil {
+		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Failed to upload logs")
+		log.Errorf("failed to upload logs for run %s: %s", run.Name, err)
 	}
 	err = r.Client.Status().Update(ctx, run)
 	if err != nil {
@@ -112,6 +132,43 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	log.Infof("finished reconciliation cycle for run %s/%s", run.Namespace, run.Name)
 	return result, nil
+}
+
+func (r *Reconciler) uploadLogs(run *configv1alpha1.TerraformRun) error {
+	for i, attempt := range run.Status.Attempts {
+		if attempt.LogsUploaded {
+			continue
+		}
+		pod := &corev1.Pod{}
+		err := r.Client.Get(context.Background(), types.NamespacedName{
+			Namespace: run.Namespace,
+			Name:      attempt.PodName,
+		}, pod)
+		if errors.IsNotFound(err) {
+			log.Infof("pod %s not found, ignoring...", attempt.PodName)
+			continue
+		}
+		if err != nil {
+			log.Errorf("failed to get pod %s: %s", attempt.PodName, err)
+			continue
+		}
+		if pod.Status.Phase != corev1.PodSucceeded && pod.Status.Phase != corev1.PodFailed {
+			log.Infof("pod %s is not in a terminal state, ignoring...", attempt.PodName)
+			continue
+		}
+		// Upload logs
+		logs, err := r.K8SLogClient.CoreV1().Pods(run.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{}).Do(context.Background()).Raw()
+		if err != nil {
+			log.Errorf("failed to get logs for pod %s: %s", pod.Name, err)
+			continue
+		}
+		err = r.Datastore.PutLogs(run.Namespace, run.Spec.Layer.Name, run.Name, strconv.Itoa(attempt.Number), logs)
+		if err != nil {
+			return err
+		}
+		run.Status.Attempts[i].LogsUploaded = true
+	}
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

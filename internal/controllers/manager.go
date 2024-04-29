@@ -19,7 +19,9 @@ package controllers
 import (
 	"os"
 
+	logClient "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -88,6 +90,14 @@ func (c *Controllers) Exec() {
 		log.Fatalf("unable to start manager: %s", err)
 	}
 	datastoreClient := datastore.NewDefaultClient()
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	clientset, err := logClient.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	for _, ctrlType := range c.config.Controller.Types {
 		switch ctrlType {
@@ -113,10 +123,12 @@ func (c *Controllers) Exec() {
 			log.Infof("repository controller started successfully")
 		case "run":
 			if err = (&terraformrun.Reconciler{
-				Client:   mgr.GetClient(),
-				Scheme:   mgr.GetScheme(),
-				Recorder: mgr.GetEventRecorderFor("Burrito"),
-				Config:   c.config,
+				Client:       mgr.GetClient(),
+				Scheme:       mgr.GetScheme(),
+				Recorder:     mgr.GetEventRecorderFor("Burrito"),
+				Config:       c.config,
+				Datastore:    datastoreClient,
+				K8SLogClient: clientset,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create run controller: %s", err)
 			}
