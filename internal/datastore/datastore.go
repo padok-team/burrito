@@ -44,7 +44,6 @@ func (s *Datastore) Exec() {
 	api.PUT("/logs", s.API.PutLogsHandler)
 	api.GET("/plans", s.API.GetPlanHandler)
 	api.PUT("/plans", s.API.PutPlanHandler)
-	api.GET("/attempts", s.API.GetAttemptsHandler)
 	e.Logger.Fatal(e.Start(s.Config.Datastore.Addr))
 	log.Infof("burrito datastore started on addr %s", s.Config.Datastore.Addr)
 }
