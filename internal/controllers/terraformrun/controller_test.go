@@ -14,9 +14,11 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	logClient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
@@ -62,16 +64,19 @@ var _ = BeforeSuite(func() {
 
 	err = configv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-
+	logClient, err := logClient.NewForConfig(cfg)
+	Expect(err).NotTo(HaveOccurred())
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	utils.LoadResources(k8sClient, "testdata")
 	reconciler = &controller.Reconciler{
-		Client: k8sClient,
-		Scheme: scheme.Scheme,
-		Config: config.TestConfig(),
-		Clock:  &MockClock{},
+		Client:       k8sClient,
+		Scheme:       scheme.Scheme,
+		Config:       config.TestConfig(),
+		Clock:        &MockClock{},
+		Datastore:    datastore.NewMockClient(),
+		K8SLogClient: logClient,
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),

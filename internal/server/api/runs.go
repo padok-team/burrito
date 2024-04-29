@@ -11,18 +11,14 @@ type GetAttemptsResponse struct {
 	Count int `json:"count"`
 }
 
-type Run struct {
-	Namespace string `param:"namespace"`
-	Layer     string `param:"layer"`
-	Run       string `param:"run"`
-}
-
 func getRunAttemptArgs(c echo.Context) (string, string, string, error) {
-	run := Run{}
-	if err := c.Bind(run); err != nil {
+	namespace := c.Param("namespace")
+	layer := c.Param("layer")
+	run := c.Param("run")
+	if namespace == "" || layer == "" || run == "" {
 		return "", "", "", fmt.Errorf("missing query parameters")
 	}
-	return run.Namespace, run.Layer, run.Run, nil
+	return namespace, layer, run, nil
 }
 
 func (a *API) GetAttemptsHandler(c echo.Context) error {

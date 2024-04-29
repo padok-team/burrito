@@ -42,12 +42,18 @@ type TerraformRunLayer struct {
 
 // TerraformRunStatus defines the observed state of TerraformRun
 type TerraformRunStatus struct {
-	Conditions   []metav1.Condition `json:"conditions,omitempty"`
-	State        string             `json:"state,omitempty"`
-	Retries      int                `json:"retries"`
-	LastRun      string             `json:"lastRun,omitempty"`
-	RunnerPod    string             `json:"runnerPod,omitempty"`
-	PlanArtifact string             `json:"planArtifact,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	State      string             `json:"state,omitempty"`
+	Retries    int                `json:"retries"`
+	LastRun    string             `json:"lastRun,omitempty"`
+	Attempts   []Attempt          `json:"attempts,omitempty"`
+	RunnerPod  string             `json:"runnerPod,omitempty"`
+}
+
+type Attempt struct {
+	PodName      string `json:"podName,omitempty"`
+	Number       int    `json:"number,omitempty"`
+	LogsUploaded bool   `json:"logsUploaded,omitempty"`
 }
 
 // +kubebuilder:object:root=true
