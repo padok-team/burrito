@@ -17,7 +17,9 @@ limitations under the License.
 package terraformrun
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"math"
 	"strconv"
 	"time"
@@ -156,13 +158,21 @@ func (r *Reconciler) uploadLogs(run *configv1alpha1.TerraformRun) error {
 			log.Infof("pod %s is not in a terminal state, ignoring...", attempt.PodName)
 			continue
 		}
+		req := r.K8SLogClient.CoreV1().Pods(run.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{})
+		logs, err := req.Stream(context.Background())
 		// Upload logs
-		logs, err := r.K8SLogClient.CoreV1().Pods(run.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{}).Do(context.Background()).Raw()
 		if err != nil {
 			log.Errorf("failed to get logs for pod %s: %s", pod.Name, err)
 			continue
 		}
-		err = r.Datastore.PutLogs(run.Namespace, run.Spec.Layer.Name, run.Name, strconv.Itoa(attempt.Number), logs)
+		defer logs.Close()
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, logs)
+		if err != nil {
+			log.Errorf("failed to copy logs for pod %s: %s", pod.Name, err)
+			continue
+		}
+		err = r.Datastore.PutLogs(run.Namespace, run.Spec.Layer.Name, run.Name, strconv.Itoa(attempt.Number), buf.Bytes())
 		if err != nil {
 			return err
 		}
