@@ -32,7 +32,7 @@ const router = createBrowserRouter([
         element: <Pulls />,
       },
       {
-        path: "logs/:layerId?/:runId?",
+        path: "logs/:namespace/:layerId?/:runId?",
         element: <Logs />,
       },
     ],
