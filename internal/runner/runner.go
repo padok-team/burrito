@@ -314,6 +314,10 @@ func (r *Runner) apply() (string, error) {
 		log.Errorf("error executing terraform apply: %s", err)
 		return "", err
 	}
+	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "short", []byte("Apply Successful"))
+	if err != nil {
+		log.Errorf("could not put short plan in datastore: %s", err)
+	}
 	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }

@@ -109,11 +109,11 @@ const Logs: React.FC = () => {
 
   const handleActive = (layer: Layer, run?: string) => {
     navigate({
-      pathname: `/logs/${layer.id}${
+      pathname: `/logs/${layer.namespace}/${layer.name}${
         run
           ? `/${run}`
           : layer.latestRuns.length > 0
-          ? `/${layer.latestRuns[0].id}`
+          ? `/${layer.lastRun}`
           : ""
       }`,
       search: searchParams.toString(),

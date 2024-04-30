@@ -12,6 +12,7 @@ export type Layer = {
   path: string;
   runCount: number;
   lastRunAt: string;
+  lastRun: Run;
   latestRuns: Run[];
   lastResult: string;
   isRunning: boolean;

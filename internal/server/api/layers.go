@@ -22,14 +22,15 @@ type layer struct {
 	Path       string `json:"path"`
 	State      string `json:"state"`
 	RunCount   int    `json:"runCount"`
+	LastRun    Run    `json:"lastRun"`
 	LastRunAt  string `json:"lastRunAt"`
 	LastResult string `json:"lastResult"`
 	IsRunning  bool   `json:"isRunning"`
 	IsPR       bool   `json:"isPR"`
-	LatestRuns []run  `json:"latestRuns"`
+	LatestRuns []Run  `json:"latestRuns"`
 }
 
-type run struct {
+type Run struct {
 	Name   string `json:"id"`
 	Commit string `json:"commit"`
 	Date   string `json:"date"`
@@ -66,6 +67,12 @@ func (a *API) LayersHandler(c echo.Context) error {
 			Path:       l.Spec.Path,
 			State:      a.getLayerState(l),
 			RunCount:   len(l.Status.LatestRuns),
+			LastRun: Run{
+				Name:   l.Status.LastRun.Name,
+				Commit: l.Status.LastRun.Commit,
+				Date:   l.Status.LastRun.Date.Format(time.RFC3339),
+				Action: l.Status.LastRun.Action,
+			},
 			LastRunAt:  l.Status.LastRun.Date.Format(time.RFC3339),
 			LastResult: l.Status.LastResult,
 			IsRunning:  run.Status.State != "Succeeded" && run.Status.State != "Failed",
@@ -79,10 +86,10 @@ func (a *API) LayersHandler(c echo.Context) error {
 	)
 }
 
-func transformLatestRuns(runs []configv1alpha1.TerraformLayerRun) []run {
-	results := []run{}
+func transformLatestRuns(runs []configv1alpha1.TerraformLayerRun) []Run {
+	results := []Run{}
 	for _, r := range runs {
-		results = append(results, run{
+		results = append(results, Run{
 			Name:   r.Name,
 			Commit: r.Commit,
 			Date:   r.Date.Format(time.RFC3339),

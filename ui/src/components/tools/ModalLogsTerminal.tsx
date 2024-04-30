@@ -46,7 +46,7 @@ const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
   const navigate = useNavigate();
 
   const handleOpenInLogs = () => {
-    navigate(`/logs/${layer.id}/${layer.latestRuns[0].id}`);
+    navigate(`/logs/${layer.namespace}/${layer.name}/${layer.lastRun.id}`);
   };
 
   return (
@@ -70,7 +70,7 @@ const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
               >
                 <LogsTerminal
                   layer={layer}
-                  run={layer.latestRuns[0].id}
+                  run={layer.lastRun.id}
                   className="h-[70vh] w-[60vw]"
                   variant={variant}
                 />
