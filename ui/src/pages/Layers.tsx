@@ -22,23 +22,29 @@ import BarsIcon from "@/assets/icons/BarsIcon";
 import CardLoader from "@/components/loaders/CardLoader";
 
 import { LayerState } from "@/clients/layers/types";
+import PaginationDropdown from "@/components/dropdowns/PaginationDropdown";
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const [view, setView] = useState<"grid" | "table">("grid");
-  const [searchParams, setSerchParams] = useSearchParams();
+  const [layerOffset, setLayerOffset] = useState(0);
+  const [layerLimit, setLayerLimit] = useState(10);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const search = useMemo<string>(
-    () => searchParams.get("search") || "",
+    () => {
+      setLayerOffset(0);
+      return searchParams.get("search") || ""
+    },
     [searchParams]
   );
 
   const setSearch = useCallback(
     (search: string) => {
       searchParams.set("search", search);
-      setSerchParams(searchParams);
+      setSearchParams(searchParams);
     },
-    [searchParams, setSerchParams]
+    [searchParams, setSearchParams]
   );
 
   const stateFilter = useMemo<LayerState[]>(() => {
@@ -49,9 +55,9 @@ const Layers: React.FC = () => {
   const setStateFilter = useCallback(
     (stateFilter: LayerState[]) => {
       searchParams.set("states", stateFilter.join(","));
-      setSerchParams(searchParams);
+      setSearchParams(searchParams);
     },
-    [searchParams, setSerchParams]
+    [searchParams, setSearchParams]
   );
 
   const repositoryFilter = useMemo<string[]>(() => {
@@ -62,9 +68,9 @@ const Layers: React.FC = () => {
   const setRepositoryFilter = useCallback(
     (repositoryFilter: string[]) => {
       searchParams.set("repositories", repositoryFilter.join(","));
-      setSerchParams(searchParams);
+      setSearchParams(searchParams);
     },
-    [searchParams, setSerchParams]
+    [searchParams, setSearchParams]
   );
 
   const hidePRFilter = useMemo<boolean>(
@@ -75,9 +81,9 @@ const Layers: React.FC = () => {
   const setHidePRFilter = useCallback(
     (hidePRFilter: boolean) => {
       searchParams.set("hidepr", hidePRFilter.toString());
-      setSerchParams(searchParams);
+      setSearchParams(searchParams);
     },
-    [searchParams, setSerchParams]
+    [searchParams, setSearchParams]
   );
 
   const layersQuery = useQuery({
@@ -199,19 +205,37 @@ const Layers: React.FC = () => {
               label="Hide Pull Requests"
             />
           </div>
-          <div className="flex flex-row items-center gap-2">
-            <NavigationButton
-              icon={<AppsIcon />}
-              variant={theme}
-              selected={view === "grid"}
-              onClick={() => setView("grid")}
-            />
-            <NavigationButton
-              icon={<BarsIcon />}
-              variant={theme}
-              selected={view === "table"}
-              onClick={() => setView("table")}
-            />
+          <div className="flex flex-row items-center gap-8">
+            <div className="flex flex-row items-center gap-2">
+              <Button theme={theme} variant={"tertiary"} onClick={() => setLayerOffset(Math.max(0,layerOffset-layerLimit))} disabled={ layerOffset == 0 }>Previous</Button>
+              <span className={`
+                  text-base
+                  font-semibold
+                  ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                `}>{layerOffset + 1} - {Math.min(layerOffset + layerLimit, layersQuery.isSuccess ? layersQuery.data.results.length : 0)} of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}</span>
+              <Button theme={theme} variant={"tertiary"} onClick={() => setLayerOffset(Math.min(layerOffset+layerLimit, layersQuery.isSuccess ? layersQuery.data.results.length : 0))} disabled= { !layersQuery.isSuccess || layerOffset + layerLimit >= layersQuery.data.results.length }>Next</Button>
+              <span className={`
+                  text-base
+                  font-medium
+                  ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+                `}>Items per page: </span>
+              <PaginationDropdown className="w-16"
+              variant={theme} selectedPagination={layerLimit} setSelectedPagination={setLayerLimit} />
+            </div>
+            <div className="flex flex-row items-center gap-2">
+              <NavigationButton
+                icon={<AppsIcon />}
+                variant={theme}
+                selected={view === "grid"}
+                onClick={() => setView("grid")}
+              />
+              <NavigationButton
+                icon={<BarsIcon />}
+                variant={theme}
+                selected={view === "table"}
+                onClick={() => setView("table")}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -241,7 +265,7 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                layersQuery.data.results.map((layer, index) => (
+                layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit).map((layer, index) => (
                   <Card key={index} variant={theme} layer={layer} />
                 ))
               ) : (
