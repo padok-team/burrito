@@ -3,7 +3,6 @@ export type Layers = {
 };
 
 export type Layer = {
-  id: string;
   namespace: string;
   name: string;
   state: LayerState;

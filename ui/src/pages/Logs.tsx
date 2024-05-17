@@ -22,7 +22,7 @@ import { Layer } from "@/clients/layers/types";
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
-  const { layerId, runId } = useParams();
+  const { namespace, layerId, runId } = useParams();
   const [searchParams, setSerchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -113,7 +113,7 @@ const Logs: React.FC = () => {
         run
           ? `/${run}`
           : layer.latestRuns.length > 0
-          ? `/${layer.lastRun}`
+          ? `/${layer.lastRun.id}`
           : ""
       }`,
       search: searchParams.toString(),
@@ -249,7 +249,7 @@ const Logs: React.FC = () => {
                 <RunCard
                   key={index}
                   variant={theme}
-                  isActive={layerId === layer.id}
+                  isActive={layerId === layer.name}
                   onClick={() => handleActive(layer)}
                   handleActive={handleActive}
                   layer={layer}
@@ -273,7 +273,7 @@ const Logs: React.FC = () => {
         {layersQuery.isSuccess &&
           layersQuery.data.results.length > 0 &&
           (layerId &&
-          layersQuery.data.results.some((layer) => layer.id === layerId) ? (
+          layersQuery.data.results.some((layer) => layer.name === layerId) ? (
             runId ? (
               ((activeLayerObject) =>
                 activeLayerObject && (
@@ -284,7 +284,7 @@ const Logs: React.FC = () => {
                     variant={theme}
                   />
                 ))(
-                layersQuery.data.results.find((layer) => layer.id === layerId)
+                layersQuery.data.results.find((layer) => layer.name === layerId)
               )
             ) : (
               <div className="flex items-center justify-center flex-1 min-w-0 sticky top-0">
