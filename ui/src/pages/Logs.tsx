@@ -22,7 +22,7 @@ import { Layer } from "@/clients/layers/types";
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
-  const { namespace, layerId, runId } = useParams();
+  const { layerId, runId } = useParams();
   const [searchParams, setSerchParams] = useSearchParams();
   const navigate = useNavigate();
 
