@@ -22,9 +22,12 @@ nav:
   - operator-manual/advanced-configuration.md
   - operator-manual/multi-tenant-architecture.md
   - operator-manual/pr-mr-workflow.md
+  - operator-manual/datastore.md
+  - operator-manual/provider-caching/md
 - User Guide:
   - user-guide/index.md
   - user-guide/override-runner.md
   - user-guide/remediation-strategy.md
   - user-guide/terraform-version.md
   - user-guide/private-modules.md
+  - user-guide/additionnal-trigger-path.md
