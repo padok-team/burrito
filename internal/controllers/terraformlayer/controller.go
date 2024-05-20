@@ -109,10 +109,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRepository linked to layer %s: %s", layer.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
-	err = r.cleanupRuns(ctx, layer, repository)
-	if err != nil {
-		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
-	}
 	state, conditions := r.GetState(ctx, layer)
 	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
 	if err != nil {
@@ -124,7 +120,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	runHistory := layer.Status.LatestRuns
 	if run != nil {
 		lastRun = getRun(*run)
-		runHistory = updateLatestRuns(runHistory, *run)
+		runHistory = updateLatestRuns(runHistory, *run, *configv1alpha1.GetRunHistoryPolicy(repository, layer).KeepLastRuns)
 	}
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult), LastRun: lastRun, LatestRuns: runHistory}
 	err = r.Client.Status().Update(ctx, layer)
@@ -132,8 +128,45 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
 		log.Errorf("could not update layer %s status: %s", layer.Name, err)
 	}
+	err = r.cleanupRuns(ctx, layer, repository)
+	if err != nil {
+		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
+	}
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
 	return result, nil
+}
+
+func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {
+	historyPolicy := configv1alpha1.GetRunHistoryPolicy(repository, layer)
+	if len(layer.Status.LatestRuns) < *historyPolicy.KeepLastRuns {
+		log.Infof("no runs to delete for layer %s", layer.Name)
+		return nil
+	}
+	runs, err := r.getAllRuns(ctx, layer)
+	if err != nil {
+		return err
+	}
+	runsToKeep := map[string]bool{}
+	for _, run := range layer.Status.LatestRuns {
+		runsToKeep[run.Name] = true
+	}
+	toDelete := []*configv1alpha1.TerraformRun{}
+	for _, run := range runs {
+		if _, ok := runsToKeep[run.Name]; !ok {
+			toDelete = append(toDelete, run)
+		}
+	}
+	if len(toDelete) == 0 {
+		log.Infof("no runs to delete for layer %s", layer.Name)
+		return nil
+	}
+	err = deleteAll(ctx, r.Client, toDelete)
+	if err != nil {
+		return err
+	}
+	log.Infof("deleted %d runs for layer %s", len(toDelete), layer.Name)
+	r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Cleaned up old runs")
+	return nil
 }
 
 func getRun(run configv1alpha1.TerraformRun) configv1alpha1.TerraformLayerRun {
@@ -145,7 +178,7 @@ func getRun(run configv1alpha1.TerraformRun) configv1alpha1.TerraformLayerRun {
 	}
 }
 
-func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha1.TerraformRun) []configv1alpha1.TerraformLayerRun {
+func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha1.TerraformRun, keep int) []configv1alpha1.TerraformLayerRun {
 	oldestRun := &configv1alpha1.TerraformLayerRun{
 		Date: metav1.NewTime(time.Now()),
 	}
@@ -157,7 +190,7 @@ func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha
 			oldestRunIndex = i
 		}
 	}
-	if oldestRun == nil || len(runs) < 5 {
+	if oldestRun == nil || len(runs) < keep {
 		return append(runs, newRun)
 	}
 	rs := append(runs[:oldestRunIndex], runs[oldestRunIndex+1:]...)

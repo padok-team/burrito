@@ -6,8 +6,7 @@ import (
 )
 
 const (
-	PlanRunRetention  int = 6
-	ApplyRunRetention int = 6
+	DefaultRunRetention int = 10
 )
 
 type OverrideRunnerSpec struct {
@@ -31,8 +30,7 @@ type MetadataOverride struct {
 }
 
 type RunHistoryPolicy struct {
-	KeepLastPlanRuns  *int `json:"plan,omitempty"`
-	KeepLastApplyRuns *int `json:"apply,omitempty"`
+	KeepLastRuns *int `json:"runs,omitempty"`
 }
 
 type RemediationStrategy struct {
@@ -89,8 +87,7 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 
 func GetRunHistoryPolicy(repository *TerraformRepository, layer *TerraformLayer) RunHistoryPolicy {
 	return RunHistoryPolicy{
-		KeepLastPlanRuns:  chooseInt(repository.Spec.RunHistoryPolicy.KeepLastPlanRuns, layer.Spec.RunHistoryPolicy.KeepLastPlanRuns, PlanRunRetention),
-		KeepLastApplyRuns: chooseInt(repository.Spec.RunHistoryPolicy.KeepLastApplyRuns, layer.Spec.RunHistoryPolicy.KeepLastApplyRuns, ApplyRunRetention),
+		KeepLastRuns: chooseInt(repository.Spec.RunHistoryPolicy.KeepLastRuns, layer.Spec.RunHistoryPolicy.KeepLastRuns, 10),
 	}
 }
 

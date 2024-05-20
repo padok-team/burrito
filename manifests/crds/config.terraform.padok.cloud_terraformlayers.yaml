@@ -2023,9 +2023,7 @@ spec:
                 type: object
               runHistoryPolicy:
                 properties:
-                  apply:
-                    type: integer
-                  plan:
+                  runs:
                     type: integer
                 type: object
               terraform:

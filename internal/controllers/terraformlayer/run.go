@@ -3,14 +3,12 @@ package terraformlayer
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -62,7 +60,7 @@ func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, repository *co
 	}
 }
 
-func (r *Reconciler) getAllFinishedRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) ([]*configv1alpha1.TerraformRun, error) {
+func (r *Reconciler) getAllRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer) ([]*configv1alpha1.TerraformRun, error) {
 	list := &configv1alpha1.TerraformRunList{}
 	labelSelector := labels.NewSelector()
 	for key, value := range GetDefaultLabels(layer) {
@@ -85,9 +83,7 @@ func (r *Reconciler) getAllFinishedRuns(ctx context.Context, layer *configv1alph
 	// Keep only runs with state Succeeded or Failed
 	var runs []*configv1alpha1.TerraformRun
 	for _, run := range list.Items {
-		if run.Status.State == "Succeeded" || run.Status.State == "Failed" {
-			runs = append(runs, &run)
-		}
+		runs = append(runs, &run)
 	}
 	return runs, nil
 }
@@ -124,52 +120,4 @@ func deleteAll(ctx context.Context, c client.Client, objs []*configv1alpha1.Terr
 	}
 
 	return ret
-}
-
-func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {
-	historyPolicy := configv1alpha1.GetRunHistoryPolicy(repository, layer)
-
-	runs, err := r.getAllFinishedRuns(ctx, layer, repository)
-	if err != nil {
-		return err
-	}
-	sortedRuns := sortAndSplitRunsByAction(runs)
-	toDelete := []*configv1alpha1.TerraformRun{}
-	if len(sortedRuns[string(PlanAction)]) <= *historyPolicy.KeepLastPlanRuns {
-		log.Infof("no plan runs to delete for layer %s", layer.Name)
-	} else {
-		toDelete = append(toDelete, sortedRuns[string(PlanAction)][:len(sortedRuns[string(PlanAction)])-*historyPolicy.KeepLastPlanRuns]...)
-	}
-	if len(sortedRuns[string(ApplyAction)]) <= *historyPolicy.KeepLastApplyRuns {
-		log.Infof("no apply runs to delete for layer %s", layer.Name)
-	} else {
-		toDelete = append(toDelete, sortedRuns[string(ApplyAction)][:len(sortedRuns[string(ApplyAction)])-*historyPolicy.KeepLastApplyRuns]...)
-	}
-	if len(toDelete) == 0 {
-		log.Infof("no runs to delete for layer %s", layer.Name)
-		return nil
-	}
-	err = deleteAll(ctx, r.Client, toDelete)
-	if err != nil {
-		return err
-	}
-	log.Infof("deleted %d runs for layer %s", len(toDelete), layer.Name)
-	r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Cleaned up old runs")
-	return nil
-}
-
-func sortAndSplitRunsByAction(runs []*configv1alpha1.TerraformRun) map[string][]*configv1alpha1.TerraformRun {
-	splittedRuns := map[string][]*configv1alpha1.TerraformRun{}
-	for _, run := range runs {
-		if _, ok := splittedRuns[run.Spec.Action]; !ok {
-			splittedRuns[run.Spec.Action] = []*configv1alpha1.TerraformRun{}
-		}
-		splittedRuns[run.Spec.Action] = append(splittedRuns[run.Spec.Action], run)
-	}
-	for action := range splittedRuns {
-		sort.Slice(splittedRuns[action], func(i, j int) bool {
-			return splittedRuns[action][i].CreationTimestamp.Before(&splittedRuns[action][j].CreationTimestamp)
-		})
-	}
-	return splittedRuns
 }

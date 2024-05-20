@@ -1581,15 +1581,13 @@ func TestGetHistoryPolicy(t *testing.T) {
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
 					RunHistoryPolicy: configv1alpha1.RunHistoryPolicy{
-						KeepLastPlanRuns:  intPointer(10),
-						KeepLastApplyRuns: intPointer(10),
+						KeepLastRuns: intPointer(10),
 					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{},
 			configv1alpha1.RunHistoryPolicy{
-				KeepLastPlanRuns:  intPointer(10),
-				KeepLastApplyRuns: intPointer(10),
+				KeepLastRuns: intPointer(10),
 			},
 		},
 		{
@@ -1598,14 +1596,12 @@ func TestGetHistoryPolicy(t *testing.T) {
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
 					RunHistoryPolicy: configv1alpha1.RunHistoryPolicy{
-						KeepLastPlanRuns:  intPointer(10),
-						KeepLastApplyRuns: intPointer(10),
+						KeepLastRuns: intPointer(10),
 					},
 				},
 			},
 			configv1alpha1.RunHistoryPolicy{
-				KeepLastPlanRuns:  intPointer(10),
-				KeepLastApplyRuns: intPointer(10),
+				KeepLastRuns: intPointer(10),
 			},
 		},
 		{
@@ -1613,22 +1609,19 @@ func TestGetHistoryPolicy(t *testing.T) {
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
 					RunHistoryPolicy: configv1alpha1.RunHistoryPolicy{
-						KeepLastPlanRuns:  intPointer(10),
-						KeepLastApplyRuns: intPointer(10),
+						KeepLastRuns: intPointer(10),
 					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
 					RunHistoryPolicy: configv1alpha1.RunHistoryPolicy{
-						KeepLastPlanRuns:  intPointer(6),
-						KeepLastApplyRuns: intPointer(5),
+						KeepLastRuns: intPointer(5),
 					},
 				},
 			},
 			configv1alpha1.RunHistoryPolicy{
-				KeepLastPlanRuns:  intPointer(6),
-				KeepLastApplyRuns: intPointer(5),
+				KeepLastRuns: intPointer(5),
 			},
 		},
 	}
@@ -1636,11 +1629,8 @@ func TestGetHistoryPolicy(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			result := configv1alpha1.GetRunHistoryPolicy(tc.repository, tc.layer)
-			if *tc.expectedHistoryPolicy.KeepLastPlanRuns != *result.KeepLastPlanRuns {
-				t.Errorf("different plan policy computed: expected %d got %d", *tc.expectedHistoryPolicy.KeepLastPlanRuns, *result.KeepLastPlanRuns)
-			}
-			if *tc.expectedHistoryPolicy.KeepLastApplyRuns != *result.KeepLastApplyRuns {
-				t.Errorf("different apply policy computed: expected %d got %d", *tc.expectedHistoryPolicy.KeepLastApplyRuns, *result.KeepLastApplyRuns)
+			if *tc.expectedHistoryPolicy.KeepLastRuns != *result.KeepLastRuns {
+				t.Errorf("different policy computed: expected %d got %d", *tc.expectedHistoryPolicy.KeepLastRuns, *result.KeepLastRuns)
 			}
 		})
 	}

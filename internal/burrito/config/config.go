@@ -70,6 +70,7 @@ type ControllerConfig struct {
 	KubernetesWebhookPort  int                  `mapstructure:"kubernetesWebhookPort"`
 	GithubConfig           GithubConfig         `mapstructure:"githubConfig"`
 	GitlabConfig           GitlabConfig         `mapstructure:"gitlabConfig"`
+	RunParallelism         int                  `mapstructure:"runParallelism"`
 }
 
 type GithubConfig struct {
