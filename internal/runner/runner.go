@@ -55,9 +55,13 @@ type TerraformExec interface {
 }
 
 func New(c *config.Config) *Runner {
+	client := datastore.NewDefaultClient()
+	if c.Datastore.TLS {
+		client.Scheme = "https"
+	}
 	return &Runner{
 		config:    c,
-		datastore: datastore.NewDefaultClient(),
+		datastore: client,
 	}
 }
 

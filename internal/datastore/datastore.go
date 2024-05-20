@@ -13,6 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	DefaultCertPath = "/etc/burrito/tls/tls.crt"
+	DefaultKeyPath  = "/etc/burrito/tls/tls.key"
+)
+
 type Datastore struct {
 	Config *config.Config
 	API    *api.API
@@ -44,8 +49,12 @@ func (s *Datastore) Exec() {
 	api.PUT("/logs", s.API.PutLogsHandler)
 	api.GET("/plans", s.API.GetPlanHandler)
 	api.PUT("/plans", s.API.PutPlanHandler)
-	e.Logger.Fatal(e.Start(s.Config.Datastore.Addr))
-	log.Infof("burrito datastore started on addr %s", s.Config.Datastore.Addr)
+	if s.Config.Datastore.TLS {
+		e.Logger.Fatal(e.StartTLS(":8080", DefaultCertPath, DefaultKeyPath))
+	} else {
+		e.Logger.Fatal(e.Start(":8080"))
+	}
+	log.Infof("burrito datastore started on addr %s", ":8080")
 }
 
 func handleHealthz(c echo.Context) error {

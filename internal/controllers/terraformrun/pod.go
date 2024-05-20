@@ -3,6 +3,7 @@ package terraformrun
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -122,6 +123,10 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 				corev1.EnvVar{
 					Name:  "HERMITCRAB_URL",
 					Value: fmt.Sprintf("https://burrito-hermitcrab.%s.svc.cluster.local/v1/providers/", r.Config.Controller.MainNamespace),
+				},
+				corev1.EnvVar{
+					Name:  "BURRITO_DATASTORE_TLS",
+					Value: strconv.FormatBool(r.Config.Datastore.TLS),
 				},
 			)
 		}
