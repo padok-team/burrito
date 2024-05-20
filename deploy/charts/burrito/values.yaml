@@ -39,9 +39,6 @@ config:
         # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
         apiToken: ""
         url: ""
-    hermitcrab:
-      enabled: false
-      certificateSecretName: burrito-hermitcrab-tls
     
     datastore:
       serviceAccounts: []
@@ -67,6 +64,7 @@ config:
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
 hermitcrab:
+  enabled: false
   metadata:
     labels:
       app.kubernetes.io/component: hermitcrab
@@ -76,9 +74,16 @@ hermitcrab:
     size: 1Gi
   tls:
     certManager:
-      use: false
+      use: true
       certificate:
-        spec: {}
+        spec:
+          secretName: burrito-hermitcrab-tls
+          commonName: burrito-hermitcrab.burrito-system.svc.cluster.local
+          dnsNames:
+            - burrito-hermitcrab.burrito-system.svc.cluster.local
+          issuerRef:
+            name: burrito-ca-issuer
+            kind: ClusterIssuer
 
   deployment:
     image:
@@ -258,5 +263,20 @@ datastore:
     - name: http
       port: 80
       targetPort: http
+    - name: https
+      port: 443
+      targetPort: http
+  tls:
+    certManager:
+      use: false
+      certificate:
+        spec:
+          secretName: burrito-datastore-tls
+          commonName: burrito-datastore.burrito-system.svc.cluster.local
+          dnsNames:
+            - burrito-datastore.burrito-system.svc.cluster.local
+          issuerRef:
+            name: burrito-ca-issuer
+            kind: ClusterIssuer
 
 tenants: []

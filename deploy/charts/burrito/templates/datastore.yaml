@@ -57,6 +57,11 @@ spec:
             - name: burrito-config
               mountPath: /etc/burrito
               readOnly: true
+            {{- if .tls.certManager.use }}
+            - name: burrito-tls
+              mountPath: /etc/burrito/tls
+              readOnly: true
+            {{- end }}
       {{- with .deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -73,6 +78,11 @@ spec:
         - name: burrito-config
           configMap:
             name: burrito-config
+        {{- if .tls.certManager.use }}
+        - name: burrito-datastore-tls
+          secret:
+            secretName: {{ .tls.certManager.certificate.spec.secretName }}
+        {{- end }}
 {{- if .service.enabled }}
 ---
 apiVersion: v1
@@ -118,4 +128,15 @@ subjects:
   - kind: ServiceAccount
     name: burrito-datastore
     namespace: {{ $.Release.Namespace }}
+---
+{{- if .tls.certManager.use }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: burrito-datastore
+  labels:
+    {{- toYaml .metadata.labels | nindent 4 }}
+spec:
+  {{- toYaml .tls.certManager.certificate.spec | nindent 4 }}
+{{- end }}
 {{- end }}

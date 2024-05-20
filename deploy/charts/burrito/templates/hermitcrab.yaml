@@ -89,7 +89,7 @@ spec:
         {{- if .tls.certManager.use }}
         - name: burrito-hermitcrab-tls
           secret:
-            secretName: {{ $.Values.config.burrito.hermitcrab.certificateSecretName }}
+            secretName: {{ .tls.certManager.certificate.spec.secretName }}
         {{- end }}
         {{- if .deployment.extraVolumes }}
         {{- toYaml .deployment.extraVolumes | nindent 8 }}

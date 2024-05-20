@@ -26,6 +26,10 @@ Datastore Authorized Service Accounts
 {{- $server := printf "%s/%s" .Release.Namespace "burrito-server" }}
 {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $server }}
 {{- $_ := set $config.datastore "serviceAccounts" $datastoreAuthorizedServiceAccounts }}
+{{- $_ := set $config.hermitcrab "certificateSecretName" .Values.hermitcrab.tls.certManager.certificate.spec.secretName }}
+{{- $_ := set $config.hermitcrab "enabled" .Values.hermitcrab.enabled }}
+{{- $_ := set $config.datastore "tls" .Values.datastore.tls.certManager.use }}
+
 
 apiVersion: v1
 kind: ConfigMap
