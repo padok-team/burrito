@@ -1,24 +1,28 @@
 # Getting started
 
+## Pre-requisites
+
+- A kubernetes cluster
+- A bucket in a cloud provider (AWS, GCP, Azure)
+- cert-manager installed in your cluster (Will only be used for internal communications using a private CA)
+
 ## Requirements
 
-- Installed [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) command-line tool.
+- Installed [helm](https://helm.sh/docs/intro/install/) command-line tool.
 - Have a [kubeconfig](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) file (default location is `~/.kube/config`).
 
 ## 1. Install burrito
 
 ```bash
-kubectl create namespace burrito
-kubectl apply -n burrito -f https://raw.githubusercontent.com/padok-team/burrito/main/manifests/install.yaml
+helm repo add burrito oci://ghcr.io/padok-team/charts
+helm repo update
+helm install burrito burrito/burrito -n burrito-system
 ```
 
-This will create a new namespace, `burrito`, where burrito services will live.
+This will create a new namespace, `burrito-system`, where burrito services will live.
 
 !!! warning
-    The installation manifests include `ClusterRoleBinding` resources that reference `burrito` namespace. If you are installing burrito into a different namespace then make sure to update the namespace reference.
-
-!!! info
-    You might be interested by our [Helm chart](./operator-manual/install/with-helm.md), that provides more control over burrito's configuration as well as a [multi-tenant architecture](./operator-manual/multi-tenant-architecture.md).
+    The installation manifests include `ClusterRoleBinding` resources that reference `burrito-system` namespace. If you are installing burrito into a different namespace then make sure to update the namespace reference.
 
 ## 2. Create a connection to a private repository
 

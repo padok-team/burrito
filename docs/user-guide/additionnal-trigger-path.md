@@ -1,6 +1,6 @@
 # Additionnal Trigger Paths
 
-By default, when you creating a layer, you must specify a repository and a path. This path is used to trigger the layer changes which means that when a change occurs in this path, the layer will be plan / apply accordingly.
+By default, when you are creating a layer, you must specify a repository and a path. This path is used to trigger the layer changes which means that when a change occurs in this path, the layer will be plan / apply accordingly.
 
 Sometimes, you need to trigger changes on a layer where the changes are not in the same path (e.g. update made on an internal terraform module hosted on the same repository).
 

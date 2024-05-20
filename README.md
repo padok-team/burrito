@@ -1,3 +1,8 @@
+> [!WARNING]
+> This project is still in a pre-release state, minor versions will introduce breaking changes until 1.0
+> 
+> You should only use releases, as the main branch can be broken.
+
 # burrito <!-- omit in toc -->
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

@@ -1,5 +1,7 @@
 # Choose a terraform/terragrunt version
 
+For now, Burrito doesn't auto-detect the terraform or terragrunt version used in your repository. You have to specify it in the `TerraformRepository` or `TerraformLayer` resource.
+
 ## Choose terraform version
 
 Both `TerraformRepository` and `TerraformLayer` expose a `spec.terrafrom.version` map field.
