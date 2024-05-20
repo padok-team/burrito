@@ -39,7 +39,7 @@ config:
         # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
         apiToken: ""
         url: ""
-    
+    hermitcrab: {}
     datastore:
       serviceAccounts: []
       storage:
