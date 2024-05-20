@@ -2,25 +2,28 @@ package s3
 
 import (
 	"bytes"
+	"context"
 	"io"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	storage "github.com/aws/aws-sdk-go/service/s3"
+	sdk "github.com/aws/aws-sdk-go-v2/config"
+	storage "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/padok-team/burrito/internal/burrito/config"
 )
 
-// Implements Storage interface using Google Cloud Storage
-
+// Implements Storage interface using AWS S3
 type S3 struct {
 	// GCS Blob Storage client
-	Client *storage.S3
+	Client *storage.Client
 	Config config.S3Config
 }
 
-// New creates a new Google Cloud Storage client
+// New creates a new AWS S3 client
 func New(config config.S3Config) *S3 {
-	session := session.Must(session.NewSession())
-	client := storage.New(session)
+	sdkConfig, err := sdk.LoadDefaultConfig(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	client := storage.NewFromConfig(sdkConfig)
 	return &S3{
 		Config: config,
 		Client: client,
@@ -33,7 +36,7 @@ func (a *S3) Get(key string) ([]byte, error) {
 		Key:    &key,
 	}
 
-	result, err := a.Client.GetObject(input)
+	result, err := a.Client.GetObject(context.TODO(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +58,7 @@ func (a *S3) Set(key string, data []byte, ttl int) error {
 		Body:   bytes.NewReader(data),
 	}
 
-	_, err := a.Client.PutObject(input)
+	_, err := a.Client.PutObject(context.TODO(), input)
 	if err != nil {
 		return err
 	}
@@ -69,7 +72,7 @@ func (a *S3) Delete(key string) error {
 		Key:    &key,
 	}
 
-	_, err := a.Client.DeleteObject(input)
+	_, err := a.Client.DeleteObject(context.TODO(), input)
 	if err != nil {
 		return err
 	}
@@ -83,7 +86,7 @@ func (a *S3) List(prefix string) ([]string, error) {
 		Prefix: &prefix,
 	}
 
-	result, err := a.Client.ListObjects(input)
+	result, err := a.Client.ListObjects(context.TODO(), input)
 	if err != nil {
 		return nil, err
 	}
