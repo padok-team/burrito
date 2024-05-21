@@ -120,7 +120,7 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 	if resp.StatusCode != http.StatusOK {
 		message, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("could not put plan, there's an issue reading the response from datastore")
+			return fmt.Errorf("could not put plan, there's an issue reading the response from datastore: %s", err)
 		}
 		return fmt.Errorf("could not put plan, there's an issue with the storage backend: %s", string(message))
 	}
