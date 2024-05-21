@@ -87,7 +87,7 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 
 func GetRunHistoryPolicy(repository *TerraformRepository, layer *TerraformLayer) RunHistoryPolicy {
 	return RunHistoryPolicy{
-		KeepLastRuns: chooseInt(repository.Spec.RunHistoryPolicy.KeepLastRuns, layer.Spec.RunHistoryPolicy.KeepLastRuns, 10),
+		KeepLastRuns: chooseInt(repository.Spec.RunHistoryPolicy.KeepLastRuns, layer.Spec.RunHistoryPolicy.KeepLastRuns, 5),
 	}
 }
 
