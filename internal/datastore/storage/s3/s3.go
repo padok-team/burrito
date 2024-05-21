@@ -87,7 +87,6 @@ func (a *S3) List(prefix string) ([]string, error) {
 		Prefix:    &prefix,
 		Delimiter: aws.String("/"),
 	}
-	a.Client.ListObjectsV2(context.TODO(), input)
 	result, err := a.Client.ListObjectsV2(context.TODO(), input)
 
 	if err != nil {
