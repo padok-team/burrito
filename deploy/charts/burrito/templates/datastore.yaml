@@ -58,7 +58,7 @@ spec:
               mountPath: /etc/burrito
               readOnly: true
             {{- if .tls.certManager.use }}
-            - name: burrito-tls
+            - name: burrito-datastore-tls
               mountPath: /etc/burrito/tls
               readOnly: true
             {{- end }}
