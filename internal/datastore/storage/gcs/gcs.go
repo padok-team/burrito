@@ -76,7 +76,10 @@ func (a *GCS) Delete(key string) error {
 func (a *GCS) List(prefix string) ([]string, error) {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
-	it := bucket.Objects(ctx, &storage.Query{Prefix: prefix})
+	it := bucket.Objects(ctx, &storage.Query{
+		Prefix:    prefix,
+		Delimiter: "/",
+	})
 
 	var objects []string
 	for {
@@ -87,7 +90,7 @@ func (a *GCS) List(prefix string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		objects = append(objects, objAttrs.Name)
+		objects = append(objects, objAttrs.Prefix)
 	}
 
 	return objects, nil

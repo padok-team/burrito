@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/aws/aws-sdk-go-v2/config"
 	storage "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/padok-team/burrito/internal/burrito/config"
 )
 
@@ -81,19 +82,21 @@ func (a *S3) Delete(key string) error {
 }
 
 func (a *S3) List(prefix string) ([]string, error) {
-	input := &storage.ListObjectsInput{
-		Bucket: &a.Config.Bucket,
-		Prefix: &prefix,
+	input := &storage.ListObjectsV2Input{
+		Bucket:    &a.Config.Bucket,
+		Prefix:    &prefix,
+		Delimiter: aws.String("/"),
 	}
+	a.Client.ListObjectsV2(context.TODO(), input)
+	result, err := a.Client.ListObjectsV2(context.TODO(), input)
 
-	result, err := a.Client.ListObjects(context.TODO(), input)
 	if err != nil {
 		return nil, err
 	}
 
-	keys := make([]string, len(result.Contents))
-	for i, obj := range result.Contents {
-		keys[i] = *obj.Key
+	keys := make([]string, len(result.CommonPrefixes))
+	for i, obj := range result.CommonPrefixes {
+		keys[i] = *obj.Prefix
 	}
 
 	return keys, nil

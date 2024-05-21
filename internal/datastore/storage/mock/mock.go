@@ -39,12 +39,21 @@ func (s *Mock) Delete(key string) error {
 }
 
 func (a *Mock) List(prefix string) ([]string, error) {
-	keys := []string{}
+	keySet := map[string]bool{}
 	for k := range a.data {
 		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
-		keys = append(keys, strings.Split(strings.TrimPrefix(k, prefix), "/")[0])
+		pathIndexs := strings.Split(k, "/")
+		keySet[pathIndexs[len(pathIndexs)-2]] = true
 	}
-	return keys, nil
+	return mapKeys(keySet), nil
+}
+
+func mapKeys(m map[string]bool) []string {
+	keys := []string{}
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
