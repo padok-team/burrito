@@ -112,18 +112,15 @@ func (s *Storage) GetPlan(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
-	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s/", namespace, layer, run))
+	attempts, err := s.GetAttempts(namespace, layer, run)
 	if err != nil {
 		return nil, err
 	}
-	if len(attempts) == 0 {
+	if attempts == 0 {
 		return nil, &errors.StorageError{Nil: true}
 	}
-	attempt, err := getMax(attempts)
-	if err != nil {
-		return nil, err
-	}
-	key := computePlanKey(namespace, layer, run, strconv.Itoa(attempt), format)
+	attempt := strconv.Itoa(attempts - 1)
+	key := computePlanKey(namespace, layer, run, attempt, format)
 	return s.Backend.Get(key)
 }
 
