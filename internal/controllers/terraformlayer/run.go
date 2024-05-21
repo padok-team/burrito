@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -89,35 +87,10 @@ func (r *Reconciler) getAllRuns(ctx context.Context, layer *configv1alpha1.Terra
 }
 
 func deleteAll(ctx context.Context, c client.Client, objs []*configv1alpha1.TerraformRun) error {
-	var wg sync.WaitGroup
-	errorCh := make(chan error, len(objs))
-
-	deleteObject := func(obj *configv1alpha1.TerraformRun) {
-		defer wg.Done()
-		err := c.Delete(ctx, obj)
-		if err != nil {
-			errorCh <- fmt.Errorf("error deleting %s: %v", obj.Name, err)
-		} else {
-			log.Infof("deleted run %s", obj.Name)
-		}
-	}
-
 	for _, obj := range objs {
-		wg.Add(1)
-		go deleteObject(obj)
-	}
-
-	go func() {
-		wg.Wait()
-		close(errorCh)
-	}()
-
-	var ret error = nil
-	for err := range errorCh {
-		if err != nil {
-			ret = err
+		if err := c.Delete(ctx, obj); err != nil {
+			return err
 		}
 	}
-
-	return ret
+	return nil
 }
