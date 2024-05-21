@@ -13,12 +13,7 @@ type API struct {
 }
 
 func New(c *config.Config) *API {
-	client := datastore.NewDefaultClient()
-	if c.Datastore.TLS {
-		client.Scheme = "https"
-	}
 	return &API{
-		config:    c,
-		Datastore: client,
+		config: c,
 	}
 }

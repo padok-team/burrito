@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/server/api"
 	"github.com/padok-team/burrito/internal/webhook"
 	log "github.com/sirupsen/logrus"
@@ -53,6 +54,11 @@ func initClient() (*client.Client, error) {
 }
 
 func (s *Server) Exec() {
+	datastore := datastore.NewDefaultClient()
+	if s.config.Datastore.TLS {
+		datastore.Scheme = "https"
+	}
+	s.API.Datastore = datastore
 	err := s.Webhook.Init()
 	if err != nil {
 		log.Fatalf("error initializing webhook: %s", err)
