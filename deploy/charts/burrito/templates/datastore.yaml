@@ -4,6 +4,9 @@
 {{- if .tls.certManager.use }}
 {{- $_ := set .deployment.livenessProbe.httpGet "scheme" "HTTPS" }}
 {{- $_ := set .deployment.readinessProbe.httpGet "scheme" "HTTPS" }}
+{{- else }}
+{{- $_ := set .deployment.livenessProbe.httpGet "scheme" "HTTP" }}
+{{- $_ := set .deployment.readinessProbe.httpGet "scheme" "HTTP" }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
