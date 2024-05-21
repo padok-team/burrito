@@ -1,6 +1,10 @@
 {{ $configChecksum := (include (print $.Template.BasePath "/config.yaml") . | sha256sum) }}
 
 {{- with mergeOverwrite (deepCopy .Values.global) .Values.datastore }}
+{{- if .tls.certManager.use }}
+{{- $_ := set .deployment.livenessProbe.httpGet "scheme" "HTTPS" }}
+{{- $_ := set .deployment.readinessProbe.httpGet "scheme" "HTTPS" }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

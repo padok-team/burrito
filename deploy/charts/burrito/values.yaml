@@ -81,9 +81,11 @@ hermitcrab:
           commonName: burrito-hermitcrab.burrito-system.svc.cluster.local
           dnsNames:
             - burrito-hermitcrab.burrito-system.svc.cluster.local
+            - burrito-hermitcrab.burrito-system
+            - burrito-hermitcrab
           issuerRef:
             name: burrito-ca-issuer
-            kind: ClusterIssuer
+            kind: Issuer
 
   deployment:
     image:
@@ -176,13 +178,13 @@ controllers:
       httpGet:
         path: /healthz
         port: 8081
-      initialDelaySeconds: 15
+      initialDelaySeconds: 5
       periodSeconds: 20
     readinessProbe:
       httpGet:
         path: /readyz
         port: 8081
-      initialDelaySeconds: 15
+      initialDelaySeconds: 5
       periodSeconds: 20
     envFrom: []
     env: []
@@ -206,13 +208,13 @@ server:
       httpGet:
         path: /healthz
         port: 8080
-      initialDelaySeconds: 15
+      initialDelaySeconds: 5
       periodSeconds: 20
     readinessProbe:
       httpGet:
         path: /healthz
         port: 8080
-      initialDelaySeconds: 15
+      initialDelaySeconds: 5
       periodSeconds: 20
     envFrom:
       # -- Reference the webhook secret here
@@ -249,13 +251,13 @@ datastore:
       httpGet:
         path: /healthz
         port: 8080
-      initialDelaySeconds: 15
+      initialDelaySeconds: 5
       periodSeconds: 20
     readinessProbe:
       httpGet:
         path: /healthz
         port: 8080
-      initialDelaySeconds: 15
+      initialDelaySeconds: 5
       periodSeconds: 20
     envFrom: []
   service:
@@ -275,8 +277,10 @@ datastore:
           commonName: burrito-datastore.burrito-system.svc.cluster.local
           dnsNames:
             - burrito-datastore.burrito-system.svc.cluster.local
+            - burrito-datastore.burrito-system
+            - burrito-datastore
           issuerRef:
             name: burrito-ca-issuer
-            kind: ClusterIssuer
+            kind: Issuer
 
 tenants: []

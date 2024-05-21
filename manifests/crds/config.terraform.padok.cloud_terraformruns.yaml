@@ -86,6 +86,9 @@ spec:
                       type: integer
                     podName:
                       type: string
+                  required:
+                  - number
+                  - podName
                   type: object
                 type: array
               conditions:

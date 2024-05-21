@@ -51,8 +51,8 @@ type TerraformRunStatus struct {
 }
 
 type Attempt struct {
-	PodName      string `json:"podName,omitempty"`
-	Number       int    `json:"number,omitempty"`
+	PodName      string `json:"podName"`
+	Number       int    `json:"number"`
 	LogsUploaded bool   `json:"logsUploaded,omitempty"`
 }
 
