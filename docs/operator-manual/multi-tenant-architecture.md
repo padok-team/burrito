@@ -6,7 +6,7 @@ With our [Helm chart](./install/with-helm.md) we provide a way to setup multi-te
 
 The setup is split across multiple Kubernetes namespaces:
 
-- `burrito-system` is where burrito's components live and operate (controllers, server, Redis)
+- `burrito-system` is where burrito's components live and operate (controllers, server, datastore)
 - the other namespaces (`tenant-namespace-[1-3]` on the schema) where `TerraformRepository`, `TerraformLayer`, `TerraformRun` and `TerraformPullRequest` resources live and where burrito spawns runner pods for Terraform `plan` and `apply` actions.
 
 Thanks to Kubernetes native RBAC system you can restrict access for your users only to the namespaces their burrito resources live.

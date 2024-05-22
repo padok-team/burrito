@@ -32,14 +32,6 @@ The chart's source code is available on [burrito GitHub repository](https://gith
 Here is an example of values file overriding some default values of burrito:
 
 ```yaml
-# Example of external Redis instance
-redis:
-  enabled: false
-config:
-  burrito:
-    redis:
-      hostname: "custom-redis.svc.cluster.local"
-
 tenants:
   # Example tenant with 1 service account having additional role bindings
   - namespace:

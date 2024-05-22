@@ -1,6 +1,3 @@
-redis:
-  enabled: true
-
 global:
   deployment:
     image:

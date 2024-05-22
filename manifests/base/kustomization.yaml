@@ -10,5 +10,4 @@ resources:
   - ./controllers
   - ./server
   - ./runner
-  - ./redis
   - ./config
