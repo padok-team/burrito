@@ -15,7 +15,6 @@ type Config struct {
 	Runner     RunnerConfig     `mapstructure:"runner"`
 	Controller ControllerConfig `mapstructure:"controller"`
 	Datastore  DatastoreConfig  `mapstructure:"datastore"`
-	Redis      Redis            `mapstructure:"redis"`
 	Server     ServerConfig     `mapstructure:"server"`
 	Hermitcrab HermitcrabConfig `mapstructure:"hermitcrab"`
 }
@@ -117,13 +116,6 @@ type Layer struct {
 	Namespace string `mapstructure:"namespace"`
 }
 
-type Redis struct {
-	Hostname   string `mapstructure:"hostname"`
-	ServerPort int    `mapstructure:"serverPort"`
-	Password   string `mapstructure:"password"`
-	Database   int    `mapstructure:"database"`
-}
-
 type HermitcrabConfig struct {
 	Enabled               bool   `mapstructure:"enabled"`
 	CertificateSecretName string `mapstructure:"certificateSecretName"`
@@ -213,12 +205,6 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 
 func TestConfig() *Config {
 	return &Config{
-		Redis: Redis{
-			Hostname:   "localhost",
-			ServerPort: 6379,
-			Password:   "",
-			Database:   0,
-		},
 		Controller: ControllerConfig{
 			TerraformMaxRetries: 5,
 			Timers: ControllerTimers{

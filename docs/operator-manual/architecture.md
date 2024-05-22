@@ -52,9 +52,6 @@ The status of a `TerraformLayer` is defined using the [conditions standards defi
 - `IsApplyUpToDate`. This condition is used to check if an `apply` needs to run after the last `plan`. Comparison is made by comparing a checksum of the last planned binary and a checksum last applied binary stored in the annotations.
 - `IsLastRelevantCommitPlanned`. This condition is used to check if a new commit has been made to the layer and need to be applied. It is evaluated by comparing the commit used for the last `plan`, the last commit which intoduced changes to the layer and the last commit made to the same branch of the repository. Those commits are "stored" as annotations.
 
-!!! info
-    We use annotations to store information because we do not want to rely too heavily on the uptime of the Redis instance.
-
 With those 3 conditions, we defined 3 states:
 
 - `Idle`. This is the state of a layer if no runner needs be started
@@ -86,9 +83,6 @@ With those 5 conditions, we defined 6 states:
 - `Failed`. This is the other final state a run can have. It means that the run has failed multiple times and has reached the maximum number of retries.
 
 The `TerraformRun` controller also creates and deletes the [Kubernetes leases](https://kubernetes.io/docs/concepts/architecture/leases/) to avoid concurrent use of Terraform on the same layer.
-
-!!! info
-    N.B.: We use lease objects in order to not have to rely on the Redis instance for layer locking.
 
 ### The runners
 

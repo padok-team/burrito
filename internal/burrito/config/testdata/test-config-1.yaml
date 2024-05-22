@@ -35,12 +35,6 @@ controller:
     apiToken: "gitlab-token"
     url: "https://gitlab.example.com"
 
-redis:
-  hostname: "burrito-redis.namespace"
-  serverPort: 5000
-  database: 0
-  password: "testPassword"
-
 server:
   addr: ":9090"
   webhook:
