@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/storage/azure"
@@ -13,12 +12,41 @@ import (
 )
 
 const (
-	LogFile        string = "run.log"
-	PlanBinFile    string = "plan.bin"
-	PlanJsonFile   string = "plan.json"
-	PrettyPlanFile string = "pretty.plan"
-	ShortDiffFile  string = "short.diff"
+	LogFile                string = "run.log"
+	PlanBinFile            string = "plan.bin"
+	PlanJsonFile           string = "plan.json"
+	PrettyPlanFile         string = "pretty.plan"
+	ShortDiffFile          string = "short.diff"
+	GitBundleFileExtension string = ".tgz"
+	LayersPrefix           string = "layers"
+	RepositoriesPrefix     string = "repositories"
 )
+
+func computeLogsKey(namespace string, layer string, run string, attempt string) string {
+	return fmt.Sprintf("/%s/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt, LogFile)
+}
+
+func computePlanKey(namespace string, layer string, run string, attempt string, format string) string {
+	key := ""
+	prefix := fmt.Sprintf("/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt)
+	switch format {
+	case "json":
+		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
+	case "pretty":
+		key = fmt.Sprintf("%s/%s", prefix, PrettyPlanFile)
+	case "short":
+		key = fmt.Sprintf("%s/%s", prefix, ShortDiffFile)
+	case "bin":
+		key = fmt.Sprintf("%s/%s", prefix, PlanBinFile)
+	default:
+		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
+	}
+	return key
+}
+
+func computeGitBundleKey(namespace string, repository string, branch string, commit string) string {
+	return fmt.Sprintf("/%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
+}
 
 type Storage struct {
 	Backend StorageBackend
@@ -44,71 +72,28 @@ func New(config config.Config) Storage {
 	return Storage{}
 }
 
-func last(a []string) string {
-	return a[len(a)-1]
-}
-
-func getMax(l []string) (int, error) {
-	max := 0
-	for _, v := range l {
-		value, err := strconv.Atoi(last(strings.Split(v, "/")))
-		if err != nil {
-			return 0, err
-		}
-		if value > max {
-			max = value
-		}
-	}
-	return max, nil
-}
-
 func (s *Storage) GetLogs(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, LogFile)
-	return s.Backend.Get(key)
+	return s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
 }
 
 func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]byte, error) {
-	attempts, err := s.Backend.List(fmt.Sprintf("/%s/%s/%s/", namespace, layer, run))
+	attempts, err := s.GetAttempts(namespace, layer, run)
 	if err != nil {
 		return nil, err
 	}
-	if len(attempts) == 0 {
+	if attempts == 0 {
 		return nil, &errors.StorageError{Nil: true}
 	}
-	attempt, err := getMax(attempts)
-	if err != nil {
-		return nil, err
-	}
-	key := fmt.Sprintf("/%s/%s/%s/%d/%s", namespace, layer, run, attempt, LogFile)
-	return s.Backend.Get(key)
+	attempt := strconv.Itoa(attempts - 1)
+	return s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
 }
 
 func (s *Storage) PutLogs(namespace string, layer string, run string, attempt string, logs []byte) error {
-	key := fmt.Sprintf("/%s/%s/%s/%s/%s", namespace, layer, run, attempt, LogFile)
-	return s.Backend.Set(key, logs, 0)
-}
-
-func computePlanKey(namespace string, layer string, run string, attempt string, format string) string {
-	key := ""
-	prefix := fmt.Sprintf("/%s/%s/%s/%s", namespace, layer, run, attempt)
-	switch format {
-	case "json":
-		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
-	case "pretty":
-		key = fmt.Sprintf("%s/%s", prefix, PrettyPlanFile)
-	case "short":
-		key = fmt.Sprintf("%s/%s", prefix, ShortDiffFile)
-	case "bin":
-		key = fmt.Sprintf("%s/%s", prefix, PlanBinFile)
-	default:
-		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
-	}
-	return key
+	return s.Backend.Set(computeLogsKey(namespace, layer, run, attempt), logs, 0)
 }
 
 func (s *Storage) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
-	key := computePlanKey(namespace, layer, run, attempt, format)
-	return s.Backend.Get(key)
+	return s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
 }
 
 func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
@@ -120,17 +105,23 @@ func (s *Storage) GetLatestPlan(namespace string, layer string, run string, form
 		return nil, &errors.StorageError{Nil: true}
 	}
 	attempt := strconv.Itoa(attempts - 1)
-	key := computePlanKey(namespace, layer, run, attempt, format)
-	return s.Backend.Get(key)
+	return s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
 }
 
 func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, format string, plan []byte) error {
-	key := computePlanKey(namespace, layer, run, attempt, format)
-	return s.Backend.Set(key, plan, 0)
+	return s.Backend.Set(computePlanKey(namespace, layer, run, attempt, format), plan, 0)
 }
 
 func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, error) {
-	key := fmt.Sprintf("/%s/%s/%s", namespace, layer, run)
+	key := fmt.Sprintf("/%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
 	attempts, err := s.Backend.List(key)
 	return len(attempts), err
+}
+
+func (s *Storage) GetGitBundle(namespace string, repository string, branch string, commit string) ([]byte, error) {
+	return s.Backend.Get(computeGitBundleKey(namespace, repository, branch, commit))
+}
+
+func (s *Storage) PutGitBundle(namespace string, repository string, branch string, commit string, bundle []byte) error {
+	return s.Backend.Set(computeGitBundleKey(namespace, repository, branch, commit), bundle, 0)
 }
