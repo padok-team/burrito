@@ -1,6 +1,12 @@
 export type Layers = {
   results: Layer[];
+  next?: string;
 };
+
+export type InfiniteLayerQueryResult = {
+  results: Layer[];
+  pageParams: string;
+}
 
 export type Layer = {
   namespace: string;

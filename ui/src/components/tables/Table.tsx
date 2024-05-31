@@ -236,7 +236,7 @@ const Table: React.FC<TableProps> = ({
         </thead>
         <tbody>
           {isLoading
-            ? Array.from({ length: 100 }).map((_, index) => (
+            ? Array.from({ length: 1 }).map((_, index) => (
                 <tr
                   key={index}
                   className={twMerge(

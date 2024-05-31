@@ -1,6 +1,8 @@
 import React, { useState, useContext, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, InfiniteQueryObserverSuccessResult } from "@tanstack/react-query";
+
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { fetchLayers } from "@/clients/layers/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
@@ -22,18 +24,17 @@ import BarsIcon from "@/assets/icons/BarsIcon";
 import CardLoader from "@/components/loaders/CardLoader";
 
 import { LayerState } from "@/clients/layers/types";
-import PaginationDropdown from "@/components/dropdowns/PaginationDropdown";
+
+import { Layer } from "@/clients/layers/types";
+import useFixMissingScroll from "@/components/misc/FixMissingScroll";
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const [view, setView] = useState<"grid" | "table">("grid");
-  const [layerOffset, setLayerOffset] = useState(0);
-  const [layerLimit, setLayerLimit] = useState(10);
   const [searchParams, setSearchParams] = useSearchParams();
-
+  const [next] = useState<string | undefined>(undefined);
   const search = useMemo<string>(
     () => {
-      setLayerOffset(0);
       return searchParams.get("search") || ""
     },
     [searchParams]
@@ -85,27 +86,56 @@ const Layers: React.FC = () => {
     },
     [searchParams, setSearchParams]
   );
+  
+const applyResultFilters = (result: InfiniteQueryObserverSuccessResult<{
+    results: Layer[];
+    pageParams: (string | undefined)[];
+}, Error>) => {
+  return result.data.results.filter((layer) =>
+    layer.name.toLowerCase().includes(search.toLowerCase())
+  ).filter((layer) =>
+    stateFilter.length === 0 || stateFilter.includes(layer.state)
+  ).filter((layer) =>
+    repositoryFilter.length === 0 || repositoryFilter.includes(layer.repository)
+  ).filter((layer) => !hidePRFilter || !layer.isPR)
+}
 
-  const layersQuery = useQuery({
-    queryKey: reactQueryKeys.layers,
-    queryFn: fetchLayers,
-    select: (data) => ({
-      ...data,
-      results: data.results
-        .filter((layer) =>
-          layer.name.toLowerCase().includes(search.toLowerCase())
-        )
-        .filter(
-          (layer) =>
-            stateFilter.length === 0 || stateFilter.includes(layer.state)
-        )
-        .filter(
-          (layer) =>
-            repositoryFilter.length === 0 ||
-            repositoryFilter.includes(layer.repository)
-        )
-        .filter((layer) => !hidePRFilter || !layer.isPR),
-    }),
+
+  const layersQuery = useInfiniteQuery({
+    queryKey: reactQueryKeys.layers(9, next),
+    queryFn: async ({pageParam}) => await fetchLayers(9, pageParam),
+    initialPageParam: next,
+    getNextPageParam: (lastPage) => lastPage.next,
+    select: data => ({
+      results: data.pages.flatMap(layers =>  layers.results),
+      pageParams: data.pageParams
+    })
+    
+    // (data) => ({
+    //   pages: data.pages
+    //     .filter((page) =>
+    //       page.results.filter(layer => layer.name.toLowerCase().includes(search.toLowerCase()))
+    //     )
+    //     .filter((page) =>
+    //       page.results.filter((layer) =>
+    //         stateFilter.length === 0 || stateFilter.includes(layer.state))
+    //     )
+    //     .filter(
+    //       (page) =>
+    //         page.results.filter((layer) =>
+    //           repositoryFilter.length === 0 ||
+    //           repositoryFilter.includes(layer.repository)
+    //         )
+    //     )
+    //     .filter((page) => 
+    //       page.results.filter(layer => !hidePRFilter || !layer.isPR)),
+    // }),
+});
+
+  useFixMissingScroll({
+    hasMoreItems: layersQuery.hasNextPage,
+    fetchMoreItems: () => layersQuery.fetchNextPage(),
+    mainElement: document.getElementById("scrollableDiv") as HTMLElement
   });
 
   return (
@@ -159,7 +189,7 @@ const Layers: React.FC = () => {
               {`
                 ${
                   layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                } layers
+                } layers loaded
               `}
             </span>
             <span
@@ -207,22 +237,6 @@ const Layers: React.FC = () => {
           </div>
           <div className="flex flex-row items-center gap-8">
             <div className="flex flex-row items-center gap-2">
-              <Button theme={theme} variant={"tertiary"} onClick={() => setLayerOffset(Math.max(0,layerOffset-layerLimit))} disabled={ layerOffset == 0 }>Previous</Button>
-              <span className={`
-                  text-base
-                  font-semibold
-                  ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
-                `}>{layerOffset + 1} - {Math.min(layerOffset + layerLimit, layersQuery.isSuccess ? layersQuery.data.results.length : 0)} of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}</span>
-              <Button theme={theme} variant={"tertiary"} onClick={() => setLayerOffset(Math.min(layerOffset+layerLimit, layersQuery.isSuccess ? layersQuery.data.results.length : 0))} disabled= { !layersQuery.isSuccess || layerOffset + layerLimit >= layersQuery.data.results.length }>Next</Button>
-              <span className={`
-                  text-base
-                  font-medium
-                  ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
-                `}>Items per page: </span>
-              <PaginationDropdown className="w-16"
-              variant={theme} selectedPagination={layerLimit} setSelectedPagination={setLayerLimit} />
-            </div>
-            <div className="flex flex-row items-center gap-2">
               <NavigationButton
                 icon={<AppsIcon />}
                 variant={theme}
@@ -240,6 +254,7 @@ const Layers: React.FC = () => {
         </div>
       </div>
       <div
+        id="scrollableDiv"
         className={`
           relative
           ${layersQuery.isSuccess ? "overflow-auto" : "overflow-hidden"}
@@ -263,12 +278,21 @@ const Layers: React.FC = () => {
               >
                 An error has occurred.
               </span>
-            ) : layersQuery.isSuccess ? (
-              layersQuery.data.results.length > 0 ? (
-                layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit).map((layer, index) => (
-                  <Card key={index} variant={theme} layer={layer} />
-                ))
-              ) : (
+            ) : layersQuery.isSuccess ? 
+            (
+              layersQuery.data.results.length > 0 ?
+                <InfiniteScroll
+                dataLength={layersQuery.data.results.length}
+                next={layersQuery.fetchNextPage}
+                hasMore={layersQuery.hasNextPage}
+                loader={<CardLoader variant={theme} />}
+                endMessage={<p>No more data to load.</p>}
+                scrollableTarget="scrollableDiv"
+                className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 gap-6"
+              >
+                  {applyResultFilters(layersQuery).map((layer, layerIndex) => <Card key={layerIndex+1} variant={theme} layer={layer} /> )}
+              </InfiniteScroll>
+                : (
                 <span
                   className={`
                     text-lg
@@ -305,7 +329,17 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                <Table variant={theme} data={layersQuery.data.results} />
+                <InfiniteScroll
+                dataLength={layersQuery.data.results.length}
+                next={layersQuery.fetchNextPage}
+                hasMore={layersQuery.hasNextPage}
+                loader={<Table variant={theme} isLoading data={[]} />}
+                endMessage={<p>No more data to load.</p>}
+                scrollableTarget="scrollableDiv"
+              >
+                  <Table variant={theme} data={applyResultFilters(layersQuery)} />
+              </InfiniteScroll>
+                // <Table variant={theme} data={layersQuery.data.results.reduce((acc, page) => acc.concat(page.results), [] as Layer[])} />
               ) : (
                 <div className="p-6">
                   <span

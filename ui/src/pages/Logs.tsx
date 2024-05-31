@@ -83,8 +83,8 @@ const Logs: React.FC = () => {
   );
 
   const layersQuery = useQuery({
-    queryKey: reactQueryKeys.layers,
-    queryFn: fetchLayers,
+    queryKey: reactQueryKeys.layers(100),
+    queryFn: () => fetchLayers(100),
     select: (data) => ({
       ...data,
       results: data.results
