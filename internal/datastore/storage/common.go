@@ -5,10 +5,13 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/storage/azure"
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	"github.com/padok-team/burrito/internal/datastore/storage/gcs"
+	"github.com/padok-team/burrito/internal/datastore/storage/mock"
 	"github.com/padok-team/burrito/internal/datastore/storage/s3"
 )
 
@@ -40,6 +43,9 @@ func New(config config.Config) Storage {
 		return Storage{Backend: gcs.New(config.Datastore.Storage.GCS)}
 	case config.Datastore.Storage.S3.Bucket != "":
 		return Storage{Backend: s3.New(config.Datastore.Storage.S3)}
+	case config.Datastore.Storage.Mock:
+		log.Warn("Using mock storage backend - for testing only - no data will only be stored in memory and will be lost when the process exits")
+		return Storage{Backend: mock.New()}
 	}
 	return Storage{}
 }

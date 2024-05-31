@@ -29,6 +29,7 @@ type StorageConfig struct {
 	GCS   GCSConfig   `mapstructure:"gcs"`
 	S3    S3Config    `mapstructure:"s3"`
 	Azure AzureConfig `mapstructure:"azure"`
+	Mock  bool        `mapstructure:"mock"`
 }
 
 type GCSConfig struct {
@@ -206,7 +207,8 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 func TestConfig() *Config {
 	return &Config{
 		Controller: ControllerConfig{
-			TerraformMaxRetries: 5,
+			TerraformMaxRetries:     5,
+			MaxConcurrentReconciles: 1,
 			Timers: ControllerTimers{
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,

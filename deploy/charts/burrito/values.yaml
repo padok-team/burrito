@@ -43,6 +43,7 @@ config:
     datastore:
       serviceAccounts: []
       storage:
+        mock: false # -- Use in-memory storage for testing - not intended for production use 
         gcs: {}
         azure: {}
         aws: {}
