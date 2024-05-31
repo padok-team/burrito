@@ -59,8 +59,9 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				WaitAction:         1 * time.Minute,
 				FailureGracePeriod: 15 * time.Second,
 			},
-			TerraformMaxRetries: 5,
-			Types:               []string{"layer", "repository", "run", "pullrequest"},
+			TerraformMaxRetries:     5,
+			MaxConcurrentReconciles: 1,
+			Types:                   []string{"layer", "repository", "run", "pullrequest"},
 			LeaderElection: config.LeaderElectionConfig{
 				Enabled: true,
 				ID:      "6d185457.terraform.padok.cloud",
@@ -136,6 +137,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_ONERROR", "30s", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_WAITACTION", "30s", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_FAILUREGRACEPERIOD", "1m", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_MAXCONCURRENTRECONCILES", "3", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TERRAFORMMAXRETRIES", "32", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_LEADERELECTION_ID", "other-leader-id", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APPID", "123456", &envVarList)
@@ -189,8 +191,9 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 				WaitAction:         30 * time.Second,
 				FailureGracePeriod: 1 * time.Minute,
 			},
-			TerraformMaxRetries: 32,
-			Types:               []string{"layer", "repository"},
+			MaxConcurrentReconciles: 3,
+			TerraformMaxRetries:     32,
+			Types:                   []string{"layer", "repository"},
 			LeaderElection: config.LeaderElectionConfig{
 				Enabled: true,
 				ID:      "other-leader-id",

@@ -58,18 +58,19 @@ type WebhookGitlabConfig struct {
 }
 
 type ControllerConfig struct {
-	MainNamespace          string               `mapstructure:"mainNamespace"`
-	Namespaces             []string             `mapstructure:"namespaces"`
-	Timers                 ControllerTimers     `mapstructure:"timers"`
-	TerraformMaxRetries    int                  `mapstructure:"terraformMaxRetries"`
-	Types                  []string             `mapstructure:"types"`
-	LeaderElection         LeaderElectionConfig `mapstructure:"leaderElection"`
-	MetricsBindAddress     string               `mapstructure:"metricsBindAddress"`
-	HealthProbeBindAddress string               `mapstructure:"healthProbeBindAddress"`
-	KubernetesWebhookPort  int                  `mapstructure:"kubernetesWebhookPort"`
-	GithubConfig           GithubConfig         `mapstructure:"githubConfig"`
-	GitlabConfig           GitlabConfig         `mapstructure:"gitlabConfig"`
-	RunParallelism         int                  `mapstructure:"runParallelism"`
+	MainNamespace           string               `mapstructure:"mainNamespace"`
+	Namespaces              []string             `mapstructure:"namespaces"`
+	Timers                  ControllerTimers     `mapstructure:"timers"`
+	TerraformMaxRetries     int                  `mapstructure:"terraformMaxRetries"`
+	Types                   []string             `mapstructure:"types"`
+	LeaderElection          LeaderElectionConfig `mapstructure:"leaderElection"`
+	MetricsBindAddress      string               `mapstructure:"metricsBindAddress"`
+	HealthProbeBindAddress  string               `mapstructure:"healthProbeBindAddress"`
+	KubernetesWebhookPort   int                  `mapstructure:"kubernetesWebhookPort"`
+	GithubConfig            GithubConfig         `mapstructure:"githubConfig"`
+	GitlabConfig            GitlabConfig         `mapstructure:"gitlabConfig"`
+	RunParallelism          int                  `mapstructure:"runParallelism"`
+	MaxConcurrentReconciles int                  `mapstructure:"maxConcurrentReconciles"`
 }
 
 type GithubConfig struct {
@@ -206,7 +207,8 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 func TestConfig() *Config {
 	return &Config{
 		Controller: ControllerConfig{
-			TerraformMaxRetries: 5,
+			TerraformMaxRetries:     5,
+			MaxConcurrentReconciles: 1,
 			Timers: ControllerTimers{
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,

@@ -120,6 +120,7 @@ func (c *Controllers) Exec() {
 				Client:   mgr.GetClient(),
 				Scheme:   mgr.GetScheme(),
 				Recorder: mgr.GetEventRecorderFor("Burrito"),
+				Config:   c.config,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create repository controller: %s", err)
 			}
