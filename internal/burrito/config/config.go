@@ -207,8 +207,7 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 func TestConfig() *Config {
 	return &Config{
 		Controller: ControllerConfig{
-			TerraformMaxRetries:     5,
-			MaxConcurrentReconciles: 1,
+			TerraformMaxRetries: 5,
 			Timers: ControllerTimers{
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,
