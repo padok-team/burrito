@@ -1,0 +1,23 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-succeeded
+  namespace: default
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-failed
+  namespace: default
+status:
+  state: "Failed"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-running
+  namespace: default
+status:
+  state: "Running"
