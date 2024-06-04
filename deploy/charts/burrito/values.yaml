@@ -18,6 +18,7 @@ config:
       # -- By default, the controller will only watch the tenants namespaces
       namespaces: []
       timers: {}
+      maxConcurrentReconciles: 1
       terraformMaxRetries: 3
       types: ["layer", "repository", "run", "pullrequest"]
       leaderElection:
@@ -46,7 +47,7 @@ config:
         mock: false # -- Use in-memory storage for testing - not intended for production use 
         gcs: {}
         azure: {}
-        aws: {}
+        s3: {}
       addr: ":8080"
 
     # Burrito server configuration
