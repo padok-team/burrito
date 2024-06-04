@@ -69,9 +69,15 @@ hermitcrab:
     labels:
       app.kubernetes.io/component: hermitcrab
       app.kubernetes.io/name: burrito-hermitcrab
-  persistence:
-    enabled: true
-    size: 1Gi
+  storage:
+    emptyDir:
+      enabled: true
+      medium: ""
+      sizeLimit: "2Gi"
+    ephemeral:
+      enabled: false
+      size: "2Gi"
+      storageClassName: ""
   tls:
     certManager:
       use: true
@@ -88,6 +94,7 @@ hermitcrab:
             kind: Issuer
 
   deployment:
+    replicas: 1
     image:
       pullPolicy: Always
       repository: sealio/hermitcrab
@@ -99,11 +106,11 @@ hermitcrab:
         value: /etc/hermitcrab/tls/tls.key
     resources:
       limits:
-        cpu: '2'
-        memory: '4Gi'
+        cpu: '1'
+        memory: '2Gi'
       requests:
-        cpu: '500m'
-        memory: '512Mi'
+        cpu: '300m'
+        memory: '256Mi'
     ports:
       - name: http
         containerPort: 80
