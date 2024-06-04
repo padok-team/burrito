@@ -2,43 +2,114 @@ package testing
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/ghodss/yaml"
+	"github.com/gruntwork-io/go-commons/errors"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-
+	coordination "k8s.io/api/coordination/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+type Resources struct {
+	Repositories []*configv1alpha1.TerraformRepository
+	Layers       []*configv1alpha1.TerraformLayer
+	Runs         []*configv1alpha1.TerraformRun
+	PullRequests []*configv1alpha1.TerraformPullRequest
+	Leases       []*coordination.Lease
+}
+
+type GenericResource struct {
+	APIVersion string            `json:"apiVersion"`
+	Kind       string            `json:"kind"`
+	Metadata   metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec       interface{}       `json:"spec"`
+}
+
+func unmarshalYaml(data []byte, obj interface{}) error {
+	jsonData, err := yaml.YAMLToJSON([]byte(data))
+	if err != nil {
+		return errors.WithStackTrace(err)
+	}
+	err = json.Unmarshal(jsonData, obj)
+	if err != nil {
+		return errors.WithStackTrace(err)
+	}
+	return nil
+}
 
 // function that loads the contents of a folder into the cluster
 func LoadResources(client client.Client, path string) {
-	log := logf.FromContext(context.TODO())
 
 	resources, err := parseResources(path)
 	if err != nil {
 		panic(err)
 	}
-	for _, r := range resources {
-		log.Info(fmt.Sprintf("Creating %s, %s/%s", r.GetObjectKind().GroupVersionKind().Kind, r.GetNamespace(), r.GetName()))
-		err := client.Create(context.TODO(), r)
+	for _, r := range resources.Layers {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+		deepCopy.Status = r.Status
+		err = client.Status().Update(context.TODO(), deepCopy)
+	}
+	for _, r := range resources.Repositories {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+		deepCopy.Status = r.Status
+		err = client.Status().Update(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+	}
+	for _, r := range resources.Runs {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+		deepCopy.Status = r.Status
+		err = client.Status().Update(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+	}
+	for _, r := range resources.Leases {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+	}
+	for _, r := range resources.PullRequests {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+		deepCopy.Status = r.Status
+		err = client.Status().Update(context.TODO(), deepCopy)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func parseResources(path string) ([]client.Object, error) {
+func parseResources(path string) (*Resources, error) {
 	log := logf.FromContext(context.TODO())
 	_ = configv1alpha1.AddToScheme(scheme.Scheme)
-	decoder := scheme.Codecs.UniversalDeserializer()
-
-	list := []client.Object{}
+	resources := Resources{}
 	r := []byte{}
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, walkErr error) error {
 		if d.IsDir() {
@@ -66,13 +137,36 @@ func parseResources(path string) ([]client.Object, error) {
 		if doc == "" || doc == "\n" {
 			continue
 		}
-		obj, _, err := decoder.Decode([]byte(doc), nil, nil)
+		genericResource := &GenericResource{}
+		err := unmarshalYaml([]byte(doc), genericResource)
+		switch genericResource.Kind {
+		case "TerraformRepository":
+			repo := &configv1alpha1.TerraformRepository{}
+			err = yaml.Unmarshal([]byte(doc), &repo)
+			resources.Repositories = append(resources.Repositories, repo)
+		case "TerraformLayer":
+			layer := &configv1alpha1.TerraformLayer{}
+			err = yaml.Unmarshal([]byte(doc), &layer)
+			resources.Layers = append(resources.Layers, layer)
+		case "TerraformRun":
+			run := &configv1alpha1.TerraformRun{}
+			err = yaml.Unmarshal([]byte(doc), &run)
+			resources.Runs = append(resources.Runs, run)
+		case "Lease":
+			lease := &coordination.Lease{}
+			err = yaml.Unmarshal([]byte(doc), &lease)
+			resources.Leases = append(resources.Leases, lease)
+		case "TerraformPullRequest":
+			pr := &configv1alpha1.TerraformPullRequest{}
+			err = yaml.Unmarshal([]byte(doc), &pr)
+			resources.PullRequests = append(resources.PullRequests, pr)
+		default:
+			continue
+		}
 		if err != nil {
 			log.Error(err, "Error while decoding YAML object")
 			continue
 		}
-		list = append(list, obj.(client.Object))
-
 	}
-	return list, nil
+	return &resources, nil
 }
