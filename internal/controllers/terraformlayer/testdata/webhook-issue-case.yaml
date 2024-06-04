@@ -9,7 +9,7 @@ metadata:
     runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
     runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
-    runner.terraform.padok.cloud/plan-run: run-1/0
+    runner.terraform.padok.cloud/plan-run: run-succeeded/0
     runner.terraform.padok.cloud/apply-commit: f4f5c237f34bac134e4503c40de9d142c1e04077
     runner.terraform.padok.cloud/apply-date: Sun May  7 11:21:53 UTC 2023
     runner.terraform.padok.cloud/apply-sum: AuP6pMNxWsD842wy0qabSZKnxZvxF9JCX8HW1nFeL1I=

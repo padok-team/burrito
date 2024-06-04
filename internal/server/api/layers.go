@@ -10,7 +10,6 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type layer struct {
@@ -41,22 +40,47 @@ type layersResponse struct {
 	Results []layer `json:"results"`
 }
 
-func (a *API) LayersHandler(c echo.Context) error {
+func (a *API) getLayersAndRuns() ([]configv1alpha1.TerraformLayer, map[string]configv1alpha1.TerraformRun, error) {
 	layers := &configv1alpha1.TerraformLayerList{}
 	err := a.Client.List(context.Background(), layers)
 	if err != nil {
 		log.Errorf("could not list terraform layers: %s", err)
-		return c.String(http.StatusInternalServerError, "could not list terraform layers")
+		return nil, nil, err
 	}
+	runs := &configv1alpha1.TerraformRunList{}
+	indexedRuns := map[string]configv1alpha1.TerraformRun{}
+	err = a.Client.List(context.Background(), runs)
 	if err != nil {
-		log.Errorf("could not list terraform layers: %s", err)
-		return c.String(http.StatusInternalServerError, "could not list terraform layers")
+		log.Errorf("could not list terraform runs: %s", err)
+		return nil, nil, err
+	}
+	for _, run := range runs.Items {
+		indexedRuns[fmt.Sprintf("%s/%s", run.Namespace, run.Name)] = run
+	}
+	return layers.Items, indexedRuns, err
+}
+
+func (a *API) LayersHandler(c echo.Context) error {
+	layers, runs, err := a.getLayersAndRuns()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform layers or runs: %s", err))
 	}
 	results := []layer{}
-	for _, l := range layers.Items {
-		run, err := a.getLatestRun(l)
+	for _, l := range layers {
 		if err != nil {
 			log.Errorf("could not get latest run for layer %s: %s", l.Name, err)
+		}
+		run, ok := runs[fmt.Sprintf("%s/%s", l.Namespace, l.Status.LastRun.Name)]
+		runAPI := Run{}
+		running := false
+		if ok {
+			runAPI = Run{
+				Name:   run.Name,
+				Commit: "",
+				Date:   run.CreationTimestamp.Format(time.RFC3339),
+				Action: run.Spec.Action,
+			}
+			running = runStillRunning(run)
 		}
 		results = append(results, layer{
 			UID:        string(l.UID),
@@ -67,15 +91,10 @@ func (a *API) LayersHandler(c echo.Context) error {
 			Path:       l.Spec.Path,
 			State:      a.getLayerState(l),
 			RunCount:   len(l.Status.LatestRuns),
-			LastRun: Run{
-				Name:   l.Status.LastRun.Name,
-				Commit: l.Status.LastRun.Commit,
-				Date:   l.Status.LastRun.Date.Format(time.RFC3339),
-				Action: l.Status.LastRun.Action,
-			},
+			LastRun:    runAPI,
 			LastRunAt:  l.Status.LastRun.Date.Format(time.RFC3339),
 			LastResult: l.Status.LastResult,
-			IsRunning:  run.Status.State != "Succeeded" && run.Status.State != "Failed",
+			IsRunning:  running,
 			IsPR:       a.isLayerPR(l),
 			LatestRuns: transformLatestRuns(l.Status.LatestRuns),
 		})
@@ -84,6 +103,13 @@ func (a *API) LayersHandler(c echo.Context) error {
 		Results: results,
 	},
 	)
+}
+
+func runStillRunning(run configv1alpha1.TerraformRun) bool {
+	if run.Status.State != "Failed" && run.Status.State != "Succeeded" {
+		return true
+	}
+	return false
 }
 
 func transformLatestRuns(runs []configv1alpha1.TerraformLayerRun) []Run {
@@ -120,18 +146,6 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 		state = "error"
 	}
 	return state
-}
-
-func (a *API) getLatestRun(layer configv1alpha1.TerraformLayer) (configv1alpha1.TerraformRun, error) {
-	run := &configv1alpha1.TerraformRun{}
-	err := a.Client.Get(context.Background(), types.NamespacedName{
-		Namespace: layer.Namespace,
-		Name:      layer.Status.LastRun.Name,
-	}, run)
-	if err != nil {
-		log.Errorf("could not get latest run for layer %s: %s", layer.Name, err)
-	}
-	return *run, err
 }
 
 func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {

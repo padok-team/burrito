@@ -20,19 +20,21 @@ type State interface {
 
 func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
 	log := log.WithContext(ctx)
-	c1, isPlanArtifactUpToDate := r.IsPlanArtifactUpToDate(layer)
-	c2, isApplyUpToDate := r.IsApplyUpToDate(layer)
-	c3, isLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
-	conditions := []metav1.Condition{c1, c2, c3}
+	c1, IsRunning := r.IsRunning(layer)
+	c2, IsLastPlanTooOld := r.IsLastPlanTooOld(layer)
+	c3, IsLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
+	c4, HasLastPlanFailed := r.HasLastPlanFailed(layer)
+	c5, IsApplyUpToDate := r.IsApplyUpToDate(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4, c5}
 	switch {
-	case isPlanArtifactUpToDate && isApplyUpToDate && isLastRelevantCommitPlanned:
-		log.Infof("layer %s is up to date, waiting for a new drift detection cycle", layer.Name)
+	case IsRunning:
+		log.Infof("layer %s is running, waiting for the run to finish", layer.Name)
 		return &Idle{}, conditions
-	case !isPlanArtifactUpToDate || !isLastRelevantCommitPlanned:
-		log.Infof("layer %s needs to be planned, acquiring lock and creating a new runner", layer.Name)
+	case IsLastPlanTooOld || !IsLastRelevantCommitPlanned:
+		log.Infof("layer %s has an outdated plan, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
-	case isPlanArtifactUpToDate && !isApplyUpToDate:
-		log.Infof("layer %s needs to be applied, acquiring lock and creating a new runner", layer.Name)
+	case !IsApplyUpToDate && !HasLastPlanFailed:
+		log.Infof("layer %s needs to be applied, creating a new run", layer.Name)
 		return &ApplyNeeded{}, conditions
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is not an intended behavior.", layer.Name)

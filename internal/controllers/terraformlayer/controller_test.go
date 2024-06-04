@@ -16,6 +16,7 @@ import (
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
@@ -68,6 +69,13 @@ var _ = BeforeSuite(func() {
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	Expect(err).NotTo(HaveOccurred())
+	err = k8sClient.Create(context.TODO(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "cleanup",
+		},
+	})
+	Expect(err).NotTo(HaveOccurred())
 	utils.LoadResources(k8sClient, "testdata")
 	reconciler = &controller.Reconciler{
 		Client: k8sClient,
@@ -81,7 +89,6 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
-
 })
 
 func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.TerraformLayer, error, error) {
@@ -285,6 +292,48 @@ var _ = Describe("Layer", func() {
 				Expect(runs.Items[0].Spec.Action).To(Equal("plan"))
 			})
 		})
+		Describe("When a TerraformLayer last run is still running", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "nominal-case-7",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should be in Idle state", func() {
+				Expect(layer.Status.State).To(Equal("Idle"))
+			})
+			It("should set RequeueAfter to DriftDetection", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
+			})
+		})
+	})
+	Describe("When a TerraformLayer has errored on plan and is still before new DriftDetection tick", Ordered, func() {
+		BeforeAll(func() {
+			name = types.NamespacedName{
+				Name:      "error-case-1",
+				Namespace: "default",
+			}
+			result, layer, reconcileError, err = getResult(name)
+		})
+		It("should still exists", func() {
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should not return an error", func() {
+			Expect(reconcileError).NotTo(HaveOccurred())
+		})
+		It("should end in Idle state", func() {
+			Expect(layer.Status.State).To(Equal("Idle"))
+		})
+		It("should set RequeueAfter to DriftDetection", func() {
+			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
+		})
 	})
 	Describe("When a TerraformLayer has errored once on plan and not in grace period anymore", Ordered, func() {
 		BeforeAll(func() {
@@ -303,9 +352,9 @@ var _ = Describe("Layer", func() {
 		It("should end in PlanNeeded state", func() {
 			Expect(layer.Status.State).To(Equal("PlanNeeded"))
 		})
-		It("should have the condition IsPlanArtifactUpToDate set to false", func() {
-			Expect(layer.Status.Conditions[0].Reason).To(Equal("LastPlanFailed"))
-			Expect(string(layer.Status.Conditions[0].Status)).To(Equal("False"))
+		It("should have the condition IsPlanTooOld set to true", func() {
+			Expect(layer.Status.Conditions[1].Reason).To(Equal("PlanIsTooOld"))
+			Expect(string(layer.Status.Conditions[1].Status)).To(Equal("True"))
 		})
 		It("should set RequeueAfter to WaitAction", func() {
 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
@@ -317,7 +366,7 @@ var _ = Describe("Layer", func() {
 			Expect(runs.Items[0].Spec.Action).To(Equal("plan"))
 		})
 	})
-	Describe("When a TerraformLayer has errored once on apply and not in grace period anymore", Ordered, func() {
+	Describe("When a TerraformLayer has errored on apply and was done after current plan", Ordered, func() {
 		BeforeAll(func() {
 			name = types.NamespacedName{
 				Name:      "error-case-4",
@@ -331,10 +380,31 @@ var _ = Describe("Layer", func() {
 		It("should not return an error", func() {
 			Expect(reconcileError).NotTo(HaveOccurred())
 		})
+		It("should end in Idle state", func() {
+			Expect(layer.Status.State).To(Equal("Idle"))
+		})
+		It("should set RequeueAfter to DriftDetection", func() {
+			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
+		})
+	})
+	Describe("When a TerraformLayer has errored on apply and was done before current plan", Ordered, func() {
+		BeforeAll(func() {
+			name = types.NamespacedName{
+				Name:      "error-case-5",
+				Namespace: "default",
+			}
+			result, layer, reconcileError, err = getResult(name)
+		})
+		It("should still exists", func() {
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should not return an error", func() {
+			Expect(reconcileError).NotTo(HaveOccurred())
+		})
 		It("should end in ApplyNeeded state", func() {
 			Expect(layer.Status.State).To(Equal("ApplyNeeded"))
 		})
-		It("should set RequeueAfter to WaitAction", func() {
+		It("should set RequeueAfter to DriftDetection", func() {
 			Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 		})
 		It("should have created an apply TerraformRun", func() {
@@ -442,8 +512,26 @@ var _ = Describe("Layer", func() {
 		})
 	})
 	// TODO: test cleanup of runs
-	Describe("Cleanup case", func() {
-
+	Describe("Cleanup case", Ordered, func() {
+		BeforeAll(func() {
+			name = types.NamespacedName{
+				Name:      "cleanup-case-1",
+				Namespace: "cleanup",
+			}
+			result, layer, reconcileError, err = getResult(name)
+		})
+		It("should still exists", func() {
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should not return an error", func() {
+			Expect(reconcileError).NotTo(HaveOccurred())
+		})
+		It("should have deleted 2 runs", func() {
+			runs := &configv1alpha1.TerraformRunList{}
+			err := k8sClient.List(context.TODO(), runs, client.InNamespace("cleanup"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(runs.Items)).To(Equal(5))
+		})
 	})
 })
 

@@ -2,7 +2,7 @@ apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
 metadata:
   name: cleanup-repo-1
-  namespace: default
+  namespace: cleanup
 spec:
   repository:
     url: git@github.com:padok-team/burrito-examples.git
@@ -11,12 +11,100 @@ apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
 metadata:
   name: cleanup-case-1
-  namespace: default
+  namespace: cleanup
 spec:
   branch: main
   path: cleanup-case-1/
   repository:
     name: cleanup-repo-1
-    namespace: default
+    namespace: cleanup
   terraform:
     version: 1.3.1
+status:
+  lastRun: run-to-keep-1
+  latestRuns:
+  - name: run-to-keep-1
+    namespace: cleanup
+    date: "2023-05-08T11:21:53Z"
+  - name: run-to-keep-2
+    namespace: cleanup
+    date: "2023-05-08T11:21:53Z"
+  - name: run-to-keep-3
+    namespace: cleanup
+    date: "2023-05-08T11:21:53Z"
+  - name: run-to-keep-4
+    namespace: cleanup
+    date: "2023-05-08T11:21:53Z"
+  - name: run-to-keep-5
+    namespace: cleanup
+    date: "2023-05-08T11:21:53Z"  
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-keep-1
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-keep-2
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-keep-3
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-keep-4
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-keep-5
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-cleanup-1
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-to-cleanup-2
+  namespace: cleanup
+  labels:
+    burrito/managed-by: cleanup-case-1
+status:
+  state: "Succeeded"

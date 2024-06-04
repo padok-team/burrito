@@ -139,11 +139,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {
 	historyPolicy := configv1alpha1.GetRunHistoryPolicy(repository, layer)
-	if len(layer.Status.LatestRuns) < *historyPolicy.KeepLastRuns {
+	runs, err := r.getAllRuns(ctx, layer)
+	if len(runs) < *historyPolicy.KeepLastRuns {
 		log.Infof("no runs to delete for layer %s", layer.Name)
 		return nil
 	}
-	runs, err := r.getAllRuns(ctx, layer)
 	if err != nil {
 		return err
 	}

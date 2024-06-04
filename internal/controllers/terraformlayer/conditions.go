@@ -1,6 +1,7 @@
 package terraformlayer
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -8,12 +9,56 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
-		Type:               "IsPlanArtifactUpToDate",
+		Type:               "IsRunning",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	if t.Status.LastRun.Name == "" {
+		condition.Reason = "NoRunHasRunYet"
+		condition.Message = "No run has run on this layer yet"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+	run := configv1alpha1.TerraformRun{}
+	err := r.Client.Get(context.TODO(), types.NamespacedName{
+		Namespace: t.Namespace,
+		Name:      t.Status.LastRun.Name,
+	}, &run)
+	if errors.IsNotFound(err) {
+		condition.Reason = "RunNotFound"
+		condition.Message = "The Last Run does not exist, this is likely a bug, considering layer is running"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if err != nil {
+		condition.Reason = "RunRetrievalError"
+		condition.Message = "An error happened while fetching the last run, this is likely a bug, considering layer is running"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if run.Status.State != "Succeeded" && run.Status.State != "Failed" {
+		condition.Reason = "RunStillRunning"
+		condition.Message = "The last run is still running"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	condition.Reason = "RunFinished"
+	condition.Message = "The last run has finished"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
+}
+
+func (r *Reconciler) IsLastPlanTooOld(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsLastPlanTooOld",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
 		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: metav1.NewTime(time.Now()),
@@ -22,20 +67,13 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	if !ok {
 		condition.Reason = "NoPlanHasRunYet"
 		condition.Message = "No plan has run on this layer yet"
-		condition.Status = metav1.ConditionFalse
-		return condition, false
-	}
-	planHash, ok := t.Annotations[annotations.LastPlanSum]
-	if !ok || planHash == "" {
-		condition.Reason = "LastPlanFailed"
-		condition.Message = "Last plan run has failed"
-		condition.Status = metav1.ConditionFalse
-		return condition, false
+		condition.Status = metav1.ConditionTrue
+		return condition, true
 	}
 	lastPlanDate, err := time.Parse(time.UnixDate, value)
 	if err != nil {
 		condition.Reason = "ParseError"
-		condition.Message = "Could not parse time from annotation"
+		condition.Message = "Burrito could not parse the time from the annotation, this is likely a bug, considering plan is recent to lock the behavior"
 		condition.Status = metav1.ConditionFalse
 		return condition, false
 	}
@@ -44,11 +82,37 @@ func (r *Reconciler) IsPlanArtifactUpToDate(t *configv1alpha1.TerraformLayer) (m
 	if nextPlanDate.After(now) {
 		condition.Reason = "PlanIsRecent"
 		condition.Message = fmt.Sprintf("The plan has been made less than %s ago.", r.Config.Controller.Timers.DriftDetection)
-		condition.Status = metav1.ConditionTrue
-		return condition, true
+		condition.Status = metav1.ConditionFalse
+		return condition, false
 	}
 	condition.Reason = "PlanIsTooOld"
 	condition.Message = fmt.Sprintf("The plan has been made more than %s ago.", r.Config.Controller.Timers.DriftDetection)
+	condition.Status = metav1.ConditionTrue
+	return condition, true
+}
+
+func (r *Reconciler) HasLastPlanFailed(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "HasLastPlanFailed",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	value, ok := t.Annotations[annotations.LastPlanSum]
+	if !ok {
+		condition.Reason = "NoPlanHasRunYet"
+		condition.Message = "No plan has run on this layer yet"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	if value == "" {
+		condition.Reason = "NoPlanSum"
+		condition.Message = "The last plan has no sum, considering plan failed"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	condition.Reason = "LastPlanHasSucceeded"
+	condition.Message = "The last plan has succeeded"
 	condition.Status = metav1.ConditionFalse
 	return condition, false
 }
@@ -142,10 +206,30 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 		return condition, false
 	}
 	if applyHash == "" {
-		condition.Reason = "LastApplyFailed"
-		condition.Message = "Last apply run has failed."
-		condition.Status = metav1.ConditionFalse
-		return condition, false
+		applyDate, err := time.Parse(time.UnixDate, t.Annotations[annotations.LastApplyDate])
+		if err != nil {
+			condition.Reason = "ParseError"
+			condition.Message = "Could not parse time from annotation, this is likely a bug, considering apply is up to date"
+			condition.Status = metav1.ConditionTrue
+			return condition, true
+		}
+		planDate, err := time.Parse(time.UnixDate, t.Annotations[annotations.LastPlanDate])
+		if err != nil {
+			condition.Reason = "ParseError"
+			condition.Message = "Could not parse time from annotation, this is likely a bug, considering apply is up to date"
+			condition.Status = metav1.ConditionTrue
+			return condition, true
+		}
+		if planDate.After(applyDate) {
+			condition.Reason = "NewPlanAvailable"
+			condition.Message = "A new plan is available, apply will run."
+			condition.Status = metav1.ConditionFalse
+			return condition, false
+		}
+		condition.Reason = "ApplyUpToDate"
+		condition.Message = "Apply has failed, waiting for another plan to run"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
 	}
 	if applyHash != planHash {
 		condition.Reason = "NewPlanAvailable"

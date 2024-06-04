@@ -29,6 +29,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	logrusr "github.com/bombsimon/logrusr/v4"
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
@@ -75,17 +77,24 @@ func (c *Controllers) Exec() {
 		Hooks:     make(logrus.LevelHooks),
 		Level:     logrus.DebugLevel,
 	}))
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     c.config.Controller.MetricsBindAddress,
-		Port:                   c.config.Controller.KubernetesWebhookPort,
+	cacheNamespaces := make(map[string]cache.Config)
+	for _, namespace := range c.config.Controller.Namespaces {
+		cacheNamespaces[namespace] = cache.Config{}
+	}
+	cacheNamespaces[c.config.Controller.MainNamespace] = cache.Config{}
+	options := manager.Options{
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: c.config.Controller.MetricsBindAddress,
+		},
 		HealthProbeBindAddress: c.config.Controller.HealthProbeBindAddress,
 		LeaderElection:         c.config.Controller.LeaderElection.Enabled,
 		LeaderElectionID:       c.config.Controller.LeaderElection.ID,
 		Cache: cache.Options{
-			Namespaces: append(c.config.Controller.Namespaces, c.config.Controller.MainNamespace),
+			DefaultNamespaces: cacheNamespaces,
 		},
-	})
+	}
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 	if err != nil {
 		log.Fatalf("unable to start manager: %s", err)
 	}

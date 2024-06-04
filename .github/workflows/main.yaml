@@ -9,7 +9,7 @@ permissions:
   packages: write
 
 env:
-  GO_VERSION: 1.19
+  GO_VERSION: 1.22
   BUILD_PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
@@ -65,7 +65,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.53
+          version: v1.55
           args: --timeout=5m
 
   build-and-push:
