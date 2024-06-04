@@ -69,11 +69,13 @@ var _ = BeforeSuite(func() {
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
-	k8sClient.Create(context.TODO(), &corev1.Namespace{
+	Expect(err).NotTo(HaveOccurred())
+	err = k8sClient.Create(context.TODO(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "cleanup",
 		},
 	})
+	Expect(err).NotTo(HaveOccurred())
 	utils.LoadResources(k8sClient, "testdata")
 	reconciler = &controller.Reconciler{
 		Client: k8sClient,

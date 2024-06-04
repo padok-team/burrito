@@ -60,6 +60,9 @@ func LoadResources(client client.Client, path string) {
 		}
 		deepCopy.Status = r.Status
 		err = client.Status().Update(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, r := range resources.Repositories {
 		deepCopy := r.DeepCopy()
@@ -139,6 +142,10 @@ func parseResources(path string) (*Resources, error) {
 		}
 		genericResource := &GenericResource{}
 		err := unmarshalYaml([]byte(doc), genericResource)
+		if err != nil {
+			log.Error(err, "Error while decoding YAML object")
+			continue
+		}
 		switch genericResource.Kind {
 		case "TerraformRepository":
 			repo := &configv1alpha1.TerraformRepository{}
