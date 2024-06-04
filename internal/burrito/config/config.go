@@ -29,6 +29,7 @@ type StorageConfig struct {
 	GCS   GCSConfig   `mapstructure:"gcs"`
 	S3    S3Config    `mapstructure:"s3"`
 	Azure AzureConfig `mapstructure:"azure"`
+	Mock  bool        `mapstructure:"mock"`
 }
 
 type GCSConfig struct {
