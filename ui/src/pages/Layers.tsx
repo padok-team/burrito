@@ -31,13 +31,10 @@ const Layers: React.FC = () => {
   const [layerLimit, setLayerLimit] = useState(10);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const search = useMemo<string>(
-    () => {
-      setLayerOffset(0);
-      return searchParams.get("search") || ""
-    },
-    [searchParams]
-  );
+  const search = useMemo<string>(() => {
+    setLayerOffset(0);
+    return searchParams.get("search") || "";
+  }, [searchParams]);
 
   const setSearch = useCallback(
     (search: string) => {
@@ -207,20 +204,65 @@ const Layers: React.FC = () => {
           </div>
           <div className="flex flex-row items-center gap-8">
             <div className="flex flex-row items-center gap-2">
-              <Button theme={theme} variant={"tertiary"} onClick={() => setLayerOffset(Math.max(0,layerOffset-layerLimit))} disabled={ layerOffset == 0 }>Previous</Button>
-              <span className={`
+              <Button
+                theme={theme}
+                variant={"tertiary"}
+                onClick={() =>
+                  setLayerOffset(Math.max(0, layerOffset - layerLimit))
+                }
+                disabled={layerOffset == 0}
+              >
+                Previous
+              </Button>
+              <span
+                className={`
                   text-base
                   font-semibold
                   ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
-                `}>{layerOffset + 1} - {Math.min(layerOffset + layerLimit, layersQuery.isSuccess ? layersQuery.data.results.length : 0)} of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}</span>
-              <Button theme={theme} variant={"tertiary"} onClick={() => setLayerOffset(Math.min(layerOffset+layerLimit, layersQuery.isSuccess ? layersQuery.data.results.length : 0))} disabled= { !layersQuery.isSuccess || layerOffset + layerLimit >= layersQuery.data.results.length }>Next</Button>
-              <span className={`
+                `}
+              >
+                {layerOffset + 1} -{" "}
+                {Math.min(
+                  layerOffset + layerLimit,
+                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                )}{" "}
+                of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
+              </span>
+              <Button
+                theme={theme}
+                variant={"tertiary"}
+                onClick={() =>
+                  setLayerOffset(
+                    Math.min(
+                      layerOffset + layerLimit,
+                      layersQuery.isSuccess
+                        ? layersQuery.data.results.length
+                        : 0
+                    )
+                  )
+                }
+                disabled={
+                  !layersQuery.isSuccess ||
+                  layerOffset + layerLimit >= layersQuery.data.results.length
+                }
+              >
+                Next
+              </Button>
+              <span
+                className={`
                   text-base
                   font-medium
                   ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
-                `}>Items per page: </span>
-              <PaginationDropdown className="w-16"
-              variant={theme} selectedPagination={layerLimit} setSelectedPagination={setLayerLimit} />
+                `}
+              >
+                Items per page:{" "}
+              </span>
+              <PaginationDropdown
+                className="w-16"
+                variant={theme}
+                selectedPagination={layerLimit}
+                setSelectedPagination={setLayerLimit}
+              />
             </div>
             <div className="flex flex-row items-center gap-2">
               <NavigationButton
@@ -265,9 +307,11 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit).map((layer, index) => (
-                  <Card key={index} variant={theme} layer={layer} />
-                ))
+                layersQuery.data.results
+                  .slice(layerOffset, layerOffset + layerLimit)
+                  .map((layer, index) => (
+                    <Card key={index} variant={theme} layer={layer} />
+                  ))
               ) : (
                 <span
                   className={`

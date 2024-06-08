@@ -57,8 +57,8 @@ const Logs: React.FC = () => {
     return param === "ascending"
       ? "ascending"
       : param === "descending"
-      ? "descending"
-      : null;
+        ? "descending"
+        : null;
   }, [searchParams]);
 
   const setDateFilter = useCallback(
@@ -101,8 +101,9 @@ const Logs: React.FC = () => {
           dateFilter === "ascending"
             ? new Date(a.lastRunAt).getTime() - new Date(b.lastRunAt).getTime()
             : dateFilter === "descending"
-            ? new Date(b.lastRunAt).getTime() - new Date(a.lastRunAt).getTime()
-            : 0
+              ? new Date(b.lastRunAt).getTime() -
+                new Date(a.lastRunAt).getTime()
+              : 0
         ),
     }),
   });
@@ -113,8 +114,8 @@ const Logs: React.FC = () => {
         run
           ? `/${run}`
           : layer.latestRuns.length > 0
-          ? `/${layer.lastRun.id}`
-          : ""
+            ? `/${layer.lastRun.id}`
+            : ""
       }`,
       search: searchParams.toString(),
     });
@@ -159,7 +160,7 @@ const Logs: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <div className="flex flex-row items-center justify-between gap-8">
+        <div className="flex flex-row items-center justify-between h-10 gap-8">
           <div className="flex flex-row items-center gap-4">
             <span
               className={`
