@@ -53,7 +53,7 @@ const Button: React.FC<ButtonProps> = ({
           focus-visible:outline-nuances-white
           fill-nuances-black`,
 
-        tertiary: `bg-nuances-white
+        tertiary: `
           text-primary-600
           underline
           hover:text-primary-400
@@ -67,16 +67,25 @@ const Button: React.FC<ButtonProps> = ({
       disabled: {
         primary: `bg-nuances-50
           text-nuances-300
-          fill-nuances-300`,
+          fill-nuances-300
+          active: bg-nuances-50
+          hover:bg-nuances-50
+          `,
 
         secondary: `bg-nuances-50
           text-nuances-300
-          fill-nuances-300`,
+          fill-nuances-300
+          active: bg-nuances-50
+          hover:bg-nuances-50`,
 
-        tertiary: `bg-nuances-white
-          text-nuances-300
+        tertiary: `
           underline
-          fill-nuances-300`,
+          text-nuances-200
+          fill-nuances-200
+          active:text-nuances-200
+          active:fill-nuances-200
+          hover:text-nuances-200
+          hover:fill-nuances-200`,
       },
     },
     dark: {
@@ -117,18 +126,26 @@ const Button: React.FC<ButtonProps> = ({
       disabled: {
         primary: `bg-nuances-50
           text-nuances-300
-          fill-nuances-300`,
+          fill-nuances-300
+          hover:bg-nuances-50
+          active:bg-nuances-50`,
 
         secondary: `bg-nuances-50
           text-nuances-300
-          fill-nuances-300`,
+          fill-nuances-300
+          hover:bg-nuances-50
+          active:bg-nuances-50`,
 
         tertiary: `bg-nuances-black
-          text-nuances-300
           underline
-          fill-nuances-300`,
+          text-nuances-300
+          fill-nuances-300
+          hover:text-nuances-300
+          hover:fill-nuances-300
+          active:text-nuances-300
+          active:fill-nuances-300`,
       },
-    }
+    },
   };
 
   return (
@@ -137,8 +154,8 @@ const Button: React.FC<ButtonProps> = ({
         `relative
         px-4
         py-2
-        rounded-md
-        ${styles[theme].base[variant]}`,
+        rounded-md`,
+        styles[theme].base[variant],
         disabled && styles[theme].disabled[variant],
         className
       )}
@@ -171,7 +188,9 @@ const Button: React.FC<ButtonProps> = ({
           <span className={`${isLoading && "invisible"}`}>{rightIcon}</span>
         )}
         {label && (
-          <span className={`font-semibold text-base ${isLoading && "invisible"}`}>
+          <span
+            className={`font-semibold text-base ${isLoading && "invisible"}`}
+          >
             {label}
           </span>
         )}
