@@ -105,6 +105,18 @@ const Layers: React.FC = () => {
     }),
   });
 
+  const updateLimit = useCallback(
+    (limit: number) => {
+      if (layersQuery.isSuccess) {
+        if (layerOffset + limit > layersQuery.data.results.length) {
+          setLayerOffset(Math.max(0, layersQuery.data.results.length - limit));
+        }
+        setLayerLimit(limit);
+      }
+    },
+    [layerOffset, layersQuery]
+  );
+
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
       <div
@@ -261,7 +273,7 @@ const Layers: React.FC = () => {
                 className="w-16"
                 variant={theme}
                 selectedPagination={layerLimit}
-                setSelectedPagination={setLayerLimit}
+                setSelectedPagination={updateLimit}
               />
             </div>
             <div className="flex flex-row items-center gap-2">
