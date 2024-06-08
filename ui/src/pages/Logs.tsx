@@ -233,65 +233,77 @@ const Logs: React.FC = () => {
               label="Hide Pull Requests"
             />
           </div>
-              <div className="flex flex-row items-center gap-2">
-                <Button
-                  theme={theme}
-                  variant={"tertiary"}
-                  onClick={() =>
-                    setLayerOffset(Math.max(0, layerOffset - layerLimit))
-                  }
-                  disabled={layerOffset == 0}
-                >
-                  Previous
-                </Button>
-                <span
-                  className={`
+          <div className="flex flex-row items-center gap-2">
+            <Button
+              theme={theme}
+              variant={"tertiary"}
+              onClick={() =>
+                setLayerOffset(Math.max(0, layerOffset - layerLimit))
+              }
+              disabled={layerOffset == 0}
+            >
+              Previous
+            </Button>
+            {layersQuery.isSuccess ? (
+              <span
+                className={`
                       text-base
                       font-semibold
                       ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
                     `}
-                >
-                  {layerOffset + 1} -{" "}
-                  {Math.min(
+              >
+                {layerOffset + 1} -{" "}
+                {Math.min(
+                  layerOffset + layerLimit,
+                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                )}{" "}
+                of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
+              </span>
+            ) : (
+              <span
+                className={`
+                      text-base
+                      font-semibold
+                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                    `}
+              >
+                {layersQuery.isLoading ? "Loading..." : "0 - 0 of 0"}
+              </span>
+            )}
+            <Button
+              theme={theme}
+              variant={"tertiary"}
+              onClick={() =>
+                setLayerOffset(
+                  Math.min(
                     layerOffset + layerLimit,
                     layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                  )}{" "}
-                  of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
-                </span>
-                <Button
-                  theme={theme}
-                  variant={"tertiary"}
-                  onClick={() =>
-                    setLayerOffset(
-                      Math.min(
-                        layerOffset + layerLimit,
-                        layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                      )
-                    )
-                  }
-                  disabled={
-                    !layersQuery.isSuccess ||
-                    layerOffset + layerLimit >= layersQuery.data.results.length
-                  }
-                >
-                  Next
-                </Button>
-                <span
-                  className={`
+                  )
+                )
+              }
+              disabled={
+                !layersQuery.isSuccess ||
+                layerOffset + layerLimit >= layersQuery.data.results.length
+              }
+            >
+              Next
+            </Button>
+            <span
+              className={`
                       text-base
                       font-medium
                       ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
                     `}
-                >
-                  Items per page:{" "}
-                </span>
-                <PaginationDropdown
-                  className="w-16"
-                  variant={theme}
-                  selectedPagination={layerLimit}
-                  setSelectedPagination={updateLimit}
-                />
-              </div>
+            >
+              Items per page:{" "}
+            </span>
+            <PaginationDropdown
+              className="w-16"
+              variant={theme}
+              selectedPagination={layerLimit}
+              setSelectedPagination={updateLimit}
+            />
+          </div>
         </div>
       </div>
       <div

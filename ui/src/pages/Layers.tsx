@@ -226,20 +226,33 @@ const Layers: React.FC = () => {
               >
                 Previous
               </Button>
-              <span
-                className={`
-                  text-base
-                  font-semibold
-                  ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
-                `}
-              >
-                {layerOffset + 1} -{" "}
-                {Math.min(
-                  layerOffset + layerLimit,
-                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                )}{" "}
-                of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
-              </span>
+              {layersQuery.isSuccess ? (
+                <span
+                  className={`
+                      text-base
+                      font-semibold
+                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                    `}
+                >
+                  {layerOffset + 1} -{" "}
+                  {Math.min(
+                    layerOffset + layerLimit,
+                    layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                  )}{" "}
+                  of{" "}
+                  {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
+                </span>
+              ) : (
+                <span
+                  className={`
+                      text-base
+                      font-semibold
+                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                    `}
+                >
+                  {layersQuery.isLoading ? "Loading..." : "0 - 0 of 0"}
+                </span>
+              )}
               <Button
                 theme={theme}
                 variant={"tertiary"}
