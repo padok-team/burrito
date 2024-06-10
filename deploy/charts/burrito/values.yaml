@@ -97,6 +97,9 @@ hermitcrab:
 
   deployment:
     replicas: 1
+    tolerations: {}
+    nodeSelector: {}
+    affinity: {}
     image:
       pullPolicy: Always
       repository: sealio/hermitcrab

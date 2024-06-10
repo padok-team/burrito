@@ -90,6 +90,12 @@ spec:
         {{- toYaml .deployment.extraVolumes | nindent 8 }}
         {{- end }}
       {{- end }}
+      tolerations:
+        {{- toYaml .deployment.tolerations | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .deployment.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .deployment.affinity | nindent 8 }}
 ---
 {{- if .tls.certManager.use }}
 apiVersion: cert-manager.io/v1
