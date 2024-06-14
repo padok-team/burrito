@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo } from "react";
+import React, { useContext, useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 
@@ -10,6 +10,7 @@ import { ThemeContext } from "@/contexts/ThemeContext";
 import Button from "@/components/core/Button";
 import Input from "@/components/core/Input";
 import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
+import PaginationDropdown from "@/components/dropdowns/PaginationDropdown";
 import DateDropdown from "@/components/dropdowns/DateDropdown";
 import Toggle from "@/components/core/Toggle";
 import RunCardLoader from "@/components/loaders/RunCardLoader";
@@ -23,6 +24,8 @@ import { Layer } from "@/clients/layers/types";
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const { layerId, runId } = useParams();
+  const [layerOffset, setLayerOffset] = useState(0);
+  const [layerLimit, setLayerLimit] = useState(10);
   const [searchParams, setSerchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -57,8 +60,8 @@ const Logs: React.FC = () => {
     return param === "ascending"
       ? "ascending"
       : param === "descending"
-      ? "descending"
-      : null;
+        ? "descending"
+        : null;
   }, [searchParams]);
 
   const setDateFilter = useCallback(
@@ -101,11 +104,24 @@ const Logs: React.FC = () => {
           dateFilter === "ascending"
             ? new Date(a.lastRunAt).getTime() - new Date(b.lastRunAt).getTime()
             : dateFilter === "descending"
-            ? new Date(b.lastRunAt).getTime() - new Date(a.lastRunAt).getTime()
-            : 0
+              ? new Date(b.lastRunAt).getTime() -
+                new Date(a.lastRunAt).getTime()
+              : 0
         ),
     }),
   });
+
+  const updateLimit = useCallback(
+    (limit: number) => {
+      if (layersQuery.isSuccess) {
+        if (layerOffset + limit > layersQuery.data.results.length) {
+          setLayerOffset(Math.max(0, layersQuery.data.results.length - limit));
+        }
+        setLayerLimit(limit);
+      }
+    },
+    [layerOffset, layersQuery]
+  );
 
   const handleActive = (layer: Layer, run?: string) => {
     navigate({
@@ -113,8 +129,8 @@ const Logs: React.FC = () => {
         run
           ? `/${run}`
           : layer.latestRuns.length > 0
-          ? `/${layer.lastRun.id}`
-          : ""
+            ? `/${layer.lastRun.id}`
+            : ""
       }`,
       search: searchParams.toString(),
     });
@@ -159,20 +175,20 @@ const Logs: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <div className="flex flex-row items-center justify-between gap-8">
+        <div className="flex flex-row items-center justify-between h-10 gap-8">
           <div className="flex flex-row items-center gap-4">
             <span
               className={`
-                text-base
-                font-semibold
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              text-base
+              font-semibold
+              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
               `}
             >
               {`
                 ${
                   layersQuery.isSuccess ? layersQuery.data.results.length : 0
                 } layers
-              `}
+                `}
             </span>
             <span
               className={`
@@ -183,13 +199,13 @@ const Logs: React.FC = () => {
                     ? "border-primary-600"
                     : "border-nuances-200"
                 }
-              `}
+                `}
             ></span>
             <span
               className={`
-                text-base
-                font-medium
-                ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+              text-base
+              font-medium
+              ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
               `}
             >
               Filter by
@@ -208,13 +224,84 @@ const Logs: React.FC = () => {
             </div>
             <Toggle
               className={`
-                text-sm
-                font-medium
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              text-sm
+              font-medium
+              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
               `}
               checked={hidePRFilter}
               onChange={() => setHidePRFilter(!hidePRFilter)}
               label="Hide Pull Requests"
+            />
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <Button
+              theme={theme}
+              variant={"tertiary"}
+              onClick={() =>
+                setLayerOffset(Math.max(0, layerOffset - layerLimit))
+              }
+              disabled={layerOffset == 0}
+            >
+              Previous
+            </Button>
+            {layersQuery.isSuccess ? (
+              <span
+                className={`
+                      text-base
+                      font-semibold
+                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                    `}
+              >
+                {layerOffset + 1} -{" "}
+                {Math.min(
+                  layerOffset + layerLimit,
+                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                )}{" "}
+                of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
+              </span>
+            ) : (
+              <span
+                className={`
+                      text-base
+                      font-semibold
+                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                    `}
+              >
+                {layersQuery.isLoading ? "Loading..." : "0 - 0 of 0"}
+              </span>
+            )}
+            <Button
+              theme={theme}
+              variant={"tertiary"}
+              onClick={() =>
+                setLayerOffset(
+                  Math.min(
+                    layerOffset + layerLimit,
+                    layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                  )
+                )
+              }
+              disabled={
+                !layersQuery.isSuccess ||
+                layerOffset + layerLimit >= layersQuery.data.results.length
+              }
+            >
+              Next
+            </Button>
+            <span
+              className={`
+                      text-base
+                      font-medium
+                      ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+                    `}
+            >
+              Items per page:{" "}
+            </span>
+            <PaginationDropdown
+              className="w-16"
+              variant={theme}
+              selectedPagination={layerLimit}
+              setSelectedPagination={updateLimit}
             />
           </div>
         </div>
@@ -245,16 +332,18 @@ const Logs: React.FC = () => {
             </span>
           ) : layersQuery.isSuccess ? (
             layersQuery.data.results.length > 0 ? (
-              layersQuery.data.results.map((layer, index) => (
-                <RunCard
-                  key={index}
-                  variant={theme}
-                  isActive={layerId === layer.name}
-                  onClick={() => handleActive(layer)}
-                  handleActive={handleActive}
-                  layer={layer}
-                />
-              ))
+              layersQuery.data.results
+                .slice(layerOffset, layerOffset + layerLimit)
+                .map((layer, index) => (
+                  <RunCard
+                    key={index}
+                    variant={theme}
+                    isActive={layerId === layer.name}
+                    onClick={() => handleActive(layer)}
+                    handleActive={handleActive}
+                    layer={layer}
+                  />
+                ))
             ) : (
               <span
                 className={`
