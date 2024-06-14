@@ -374,7 +374,7 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                <Table variant={theme} data={layersQuery.data.results} />
+                <Table variant={theme} data={layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit)} />
               ) : (
                 <div className="p-6">
                   <span
