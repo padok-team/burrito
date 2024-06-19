@@ -14,7 +14,7 @@
 
 ## 1. Install burrito
 
-Copy and modify the default values to match your requirements.
+Copy and modify the [default values](https://github.com/padok-team/burrito/blob/main/deploy/charts/burrito/values.yaml) to match your requirements.
 
 ```bash
 helm install burrito oci://ghcr.io/padok-team/charts/burrito -n burrito-system -f ./values.yaml
