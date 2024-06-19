@@ -23,11 +23,4 @@ Finally, currently, there is no easy way to navigate your Terraform state to tru
 
 ## Getting started
 
-### Quick start
-
-```bash
-kubectl create namespace burrito
-kubectl apply -n burrito -f https://raw.githubusercontent.com/padok-team/burrito/main/manifests/install.yaml
-```
-
 Follow our [getting started guide](./getting-started.md). Further user oriented [documentation](./user-guide/) is provided for additional features.

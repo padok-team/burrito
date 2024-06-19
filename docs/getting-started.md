@@ -10,13 +10,14 @@
 
 - Installed [helm](https://helm.sh/docs/intro/install/) command-line tool.
 - Have a [kubeconfig](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) file (default location is `~/.kube/config`).
+- Complete access for burrito to the bucket where logs and plans will be stored.
 
 ## 1. Install burrito
 
+Copy and modify the default values to match your requirements.
+
 ```bash
-helm repo add burrito oci://ghcr.io/padok-team/charts
-helm repo update
-helm install burrito burrito/burrito -n burrito-system
+helm install burrito oci://ghcr.io/padok-team/charts/burrito -n burrito-system -f ./values.yaml
 ```
 
 This will create a new namespace, `burrito-system`, where burrito services will live.

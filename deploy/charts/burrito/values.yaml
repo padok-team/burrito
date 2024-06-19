@@ -45,9 +45,13 @@ config:
       serviceAccounts: []
       storage:
         mock: false # -- Use in-memory storage for testing - not intended for production use 
-        gcs: {}
-        azure: {}
-        s3: {}
+        gcs:
+          bucket: ""
+        azure:
+          storageAccount: ""
+          container: ""
+        s3: 
+          bucket: ""
       addr: ":8080"
 
     # Burrito server configuration
