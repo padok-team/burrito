@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go v1.53.16
 	github.com/bradleyfalzon/ghinstallation/v2 v2.8.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/gruntwork-io/go-commons v0.8.2
+	github.com/gruntwork-io/go-commons v0.17.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/terraform-json v0.17.1
 	github.com/onsi/ginkgo/v2 v2.17.3
@@ -58,7 +58,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/go-errors/errors v1.0.2-0.20180813162953-d98b870cc4e0 // indirect
+	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -93,9 +93,11 @@ require (
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/urfave/cli v1.22.4 // indirect
+	github.com/urfave/cli/v2 v2.10.3 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/zclconf/go-cty v1.14.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
