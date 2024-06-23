@@ -72,7 +72,7 @@ func New(config config.Config) Storage {
 	case config.Datastore.Storage.S3.Bucket != "":
 		return Storage{Backend: s3.New(config.Datastore.Storage.S3)}
 	case config.Datastore.Storage.Mock:
-		log.Warn("Using mock storage backend - for testing only - no data will only be stored in memory and will be lost when the process exits")
+		log.Warn("Using mock storage backend - for testing only - data will only be stored in memory and will be lost when the process exits")
 		return Storage{Backend: mock.New()}
 	}
 	return Storage{}
