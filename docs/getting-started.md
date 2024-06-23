@@ -59,7 +59,7 @@ spec:
 ```
 
 !!! info
-    You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformLayer` definition.
+    You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformRepository` definition.
 
 ## 3. Synchronize a terraform layer
 
@@ -74,7 +74,7 @@ metadata:
 spec:
   terraform:
     version: "1.3.1"
-  path: "internal/e2e/testdata/random-pets"
+  path: "internal/e2e/testdata/terraform/random-pets"
   branch: "main"
   repository:
     name: burrito
