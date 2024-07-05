@@ -1,14 +1,29 @@
 # Setup a Git Webhook
 
-Create a webhook (with a secret!) in the repository you want to receive events from.
+## Expose Burrito server to the internet
 
-Then create a secret:
+Expose the `burrito-server` service to the internet using the method of your choice. (e.g. ingress, port-forward & ngrok for local testing...). Accessing the URL on the browser should display the Burrito UI.
 
+## Configure a webhook on GitHub or GitLab
+
+Create a webhook (with a secret!) in the repository you want to receive events from.  
+The target URL must point to the exposed `burrito-server` on the `/api/webhook` path.
+
+GitHub triggers:  
+The webhook should be triggered on `push` and `pull_request` events.
+
+GitLab triggers:  
+The webhook should be triggered on `Push events` from all branches and `Merge request events`.
+
+## Reference the webhook secret in the controller
+
+Create a secret called `burrito-webhook-secret` in the controller namespace with the webhook secret.
 ```yaml
 kind: Secret
+apiVersion: v1
 metadata:
   name: burrito-webhook-secret
-  namespace: burrito
+  namespace: burrito-system
 type: Opaque
 stringData:
   burrito-webhook-secret: <my-webhook-secret>

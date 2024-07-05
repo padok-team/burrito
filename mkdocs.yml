@@ -1,9 +1,11 @@
-site_name: burrito
+site_name: Burrito
 repo_url: https://github.com/padok-team/burrito
 theme:
   name: material
   favicon: assets/icon/burrito.png
   logo: assets/icon/burrito.png
+  features:
+    - navigation.indexes
 markdown_extensions:
 - codehilite
 - admonition
@@ -12,14 +14,16 @@ markdown_extensions:
 nav:
 - Home: index.md
 - Overview: overview.md
-- Getting Started:
-  - IaC Drift Detection: getting-started/iac-drift-detection.md
-  - PR/MR Workflow: getting-started/pr-mr-workflow.md
-  - UI Overview: getting-started/ui.md
+- Getting started: getting-started.md
+- Guides:
+  - guides/index.md
+  - IaC Drift Detection: guides/iac-drift-detection.md
+  - PR/MR Workflow: guides/pr-mr-workflow.md
+  - UI Overview: guides/ui.md
+- Installation:
+  - Install with Helm (recommended): installation/with-helm.md
+  - Install with static manifests: installation/with-static-manifests.md
 - Operator Manual:
-  - Install:
-    - With static manifests: operator-manual/install/with-static-manifests.md
-    - With our Helm chart: operator-manual/install/with-helm.md
   - operator-manual/index.md
   - operator-manual/architecture.md
   - operator-manual/git-webhook.md
@@ -36,6 +40,7 @@ nav:
   - user-guide/private-modules.md
   - user-guide/additionnal-trigger-path.md
 - Reference:
+  - reference/index.md
   - reference/api.md
   - reference/crds.md
 - FAQ: faq.md

@@ -9,21 +9,25 @@ config:
   burrito:
     datastore:
       storage:
+        mock: <false|true> # default: false
         s3:
-          bucket: XXX
+          bucket: <bucket-name>
         gcs:
-          bucket: XXX
+          bucket: <bucket-name>
         azure:
-          storageAccount: XXX
-          container: XXX
+          storageAccount: <storage-account>
+          container: <container-name>
 ```
 
 !!! info
     Only one storage backend can be configured at a time.
 
+!!! warning
+    The `mock` storage backend is only for testing purposes and should not be used in production. If enabled, Burrito will store the data in memory and will lose it when the pod is restarted. It also might fill up the memory of the pod if too much data is stored.
+
 ## Authentication
 
-The different cloud provider implementations rely on the default credentials chain of the cloud provider SDKs.
+The different cloud provider implementations rely on the default credentials chain of the cloud provider SDKs. Use annotations and labels on the service account associated to the datastore by updating the `datastore.serviceAccount.metadata` field to specify the credentials to use. (e.g. `iam.amazonaws.com/role` for AWS)
 
 ## Authorization
 
