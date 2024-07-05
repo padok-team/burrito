@@ -10,8 +10,12 @@ markdown_extensions:
 - toc:
     permalink: true
 nav:
-- Overview: index.md
-- Getting Started: getting-started.md
+- Home: index.md
+- Overview: overview.md
+- Getting Started:
+  - IaC Drift Detection: getting-started/iac-drift-detection.md
+  - PR/MR Workflow: getting-started/pr-mr-workflow.md
+  - UI Overview: getting-started/ui.md
 - Operator Manual:
   - Install:
     - With static manifests: operator-manual/install/with-static-manifests.md
@@ -31,3 +35,9 @@ nav:
   - user-guide/terraform-version.md
   - user-guide/private-modules.md
   - user-guide/additionnal-trigger-path.md
+- Reference:
+  - reference/api.md
+  - reference/crds.md
+- FAQ: faq.md
+- Contributing:
+  - contributing.md
