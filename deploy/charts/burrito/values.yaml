@@ -11,13 +11,10 @@ config:
   # -- Annotations to be added to the ConfigMap
   annotations: {}
 
-  # -- Burrito configuration in YAML format
   burrito:
-    # Burrito controller configuration
     controller:
       # -- By default, the controller will only watch the tenants namespaces
       namespaces: []
-      # -- Timer configuration
       timers:
         # -- Drift detection interval
         driftDetection: 10m
@@ -33,7 +30,6 @@ config:
       terraformMaxRetries: 3
       # -- Resource types to watch for reconciliation
       types: ["layer", "repository", "run", "pullrequest"]
-      # -- Leader election configuration
       leaderElection:
         # -- Enable/Disable leader election
         enabled: true
@@ -45,80 +41,66 @@ config:
       healthProbeBindAddress: ":8081"
       # -- Port used to handle the Kubernetes webhook
       kubernetesWebhookPort: 9443
-      # -- GitHub configuration
       githubConfig:
-        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APPID environment variable
+        # -- Github app ID, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APPID environment variable
         appId: ""
-        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID environment variable
+        # -- Github app unstallation ID, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID environment variable
         installationId: ""
-        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY environment variable
+        # -- Github app private key, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY environment variable
         privateKey: ""
-        # -- Prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable
+        # -- Github API token, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable
         apiToken: ""
-      # -- GitLab configuration
       gitlabConfig:
-        # -- Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
+        # -- Gitlab API token Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
         apiToken: ""
+        # -- Gitlab URL
         url: ""
     # -- Provider cache custom configuration
     hermitcrab: {}
-    # -- Datastore configuration
     datastore:
       # -- Service account to use for datastore operations (e.g. reading/writing to storage)
       serviceAccounts: []
       storage:
         # -- Use in-memory storage for testing - not intended for production use, data will be lost on datastore restart 
         mock: false 
-        # -- GCS configuration
         gcs:
           # -- GCS bucket name
           bucket: ""
-        # -- Azure storage configuration
         azure:
           # -- Azure storage account name
           storageAccount: ""
           # -- Azure storage container name
           container: ""
-        # -- S3 configuration
         s3: 
           # -- S3 bucket name
           bucket: ""
       # -- Datastore exposed port
       addr: ":8080"
 
-    # -- Burrito server configuration
     server:
       # -- Server exposed port
       addr: ":8080"
-      # -- Github/Gitlab webhook handling configuration
       webhook:
-        # -- Github webhook configuration
         github:
           # -- Secret to validate webhook payload, prefer override with the BURRITO_SERVER_WEBHOOK_GITHUB_SECRET environment variable
           secret: ""
-        # -- Gitlab webhook configuration
         gitlab:
           # -- Secret to validate webhook payload, Prefer override with the BURRITO_SERVER_WEBHOOK_GITLAB_SECRET environment variable
           secret: ""
 
-    # -- Burrito runnners configuration
     runner:
-      # -- Configmap name to store the SSH known hosts
+      # -- Configmap name to store the SSH known hosts in the runner
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
-# -- Terraform provider cache configuration (Hermitcrab)
-hermitcrab:
-  # -- Enable/Disable Hermitcrab
+hermitcrab: 
+  # -- Enable/Disable Hermitcrab (terraform provider cache in cluster)
   enabled: false
-  # -- Metadata for Hermitcrab resources
   metadata:
     # -- Labels to be added to the Hermitcrab resources
     labels:
       app.kubernetes.io/component: hermitcrab
       app.kubernetes.io/name: burrito-hermitcrab
-  # -- Hermitcrab storage configuration
   storage:
-    # -- EmptyDir configuration
     emptyDir:
       # -- Use emptyDir for Hermitcrab storage
       enabled: true
@@ -126,7 +108,6 @@ hermitcrab:
       medium: ""
       # -- EmptyDir size limit
       sizeLimit: "2Gi"
-    # -- Ephemeral storage configuration
     ephemeral:
       # -- Use ephemeral storage for Hermitcrab storage
       enabled: false
@@ -134,13 +115,10 @@ hermitcrab:
       size: "2Gi"
       # -- Ephemeral storage class name
       storageClassName: ""
-  # -- Hermitcrab TLS configuration
   tls:
-    # -- CertManager configuration
     certManager:
       # -- Use CertManager for Hermitcrab TLS (requires cert-manager to be installed on the cluster)
       use: true
-      # -- CertManager certificate configuration
       certificate:
         spec:
           # -- Secret name to store the Hermitcrab TLS certificate
@@ -152,12 +130,10 @@ hermitcrab:
             - burrito-hermitcrab.burrito-system.svc.cluster.local
             - burrito-hermitcrab.burrito-system
             - burrito-hermitcrab
-          # -- Issuer reference for the Hermitcrab TLS certificate
           issuerRef:
             # -- The default issuer name is "burrito-ca-issuer", packaged with the chart
             name: burrito-ca-issuer
             kind: Issuer
-  # -- Hermitcrab deployment configuration
   deployment:
     # -- Hermitcrab replicas
     replicas: 1
@@ -221,14 +197,12 @@ hermitcrab:
         port: 80
         path: /livez
 
-# -- Burrito global configuration (applied to all components)
 global:
   # -- Global metadata configuration 
   metadata:
     labels:
       app.kubernetes.io/part-of: burrito
     annotations: {}
-  # -- Global deployment configuration
   deployment:
     autoscaling:
       # -- Enable/Disable autoscaling for Burrito pods
@@ -267,7 +241,6 @@ global:
       annotations: {}
       labels: {}
 
-# -- Burrito controller configuration
 controllers:
   # -- Metadata configuration for the Burrito controller
   metadata:
@@ -363,14 +336,12 @@ server:
     # -- TLS configuration for the Burrito server ingress
     tls: []
 
-# -- Burrito datastore configuration
 datastore:
   # -- Metadata configuration for the Burrito datastore
   metadata:
     labels:
       app.kubernetes.io/component: datastore
       app.kubernetes.io/name: burrito-datastore
-  # -- Deployment configuration for the Burrito datastore
   deployment:
     # -- Annotations to be added to the pods generated by the Burrito datastore deployment
     podAnnotations:
