@@ -48,21 +48,16 @@ spec:
             {{- toYaml .deployment.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .deployment.readinessProbe | nindent 12 }}
-          {{- if or .storage.emptyDir.enabled .storage.ephemeral.enabled .tls.certManager.use .deployment.extraVolumeMounts }}
           volumeMounts:
             {{- if or .storage.emptyDir.enabled .storage.ephemeral.enabled }}
             - name: provider-cache
               mountPath: /var/run/hermitcrab
             {{- end }}
-            {{- if .tls.certManager.use }}
             - name: burrito-hermitcrab-tls
               mountPath: /etc/hermitcrab/tls
-            {{- end }}
             {{- if .deployment.extraVolumeMounts }}
             {{- toYaml .deployment.extraVolumeMounts | nindent 12 }}
             {{- end }}
-          {{- end }}
-      {{- if or .storage.emptyDir.enabled .storage.ephemeral.enabled .tls.certManager.use .deployment.extraVolumes }}
       volumes:
         {{- if or .storage.emptyDir.enabled .storage.ephemeral.enabled }}
         - name: provider-cache
@@ -85,11 +80,14 @@ spec:
         - name: burrito-hermitcrab-tls
           secret:
             secretName: {{ .tls.certManager.certificate.spec.secretName }}
+        {{- else }}
+        - name: burrito-hermitcrab-tls
+          secret:
+            secretName: {{ .tls.secretName }}
         {{- end }}
         {{- if .deployment.extraVolumes }}
         {{- toYaml .deployment.extraVolumes | nindent 8 }}
         {{- end }}
-      {{- end }}
       tolerations:
         {{- toYaml .deployment.tolerations | nindent 8 }}
       nodeSelector:

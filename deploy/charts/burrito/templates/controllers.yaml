@@ -63,7 +63,7 @@ spec:
             - name: burrito-token
               mountPath: /var/run/secrets/token
               readOnly: true
-            {{- if $.Values.datastore.tls.certManager.use }}
+            {{- if $.Values.datastore.tls.enabled }}
             - name: burrito-ca
               mountPath: /etc/ssl/certs/burrito-ca.crt
               subPath: burrito-ca.crt
@@ -92,12 +92,19 @@ spec:
                 audience: burrito
                 expirationSeconds: 3600
                 path: burrito
-        {{- if $.Values.datastore.tls.certManager.use }}
+        {{- if and $.Values.datastore.tls.enabled $.Values.datastore.tls.certManager.use }}
         - name: burrito-ca
           secret:
             secretName: {{ $.Values.datastore.tls.certManager.certificate.spec.secretName }}
             items:
               - key: ca.crt
+                path: burrito-ca.crt
+        {{- else if $.Values.datastore.tls.enabled }}
+        - name: burrito-ca
+          secret:
+            secretName: {{ $.Values.datastore.tls.secretName }}
+            items:
+              - key: {{ $.Values.datastore.tls.caKey }}
                 path: burrito-ca.crt
         {{- end }}
 {{- if .service.enabled }}

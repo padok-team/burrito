@@ -116,8 +116,10 @@ hermitcrab:
       # -- Ephemeral storage class name
       storageClassName: ""
   tls:
+    # -- Reference a secret that contains a CA cer (ca.crt, tls.crt, tls.key) for Hermitcrab (if not using CertManager) - note: TLS is required for Hermitcrab, as Terraform Provider Mirror protocol requires it
+    secretName: burrito-hermitcrab-tls
     certManager:
-      # -- Use CertManager for Hermitcrab TLS (requires cert-manager to be installed on the cluster)
+      # -- Use CertManager for Hermitcrab TLS (recommended - requires cert-manager to be installed on the cluster)
       use: true
       certificate:
         spec:
@@ -138,7 +140,7 @@ hermitcrab:
     # -- Hermitcrab replicas
     replicas: 1
     # -- Hermitcrab tolerations
-    tolerations: {}
+    tolerations: []
     # -- Hermitcrab node selector
     nodeSelector: {}
     # -- Hermitcrab affinity
@@ -381,9 +383,13 @@ datastore:
       targetPort: http
   # -- TLS configuration for the Burrito datastore
   tls:
+    # -- Enable/Disable TLS for the Burrito datastore (recommended for production use)
+    enabled: false
+    # -- Reference a secret that contains a CA certificate (ca.crt, tls.crt, tls.key) for the Burrito datastore (if not using CertManager)
+    secretName: burrito-datastore-tls
     certManager:
-      # -- Use CertManager for Burrito datastore TLS (requires cert-manager to be installed on the cluster)
-      use: false
+      # -- Use CertManager for Burrito datastore TLS (recommended - requires cert-manager to be installed on the cluster)
+      use: true
       # -- CertManager certificate configuration
       certificate:
         spec:
