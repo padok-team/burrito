@@ -1,7 +1,7 @@
 {{ $configChecksum := (include (print $.Template.BasePath "/config.yaml") . | sha256sum) }}
 
 {{- with mergeOverwrite (deepCopy .Values.global) .Values.datastore }}
-{{- if .tls.certManager.use }}
+{{- if .tls.enabled }}
 {{- $_ := set .deployment.livenessProbe.httpGet "scheme" "HTTPS" }}
 {{- $_ := set .deployment.readinessProbe.httpGet "scheme" "HTTPS" }}
 {{- else }}
@@ -64,7 +64,7 @@ spec:
             - name: burrito-config
               mountPath: /etc/burrito
               readOnly: true
-            {{- if .tls.certManager.use }}
+            {{- if .tls.enabled }}
             - name: burrito-datastore-tls
               mountPath: /etc/burrito/tls
               readOnly: true
@@ -85,10 +85,14 @@ spec:
         - name: burrito-config
           configMap:
             name: burrito-config
-        {{- if .tls.certManager.use }}
+        {{- if and .tls.enabled .tls.certManager.use }}
         - name: burrito-datastore-tls
           secret:
             secretName: {{ .tls.certManager.certificate.spec.secretName }}
+        {{- else if .tls.enabled }}
+        - name: burrito-datastore-tls
+          secret:
+            secretName: {{ .tls.secretName }}
         {{- end }}
 {{- if .service.enabled }}
 ---
@@ -136,7 +140,7 @@ subjects:
     name: burrito-datastore
     namespace: {{ $.Release.Namespace }}
 ---
-{{- if .tls.certManager.use }}
+{{- if and .tls.enabled .tls.certManager.use }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

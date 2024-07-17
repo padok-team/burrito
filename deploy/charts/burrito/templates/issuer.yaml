@@ -1,3 +1,4 @@
+{{- if or (and .Values.hermitcrab.enabled .Values.hermitcrab.tls.certManager.use) (and .Values.datastore.tls.enabled .Values.datastore.tls.certManager.use) }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
@@ -28,3 +29,4 @@ metadata:
 spec:
   ca:
     secretName: burrito-ca
+{{- end }}
