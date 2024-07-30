@@ -1,26 +1,12 @@
-# Overview
+# Burrito Documentation
 
-## What is burrito?
+This is the home of the Burrito documentation. Here you will find all the information you need to get started with Burrito.
 
-**Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) Kubernetes Operator.
-
-![demo](assets/demo/demo.gif)
-
-## Why burrito?
-
-[`terraform`](https://www.terraform.io/) is a tremendous tool to manage your infrastructure in IaC.
-However, it lacks built-in solutions for managing [state drift](https://developer.hashicorp.com/terraform/tutorials/state/resource-drift).
-
-Additionally, configuring a CI/CD pipeline for Terraform can be challenging and often varies depending on the selected tools
-
-Finally, currently, there is no easy way to navigate your Terraform state to truly understand the modifications it undergoes when running `terraform apply`.
-
-`burrito` aims to tackle those issues by:
-
-- Planning continuously your Terraform code and run applies if needed
-- Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for Terraform ever again
-- Showing your state's modifications in a simple Web UI
-
-## Getting started
-
-Follow our [getting started guide](./getting-started.md). Further user oriented [documentation](./user-guide/) is provided for additional features.
+- [Overview](./overview.md) helps you understand what Burrito is all about.
+- [Getting Started](./getting-started.md) is a step-by-step guide to help you get started with Burrito.
+- [Guides](./guides/index.md) provides detailed tutorials to help you understand how to use Burrito.
+- [Operator Manual](./operator-manual/) is a detailed guide to help you understand how to install and configure Burrito.
+- [User Guide](./user-guide/) is a detailed guide to help you understand how to setup and use Burrito resources.
+<!-- - [Reference](./reference/) provides detailed information about the Burrito CRDs and their specifications.
+- [FAQ](./faq.md) answers some of the most frequently asked questions about Burrito.
+- [Contributing](./contributing.md) provides information on how to contribute to the Burrito project. -->

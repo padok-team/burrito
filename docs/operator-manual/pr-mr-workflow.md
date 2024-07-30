@@ -45,6 +45,13 @@ With those 3 conditions, we defined 3 states:
 
 ## Configuration
 
+### Webhook
+
+Follow the instructions in [Setting up a Git Webhook](./git-webhook.md) to configure a webhook in your repository.
+The webhook will be used to trigger:
+- Drift detection when a push event is received.
+- The PR/MR workflow when a pull request event is received.
+
 ### GitHub with a dedicated GitHub App
 
 #### Create the GitHub App
