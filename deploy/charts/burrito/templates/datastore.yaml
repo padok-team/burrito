@@ -69,6 +69,9 @@ spec:
               mountPath: /etc/burrito/tls
               readOnly: true
             {{- end }}
+            {{- if .deployment.extraVolumeMounts }}
+            {{- toYaml .deployment.extraVolumeMounts | nindent 12 }}
+            {{- end }}
       {{- with .deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -93,6 +96,9 @@ spec:
         - name: burrito-datastore-tls
           secret:
             secretName: {{ .tls.secretName }}
+        {{- end }}
+        {{- if .deployment.extraVolumes }}
+        {{- toYaml .deployment.extraVolumes | nindent 8 }}
         {{- end }}
 {{- if .service.enabled }}
 ---

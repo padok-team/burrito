@@ -68,6 +68,9 @@ spec:
               subPath: burrito-ca.crt
               readOnly: true
             {{- end }}
+            {{- if .deployment.extraVolumeMounts }}
+            {{- toYaml .deployment.extraVolumeMounts | nindent 12 }}
+            {{- end }}
       {{- with .deployment.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -105,6 +108,9 @@ spec:
             items:
               - key: ca.crt
                 path: burrito-ca.crt
+        {{- end }}
+        {{- if .deployment.extraVolumes }}
+        {{- toYaml .deployment.extraVolumes | nindent 8 }}
         {{- end }}
 {{- if .service.enabled }}
 ---
