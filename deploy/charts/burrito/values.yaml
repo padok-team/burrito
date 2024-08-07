@@ -198,6 +198,10 @@ hermitcrab:
             value: ""
         port: 80
         path: /livez
+    # -- Additional volumes
+    extraVolumes: {}
+    # -- Additional volume mounts
+    extraVolumeMounts: {}
 
 global:
   # -- Global metadata configuration 
@@ -233,6 +237,10 @@ global:
     ports: []
     # -- Global environment variables 
     envFrom: []
+    # -- Additional volumes
+    extraVolumes: {}
+    # -- Additional volume mounts
+    extraVolumeMounts: {}
   # -- Global service configuration
   service:
     # -- Enable/Disable service creation for Burrito components
@@ -276,6 +284,10 @@ controllers:
     envFrom: []
     # -- Environment variables to pass to the Burrito controller container
     env: []
+    # -- Additional volumes
+    extraVolumes: {}
+    # -- Additional volume mounts
+    extraVolumeMounts: {}
   service:
     # -- Enable/Disable service creation for the Burrito controller
     enabled: false
@@ -319,6 +331,10 @@ server:
       - secretRef:
           name: burrito-webhook-secret
           optional: true
+    # -- Additional volumes
+    extraVolumes: {}
+    # -- Additional volume mounts
+    extraVolumeMounts: {}
   # -- Service configuration for the Burrito server
   service:
     ports:
@@ -376,6 +392,10 @@ datastore:
       periodSeconds: 20
     # -- Environment variables to pass to the Burrito datastore container
     envFrom: []
+    # -- Additional volumes
+    extraVolumes: {}
+    # -- Additional volume mounts
+    extraVolumeMounts: {}
   # -- Service configuration for the Burrito datastore
   service:
     ports:
