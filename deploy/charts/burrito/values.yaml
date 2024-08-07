@@ -149,7 +149,7 @@ hermitcrab:
     image:
       pullPolicy: Always
       repository: sealio/hermitcrab
-      tag: main
+      tag: main@sha256:764047122cba37be932153c38bb368b811cdd5c70bcec9266b8abdd855245e40
     # -- Hermitcrab environment variables
     env:
       - name: SERVER_TLS_CERT_FILE
