@@ -267,7 +267,7 @@ func (r *Runner) plan() (string, error) {
 		log.Errorf("error parsing terraform json plan: %s", err)
 		return "", err
 	}
-	_, shortDiff := getDiff(plan)
+	_, shortDiff := runnerutils.GetDiff(plan)
 	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "json", planJsonBytes)
 	if err != nil {
 		log.Errorf("could not put json plan in datastore: %s", err)
@@ -326,26 +326,4 @@ func (r *Runner) apply() (string, error) {
 	}
 	log.Infof("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
-}
-
-func getDiff(plan *tfjson.Plan) (bool, string) {
-	delete := 0
-	create := 0
-	update := 0
-	for _, res := range plan.ResourceChanges {
-		if res.Change.Actions.Create() {
-			create++
-		}
-		if res.Change.Actions.Delete() {
-			delete++
-		}
-		if res.Change.Actions.Update() {
-			update++
-		}
-	}
-	diff := false
-	if create+delete+update > 0 {
-		diff = true
-	}
-	return diff, fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
 }
