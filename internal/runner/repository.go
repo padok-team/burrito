@@ -7,19 +7,24 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	log "github.com/sirupsen/logrus"
 )
 
-func clone(repository config.RepositoryConfig, URL, branch, path string) (*git.Repository, error) {
-	cloneOptions, err := getCloneOptions(repository, URL, branch, path)
+// Fetch the content of the specified repository on the specified branch with git clone
+//
+// TODO: Fetch repo from datastore when repository controller is implemented
+func FetchRepositoryContent(repo *configv1alpha1.TerraformRepository, branch string, config config.RepositoryConfig) (*git.Repository, error) {
+	log.Infof("fetching repository %s on %s branch with git clone", repo.Spec.Repository.Url, branch)
+	cloneOptions, err := getCloneOptions(config, repo.Spec.Repository.Url, branch)
 	if err != nil {
 		return &git.Repository{}, err
 	}
 	return git.PlainClone(WorkingDir, false, cloneOptions)
 }
 
-func getCloneOptions(repository config.RepositoryConfig, URL, branch, path string) (*git.CloneOptions, error) {
+func getCloneOptions(repository config.RepositoryConfig, URL, branch string) (*git.CloneOptions, error) {
 	authMethod := "ssh"
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),

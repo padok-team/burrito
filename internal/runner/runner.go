@@ -199,14 +199,13 @@ func (r *Runner) init() error {
 	}
 	log.Infof("kubernetes resources successfully retrieved")
 
-	log.Infof("cloning repository %s %s branch", r.repository.Spec.Repository.Url, r.layer.Spec.Branch)
-	r.gitRepository, err = clone(r.config.Runner.Repository, r.repository.Spec.Repository.Url, r.layer.Spec.Branch, r.layer.Spec.Path)
+	r.gitRepository, err = FetchRepositoryContent(r.repository, r.layer.Spec.Branch, r.config.Runner.Repository)
 	if err != nil {
 		r.gitRepository = nil // reset git repository for the caller
-		log.Errorf("error cloning repository: %s", err)
+		log.Errorf("error fetching repository: %s", err)
 		return err
 	}
-	log.Infof("repository cloned successfully")
+	log.Infof("repository fetched successfully")
 
 	log.Infof("installing binaries...")
 	err = r.install()
