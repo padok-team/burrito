@@ -180,9 +180,9 @@ func (r *Runner) init() error {
 	}
 	log.Infof("binaries successfully installed")
 
-	if os.Getenv("HERMITCRAB_ENABLED") == "true" {
+	if r.config.Hermitcrab.Enabled {
 		log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
-		err := runnerutils.CreateNetworkMirrorConfig(WorkingDir, os.Getenv("HERMITCRAB_URL"))
+		err := runnerutils.CreateNetworkMirrorConfig(WorkingDir, r.config.Hermitcrab.URL)
 		if err != nil {
 			log.Errorf("error creating network mirror configuration: %s", err)
 		}
