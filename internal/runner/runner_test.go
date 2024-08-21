@@ -156,3 +156,64 @@ var _ = Describe("End-to-End Runner Tests", func() {
 
 	})
 })
+
+var _ = Describe("Runner Tests", func() {
+	var err error
+	Describe("Nominal Case", func() {
+		Describe("When Hermitcrab is enabled", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Hermitcrab.Enabled = true
+				conf.Hermitcrab.URL = "http://hermitcrab.local"
+
+				runner := runner.New(conf)
+				err = runner.EnableHermitcrab()
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have created a network mirror configuration file that contains the URL", func() {
+				content, err := os.ReadFile(filepath.Join(conf.Runner.RepositoryPath, "config.tfrc"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).To(ContainSubstring("http://hermitcrab.local"))
+			})
+			It("should have set the TF_CLI_CONFIG_FILE environment variable", func() {
+				Expect(os.Getenv("TF_CLI_CONFIG_FILE")).NotTo(BeEmpty())
+			})
+		})
+		Describe("When all resources are present (layer, run, repository)", Ordered, func() {
+			var conf *config.Config
+			var runnerInstance *runner.Runner
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "apply"
+				conf.Runner.Layer.Name = "nominal-case-1"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "nominal-case-1-apply"
+
+				runnerInstance = runner.New(conf)
+				runnerInstance.Client = k8sClient
+				err = runnerInstance.GetResources()
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have retrieved the layer", func() {
+				Expect(runnerInstance.Layer).NotTo(BeNil())
+			})
+			It("should have retrieved the run", func() {
+				Expect(runnerInstance.Run).NotTo(BeNil())
+			})
+			It("should have retrieved the repository", func() {
+				Expect(runnerInstance.Repository).NotTo(BeNil())
+			})
+		})
+	})
+})
