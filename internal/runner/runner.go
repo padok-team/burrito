@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
@@ -86,6 +85,8 @@ func (r *Runner) Init() error {
 		return err
 	}
 
+	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.Layer.Spec.Path)
+
 	r.gitRepository, err = FetchRepositoryContent(r.Repository, r.Layer.Spec.Branch, r.config)
 	if err != nil {
 		log.Errorf("error fetching repository: %s", err)
@@ -94,12 +95,7 @@ func (r *Runner) Init() error {
 	log.Infof("repository fetched successfully")
 
 	log.Infof("installing binaries...")
-	err = os.Chdir(r.workingDir) // need to cd into the repo to detect tf versions
-	if err != nil {
-		log.Errorf("error changing directory: %s", err)
-		return err
-	}
-	r.exec, err = tools.InstallBinaries(r.Layer, r.Repository, r.config.Runner.RunnerBinaryPath)
+	r.exec, err = tools.InstallBinaries(r.Layer, r.Repository, r.config.Runner.RunnerBinaryPath, r.workingDir)
 	if err != nil {
 		log.Errorf("error installing binaries: %s", err)
 		return err
@@ -136,7 +132,6 @@ func (r *Runner) GetResources() error {
 	}
 	log.Infof("successfully retrieved layer")
 	r.Layer = layer
-	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.Layer.Spec.Path)
 
 	run := &configv1alpha1.TerraformRun{}
 	log.Infof("getting run %s/%s", layer.Namespace, layer.Status.LastRun.Name)
