@@ -15,13 +15,13 @@ import (
 // Fetch the content of the specified repository on the specified branch with git clone
 //
 // TODO: Fetch repo from datastore when repository controller is implemented
-func FetchRepositoryContent(repo *configv1alpha1.TerraformRepository, branch string, config config.RepositoryConfig) (*git.Repository, error) {
+func FetchRepositoryContent(repo *configv1alpha1.TerraformRepository, branch string, config *config.Config) (*git.Repository, error) {
 	log.Infof("fetching repository %s on %s branch with git clone", repo.Spec.Repository.Url, branch)
-	cloneOptions, err := getCloneOptions(config, repo.Spec.Repository.Url, branch)
+	cloneOptions, err := getCloneOptions(config.Runner.Repository, repo.Spec.Repository.Url, branch)
 	if err != nil {
 		return &git.Repository{}, err
 	}
-	return git.PlainClone(RepositoryDir, false, cloneOptions)
+	return git.PlainClone(config.Runner.RepositoryPath, false, cloneOptions)
 }
 
 func getCloneOptions(repository config.RepositoryConfig, URL, branch string) (*git.CloneOptions, error) {
