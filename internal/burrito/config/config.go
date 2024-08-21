@@ -121,6 +121,7 @@ type Layer struct {
 type HermitcrabConfig struct {
 	Enabled               bool   `mapstructure:"enabled"`
 	CertificateSecretName string `mapstructure:"certificateSecretName"`
+	URL                   string `mapstructure:"url"`
 }
 
 type ServerConfig struct {
