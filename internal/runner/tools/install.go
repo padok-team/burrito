@@ -30,9 +30,9 @@ func newTenvWrapper(binaryPath string, toolName string) (*tenvWrapper, error) {
 	return &versionManager, nil
 }
 
-// Detect if the tool is already installed and compatible with the version constraint
+// detect if the tool is already installed and compatible with the version constraint
 // Return the version of the tool found locally, or the version to install
-func Detect(binaryPath, toolName, versionConstraint string) (string, error) {
+func detect(binaryPath, toolName, versionConstraint string) (string, error) {
 	tenvWrapper, err := newTenvWrapper(binaryPath, toolName)
 	if err != nil {
 		return "", err
@@ -59,8 +59,8 @@ func Detect(binaryPath, toolName, versionConstraint string) (string, error) {
 	return version, nil
 }
 
-// Install the tool with the given version, do noting if already installed
-func Install(binaryPath, toolName, version string) error {
+// install the tool with the given version, do noting if already installed
+func install(binaryPath, toolName, version string) error {
 	tenvWrapper, err := newTenvWrapper(binaryPath, toolName)
 	if err != nil {
 		return err
@@ -71,11 +71,11 @@ func Install(binaryPath, toolName, version string) error {
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
 func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath string) (TerraformExec, error) {
 	terraformVersion := configv1alpha1.GetTerraformVersion(repo, layer)
-	terraformVersion, err := Detect(binaryPath, "terraform", terraformVersion)
+	terraformVersion, err := detect(binaryPath, "terraform", terraformVersion)
 	if err != nil {
 		return nil, err
 	}
-	if err := Install(binaryPath, "terraform", terraformVersion); err != nil {
+	if err := install(binaryPath, "terraform", terraformVersion); err != nil {
 		return nil, err
 	}
 	tf := &tf.Terraform{
@@ -84,11 +84,11 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 
 	if configv1alpha1.GetTerragruntEnabled(repo, layer) {
 		terragruntVersion := configv1alpha1.GetTerragruntVersion(repo, layer)
-		terragruntVersion, err := Detect(binaryPath, "terragrunt", terragruntVersion)
+		terragruntVersion, err := detect(binaryPath, "terragrunt", terragruntVersion)
 		if err != nil {
 			return nil, err
 		}
-		if err := Install(binaryPath, "terragrunt", terragruntVersion); err != nil {
+		if err := install(binaryPath, "terragrunt", terragruntVersion); err != nil {
 			return nil, err
 		}
 		return &tg.Terragrunt{
