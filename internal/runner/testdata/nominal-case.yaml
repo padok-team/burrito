@@ -1,0 +1,22 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: nominal-case-1
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  repository:
+    name: burrito-examples
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-1-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: nominal-case-1
+    namespace: default
