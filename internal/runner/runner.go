@@ -22,9 +22,9 @@ type Runner struct {
 	exec          tools.TerraformExec
 	Datastore     datastore.Client
 	Client        client.Client
-	layer         *configv1alpha1.TerraformLayer
-	run           *configv1alpha1.TerraformRun
-	repository    *configv1alpha1.TerraformRepository
+	Layer         *configv1alpha1.TerraformLayer
+	Run           *configv1alpha1.TerraformRun
+	Repository    *configv1alpha1.TerraformRepository
 	gitRepository *git.Repository
 	workingDir    string
 }
@@ -80,13 +80,13 @@ func (r *Runner) initClients() error {
 // fetch the repository content, install the binaries and configure Hermitcrab mirror.
 func (r *Runner) Init() error {
 	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
-	err := r.getResources()
+	err := r.GetResources()
 	if err != nil {
 		log.Errorf("error getting kubernetes resources: %s", err)
 		return err
 	}
 
-	r.gitRepository, err = FetchRepositoryContent(r.repository, r.layer.Spec.Branch, r.config)
+	r.gitRepository, err = FetchRepositoryContent(r.Repository, r.Layer.Spec.Branch, r.config)
 	if err != nil {
 		log.Errorf("error fetching repository: %s", err)
 		return err
@@ -99,7 +99,7 @@ func (r *Runner) Init() error {
 		log.Errorf("error changing directory: %s", err)
 		return err
 	}
-	r.exec, err = tools.InstallBinaries(r.layer, r.repository, r.config.Runner.RunnerBinaryPath)
+	r.exec, err = tools.InstallBinaries(r.Layer, r.Repository, r.config.Runner.RunnerBinaryPath)
 	if err != nil {
 		log.Errorf("error installing binaries: %s", err)
 		return err
@@ -107,17 +107,24 @@ func (r *Runner) Init() error {
 
 	if r.config.Hermitcrab.Enabled {
 		log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
-		err := runnerutils.CreateNetworkMirrorConfig(r.config.Runner.RepositoryPath, r.config.Hermitcrab.URL)
-		if err != nil {
-			log.Errorf("error creating network mirror configuration: %s", err)
-		}
+		return r.EnableHermitcrab()
 	}
 
 	return nil
 }
 
+// Enable Hermitcrab network mirror configuration.
+func (r *Runner) EnableHermitcrab() error {
+	log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
+	err := runnerutils.CreateNetworkMirrorConfig(r.config.Runner.RepositoryPath, r.config.Hermitcrab.URL)
+	if err != nil {
+		log.Errorf("error creating network mirror configuration: %s", err)
+	}
+	return err
+}
+
 // Retrieve linked resources (layer, run, repository) from the Kubernetes API.
-func (r *Runner) getResources() error {
+func (r *Runner) GetResources() error {
 	layer := &configv1alpha1.TerraformLayer{}
 	log.Infof("getting layer %s/%s", r.config.Runner.Layer.Namespace, r.config.Runner.Layer.Name)
 	err := r.Client.Get(context.TODO(), types.NamespacedName{
@@ -128,19 +135,20 @@ func (r *Runner) getResources() error {
 		return err
 	}
 	log.Infof("successfully retrieved layer")
-	r.layer = layer
-	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.layer.Spec.Path)
+	r.Layer = layer
+	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.Layer.Spec.Path)
 
-	r.run = &configv1alpha1.TerraformRun{}
+	run := &configv1alpha1.TerraformRun{}
 	log.Infof("getting run %s/%s", layer.Namespace, layer.Status.LastRun.Name)
 	err = r.Client.Get(context.TODO(), types.NamespacedName{
 		Namespace: layer.Namespace,
 		Name:      r.config.Runner.Run,
-	}, r.run)
+	}, run)
 	if err != nil {
 		return err
 	}
 	log.Infof("successfully retrieved run")
+	r.Run = run
 
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Infof("getting repo %s/%s", layer.Spec.Repository.Namespace, layer.Spec.Repository.Name)
@@ -152,7 +160,7 @@ func (r *Runner) getResources() error {
 		return err
 	}
 	log.Infof("successfully retrieved repo")
-	r.repository = repository
+	r.Repository = repository
 
 	log.Infof("kubernetes resources successfully retrieved")
 	return nil
