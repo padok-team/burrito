@@ -1,23 +1,67 @@
 package runner
 
 import (
+	"context"
 	"crypto/sha256"
 	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	tfjson "github.com/hashicorp/terraform-json"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	runnerutils "github.com/padok-team/burrito/internal/utils/runner"
 	log "github.com/sirupsen/logrus"
 )
 
 const PlanArtifact string = "/tmp/plan.out"
 
+// Execute the actions defined in the runner configuration. The runner must
+// be initialized.
+func (r *Runner) ExecAction() error {
+	ann := map[string]string{}
+	ref, _ := r.gitRepository.Head()
+	commit := ref.Hash().String()
+
+	switch r.config.Runner.Action {
+	case "plan":
+		sum, err := r.execPlan()
+		if err != nil {
+			return err
+		}
+		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
+		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
+		ann[annotations.LastPlanSum] = sum
+		ann[annotations.LastPlanCommit] = commit
+
+	case "apply":
+		sum, err := r.execApply()
+		if err != nil {
+			return err
+		}
+		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
+		ann[annotations.LastApplySum] = sum
+		ann[annotations.LastApplyCommit] = commit
+	default:
+		return errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
+	}
+
+	err := annotations.Add(context.TODO(), r.Client, r.layer, ann)
+	if err != nil {
+		log.Errorf("could not update terraform layer annotations: %s", err)
+		return err
+	}
+	log.Infof("successfully updated terraform layer annotations")
+
+	return nil
+}
+
 // Run the `init` command
-func (r *Runner) execInit() error {
+func (r *Runner) ExecInit() error {
 	log.Infof("launching terraform init in %s", r.workingDir)
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
@@ -55,7 +99,7 @@ func (r *Runner) execPlan() (string, error) {
 		return "", err
 	}
 	log.Infof("sending plan to datastore")
-	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "pretty", prettyPlan)
+	err = r.Datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "pretty", prettyPlan)
 	if err != nil {
 		log.Errorf("could not put pretty plan in datastore: %s", err)
 	}
@@ -66,11 +110,11 @@ func (r *Runner) execPlan() (string, error) {
 		return "", err
 	}
 	_, shortDiff := runnerutils.GetDiff(plan)
-	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "json", planJsonBytes)
+	err = r.Datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "json", planJsonBytes)
 	if err != nil {
 		log.Errorf("could not put json plan in datastore: %s", err)
 	}
-	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "short", []byte(shortDiff))
+	err = r.Datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "short", []byte(shortDiff))
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
@@ -80,7 +124,7 @@ func (r *Runner) execPlan() (string, error) {
 		return "", err
 	}
 	sum := sha256.Sum256(planBin)
-	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "bin", planBin)
+	err = r.Datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "bin", planBin)
 	if err != nil {
 		log.Errorf("could not put plan binary in cache: %s", err)
 		return "", err
@@ -98,7 +142,7 @@ func (r *Runner) execApply() (string, error) {
 		return "", err
 	}
 	log.Info("getting plan binary in datastore at key")
-	plan, err := r.datastore.GetPlan(r.layer.Namespace, r.layer.Name, r.run.Spec.Artifact.Run, r.run.Spec.Artifact.Attempt, "bin")
+	plan, err := r.Datastore.GetPlan(r.layer.Namespace, r.layer.Name, r.run.Spec.Artifact.Run, r.run.Spec.Artifact.Attempt, "bin")
 	if err != nil {
 		log.Errorf("could not get plan artifact: %s", err)
 		return "", err
@@ -120,7 +164,7 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("error executing terraform apply: %s", err)
 		return "", err
 	}
-	err = r.datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "short", []byte("Apply Successful"))
+	err = r.Datastore.PutPlan(r.layer.Namespace, r.layer.Name, r.run.Name, strconv.Itoa(r.run.Status.Retries), "short", []byte("Apply Successful"))
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
