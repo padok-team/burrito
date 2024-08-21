@@ -97,5 +97,6 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		}, nil
 	}
 
+	log.Infof("binaries successfully installed")
 	return tf, nil
 }

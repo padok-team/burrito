@@ -3,6 +3,8 @@ package runner
 import (
 	"fmt"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Creates a network mirror configuration file for Terraform with the given endpoint
@@ -22,5 +24,6 @@ provider_installation {
 	if err != nil {
 		return err
 	}
+	log.Infof("network mirror configuration created")
 	return nil
 }

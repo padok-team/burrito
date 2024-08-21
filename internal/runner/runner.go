@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -15,19 +16,16 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/padok-team/burrito/internal/utils"
 	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/padok-team/burrito/internal/runner/tools"
 	runnerutils "github.com/padok-team/burrito/internal/utils/runner"
 )
 
-const WorkingDir string = "/runner/repository"
+const RepositoryDir string = "/runner/repository"
 
 type Runner struct {
 	config        *config.Config
@@ -38,6 +36,7 @@ type Runner struct {
 	run           *configv1alpha1.TerraformRun
 	repository    *configv1alpha1.TerraformRepository
 	gitRepository *git.Repository
+	workingDir    string
 }
 
 func New(c *config.Config) *Runner {
@@ -46,6 +45,7 @@ func New(c *config.Config) *Runner {
 	}
 }
 
+// Entrypoint function of the runner. Initializes the runner, executes the action and updates the layer annotations.
 func (r *Runner) Exec() error {
 	client := datastore.NewDefaultClient(r.config.Datastore)
 	r.datastore = client
@@ -55,58 +55,53 @@ func (r *Runner) Exec() error {
 	err := r.init()
 	if err != nil {
 		log.Errorf("error initializing runner: %s", err)
+		return err
 	}
-	if r.gitRepository != nil {
-		ref, _ := r.gitRepository.Head()
-		commit = ref.Hash().String()
+
+	err = r.execInit()
+	if err != nil {
+		log.Errorf("error executing init: %s", err)
+		return err
 	}
+
+	ann := map[string]string{}
+	ref, _ := r.gitRepository.Head()
+	commit := ref.Hash().String()
 
 	switch r.config.Runner.Action {
 	case "plan":
-		sum, err := r.plan()
-		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
-		if err == nil {
-			ann[annotations.LastPlanCommit] = commit
+		sum, err := r.execPlan()
+		if err != nil {
+			return err
 		}
+		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.run.Name, strconv.Itoa(r.run.Status.Retries))
 		ann[annotations.LastPlanSum] = sum
+		ann[annotations.LastPlanCommit] = commit
+
 	case "apply":
-		sum, err := r.apply()
+		sum, err := r.execApply()
+		if err != nil {
+			return err
+		}
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
 		ann[annotations.LastApplySum] = sum
-		if err == nil {
-			ann[annotations.LastApplyCommit] = commit
-		}
+		ann[annotations.LastApplyCommit] = commit
 	default:
-		err = errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
+		return errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
 	}
 
+	err = annotations.Add(context.TODO(), r.client, r.layer, ann)
 	if err != nil {
-		log.Errorf("error during runner execution: %s", err)
-	}
-
-	annotErr := annotations.Add(context.TODO(), r.client, r.layer, ann)
-	if annotErr != nil {
 		log.Errorf("could not update terraform layer annotations: %s", err)
+		return err
 	}
 	log.Infof("successfully updated terraform layer annotations")
 
-	return err
+	return nil
 }
 
-func newK8SClient() (client.Client, error) {
-	scheme := runtime.NewScheme()
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(configv1alpha1.AddToScheme(scheme))
-	cl, err := client.New(ctrl.GetConfigOrDie(), client.Options{
-		Scheme: scheme,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return cl, err
-}
-
+// Retrieve linked resources (layer, run, repository) from the Kubernetes API.
 func (r *Runner) getResources() error {
 	layer := &configv1alpha1.TerraformLayer{}
 	log.Infof("getting layer %s/%s", r.config.Runner.Layer.Namespace, r.config.Runner.Layer.Name)
@@ -119,6 +114,8 @@ func (r *Runner) getResources() error {
 	}
 	log.Infof("successfully retrieved layer")
 	r.layer = layer
+	r.workingDir = filepath.Join(RepositoryDir, r.layer.Spec.Path)
+
 	r.run = &configv1alpha1.TerraformRun{}
 	log.Infof("getting run %s/%s", layer.Namespace, layer.Status.LastRun.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{
@@ -129,6 +126,7 @@ func (r *Runner) getResources() error {
 		return err
 	}
 	log.Infof("successfully retrieved run")
+
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Infof("getting repo %s/%s", layer.Spec.Repository.Namespace, layer.Spec.Repository.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{
@@ -140,16 +138,27 @@ func (r *Runner) getResources() error {
 	}
 	log.Infof("successfully retrieved repo")
 	r.repository = repository
+
+	log.Infof("kubernetes resources successfully retrieved")
 	return nil
 }
 
+// Initialize the runner's clients, retrieve linked resources (layer, run, repository),
+// fetch the repository content, install the binaries and configure Hermitcrab mirror.
 func (r *Runner) init() error {
-	cl, err := newK8SClient()
+	kubeClient, err := utils.NewK8SClient()
 	if err != nil {
 		log.Errorf("error creating kubernetes client: %s", err)
 		return err
 	}
-	r.client = cl
+	r.client = kubeClient
+
+	datastoreClient := datastore.NewDefaultClient()
+	if r.config.Datastore.TLS {
+		log.Info("using TLS for datastore")
+		datastoreClient.Scheme = "https"
+	}
+	r.datastore = datastoreClient
 
 	log.Infof("retrieving linked TerraformLayer and TerraformRepository")
 	err = r.getResources()
@@ -157,18 +166,16 @@ func (r *Runner) init() error {
 		log.Errorf("error getting kubernetes resources: %s", err)
 		return err
 	}
-	log.Infof("kubernetes resources successfully retrieved")
 
 	r.gitRepository, err = FetchRepositoryContent(r.repository, r.layer.Spec.Branch, r.config.Runner.Repository)
 	if err != nil {
-		r.gitRepository = nil // reset git repository for the caller
 		log.Errorf("error fetching repository: %s", err)
 		return err
 	}
 	log.Infof("repository fetched successfully")
 
 	log.Infof("installing binaries...")
-	err = os.Chdir(fmt.Sprintf("%s/%s", WorkingDir, r.layer.Spec.Path)) // need to cd into the repo to detect tf versions
+	err = os.Chdir(r.workingDir) // need to cd into the repo to detect tf versions
 	if err != nil {
 		log.Errorf("error changing directory: %s", err)
 		return err
@@ -178,23 +185,14 @@ func (r *Runner) init() error {
 		log.Errorf("error installing binaries: %s", err)
 		return err
 	}
-	log.Infof("binaries successfully installed")
 
 	if r.config.Hermitcrab.Enabled {
 		log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
-		err := runnerutils.CreateNetworkMirrorConfig(WorkingDir, r.config.Hermitcrab.URL)
+		err := runnerutils.CreateNetworkMirrorConfig(RepositoryDir, r.config.Hermitcrab.URL)
 		if err != nil {
 			log.Errorf("error creating network mirror configuration: %s", err)
 		}
-		log.Infof("network mirror configuration created")
 	}
 
-	workingDir := fmt.Sprintf("%s/%s", WorkingDir, r.layer.Spec.Path)
-	log.Infof("Launching terraform init in %s", workingDir)
-	err = r.exec.Init(workingDir)
-	if err != nil {
-		log.Errorf("error executing terraform init: %s", err)
-		return err
-	}
 	return nil
 }

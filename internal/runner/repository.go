@@ -21,7 +21,7 @@ func FetchRepositoryContent(repo *configv1alpha1.TerraformRepository, branch str
 	if err != nil {
 		return &git.Repository{}, err
 	}
-	return git.PlainClone(WorkingDir, false, cloneOptions)
+	return git.PlainClone(RepositoryDir, false, cloneOptions)
 }
 
 func getCloneOptions(repository config.RepositoryConfig, URL, branch string) (*git.CloneOptions, error) {

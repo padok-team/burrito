@@ -16,7 +16,24 @@ import (
 
 const PlanArtifact string = "/tmp/plan.out"
 
-func (r *Runner) plan() (string, error) {
+// Run the `init` command
+func (r *Runner) execInit() error {
+	log.Infof("launching terraform init in %s", r.workingDir)
+	if r.exec == nil {
+		err := errors.New("terraform or terragrunt binary not installed")
+		return err
+	}
+	err := r.exec.Init(r.workingDir)
+	if err != nil {
+		log.Errorf("error executing terraform init: %s", err)
+		return err
+	}
+	return nil
+}
+
+// Run the `plan` command and save the plan artifact in the datastore
+// Returns the sha256 sum of the plan artifact
+func (r *Runner) execPlan() (string, error) {
 	log.Infof("starting terraform plan")
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
@@ -72,7 +89,9 @@ func (r *Runner) plan() (string, error) {
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
-func (r *Runner) apply() (string, error) {
+// Run the `apply` command, by default with the plan artifact from the previous plan run
+// Returns the sha256 sum of the plan artifact used
+func (r *Runner) execApply() (string, error) {
 	log.Infof("starting terraform apply")
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
