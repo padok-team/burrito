@@ -126,5 +126,33 @@ var _ = Describe("End-to-End Runner Tests", func() {
 				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
 			})
 		})
+		Describe("When Runner is launched for running an Apply", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "apply"
+				conf.Runner.Layer.Name = "nominal-case-1"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "nominal-case-1-apply"
+
+				runner := runner.New(conf)
+				err = executeRunner(runner)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have updated the TerraformLayer annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: "default", Name: "nominal-case-1"}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(layer.Annotations).To(HaveKey(annotations.LastApplyDate))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastApplySum))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
+			})
+		})
+
 	})
 })
