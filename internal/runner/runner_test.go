@@ -95,10 +95,10 @@ func executeRunner(r *runner.Runner) error {
 	return r.ExecAction()
 }
 
-var _ = Describe("End-to-End Runner Tests", func() {
+var _ = Describe("Runner Tests", func() {
 	var err error
-	Describe("Nominal Case", func() {
-		Describe("When Runner is launched for running a Plan", Ordered, func() {
+	Describe("Nominal Case", Ordered, func() {
+		Describe("End-to-End - When Runner is launched for running a Plan", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
 				conf = generateTestConfig()
@@ -126,7 +126,7 @@ var _ = Describe("End-to-End Runner Tests", func() {
 				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
 			})
 		})
-		Describe("When Runner is launched for running an Apply", Ordered, func() {
+		Describe("End-to-End - When Runner is launched for running an Apply", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
 				conf = generateTestConfig()
@@ -153,13 +153,6 @@ var _ = Describe("End-to-End Runner Tests", func() {
 				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
 			})
 		})
-
-	})
-})
-
-var _ = Describe("Runner Tests", func() {
-	var err error
-	Describe("Nominal Case", func() {
 		Describe("When Hermitcrab is enabled", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {

@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -69,9 +70,21 @@ func install(binaryPath, toolName, version string) error {
 }
 
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
-func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath string) (TerraformExec, error) {
+func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (TerraformExec, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Errorf("error getting current working directory: %s", err)
+		return nil, err
+	}
+	err = os.Chdir(workingDir) // need to cd into the repo to detect tf versions
+	if err != nil {
+		log.Errorf("error changing directory: %s", err)
+		return nil, err
+	}
+	defer os.Chdir(cwd)
+
 	terraformVersion := configv1alpha1.GetTerraformVersion(repo, layer)
-	terraformVersion, err := detect(binaryPath, "terraform", terraformVersion)
+	terraformVersion, err = detect(binaryPath, "terraform", terraformVersion)
 	if err != nil {
 		return nil, err
 	}
