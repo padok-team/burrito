@@ -3,7 +3,6 @@ package terraformrun
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -55,19 +54,21 @@ func (r *Reconciler) GetLinkedPods(run *configv1alpha1.TerraformRun) (*corev1.Po
 	return list, nil
 }
 
-func (r *Reconciler) ensureHermitcrabSecret(tenantNamespace string) error {
+func (r *Reconciler) ensureCertificateAuthoritySecret(tenantNamespace, caSecretName string) error {
 	secret := &corev1.Secret{}
-	err := r.Client.Get(context.Background(), client.ObjectKey{Namespace: r.Config.Controller.MainNamespace,
-		Name: r.Config.Hermitcrab.CertificateSecretName}, secret)
+	err := r.Client.Get(context.Background(), client.ObjectKey{
+		Namespace: r.Config.Controller.MainNamespace,
+		Name:      caSecretName,
+	}, secret)
 	if err != nil {
 		return err
 	}
 	if _, ok := secret.Data["ca.crt"]; !ok {
-		return fmt.Errorf("ca.crt not found in secret %s", r.Config.Hermitcrab.CertificateSecretName)
+		return fmt.Errorf("ca.crt not found in secret %s", caSecretName)
 	}
 	secret = &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.Config.Hermitcrab.CertificateSecretName,
+			Name:      caSecretName,
 			Namespace: tenantNamespace,
 		},
 		Data: map[string][]byte{
@@ -83,38 +84,45 @@ func (r *Reconciler) ensureHermitcrabSecret(tenantNamespace string) error {
 	} else if err != nil {
 		return err
 	}
-	log.Infof("hermitcrab certificate is available in namespace %s", tenantNamespace)
+	log.Infof("CA certificate is available in namespace %s", tenantNamespace)
 	return nil
+}
+
+func mountCA(podSpec *corev1.PodSpec, caSecretName, caName string) {
+	volumeName := fmt.Sprintf("%s-cert", caName)
+	mountPath := fmt.Sprintf("/etc/ssl/certs/%s.crt", caName)
+	caFilename := fmt.Sprintf("%s.crt", caName)
+
+	podSpec.Volumes = append(podSpec.Volumes, corev1.Volume{
+		Name: volumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: caSecretName,
+				Items: []corev1.KeyToPath{
+					{
+						Key:  "ca.crt",
+						Path: caFilename,
+					},
+				},
+			},
+		},
+	})
+	podSpec.Containers[0].VolumeMounts = append(podSpec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		MountPath: mountPath,
+		Name:      volumeName,
+		SubPath:   caFilename,
+	})
 }
 
 func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.Pod {
 	defaultSpec := defaultPodSpec(r.Config, layer, repository, run)
 
 	if r.Config.Hermitcrab.Enabled {
-		err := r.ensureHermitcrabSecret(layer.Namespace)
+		err := r.ensureCertificateAuthoritySecret(layer.Namespace, r.Config.Hermitcrab.CertificateSecretName)
 		if err != nil {
 			log.Errorf("failed to ensure HermitCrab secret in namespace %s: %s", layer.Namespace, err)
 		} else {
-			defaultSpec.Volumes = append(defaultSpec.Volumes, corev1.Volume{
-				Name: "hermitcrab-ca-cert",
-				VolumeSource: corev1.VolumeSource{
-					Secret: &corev1.SecretVolumeSource{
-						SecretName: r.Config.Hermitcrab.CertificateSecretName,
-						Items: []corev1.KeyToPath{
-							{
-								Key:  "ca.crt",
-								Path: "hermitcrab-ca.crt",
-							},
-						},
-					},
-				},
-			})
-			defaultSpec.Containers[0].VolumeMounts = append(defaultSpec.Containers[0].VolumeMounts, corev1.VolumeMount{
-				MountPath: "/etc/ssl/certs/hermitcrab-ca.crt",
-				Name:      "hermitcrab-ca-cert",
-				SubPath:   "hermitcrab-ca.crt",
-			})
-
+			mountCA(&defaultSpec, r.Config.Hermitcrab.CertificateSecretName, "burrito-hermitcrab-ca")
 			defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env,
 				corev1.EnvVar{
 					Name:  "HERMITCRAB_ENABLED",
@@ -124,11 +132,19 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 					Name:  "HERMITCRAB_URL",
 					Value: fmt.Sprintf("https://burrito-hermitcrab.%s.svc.cluster.local/v1/providers/", r.Config.Controller.MainNamespace),
 				},
-				corev1.EnvVar{
-					Name:  "BURRITO_DATASTORE_TLS",
-					Value: strconv.FormatBool(r.Config.Datastore.TLS),
-				},
 			)
+		}
+	}
+	if r.Config.Datastore.TLS {
+		err := r.ensureCertificateAuthoritySecret(layer.Namespace, r.Config.Datastore.CertificateSecretName)
+		if err != nil {
+			log.Errorf("failed to ensure Datastore secret in namespace %s: %s", layer.Namespace, err)
+		} else {
+			mountCA(&defaultSpec, r.Config.Datastore.CertificateSecretName, "burrito-datastore-ca")
+			defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+				Name:  "BURRITO_DATASTORE_TLS",
+				Value: "true",
+			})
 		}
 	}
 	switch Action(run.Spec.Action) {

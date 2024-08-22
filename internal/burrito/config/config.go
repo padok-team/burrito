@@ -21,6 +21,7 @@ type Config struct {
 
 type DatastoreConfig struct {
 	TLS                       bool          `mapstructure:"tls"`
+	CertificateSecretName     string        `mapstructure:"certificateSecretName"`
 	Storage                   StorageConfig `mapstructure:"storage"`
 	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
 }

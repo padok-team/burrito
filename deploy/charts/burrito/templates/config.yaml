@@ -26,6 +26,10 @@ Datastore Authorized Service Accounts
 {{- $server := printf "%s/%s" .Release.Namespace "burrito-server" }}
 {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $server }}
 {{- $_ := set $config.datastore "serviceAccounts" $datastoreAuthorizedServiceAccounts }}
+
+{{/*
+TLS certificates
+*/}}
 {{- if .Values.hermitcrab.tls.certManager.use }}
 {{- $_ := set $config.hermitcrab "certificateSecretName" .Values.hermitcrab.tls.certManager.certificate.spec.secretName }}
 {{- else }}
@@ -33,6 +37,11 @@ Datastore Authorized Service Accounts
 {{- end }}
 {{- $_ := set $config.hermitcrab "enabled" .Values.hermitcrab.enabled }}
 {{- $_ := set $config.datastore "tls" .Values.datastore.tls.enabled }}
+{{- if .Values.datastore.tls.certManager.use }}
+{{- $_ := set $config.datastore "certificateSecretName" .Values.datastore.tls.certManager.certificate.spec.secretName }}
+{{- else }}
+{{- $_ := set $config.datastore "certificateSecretName" .Values.datastore.tls.secretName }}
+{{- end }}
 
 
 apiVersion: v1
