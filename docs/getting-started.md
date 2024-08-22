@@ -62,7 +62,7 @@ spec:
 ```
 
 !!! info
-You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformRepository` definition.
+    You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformRepository` definition.
 
 ## 3. Synchronize a terraform layer
 
