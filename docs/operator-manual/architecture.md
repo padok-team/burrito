@@ -86,9 +86,8 @@ The `TerraformRun` controller also creates and deletes the [Kubernetes leases](h
 
 ### The runners
 
-The runner image implementation heavily relies on Golang libraries provided by Hashicorp such as [`tfexec`](https://github.com/hashicorp/terraform-exec) and [`hc-install`](https://github.com/hashicorp/hc-install) which allows us to dynamically download and use any version of the Terraform binary.
-Thus, we support any existing version of Terraform.
+The runner implementation relies on [`tenv`](https://github.com/tofuutils/tenv), a tool from the community which allows us to dynamically download and use any version of Terraform, Terragrunt or OpenTofu (coming soon). Thus, we support any existing version of Terraform.
 
-The runners also support any existing version of [Terragrunt](https://terragrunt.gruntwork.io/).
+If no version constraint is set in the TerraformLayer resource or in the TerraformRepository resource, `tenv` will detect which version of Terraform/Terragrunt/OpenTofu to use by looking at the version constraints in your code.
 
-The runner is responsible to update the annotations of the layer it is associated with to store information about what commit was plan/apply and when.
+The runner is responsible to update the annotations of the layer it is associated to to store information about what commit was planned/applied and when.

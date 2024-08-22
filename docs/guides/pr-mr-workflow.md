@@ -44,7 +44,7 @@ Configure a webhook in your GitHub repository to point to the exposed `burrito-s
 kind: Secret
 metadata:
   name: burrito-webhook-secret
-  namespace: burrito
+  namespace: burrito-system
 type: Opaque
 stringData:
   burrito-webhook-secret: <my-webhook-secret>
@@ -86,7 +86,7 @@ my-layer-pr-1-rxvrt   ApplyNeeded   my-repository   update-tf-code   terraform  
 
 The Burrito server should have commented on the PR/MR with the plan output. You can check the comments on the PR/MR to see the plan output.
 
-![Pul request comment demo](../assets/demo/pr-demo.png)
+![Pull request comment demo](../assets/demo/pr-demo.png)
 
 Set the `autoApply` field to `true` in the TerraformLayer resource to automatically apply the Terraform code upon merging the PR/MR.
 
