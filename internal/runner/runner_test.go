@@ -27,6 +27,9 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 
+const binaryPath string = "bin/tenv-binaries"
+const repositoryPath string = "test.out/runner-repository"
+
 func TestRunner(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -56,29 +59,38 @@ var _ = BeforeSuite(func() {
 
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	// create directory for terraform/terragrunt binaries (to re-use them between tests)
+	cwd, err := os.Getwd()
+	Expect(err).NotTo(HaveOccurred())
+	err = os.MkdirAll(filepath.Join(cwd, binaryPath), 0755)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
+	cwd, err := os.Getwd()
+	Expect(err).NotTo(HaveOccurred())
+	err = os.RemoveAll(filepath.Join(cwd, binaryPath))
+	Expect(err).NotTo(HaveOccurred())
 })
 
 func generateTestConfig() *config.Config {
 	conf := config.TestConfig()
-	cwd, _ := os.Getwd()
-	conf.Runner.RunnerBinaryPath = filepath.Join(cwd, "bin", "tenv-binaries")
-	conf.Runner.RepositoryPath = filepath.Join(cwd, "test.out", "runner-repository")
-	_ = os.MkdirAll(conf.Runner.RepositoryPath, 0755)
-	_ = os.MkdirAll(conf.Runner.RunnerBinaryPath, 0755)
-
+	cwd, err := os.Getwd()
+	Expect(err).NotTo(HaveOccurred())
+	conf.Runner.RunnerBinaryPath = filepath.Join(cwd, binaryPath)
+	conf.Runner.RepositoryPath = filepath.Join(cwd, repositoryPath)
+	err = os.MkdirAll(conf.Runner.RepositoryPath, 0755)
+	Expect(err).NotTo(HaveOccurred())
 	return conf
 }
 
 // Remove the repository and the binaries directories
 func cleanup(conf *config.Config) {
 	_ = os.RemoveAll(conf.Runner.RepositoryPath)
-	_ = os.RemoveAll(conf.Runner.RunnerBinaryPath)
 }
 
 func executeRunner(r *runner.Runner) error {
@@ -98,7 +110,7 @@ func executeRunner(r *runner.Runner) error {
 var _ = Describe("Runner Tests", func() {
 	var err error
 	Describe("Nominal Case", Ordered, func() {
-		Describe("End-to-End - When Runner is launched for running a Plan", Ordered, func() {
+		Describe("End-to-End - When Runner is launched for running a Terraform plan", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
 				conf = generateTestConfig()
@@ -126,7 +138,7 @@ var _ = Describe("Runner Tests", func() {
 				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
 			})
 		})
-		Describe("End-to-End - When Runner is launched for running an Apply", Ordered, func() {
+		Describe("End-to-End - When Runner is launched for running a Terraform apply", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
 				conf = generateTestConfig()
@@ -153,6 +165,61 @@ var _ = Describe("Runner Tests", func() {
 				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
 			})
 		})
+		Describe("End-to-End - When Runner is launched for running a Terragrunt plan", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "plan"
+				conf.Runner.Layer.Name = "nominal-case-2"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "nominal-case-2-plan"
+
+				runner := runner.New(conf)
+				err = executeRunner(runner)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have updated the TerraformLayer annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: "default", Name: "nominal-case-2"}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanDate))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanRun))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanSum))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
+			})
+		})
+		Describe("End-to-End - When Runner is launched for running Terragrunt apply", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "apply"
+				conf.Runner.Layer.Name = "nominal-case-2"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "nominal-case-2-apply"
+
+				runner := runner.New(conf)
+				err = executeRunner(runner)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have updated the TerraformLayer annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: "default", Name: "nominal-case-2"}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(layer.Annotations).To(HaveKey(annotations.LastApplyDate))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastApplySum))
+				Expect(layer.Annotations).To(HaveKey(annotations.LastPlanCommit))
+			})
+		})
 		Describe("When Hermitcrab is enabled", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
@@ -165,6 +232,7 @@ var _ = Describe("Runner Tests", func() {
 			})
 			AfterAll(func() {
 				cleanup(conf)
+				_ = os.Unsetenv("TF_CLI_CONFIG_FILE")
 			})
 			It("should not return an error", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -183,10 +251,10 @@ var _ = Describe("Runner Tests", func() {
 			var runnerInstance *runner.Runner
 			BeforeAll(func() {
 				conf = generateTestConfig()
-				conf.Runner.Action = "apply"
+				conf.Runner.Action = "plan"
 				conf.Runner.Layer.Name = "nominal-case-1"
 				conf.Runner.Layer.Namespace = "default"
-				conf.Runner.Run = "nominal-case-1-apply"
+				conf.Runner.Run = "nominal-case-1-plan"
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
@@ -206,6 +274,58 @@ var _ = Describe("Runner Tests", func() {
 			})
 			It("should have retrieved the repository", func() {
 				Expect(runnerInstance.Repository).NotTo(BeNil())
+			})
+		})
+		Describe("When binaries versions are specified in layer", Ordered, func() {
+			var conf *config.Config
+			var runnerInstance *runner.Runner
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Layer.Name = "nominal-case-2"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "nominal-case-2-plan"
+
+				runnerInstance = runner.New(conf)
+				runnerInstance.Client = k8sClient
+				err = runnerInstance.Init()
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have installed Terraform version 1.7.5", func() {
+				_, err := os.Stat(filepath.Join(conf.Runner.RunnerBinaryPath, "Terraform", "1.7.5", "terraform"))
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have installed Terragrunt version 0.66.9", func() {
+				_, err := os.Stat(filepath.Join(conf.Runner.RunnerBinaryPath, "Terragrunt", "0.66.9", "terragrunt"))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+		Describe("When Terraform version is specified in the codebase", Ordered, func() {
+			var conf *config.Config
+			var runnerInstance *runner.Runner
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Layer.Name = "nominal-case-3"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "nominal-case-3-plan"
+
+				runnerInstance = runner.New(conf)
+				runnerInstance.Client = k8sClient
+				err = runnerInstance.Init()
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should not return an error", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should have installed Terraform version 1.7.5", func() {
+				_, err := os.Stat(filepath.Join(conf.Runner.RunnerBinaryPath, "Terraform", "1.7.5", "terraform"))
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 	})
