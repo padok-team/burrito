@@ -1,0 +1,87 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: error-case-1
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples-non-existent-repo
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-1
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  repository:
+    name: error-case-1
+    namespace: default
+  remediationStrategy:
+    applyWithoutPlanArtifact: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-1-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: error-case-1
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-2
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  repository:
+    name: burrito-examples
+    namespace: default
+  remediationStrategy:
+    applyWithoutPlanArtifact: true
+  terraform:
+    version: "invalid version constraint"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-2-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: error-case-2
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-3
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  repository:
+    name: burrito-examples
+    namespace: default
+  remediationStrategy:
+    applyWithoutPlanArtifact: true
+  terraform:
+    version: "1.7.4242"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-3-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: error-case-2
+    namespace: default

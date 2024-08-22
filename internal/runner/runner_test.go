@@ -329,4 +329,119 @@ var _ = Describe("Runner Tests", func() {
 			})
 		})
 	})
+	Describe("Error Cases", Ordered, func() {
+		Describe("When repository fails to fetch", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "plan"
+				conf.Runner.Layer.Name = "error-case-1"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "error-case-1-plan"
+
+				runner := runner.New(conf)
+				err = executeRunner(runner)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should return an error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+			It("should not have updated the TerraformLayer annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: "default", Name: "error-case-1"}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanDate))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanSum))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanCommit))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanRun))
+			})
+		})
+		Describe("When binaries version constraint are malformed", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "plan"
+				conf.Runner.Layer.Name = "error-case-2"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "error-case-2-plan"
+
+				runner := runner.New(conf)
+				err = executeRunner(runner)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should return an error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+			It("should not have updated the TerraformLayer annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: "default", Name: "error-case-2"}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanDate))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanSum))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanCommit))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanRun))
+			})
+		})
+		Describe("When binaries version does not exist", Ordered, func() {
+			var conf *config.Config
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "plan"
+				conf.Runner.Layer.Name = "error-case-3"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "error-case-3-plan"
+
+				runner := runner.New(conf)
+				err = executeRunner(runner)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should return an error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+			It("should not have updated the TerraformLayer annotations", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: "default", Name: "error-case-3"}, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanDate))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanSum))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanCommit))
+				Expect(layer.Annotations).NotTo(HaveKey(annotations.LastPlanRun))
+			})
+		})
+		Describe("When linked resources do not exist", Ordered, func() {
+			var conf *config.Config
+			var runnerInstance *runner.Runner
+			BeforeAll(func() {
+				conf = generateTestConfig()
+				conf.Runner.Action = "plan"
+				conf.Runner.Layer.Name = "non-existent-layer"
+				conf.Runner.Layer.Namespace = "default"
+				conf.Runner.Run = "non-existent-run"
+
+				runnerInstance = runner.New(conf)
+				err = executeRunner(runnerInstance)
+			})
+			AfterAll(func() {
+				cleanup(conf)
+			})
+			It("should return an error", func() {
+				Expect(err).To(HaveOccurred())
+			})
+			It("should have a nil layer", func() {
+				Expect(runnerInstance.Layer).To(BeNil())
+			})
+			It("should have a nil run", func() {
+				Expect(runnerInstance.Run).To(BeNil())
+			})
+			It("should have a nil repository", func() {
+				Expect(runnerInstance.Repository).To(BeNil())
+			})
+		})
+	})
 })
