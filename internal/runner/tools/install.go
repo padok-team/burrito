@@ -81,7 +81,12 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		log.Errorf("error changing directory: %s", err)
 		return nil, err
 	}
-	defer os.Chdir(cwd)
+	defer func() {
+		err := os.Chdir(cwd)
+		if err != nil {
+			log.Errorf("error changing directory back to %s: %s", cwd, err)
+		}
+	}()
 
 	terraformVersion := configv1alpha1.GetTerraformVersion(repo, layer)
 	terraformVersion, err = detect(binaryPath, "terraform", terraformVersion)
