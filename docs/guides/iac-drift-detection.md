@@ -72,14 +72,14 @@ Here is the content of the `TerraformRepository` resource that you have created
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
 metadata:
-  name: my-repo
+  name: my-repository
   namespace: burrito-project
 spec:
   repository:
-    url: git@github.com:padok-team/burrito-examples.git
+    url: https://github.com/padok-team/burrito-examples
 ```
 
-Create a `TerraformLayer` resource in the `burrito-system` namespace, referencing the `TerraformRepository` you just created. For now, the autoApply is set to false, so the layer will only plan the Terraform code and not apply it.
+Create a `TerraformLayer` resource in the `burrito-system` namespace, referencing the `TerraformRepository` you just created. For now, the `autoApply` is set to false, so the layer will only plan the Terraform code and not apply it.
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-layer.yaml
@@ -99,8 +99,6 @@ spec:
   repository:
     name: my-repository
     namespace: burrito-project
-  terraform:
-    version: 1.3.1
 ```
 
 Check that your Terraform code is being planned by Burrito:
@@ -135,7 +133,7 @@ kubectl port-forward svc/burrito-server -n burrito-system 8080:80
 
 ![Burrito drift example](../assets/demo/drift-example.png)
 
-Activate the autoApply feature by updating the `TerraformLayer` resource:
+Activate the `autoApply` feature by updating the `TerraformLayer` resource:
 
 ```bash
 kubectl patch tfl my-layer -n burrito-project --type merge --patch '{"spec":{"remediationStrategy":{"autoApply":true}}}'
