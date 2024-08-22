@@ -3,14 +3,14 @@
 <p align="center"><img src="../../assets/design/pr-mr-workflow.excalidraw.png" width="1000px" /></p>
 
 !!! info
-In this documentation all references to pull requests can be change to merge requests for GitLab. However, the resulting Kubernetes object will still be named `TerraformPullRequest`.
+    In this documentation all references to pull requests can be change to merge requests for GitLab. However, the resulting Kubernetes object will still be named `TerraformPullRequest`.
 
 ## Components
 
 ### The server
 
 !!! info
-For more information about the server, see the [architectural overview](./architecture.md) documentation.
+    For more information about the server, see the [architectural overview](./architecture.md) documentation.
 
 Upon receiving a Pull Request creation event, the server creates a `TerraformPullRequest` resource.
 
@@ -35,7 +35,7 @@ The status of a `TerraformPulLRequest` is defined using the [conditions standard
 - `IsCommentUpToDate`. This condition is used to check if the controller needs to send a comment to a pull request. This is checked by comparing the last discovered commit and the last commit for which a comment was already sent.
 
 !!! info
-We use annotations to store information.
+    We use annotations to store information.
 
 With those 3 conditions, we defined 3 states:
 
