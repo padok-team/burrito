@@ -61,7 +61,7 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() error {
-	client := datastore.NewDefaultClient(r.config.Datastore.TLS)
+	client := datastore.NewDefaultClient(r.config.Datastore)
 	r.datastore = client
 	var commit string
 	ann := map[string]string{}

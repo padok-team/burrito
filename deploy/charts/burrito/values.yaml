@@ -61,8 +61,8 @@ config:
       # -- Service account to use for datastore operations (e.g. reading/writing to storage)
       serviceAccounts: []
       storage:
-        # -- Use in-memory storage for testing - not intended for production use, data will be lost on datastore restart 
-        mock: false 
+        # -- Use in-memory storage for testing - not intended for production use, data will be lost on datastore restart
+        mock: false
         gcs:
           # -- GCS bucket name
           bucket: ""
@@ -71,11 +71,13 @@ config:
           storageAccount: ""
           # -- Azure storage container name
           container: ""
-        s3: 
+        s3:
           # -- S3 bucket name
           bucket: ""
       # -- Datastore exposed port
       addr: ":8080"
+      # -- Datastore hostname, used by controller, server and runner to reach the datastore
+      hostname: "burrito-datastore.burrito-system.svc.cluster.local"
 
     server:
       # -- Server exposed port
@@ -92,7 +94,7 @@ config:
       # -- Configmap name to store the SSH known hosts in the runner
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
-hermitcrab: 
+hermitcrab:
   # -- Enable/Disable Hermitcrab (terraform provider cache in cluster)
   enabled: false
   metadata:
@@ -161,11 +163,11 @@ hermitcrab:
     # -- Hermitcrab resources configuration
     resources:
       limits:
-        cpu: '1'
-        memory: '2Gi'
+        cpu: "1"
+        memory: "2Gi"
       requests:
-        cpu: '300m'
-        memory: '256Mi'
+        cpu: "300m"
+        memory: "256Mi"
     # -- Hermitcrab ports configuration
     ports:
       - name: http
@@ -204,7 +206,7 @@ hermitcrab:
     extraVolumeMounts: {}
 
 global:
-  # -- Global metadata configuration 
+  # -- Global metadata configuration
   metadata:
     labels:
       app.kubernetes.io/part-of: burrito
@@ -235,7 +237,7 @@ global:
     resources: {}
     # -- Global ports configuration
     ports: []
-    # -- Global environment variables 
+    # -- Global environment variables
     envFrom: []
     # -- Additional volumes
     extraVolumes: {}
@@ -399,12 +401,12 @@ datastore:
   # -- Service configuration for the Burrito datastore
   service:
     ports:
-    - name: http
-      port: 80
-      targetPort: http
-    - name: https
-      port: 443
-      targetPort: http
+      - name: http
+        port: 80
+        targetPort: http
+      - name: https
+        port: 443
+        targetPort: http
   # -- TLS configuration for the Burrito datastore
   tls:
     # -- Enable/Disable TLS for the Burrito datastore (recommended for production use)

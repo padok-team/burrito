@@ -98,7 +98,7 @@ func (c *Controllers) Exec() {
 	if err != nil {
 		log.Fatalf("unable to start manager: %s", err)
 	}
-	datastoreClient := datastore.NewDefaultClient(c.config.Datastore.TLS)
+	datastoreClient := datastore.NewDefaultClient(c.config.Datastore)
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())

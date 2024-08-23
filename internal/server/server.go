@@ -54,7 +54,7 @@ func initClient() (*client.Client, error) {
 }
 
 func (s *Server) Exec() {
-	datastore := datastore.NewDefaultClient(s.config.Datastore.TLS)
+	datastore := datastore.NewDefaultClient(s.config.Datastore)
 	s.API.Datastore = datastore
 	err := s.Webhook.Init()
 	if err != nil {

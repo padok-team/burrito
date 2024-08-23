@@ -50,9 +50,9 @@ func (s *Datastore) Exec() {
 	api.GET("/plans", s.API.GetPlanHandler)
 	api.PUT("/plans", s.API.PutPlanHandler)
 	if s.Config.Datastore.TLS {
-		e.Logger.Fatal(e.StartTLS(":8080", DefaultCertPath, DefaultKeyPath))
+		e.Logger.Fatal(e.StartTLS(s.Config.Datastore.Addr, DefaultCertPath, DefaultKeyPath))
 	} else {
-		e.Logger.Fatal(e.Start(":8080"))
+		e.Logger.Fatal(e.Start(s.Config.Datastore.Addr))
 	}
 }
 

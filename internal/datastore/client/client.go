@@ -9,13 +9,13 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/api"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	log "github.com/sirupsen/logrus"
 )
 
 const (
-	DefaultHostname  = "burrito-datastore.burrito-system"
 	DefaultTokenPath = "/var/run/secrets/token/burrito"
 )
 
@@ -33,14 +33,14 @@ type DefaultClient struct {
 	client    *http.Client
 }
 
-func NewDefaultClient(useTLS bool) *DefaultClient {
+func NewDefaultClient(config config.DatastoreConfig) *DefaultClient {
 	scheme := "http"
-	if useTLS {
+	if config.TLS {
 		log.Info("using TLS for datastore")
 		scheme = "https"
 	}
 	return &DefaultClient{
-		Hostname:  DefaultHostname,
+		Hostname:  config.Hostname,
 		tokenPath: DefaultTokenPath,
 		scheme:    scheme,
 		client:    &http.Client{},
