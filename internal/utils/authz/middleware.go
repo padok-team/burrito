@@ -53,8 +53,9 @@ func (a *Authz) Process(next echo.HandlerFunc) echo.HandlerFunc {
 		if authz == "" {
 			return echo.NewHTTPError(http.StatusUnauthorized, "missing Authorization header")
 		}
-		_, found := a.Cache.Get(authz)
+		sa, found := a.Cache.Get(authz)
 		if found {
+			c.Set("serviceAccount", sa)
 			return next(c)
 		}
 		ctx := context.Background()
@@ -71,11 +72,11 @@ func (a *Authz) Process(next echo.HandlerFunc) echo.HandlerFunc {
 		if !result.Status.Authenticated {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 		}
-		fmt.Printf("%s", result.Status.User.Username)
 		if !a.isServiceAccountAllowed(result.Status.User.Username) {
 			return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized user")
 		}
-		a.Cache.Set(authz, true, cache.DefaultExpiration)
+		a.Cache.Set(authz, result.Status.User.Username, cache.DefaultExpiration)
+		c.Set("serviceAccount", result.Status.User.Username)
 		return next(c)
 	}
 }

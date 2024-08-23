@@ -43,7 +43,7 @@ func (s *Datastore) Exec() {
 	e.GET("/healthz", handleHealthz)
 
 	api := e.Group("/api")
-	api.Use(middleware.Logger())
+	api.Use(middleware.RequestLoggerWithConfig(getLoggerConfig()))
 	api.Use(authz.Process)
 	api.GET("/logs", s.API.GetLogsHandler)
 	api.PUT("/logs", s.API.PutLogsHandler)
@@ -54,9 +54,36 @@ func (s *Datastore) Exec() {
 	} else {
 		e.Logger.Fatal(e.Start(":8080"))
 	}
-	log.Infof("burrito datastore started on addr %s", ":8080")
 }
 
 func handleHealthz(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
+}
+
+func getLoggerConfig() middleware.RequestLoggerConfig {
+	return middleware.RequestLoggerConfig{
+		LogRemoteIP:      true,
+		LogMethod:        true,
+		LogURI:           true,
+		LogStatus:        true,
+		LogError:         true,
+		LogLatency:       true,
+		LogContentLength: true,
+		LogResponseSize:  true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			user, _ := c.Get("serviceAccount").(string)
+			log.WithFields(log.Fields{
+				"service_account": user,
+				"remote_ip":       v.RemoteIP,
+				"method":          v.Method,
+				"uri":             v.URI,
+				"status":          v.Status,
+				"error":           v.Error,
+				"latency":         v.Latency.String(),
+				"bytes_in":        v.ContentLength,
+				"bytes_out":       v.ResponseSize,
+			}).Info()
+			return nil
+		},
+	}
 }
