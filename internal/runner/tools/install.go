@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -8,6 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	tf "github.com/padok-team/burrito/internal/runner/tools/terraform"
 	tg "github.com/padok-team/burrito/internal/runner/tools/terragrunt"
+	ot "github.com/padok-team/burrito/internal/runner/tools/tofu"
 	log "github.com/sirupsen/logrus"
 	tenvconfig "github.com/tofuutils/tenv/v3/config"
 	"github.com/tofuutils/tenv/v3/versionmanager"
@@ -16,7 +18,7 @@ import (
 
 type tenvWrapper = versionmanager.VersionManager
 
-// Creates a `tenv` wrapper for the given tool (Terraform/Terragrunt/OpenTofu)
+// Creates a `tenv` wrapper for the given tool (Terraform/Terragrunt/Tofu)
 func newTenvWrapper(binaryPath string, toolName string) (*tenvWrapper, error) {
 	conf, err := tenvconfig.InitConfigFromEnv()
 	if err != nil {
@@ -70,7 +72,7 @@ func install(binaryPath, toolName, version string) error {
 }
 
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
-func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (TerraformExec, error) {
+func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (IacExec, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Errorf("error getting current working directory: %s", err)
@@ -87,17 +89,28 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 			log.Errorf("error changing directory back to %s: %s", cwd, err)
 		}
 	}()
-
-	terraformVersion := configv1alpha1.GetTerraformVersion(repo, layer)
-	terraformVersion, err = detect(binaryPath, "terraform", terraformVersion)
+	iacTool := configv1alpha1.GetIacTool(repo, layer)
+	if iacTool != "terraform" && iacTool != "tofu" {
+		return nil, errors.New("unsupported IaC tool, set spec.iacTool to 'terraform' or 'tofu'")
+	}
+	iacToolVersion := configv1alpha1.GetIacToolVersion(repo, layer)
+	iacToolVersion, err = detect(binaryPath, iacTool, iacToolVersion)
 	if err != nil {
 		return nil, err
 	}
-	if err := install(binaryPath, "terraform", terraformVersion); err != nil {
+	if err := install(binaryPath, iacTool, iacToolVersion); err != nil {
 		return nil, err
 	}
-	tf := &tf.Terraform{
-		ExecPath: filepath.Join(binaryPath, "Terraform", terraformVersion, "terraform"),
+	var iacExec IacExec
+	if iacTool == "terraform" {
+		iacExec = &tf.Terraform{
+			ExecPath: filepath.Join(binaryPath, "Terraform", iacToolVersion, "terraform"),
+		}
+	}
+	if iacTool == "tofu" {
+		iacExec = &ot.Tofu{
+			ExecPath: filepath.Join(binaryPath, "OpenTofu", iacToolVersion, "tofu"),
+		}
 	}
 
 	if configv1alpha1.GetTerragruntEnabled(repo, layer) {
@@ -109,12 +122,20 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		if err := install(binaryPath, "terragrunt", terragruntVersion); err != nil {
 			return nil, err
 		}
-		return &tg.Terragrunt{
-			ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-			Terraform: tf,
-		}, nil
-	}
+		if iacTool == "terraform" {
+			return &tg.Terragrunt{
+				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
+				Terraform: iacExec.(*tf.Terraform),
+				Tofu:      nil,
+			}, nil
+		} else if iacTool == "tofu" {
+			return &tg.Terragrunt{
+				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
+				Terraform: nil,
+				Tofu:      iacExec.(*ot.Tofu),
+			}, nil
+		}
 
-	log.Infof("binaries successfully installed")
-	return tf, nil
+	}
+	return iacExec, nil
 }

@@ -18,7 +18,7 @@ import (
 
 type Runner struct {
 	config        *config.Config
-	exec          tools.TerraformExec
+	exec          tools.IacExec
 	Datastore     datastore.Client
 	Client        client.Client
 	Layer         *configv1alpha1.TerraformLayer
@@ -100,6 +100,7 @@ func (r *Runner) Init() error {
 		log.Errorf("error installing binaries: %s", err)
 		return err
 	}
+	log.Infof("binaries successfully installed")
 
 	if r.config.Hermitcrab.Enabled {
 		log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
