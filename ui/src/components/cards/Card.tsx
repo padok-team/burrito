@@ -10,6 +10,9 @@ import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 
 import { Layer } from "@/clients/layers/types";
+import GenericIconButton from "../buttons/GenericIconButton";
+import { syncLayer } from "@/clients/layers/client";
+import SyncIcon from "@/assets/icons/SyncIcon";
 
 export interface CardProps {
   className?: string;
@@ -159,9 +162,12 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
-      {layer.latestRuns.length > 0 && (
-        <ModalLogsTerminal layer={layer} variant={variant} />
-      )}
+      <div className="flex gap-4">
+        {layer.latestRuns.length > 0 && (
+          <ModalLogsTerminal layer={layer} variant={variant} />
+        )}
+        <GenericIconButton variant={variant} Icon={SyncIcon} onClick={() => syncLayer(layer.namespace, layer.name)} />
+      </div>
       <Tooltip
         opacity={1}
         id="card-tooltip"
