@@ -53,8 +53,33 @@ type TerragruntConfig struct {
 	Version string `json:"version,omitempty"`
 }
 
+type TofuConfig struct {
+	Version          string           `json:"version,omitempty"`
+	TerragruntConfig TerragruntConfig `json:"terragrunt,omitempty"`
+}
+
+func GetIacTool(repository *TerraformRepository, layer *TerraformLayer) string {
+	return chooseString(repository.Spec.IacTool, layer.Spec.IacTool)
+}
+
+func GetIacToolVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	iacTool := GetIacTool(repository, layer)
+	switch iacTool {
+	case "terraform":
+		return GetTerraformVersion(repository, layer)
+	case "tofu":
+		return GetTofuVersion(repository, layer)
+	default:
+		return ""
+	}
+}
+
 func GetTerraformVersion(repository *TerraformRepository, layer *TerraformLayer) string {
 	return chooseString(repository.Spec.TerraformConfig.Version, layer.Spec.TerraformConfig.Version)
+}
+
+func GetTofuVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	return chooseString(repository.Spec.TofuConfig.Version, layer.Spec.TofuConfig.Version)
 }
 
 func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer) string {

@@ -30,7 +30,9 @@ type TerraformLayerSpec struct {
 
 	Path                string                   `json:"path,omitempty"`
 	Branch              string                   `json:"branch,omitempty"`
+	IacTool             string                   `json:"iacTool,omitempty"`
 	TerraformConfig     TerraformConfig          `json:"terraform,omitempty"`
+	TofuConfig          TofuConfig               `json:"tofu,omitempty"`
 	Repository          TerraformLayerRepository `json:"repository,omitempty"`
 	RemediationStrategy RemediationStrategy      `json:"remediationStrategy,omitempty"`
 	OverrideRunnerSpec  OverrideRunnerSpec       `json:"overrideRunnerSpec,omitempty"`

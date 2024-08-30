@@ -9,6 +9,120 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
+func TestGetIacTool(t *testing.T) {
+	tt := []struct {
+		name            string
+		repository      *configv1alpha1.TerraformRepository
+		layer           *configv1alpha1.TerraformLayer
+		expectedIacTool string
+	}{
+		{
+			"OnlyRepositoryIacTool",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					IacTool: "terraform",
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			"terraform",
+		},
+		{
+			"OnlyLayerIacTool",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					IacTool: "terraform",
+				},
+			},
+			"terraform",
+		},
+		{
+			"OverrideRepositoryWithLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					IacTool: "terraform",
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					IacTool: "tofu",
+				},
+			},
+			"tofu",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetIacTool(tc.repository, tc.layer)
+			if tc.expectedIacTool != result {
+				t.Errorf("different IacTool computed: expected %s go %s", tc.expectedIacTool, result)
+			}
+		})
+	}
+}
+
+func TestGetTofuVersion(t *testing.T) {
+	tt := []struct {
+		name            string
+		repository      *configv1alpha1.TerraformRepository
+		layer           *configv1alpha1.TerraformLayer
+		expectedVersion string
+	}{
+		{
+			"OnlyRepositoryVersion",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					TofuConfig: configv1alpha1.TofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			"1.0.1",
+		},
+		{
+			"OnlyLayerVersion",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TofuConfig: configv1alpha1.TofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			"1.0.1",
+		},
+		{
+			"OverrideRepositoryWithLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					TofuConfig: configv1alpha1.TofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TofuConfig: configv1alpha1.TofuConfig{
+						Version: "1.0.6",
+					},
+				},
+			},
+			"1.0.6",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetTofuVersion(tc.repository, tc.layer)
+			if tc.expectedVersion != result {
+				t.Errorf("different version computed: expected %s go %s", tc.expectedVersion, result)
+			}
+		})
+	}
+}
+
 func TestGetTerraformVersion(t *testing.T) {
 	tt := []struct {
 		name            string
