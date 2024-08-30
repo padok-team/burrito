@@ -243,6 +243,28 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 	return condition, true
 }
 
+func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsSyncScheduled",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	// check if annotations.SyncNow is present
+	if _, ok := t.Annotations[annotations.SyncNow]; ok {
+		condition.Reason = "SyncScheduled"
+		condition.Message = "A sync has been manually scheduled"
+		condition.Status = metav1.ConditionTrue
+		// Remove the annotation to avoid running the sync again
+		annotations.Remove(context.Background(), r.Client, t, annotations.SyncNow)
+		return condition, true
+	}
+	condition.Reason = "NoSyncScheduled"
+	condition.Message = "No sync has been manually scheduled"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
+}
+
 func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {
 	if len(changedFiles) == 0 {
 		return true

@@ -24,6 +24,8 @@ const (
 
 	ForceApply              string = "notifications.terraform.padok.cloud/force-apply"
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
+
+	SyncNow string = "api.terraform.padok.cloud/sync-now"
 )
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {
