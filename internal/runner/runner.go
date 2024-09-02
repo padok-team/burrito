@@ -66,11 +66,7 @@ func (r *Runner) initClients() error {
 	}
 	r.Client = kubeClient
 
-	datastoreClient := datastore.NewDefaultClient()
-	if r.config.Datastore.TLS {
-		log.Info("using TLS for datastore")
-		datastoreClient.Scheme = "https"
-	}
+	datastoreClient := datastore.NewDefaultClient(r.config.Datastore)
 	r.Datastore = datastoreClient
 	return nil
 }
