@@ -61,11 +61,7 @@ func New(c *config.Config) *Runner {
 }
 
 func (r *Runner) Exec() error {
-	client := datastore.NewDefaultClient()
-	if r.config.Datastore.TLS {
-		log.Info("using TLS for datastore")
-		client.Scheme = "https"
-	}
+	client := datastore.NewDefaultClient(r.config.Datastore)
 	r.datastore = client
 	var commit string
 	ann := map[string]string{}

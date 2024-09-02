@@ -113,6 +113,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	state, conditions := r.GetState(ctx, layer)
 	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
 	if err != nil {
+		log.Errorf("failed to get plan for layer %s: %s", layer.Name, err)
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
 		lastResult = []byte("Error getting last Result")
 	}

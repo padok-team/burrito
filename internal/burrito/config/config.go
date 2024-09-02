@@ -20,7 +20,10 @@ type Config struct {
 }
 
 type DatastoreConfig struct {
+	Hostname                  string        `mapstructure:"hostname"`
+	Addr                      string        `mapstructure:"addr"`
 	TLS                       bool          `mapstructure:"tls"`
+	CertificateSecretName     string        `mapstructure:"certificateSecretName"`
 	Storage                   StorageConfig `mapstructure:"storage"`
 	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
 }

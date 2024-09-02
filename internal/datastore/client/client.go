@@ -2,7 +2,6 @@ package client
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,13 +9,14 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/api"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	DefaultHostname = "burrito-datastore.burrito-system"
-	DefaultPath     = "/var/run/secrets/token/burrito"
+	DefaultTokenPath = "/var/run/secrets/token/burrito"
 )
 
 type Client interface {
@@ -27,39 +27,37 @@ type Client interface {
 }
 
 type DefaultClient struct {
-	Hostname string
-	Path     string
-	Scheme   string
-	client   *http.Client
+	Hostname  string
+	tokenPath string
+	scheme    string
+	client    *http.Client
 }
 
-func NewDefaultClient() *DefaultClient {
+func NewDefaultClient(config config.DatastoreConfig) *DefaultClient {
+	scheme := "http"
+	if config.TLS {
+		log.Info("using TLS for datastore")
+		scheme = "https"
+	}
 	return &DefaultClient{
-		Hostname: DefaultHostname,
-		Path:     DefaultPath,
-		Scheme:   "http",
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		},
+		Hostname:  config.Hostname,
+		tokenPath: DefaultTokenPath,
+		scheme:    scheme,
+		client:    &http.Client{},
 	}
 }
 
 func (c *DefaultClient) buildRequest(path string, queryParams url.Values, method string, body io.Reader) (*http.Request, error) {
-	url := fmt.Sprintf("%s://%s%s?%s", c.Scheme, c.Hostname, path, queryParams.Encode())
+	url := fmt.Sprintf("%s://%s%s?%s", c.scheme, c.Hostname, path, queryParams.Encode())
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
-	token, err := os.ReadFile(c.Path)
+	token, err := os.ReadFile(c.tokenPath)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", string(token))
-	if err != nil {
-		return nil, err
-	}
 	return req, nil
 }
 
