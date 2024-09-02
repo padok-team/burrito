@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/martian/v3/log"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -256,7 +257,10 @@ func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.C
 		condition.Message = "A sync has been manually scheduled"
 		condition.Status = metav1.ConditionTrue
 		// Remove the annotation to avoid running the sync again
-		annotations.Remove(context.Background(), r.Client, t, annotations.SyncNow)
+		err := annotations.Remove(context.Background(), r.Client, t, annotations.SyncNow)
+		if err != nil {
+			log.Errorf("Failed to remove annotation %s from layer %s: %s", annotations.SyncNow, t.Name, err)
+		}
 		return condition, true
 	}
 	condition.Reason = "NoSyncScheduled"
