@@ -11,5 +11,3 @@ spec:
   repository:
     name: my-repository
     namespace: burrito-project
-  terraform:
-    version: 1.3.1

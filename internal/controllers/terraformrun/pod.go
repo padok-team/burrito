@@ -125,11 +125,11 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 			mountCA(&defaultSpec, r.Config.Hermitcrab.CertificateSecretName, "burrito-hermitcrab-ca")
 			defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env,
 				corev1.EnvVar{
-					Name:  "HERMITCRAB_ENABLED",
+					Name:  "BURRITO_HERMITCRAB_ENABLED",
 					Value: "true",
 				},
 				corev1.EnvVar{
-					Name:  "HERMITCRAB_URL",
+					Name:  "BURRITO_HERMITCRAB_URL",
 					Value: fmt.Sprintf("https://burrito-hermitcrab.%s.svc.cluster.local/v1/providers/", r.Config.Controller.MainNamespace),
 				},
 			)
@@ -314,10 +314,6 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 					{
 						Name:  "SSH_KNOWN_HOSTS",
 						Value: "/home/burrito/.ssh/known_hosts",
-					},
-					{
-						Name:  "BURRITO_DATASTORE_HOSTNAME",
-						Value: config.Datastore.Hostname,
 					},
 				},
 			},

@@ -1,0 +1,101 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: nominal-case-1
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  repository:
+    name: burrito-examples
+    namespace: default
+  remediationStrategy:
+    applyWithoutPlanArtifact: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-1-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: nominal-case-1
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-1-apply
+  namespace: default
+spec:
+  action: apply
+  layer:
+    name: nominal-case-1
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: nominal-case-2
+  namespace: default
+spec:
+  branch: main
+  path: terragrunt/random-pets/test/
+  repository:
+    name: burrito-examples
+    namespace: default
+  remediationStrategy:
+    applyWithoutPlanArtifact: true
+  terraform:
+    version: "1.7.5"
+    terragrunt:
+      enabled: true
+      version: "0.66.9"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-2-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: nominal-case-2
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-2-apply
+  namespace: default
+spec:
+  action: apply
+  layer:
+    name: nominal-case-2
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: nominal-case-3
+  namespace: default
+spec:
+  branch: main
+  path: terraform-with-version/
+  repository:
+    name: burrito-examples
+    namespace: default
+  remediationStrategy:
+    applyWithoutPlanArtifact: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-3-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: nominal-case-3
+    namespace: default

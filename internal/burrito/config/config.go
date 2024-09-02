@@ -114,6 +114,7 @@ type RunnerConfig struct {
 	Repository                 RepositoryConfig `mapstructure:"repository"`
 	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
 	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`
+	RepositoryPath             string           `mapstructure:"repositoryPath"`
 }
 
 type Layer struct {
@@ -124,6 +125,7 @@ type Layer struct {
 type HermitcrabConfig struct {
 	Enabled               bool   `mapstructure:"enabled"`
 	CertificateSecretName string `mapstructure:"certificateSecretName"`
+	URL                   string `mapstructure:"url"`
 }
 
 type ServerConfig struct {
@@ -222,6 +224,7 @@ func TestConfig() *Config {
 		},
 		Runner: RunnerConfig{
 			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
+			Layer:                      Layer{},
 		},
 	}
 }

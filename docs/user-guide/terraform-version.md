@@ -1,10 +1,12 @@
-# Choose a terraform/terragrunt version
+# Configure a Terraform/Terragrunt/OpenTofu version
 
-For now, Burrito doesn't auto-detect the terraform or terragrunt version used in your repository. You have to specify it in the `TerraformRepository` or `TerraformLayer` resource.
+By leveraging [`tenv`](https://github.com/tofuutils/tenv), Burrito auto-detects the Terraform, Terragrunt or OpenTofu version used in your repository, with version constraints set in your code (see [`tenv`'s README](https://github.com/tofuutils/tenv/blob/main/README.md)).
 
-## Choose terraform version
+Additionally, you can to specify version constraints in the `TerraformRepository` or `TerraformLayer` resource as described below.
 
-Both `TerraformRepository` and `TerraformLayer` expose a `spec.terrafrom.version` map field.
+## Choose Terraform version
+
+Both `TerraformRepository` and `TerraformLayer` expose a `spec.terraform.version` map field that support version constraints as described in the [Terraform documentation](https://www.terraform.io/docs/language/expressions/version-constraints.html).
 
 If the field is specified for a given `TerraformRepository` it will be applied by default to all `TerraformLayer` linked to it.
 
@@ -12,7 +14,7 @@ If the field is specified for a given `TerraformLayer` it will take precedence o
 
 ## Enable Terragrunt
 
-You can specify usage of terragrunt as follow:
+You can specify usage of Terragrunt with the `spec.terraform.terragrunt` map as follow:
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -21,7 +23,7 @@ metadata:
   name: random-pets-terragrunt
 spec:
   terraform:
-    version: "1.3.1"
+    version: "~> 1.3.0"
     terragrunt:
       enabled: true
       version: "0.44.5"
@@ -36,3 +38,7 @@ spec:
 
 !!! info
     This configuration can be specified at the `TerraformRepository` level to be enabled by default in each of its layers.
+
+## Use OpenTofu instead of Terraform
+
+(coming soon)
