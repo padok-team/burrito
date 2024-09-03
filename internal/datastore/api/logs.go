@@ -42,6 +42,7 @@ func (a *API) GetLogsHandler(c echo.Context) error {
 		return c.String(http.StatusNotFound, "No logs for this attempt")
 	}
 	if err != nil {
+		c.Logger().Errorf("Could not get logs, there's an issue with the storage backend : %s", err)
 		return c.String(http.StatusInternalServerError, "could not get logs, there's an issue with the storage backend")
 	}
 	response.Results = append(response.Results, strings.Split(string(content), "\n")...)
@@ -63,6 +64,7 @@ func (a *API) PutLogsHandler(c echo.Context) error {
 	}
 	err = a.Storage.PutLogs(namespace, layer, run, attempt, content)
 	if err != nil {
+		c.Logger().Errorf("Could not put logs, there's an issue with the storage backend : %s", err)
 		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend")
 	}
 	return c.NoContent(http.StatusOK)

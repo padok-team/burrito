@@ -37,10 +37,11 @@ func (a *API) GetPlanHandler(c echo.Context) error {
 		content, err = a.Storage.GetPlan(namespace, layer, run, attempt, format)
 	}
 	if storageerrors.NotFound(err) {
-		return c.String(http.StatusNotFound, "No logs for this attempt")
+		return c.String(http.StatusNotFound, "No plan for this attempt")
 	}
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "could not get logs, there's an issue with the storage backend")
+		c.Logger().Errorf("Could not get plan, there's an issue with the storage backend : %s", err)
+		return c.String(http.StatusInternalServerError, "could not get plan, there's an issue with the storage backend")
 	}
 	return c.Blob(http.StatusOK, "application/octet-stream", content)
 }
@@ -60,7 +61,7 @@ func (a *API) PutPlanHandler(c echo.Context) error {
 	}
 	err = a.Storage.PutPlan(namespace, layer, run, attempt, format, content)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend: "+err.Error())
+		return c.String(http.StatusInternalServerError, "could not put plan, there's an issue with the storage backend: "+err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
