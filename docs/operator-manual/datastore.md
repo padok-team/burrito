@@ -12,6 +12,7 @@ config:
         mock: <false|true> # default: false
         s3:
           bucket: <bucket-name>
+          usePathStyle: <false|true> # default: false
         gcs:
           bucket: <bucket-name>
         azure:

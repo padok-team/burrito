@@ -24,7 +24,9 @@ func New(config config.S3Config) *S3 {
 	if err != nil {
 		panic(err)
 	}
-	client := storage.NewFromConfig(sdkConfig)
+	client := storage.NewFromConfig(sdkConfig, func(o *storage.Options) {
+		o.UsePathStyle = config.UsePathStyle
+	})
 	return &S3{
 		Config: config,
 		Client: client,

@@ -74,6 +74,8 @@ config:
         s3:
           # -- S3 bucket name
           bucket: ""
+          # -- S3 option for bucket name in path instead of as subdomain
+          usePathStyle: false
       # -- Datastore exposed port
       addr: ":8080"
       # -- Datastore hostname, used by controller, server and runner to reach the datastore
