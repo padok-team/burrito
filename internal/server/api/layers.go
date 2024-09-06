@@ -9,24 +9,26 @@ import (
 	"github.com/labstack/echo/v4"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/server/utils"
 	log "github.com/sirupsen/logrus"
 )
 
 type layer struct {
-	UID        string `json:"uid"`
-	Name       string `json:"name"`
-	Namespace  string `json:"namespace"`
-	Repository string `json:"repository"`
-	Branch     string `json:"branch"`
-	Path       string `json:"path"`
-	State      string `json:"state"`
-	RunCount   int    `json:"runCount"`
-	LastRun    Run    `json:"lastRun"`
-	LastRunAt  string `json:"lastRunAt"`
-	LastResult string `json:"lastResult"`
-	IsRunning  bool   `json:"isRunning"`
-	IsPR       bool   `json:"isPR"`
-	LatestRuns []Run  `json:"latestRuns"`
+	UID              string                 `json:"uid"`
+	Name             string                 `json:"name"`
+	Namespace        string                 `json:"namespace"`
+	Repository       string                 `json:"repository"`
+	Branch           string                 `json:"branch"`
+	Path             string                 `json:"path"`
+	State            string                 `json:"state"`
+	RunCount         int                    `json:"runCount"`
+	LastRun          Run                    `json:"lastRun"`
+	LastRunAt        string                 `json:"lastRunAt"`
+	LastResult       string                 `json:"lastResult"`
+	IsRunning        bool                   `json:"isRunning"`
+	IsPR             bool                   `json:"isPR"`
+	LatestRuns       []Run                  `json:"latestRuns"`
+	ManualSyncStatus utils.ManualSyncStatus `json:"manualSyncStatus"`
 }
 
 type Run struct {
@@ -83,20 +85,21 @@ func (a *API) LayersHandler(c echo.Context) error {
 			running = runStillRunning(run)
 		}
 		results = append(results, layer{
-			UID:        string(l.UID),
-			Name:       l.Name,
-			Namespace:  l.Namespace,
-			Repository: fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
-			Branch:     l.Spec.Branch,
-			Path:       l.Spec.Path,
-			State:      a.getLayerState(l),
-			RunCount:   len(l.Status.LatestRuns),
-			LastRun:    runAPI,
-			LastRunAt:  l.Status.LastRun.Date.Format(time.RFC3339),
-			LastResult: l.Status.LastResult,
-			IsRunning:  running,
-			IsPR:       a.isLayerPR(l),
-			LatestRuns: transformLatestRuns(l.Status.LatestRuns),
+			UID:              string(l.UID),
+			Name:             l.Name,
+			Namespace:        l.Namespace,
+			Repository:       fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
+			Branch:           l.Spec.Branch,
+			Path:             l.Spec.Path,
+			State:            a.getLayerState(l),
+			RunCount:         len(l.Status.LatestRuns),
+			LastRun:          runAPI,
+			LastRunAt:        l.Status.LastRun.Date.Format(time.RFC3339),
+			LastResult:       l.Status.LastResult,
+			IsRunning:        running,
+			IsPR:             a.isLayerPR(l),
+			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
+			ManualSyncStatus: utils.GetManualSyncStatus(l),
 		})
 	}
 	return c.JSON(http.StatusOK, &layersResponse{

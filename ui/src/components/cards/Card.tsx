@@ -74,6 +74,8 @@ const Card: React.FC<CardProps> = ({
     );
   };
 
+  const isManualSyncPending = layer.manualSyncStatus === "pending" || layer.manualSyncStatus === "annotated";
+
   return (
     <div
       className={twMerge(
@@ -166,7 +168,12 @@ const Card: React.FC<CardProps> = ({
         {layer.latestRuns.length > 0 && (
           <ModalLogsTerminal layer={layer} variant={variant} />
         )}
-        <GenericIconButton variant={variant} Icon={SyncIcon} onClick={() => syncLayer(layer.namespace, layer.name)} />
+        <GenericIconButton variant={variant} 
+                           Icon={SyncIcon} 
+                           disabled={isManualSyncPending}
+                           onClick={() => syncLayer(layer.namespace, layer.name)} 
+                           tooltip={isManualSyncPending ? "Sync in progress..." : "Sync now"} 
+                           />
       </div>
       <Tooltip
         opacity={1}
