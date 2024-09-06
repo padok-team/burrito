@@ -39,6 +39,7 @@ func NewDefaultClient(config config.DatastoreConfig) *DefaultClient {
 		log.Info("using TLS for datastore")
 		scheme = "https"
 	}
+	log.Infof("using datastore at %s://%s", scheme, config.Hostname)
 	return &DefaultClient{
 		Hostname:  config.Hostname,
 		tokenPath: DefaultTokenPath,
