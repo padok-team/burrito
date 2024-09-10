@@ -40,7 +40,8 @@ type GCSConfig struct {
 }
 
 type S3Config struct {
-	Bucket string `mapstructure:"bucket"`
+	Bucket       string `mapstructure:"bucket"`
+	UsePathStyle bool   `mapstructure:"usePathStyle"`
 }
 
 type AzureConfig struct {
