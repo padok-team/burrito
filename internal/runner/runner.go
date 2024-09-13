@@ -18,7 +18,7 @@ import (
 
 type Runner struct {
 	config        *config.Config
-	exec          tools.TerraformExec
+	exec          tools.IacExec
 	Datastore     datastore.Client
 	Client        client.Client
 	Layer         *configv1alpha1.TerraformLayer

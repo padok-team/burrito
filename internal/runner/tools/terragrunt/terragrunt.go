@@ -2,38 +2,47 @@ package terragrunt
 
 import (
 	"errors"
-	"os"
 	"os/exec"
 
+	"github.com/padok-team/burrito/internal/runner/tools/opentofu"
 	"github.com/padok-team/burrito/internal/runner/tools/terraform"
+	c "github.com/padok-team/burrito/internal/utils/cmd"
 )
 
 type Terragrunt struct {
 	ExecPath   string
 	WorkingDir string
 	Terraform  *terraform.Terraform
+	OpenTofu   *opentofu.OpenTofu
 }
 
-func verbose(cmd *exec.Cmd) {
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-}
-
-func (t *Terragrunt) getDefaultOptions(command string) []string {
+func (t *Terragrunt) getDefaultOptions(command string) ([]string, error) {
+	var execPath string
+	if t.Terraform != nil {
+		execPath = t.Terraform.ExecPath
+	} else if t.OpenTofu != nil {
+		execPath = t.OpenTofu.ExecPath
+	} else {
+		return nil, errors.New("Cannot find a valid binary to use with Terragrunt")
+	}
 	return []string{
 		command,
 		"--terragrunt-tfpath",
-		t.Terraform.ExecPath,
+		execPath,
 		"--terragrunt-working-dir",
 		t.WorkingDir,
 		"-no-color",
-	}
+	}, nil
 }
 
 func (t *Terragrunt) Init(workingDir string) error {
 	t.WorkingDir = workingDir
-	cmd := exec.Command(t.ExecPath, t.getDefaultOptions("init")...)
-	verbose(cmd)
+	options, err := t.getDefaultOptions("init")
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(t.ExecPath, options...)
+	c.Verbose(cmd)
 	cmd.Dir = t.WorkingDir
 	if err := cmd.Run(); err != nil {
 		return err
@@ -42,9 +51,13 @@ func (t *Terragrunt) Init(workingDir string) error {
 }
 
 func (t *Terragrunt) Plan(planArtifactPath string) error {
-	options := append(t.getDefaultOptions("plan"), "-out", planArtifactPath)
+	options, err := t.getDefaultOptions("plan")
+	if err != nil {
+		return err
+	}
+	options = append(options, "-out", planArtifactPath)
 	cmd := exec.Command(t.ExecPath, options...)
-	verbose(cmd)
+	c.Verbose(cmd)
 	cmd.Dir = t.WorkingDir
 	if err := cmd.Run(); err != nil {
 		return err
@@ -53,13 +66,17 @@ func (t *Terragrunt) Plan(planArtifactPath string) error {
 }
 
 func (t *Terragrunt) Apply(planArtifactPath string) error {
-	options := append(t.getDefaultOptions("apply"), "-auto-approve")
+	options, err := t.getDefaultOptions("apply")
+	if err != nil {
+		return err
+	}
+	options = append(options, "-auto-approve")
 	if planArtifactPath != "" {
 		options = append(options, planArtifactPath)
 	}
 
 	cmd := exec.Command(t.ExecPath, options...)
-	verbose(cmd)
+	c.Verbose(cmd)
 	cmd.Dir = t.WorkingDir
 	if err := cmd.Run(); err != nil {
 		return err
@@ -68,7 +85,10 @@ func (t *Terragrunt) Apply(planArtifactPath string) error {
 }
 
 func (t *Terragrunt) Show(planArtifactPath, mode string) ([]byte, error) {
-	options := t.getDefaultOptions("show")
+	options, err := t.getDefaultOptions("show")
+	if err != nil {
+		return nil, err
+	}
 	switch mode {
 	case "json":
 		options = append(options, "-json", planArtifactPath)
