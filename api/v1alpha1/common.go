@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
@@ -44,8 +46,11 @@ type OnErrorRemediationStrategy struct {
 }
 
 type TerraformConfig struct {
-	Version          string           `json:"version,omitempty"`
-	TerragruntConfig TerragruntConfig `json:"terragrunt,omitempty"`
+	Version string `json:"version,omitempty"`
+}
+
+type OpenTofuConfig struct {
+	Version string `json:"version,omitempty"`
 }
 
 type TerragruntConfig struct {
@@ -53,16 +58,36 @@ type TerragruntConfig struct {
 	Version string `json:"version,omitempty"`
 }
 
+func GetIacTool(repository *TerraformRepository, layer *TerraformLayer) string {
+	return strings.ToLower(chooseString(repository.Spec.IacTool, layer.Spec.IacTool))
+}
+
+func GetIacToolVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	iacTool := GetIacTool(repository, layer)
+	switch iacTool {
+	case "terraform":
+		return GetTerraformVersion(repository, layer)
+	case "opentofu":
+		return GetOpenTofuVersion(repository, layer)
+	default:
+		return ""
+	}
+}
+
 func GetTerraformVersion(repository *TerraformRepository, layer *TerraformLayer) string {
 	return chooseString(repository.Spec.TerraformConfig.Version, layer.Spec.TerraformConfig.Version)
 }
 
+func GetOpenTofuVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	return chooseString(repository.Spec.OpenTofuConfig.Version, layer.Spec.OpenTofuConfig.Version)
+}
+
 func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer) string {
-	return chooseString(repository.Spec.TerraformConfig.TerragruntConfig.Version, layer.Spec.TerraformConfig.TerragruntConfig.Version)
+	return chooseString(repository.Spec.TerragruntConfig.Version, layer.Spec.TerragruntConfig.Version)
 }
 
 func GetTerragruntEnabled(repository *TerraformRepository, layer *TerraformLayer) bool {
-	return chooseBool(repository.Spec.TerraformConfig.TerragruntConfig.Enabled, layer.Spec.TerraformConfig.TerragruntConfig.Enabled, false)
+	return chooseBool(repository.Spec.TerragruntConfig.Enabled, layer.Spec.TerragruntConfig.Enabled, false)
 }
 
 func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
