@@ -29,7 +29,10 @@ type TerraformRepositorySpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	Repository          TerraformRepositoryRepository `json:"repository,omitempty"`
+	IacTool             string                        `json:"iacTool,omitempty"`
 	TerraformConfig     TerraformConfig               `json:"terraform,omitempty"`
+	TerragruntConfig    TerragruntConfig              `json:"terragrunt,omitempty"`
+	OpenTofuConfig      OpenTofuConfig                `json:"opentofu,omitempty"`
 	RemediationStrategy RemediationStrategy           `json:"remediationStrategy,omitempty"`
 	OverrideRunnerSpec  OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
 	RunHistoryPolicy    RunHistoryPolicy              `json:"runHistoryPolicy,omitempty"`

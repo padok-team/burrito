@@ -62,6 +62,13 @@ spec:
             properties:
               branch:
                 type: string
+              iacTool:
+                type: string
+              opentofu:
+                properties:
+                  version:
+                    type: string
+                type: object
               overrideRunnerSpec:
                 properties:
                   env:
@@ -2231,13 +2238,13 @@ spec:
                 type: object
               terraform:
                 properties:
-                  terragrunt:
-                    properties:
-                      enabled:
-                        type: boolean
-                      version:
-                        type: string
-                    type: object
+                  version:
+                    type: string
+                type: object
+              terragrunt:
+                properties:
+                  enabled:
+                    type: boolean
                   version:
                     type: string
                 type: object
