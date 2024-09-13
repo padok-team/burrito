@@ -136,12 +136,12 @@ func (r *Runner) execPlan() (string, error) {
 // Run the `apply` command, by default with the plan artifact from the previous plan run
 // Returns the sha256 sum of the plan artifact used
 func (r *Runner) execApply() (string, error) {
-	log.Infof("starting terraform apply")
+	log.Info("starting terraform apply")
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return "", err
 	}
-	log.Info("getting plan binary in datastore at key")
+	log.Infof("getting plan binary in datastore at key %s/%s/%s/%s", r.Layer.Namespace, r.Layer.Name, r.Run.Spec.Artifact.Run, r.Run.Spec.Artifact.Attempt)
 	plan, err := r.Datastore.GetPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Spec.Artifact.Run, r.Run.Spec.Artifact.Attempt, "bin")
 	if err != nil {
 		log.Errorf("could not get plan artifact: %s", err)
@@ -153,7 +153,7 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("could not write plan artifact to disk: %s", err)
 		return "", err
 	}
-	log.Print("launching terraform apply")
+	log.Info("launching terraform apply")
 	if configv1alpha1.GetApplyWithoutPlanArtifactEnabled(r.Repository, r.Layer) {
 		log.Infof("applying without reusing plan artifact from previous plan run")
 		err = r.exec.Apply("")
@@ -168,6 +168,6 @@ func (r *Runner) execApply() (string, error) {
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
-	log.Infof("terraform apply ran successfully")
+	log.Info("terraform apply ran successfully")
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }

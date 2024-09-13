@@ -1,6 +1,6 @@
 package tools
 
-type TerraformExec interface {
+type IacExec interface {
 	Init(string) error
 	Plan(string) error
 	Apply(string) error
