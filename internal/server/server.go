@@ -82,6 +82,7 @@ func (s *Server) Exec() {
 	e.GET("/healthz", handleHealthz)
 	api.POST("/webhook", s.Webhook.GetHttpHandler())
 	api.GET("/layers", s.API.LayersHandler)
+	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
 	api.GET("/repositories", s.API.RepositoriesHandler)
 	api.GET("/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
 	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
