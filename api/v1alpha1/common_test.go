@@ -9,54 +9,155 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
-func TestGetIacTool(t *testing.T) {
+func TestGetTerraformEnabled(t *testing.T) {
 	tt := []struct {
-		name            string
-		repository      *configv1alpha1.TerraformRepository
-		layer           *configv1alpha1.TerraformLayer
-		expectedIacTool string
+		name       string
+		repository *configv1alpha1.TerraformRepository
+		layer      *configv1alpha1.TerraformLayer
+		expected   bool
 	}{
-		{
-			"OnlyRepositoryIacTool",
+		{"OnlyRepositoryEnabling",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					IacTool: "terraform",
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{},
-			"terraform",
+			true,
 		},
-		{
-			"OnlyLayerIacTool",
+		{"OnlyLayerEnabling",
 			&configv1alpha1.TerraformRepository{},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					IacTool: "terraform",
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
 				},
 			},
-			"terraform",
+			true,
 		},
-		{
-			"OverrideRepositoryWithLayer",
+		// Edge case: Merging config from repository and layer should
+		// never set several base execution tools to true at the same time.
+		{"OverrideRepositoryTerraformWithLayerOpenTofu",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					IacTool: "terraform",
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					IacTool: "opentofu",
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
 				},
 			},
-			"opentofu",
+			false,
+		},
+		{"OverrideRepositoryOpentofuWithLayerTerraform",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
 		},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			result := configv1alpha1.GetIacTool(tc.repository, tc.layer)
-			if tc.expectedIacTool != result {
-				t.Errorf("different IacTool computed: expected %s go %s", tc.expectedIacTool, result)
+			result := configv1alpha1.GetTerraformEnabled(tc.repository, tc.layer)
+			if tc.expected != result {
+				t.Errorf("different base exec enabled status computed: expected %t go %t", tc.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetOpenTofuEnabled(t *testing.T) {
+	tt := []struct {
+		name       string
+		repository *configv1alpha1.TerraformRepository
+		layer      *configv1alpha1.TerraformLayer
+		expected   bool
+	}{
+		{"OnlyRepositoryEnabling",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			true,
+		},
+		{"OnlyLayerEnabling",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		// Edge case: Merging config from repository and layer should
+		// never set several base execution tools to true at the same time.
+		{"OverrideRepositoryTerraformWithLayerOpenTofu",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		{"OverrideRepositoryOpentofuWithLayerTerraform",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetOpenTofuEnabled(tc.repository, tc.layer)
+			if tc.expected != result {
+				t.Errorf("different base exec enabled status computed: expected %t go %t", tc.expected, result)
 			}
 		})
 	}

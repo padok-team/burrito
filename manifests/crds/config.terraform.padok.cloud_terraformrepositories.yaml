@@ -50,10 +50,10 @@ spec:
           spec:
             description: TerraformRepositorySpec defines the desired state of TerraformRepository
             properties:
-              iacTool:
-                type: string
               opentofu:
                 properties:
+                  enabled:
+                    type: boolean
                   version:
                     type: string
                 type: object
@@ -2224,6 +2224,8 @@ spec:
                 type: object
               terraform:
                 properties:
+                  enabled:
+                    type: boolean
                   version:
                     type: string
                 type: object
@@ -2235,6 +2237,15 @@ spec:
                     type: string
                 type: object
             type: object
+            x-kubernetes-validations:
+            - message: Both terraform.enabled and opentofu.enabled cannot be true
+                at the same time
+              rule: '!(has(self.terraform.enabled) && has(self.opentofu.enabled) &&
+                self.terraform.enabled == true && self.opentofu.enabled == true)'
+            - message: Both terraform.enabled and opentofu.enabled cannot be false
+                at the same time
+              rule: '!(has(self.terraform.enabled) && has(self.opentofu.enabled) &&
+                self.terraform.enabled == false && self.opentofu.enabled == false)'
           status:
             description: TerraformRepositoryStatus defines the observed state of TerraformRepository
             properties:

@@ -1,8 +1,6 @@
 package v1alpha1
 
 import (
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
@@ -47,31 +45,31 @@ type OnErrorRemediationStrategy struct {
 
 type TerraformConfig struct {
 	Version string `json:"version,omitempty"`
+	Enabled *bool  `json:"enabled,omitempty"`
 }
 
 type OpenTofuConfig struct {
 	Version string `json:"version,omitempty"`
+	Enabled *bool  `json:"enabled,omitempty"`
 }
 
 type TerragruntConfig struct {
-	Enabled *bool  `json:"enabled,omitempty"`
 	Version string `json:"version,omitempty"`
+	Enabled *bool  `json:"enabled,omitempty"`
 }
 
-func GetIacTool(repository *TerraformRepository, layer *TerraformLayer) string {
-	return strings.ToLower(chooseString(repository.Spec.IacTool, layer.Spec.IacTool))
-}
-
-func GetIacToolVersion(repository *TerraformRepository, layer *TerraformLayer) string {
-	iacTool := GetIacTool(repository, layer)
-	switch iacTool {
-	case "terraform":
-		return GetTerraformVersion(repository, layer)
-	case "opentofu":
-		return GetOpenTofuVersion(repository, layer)
-	default:
-		return ""
+func GetTerraformEnabled(repository *TerraformRepository, layer *TerraformLayer) bool {
+	if isEnabled(layer.Spec.OpenTofuConfig.Enabled) {
+		return false
 	}
+	return chooseBool(repository.Spec.TerraformConfig.Enabled, layer.Spec.TerraformConfig.Enabled, false)
+}
+
+func GetOpenTofuEnabled(repository *TerraformRepository, layer *TerraformLayer) bool {
+	if isEnabled(layer.Spec.TerraformConfig.Enabled) {
+		return false
+	}
+	return chooseBool(repository.Spec.OpenTofuConfig.Enabled, layer.Spec.OpenTofuConfig.Enabled, false)
 }
 
 func GetTerraformVersion(repository *TerraformRepository, layer *TerraformLayer) string {
@@ -82,12 +80,12 @@ func GetOpenTofuVersion(repository *TerraformRepository, layer *TerraformLayer) 
 	return chooseString(repository.Spec.OpenTofuConfig.Version, layer.Spec.OpenTofuConfig.Version)
 }
 
-func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer) string {
-	return chooseString(repository.Spec.TerragruntConfig.Version, layer.Spec.TerragruntConfig.Version)
-}
-
 func GetTerragruntEnabled(repository *TerraformRepository, layer *TerraformLayer) bool {
 	return chooseBool(repository.Spec.TerragruntConfig.Enabled, layer.Spec.TerragruntConfig.Enabled, false)
+}
+
+func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer) string {
+	return chooseString(repository.Spec.TerragruntConfig.Version, layer.Spec.TerragruntConfig.Version)
 }
 
 func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
@@ -122,6 +120,10 @@ func GetApplyWithoutPlanArtifactEnabled(repository *TerraformRepository, layer *
 
 func GetAutoApplyEnabled(repo *TerraformRepository, layer *TerraformLayer) bool {
 	return chooseBool(repo.Spec.RemediationStrategy.AutoApply, layer.Spec.RemediationStrategy.AutoApply, false)
+}
+
+func isEnabled(enabled *bool) bool {
+	return enabled != nil && *enabled
 }
 
 func chooseBool(a, b *bool, defaultVal bool) bool {
