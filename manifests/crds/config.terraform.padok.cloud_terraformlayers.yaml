@@ -62,10 +62,10 @@ spec:
             properties:
               branch:
                 type: string
-              iacTool:
-                type: string
               opentofu:
                 properties:
+                  enabled:
+                    type: boolean
                   version:
                     type: string
                 type: object
@@ -2238,6 +2238,8 @@ spec:
                 type: object
               terraform:
                 properties:
+                  enabled:
+                    type: boolean
                   version:
                     type: string
                 type: object
@@ -2249,6 +2251,15 @@ spec:
                     type: string
                 type: object
             type: object
+            x-kubernetes-validations:
+            - message: Both terraform.enabled and opentofu.enabled cannot be true
+                at the same time
+              rule: '!(has(self.terraform.enabled) && has(self.opentofu.enabled) &&
+                self.terraform.enabled == true && self.opentofu.enabled == true)'
+            - message: Both terraform.enabled and opentofu.enabled cannot be false
+                at the same time
+              rule: '!(has(self.terraform.enabled) && has(self.opentofu.enabled) &&
+                self.terraform.enabled == false && self.opentofu.enabled == false)'
           status:
             description: TerraformLayerStatus defines the observed state of TerraformLayer
             properties:

@@ -17,6 +17,10 @@ type OpenTofu struct {
 	WorkingDir string
 }
 
+func (t *OpenTofu) TenvName() string {
+	return "tofu"
+}
+
 func (t *OpenTofu) Init(workingDir string) error {
 	t.WorkingDir = workingDir
 	cmd := exec.Command(t.ExecPath, "init", "-upgrade")

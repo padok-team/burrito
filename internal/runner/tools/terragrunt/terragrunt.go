@@ -16,6 +16,10 @@ type Terragrunt struct {
 	OpenTofu   *opentofu.OpenTofu
 }
 
+func (t *Terragrunt) TenvName() string {
+	return "terragrunt"
+}
+
 func (t *Terragrunt) getDefaultOptions(command string) ([]string, error) {
 	var execPath string
 	if t.Terraform != nil {

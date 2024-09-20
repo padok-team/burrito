@@ -20,10 +20,6 @@ type tenvWrapper = versionmanager.VersionManager
 
 // Creates a `tenv` wrapper for the given tool (Terraform/Terragrunt/OpenTofu)
 func newTenvWrapper(binaryPath string, toolName string) (*tenvWrapper, error) {
-	// OpenTofu is called "tofu" in the context of tenv
-	if toolName == "opentofu" {
-		toolName = "tofu"
-	}
 	conf, err := tenvconfig.InitConfigFromEnv()
 	if err != nil {
 		return nil, err
@@ -76,7 +72,7 @@ func install(binaryPath, toolName, version string) error {
 }
 
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
-func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (IacExec, error) {
+func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (BaseExec, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Errorf("error getting current working directory: %s", err)
@@ -93,30 +89,32 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 			log.Errorf("error changing directory back to %s: %s", cwd, err)
 		}
 	}()
-	iacTool := configv1alpha1.GetIacTool(repo, layer)
-	if iacTool != "terraform" && iacTool != "opentofu" {
-		return nil, errors.New("unsupported IaC tool, set spec.iacTool to 'terraform' or 'opentofu'")
-	}
-	iacToolVersion := configv1alpha1.GetIacToolVersion(repo, layer)
-	iacToolVersion, err = detect(binaryPath, iacTool, iacToolVersion)
-	if err != nil {
-		return nil, err
-	}
-	if err := install(binaryPath, iacTool, iacToolVersion); err != nil {
-		return nil, err
-	}
-	var iacExec IacExec
-	if iacTool == "terraform" {
-		log.Infof("using Terraform version %s", iacToolVersion)
-		iacExec = &tf.Terraform{
-			ExecPath: filepath.Join(binaryPath, "Terraform", iacToolVersion, "terraform"),
+
+	var baseExec BaseExec
+	var baseExecVersion string
+	if configv1alpha1.GetTerraformEnabled(repo, layer) {
+		baseExecVersion, err = detect(binaryPath, "terraform", configv1alpha1.GetTerraformVersion(repo, layer))
+		if err != nil {
+			return nil, err
 		}
-	}
-	if iacTool == "opentofu" {
-		log.Infof("using OpenTofu version %s", iacToolVersion)
-		iacExec = &ot.OpenTofu{
-			ExecPath: filepath.Join(binaryPath, "OpenTofu", iacToolVersion, "tofu"),
+		baseExec = &tf.Terraform{
+			ExecPath: filepath.Join(binaryPath, "Terraform", baseExecVersion, "terraform"),
 		}
+	} else if configv1alpha1.GetOpenTofuEnabled(repo, layer) {
+		baseExecVersion, err = detect(binaryPath, "tofu", configv1alpha1.GetOpenTofuVersion(repo, layer))
+		if err != nil {
+			return nil, err
+		}
+		baseExec = &ot.OpenTofu{
+			ExecPath: filepath.Join(binaryPath, "OpenTofu", baseExecVersion, "tofu"),
+		}
+	} else {
+		return nil, errors.New("Please enable either Terraform or OpenTofu in the repository or layer configuration")
+	}
+	log.Infof("using %s version %s", baseExec.TenvName(), baseExecVersion)
+
+	if err := install(binaryPath, baseExec.TenvName(), baseExecVersion); err != nil {
+		return nil, err
 	}
 	if configv1alpha1.GetTerragruntEnabled(repo, layer) {
 		terragruntVersion := configv1alpha1.GetTerragruntVersion(repo, layer)
@@ -127,21 +125,21 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		if err := install(binaryPath, "terragrunt", terragruntVersion); err != nil {
 			return nil, err
 		}
-		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, iacTool)
-		if iacTool == "terraform" {
+		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, baseExec)
+		if baseExec.TenvName() == "terraform" {
 			return &tg.Terragrunt{
 				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-				Terraform: iacExec.(*tf.Terraform),
+				Terraform: baseExec.(*tf.Terraform),
 				OpenTofu:  nil,
 			}, nil
-		} else if iacTool == "opentofu" {
+		} else if baseExec.TenvName() == "tofu" {
 			return &tg.Terragrunt{
 				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
 				Terraform: nil,
-				OpenTofu:  iacExec.(*ot.OpenTofu),
+				OpenTofu:  baseExec.(*ot.OpenTofu),
 			}, nil
 		}
 
 	}
-	return iacExec, nil
+	return baseExec, nil
 }
