@@ -47,7 +47,7 @@ stringData:
     -----END OPENSSH PRIVATE KEY-----
 ```
 
-Then, create a `TerraformRepository` Kubernetes resource:
+Then, create a `TerraformRepository` Kubernetes resource. The `spec.terraform.enabled` set the repository as a terraform repository (as opposed to an opentofu repository). This setting will propagate to all layers linked to this repository by default, but can be overridden at the layer level.
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -59,6 +59,8 @@ spec:
   repository:
     url: <https-or-ssh-repository-url>
     secretName: burrito-repo
+  terraform:
+    enabled: true
 ```
 
 !!! info
