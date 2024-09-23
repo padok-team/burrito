@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os/exec"
 
-	"github.com/hashicorp/terraform-exec/tfexec"
 	c "github.com/padok-team/burrito/internal/utils/cmd"
 )
 
@@ -12,7 +11,6 @@ import (
 // Switch to it when this repo is updated: https://github.com/tofu/tofu-exec
 
 type OpenTofu struct {
-	exec       *tfexec.Terraform
 	ExecPath   string
 	WorkingDir string
 }
