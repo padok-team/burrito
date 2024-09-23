@@ -34,6 +34,8 @@ metadata:
 spec:
   repository:
     url: https://github.com/padok-team/burrito
+  terraform:
+    enabled: true
   overrideRunnerSpec:
     imagePullSecrets:
     - name: ghcr-creds
@@ -71,7 +73,9 @@ metadata:
 spec:
   repository:
     url: https://github.com/padok-team/burrito
-  overridePodSpec:
+  terraform:
+    enabled: true
+  overrideRunnerSpec:
     imagePullSecrets:
     - name: ghcr-creds
     tolerations:

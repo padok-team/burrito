@@ -66,7 +66,8 @@ Create a TerraformRepository resource in the `burrito-system` namespace:
 kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-repository.yaml
 ```
 
-Here is the content of the `TerraformRepository` resource that you have created
+Here is the content of the `TerraformRepository` resource that you have created. It references the GitHub repository containing the Terraform code.
+It also specifies that the IaC is Terraform code (as opposed to OpenTofu code). This setting will propagate to all layers linked to this repository by default, but can be overridden at the layer level.
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -77,9 +78,11 @@ metadata:
 spec:
   repository:
     url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
 ```
 
-Create a `TerraformLayer` resource in the `burrito-system` namespace, referencing the `TerraformRepository` you just created. For now, the `autoApply` is set to false, so the layer will only plan the Terraform code and not apply it.
+Create a `TerraformLayer` resource in the `burrito-system` namespace, referencing the `TerraformRepository` you just created. For now, the `autoApply` is set to false, so the layer will only plan the Terraform code and not apply it. 
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-layer.yaml

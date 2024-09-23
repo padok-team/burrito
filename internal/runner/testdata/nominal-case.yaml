@@ -11,6 +11,8 @@ spec:
     namespace: default
   remediationStrategy:
     applyWithoutPlanArtifact: true
+  terraform:
+    enabled: true
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -49,9 +51,9 @@ spec:
     applyWithoutPlanArtifact: true
   terraform:
     version: "1.7.5"
-    terragrunt:
-      enabled: true
-      version: "0.66.9"
+  terragrunt:
+    enabled: true
+    version: "0.66.9"
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun

@@ -15,6 +15,10 @@ type Terraform struct {
 	ExecPath string
 }
 
+func (t *Terraform) TenvName() string {
+	return "terraform"
+}
+
 func (t *Terraform) Init(workingDir string) error {
 	exec, err := tfexec.NewTerraform(workingDir, t.ExecPath)
 	if err != nil {

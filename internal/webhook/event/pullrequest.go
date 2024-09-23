@@ -29,7 +29,7 @@ func (e *PullRequestEvent) Handle(c client.Client) error {
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := c.List(context.Background(), repositories)
 	if err != nil {
-		log.Errorf("could not list terraform repositories: %s", err)
+		log.Errorf("could not list TerraformRepositories: %s", err)
 		return err
 	}
 	affectedRepositories := e.getAffectedRepositories(repositories.Items)
@@ -52,7 +52,7 @@ func (e *PullRequestEvent) Handle(c client.Client) error {
 func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
-		log.Infof("creating terraform pull request %s/%s", pr.Namespace, pr.Name)
+		log.Infof("creating TerraformPullRequest %s/%s", pr.Namespace, pr.Name)
 		err := c.Create(ctx, &pr)
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
@@ -64,7 +64,7 @@ func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv
 func batchDeletePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
-		log.Infof("deleting terraform pull request %s/%s", pr.Namespace, pr.Name)
+		log.Infof("deleting TerraformPullRequest %s/%s", pr.Namespace, pr.Name)
 		err := c.Delete(ctx, &pr)
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
@@ -104,7 +104,7 @@ func (e *PullRequestEvent) generateTerraformPullRequests(repositories []configv1
 func (e *PullRequestEvent) getAffectedRepositories(repositories []configv1alpha1.TerraformRepository) []configv1alpha1.TerraformRepository {
 	affectedRepositories := []configv1alpha1.TerraformRepository{}
 	for _, repo := range repositories {
-		log.Infof("evaluating terraform repository %s for url %s", repo.Name, repo.Spec.Repository.Url)
+		log.Infof("evaluating TerraformRepository %s for url %s", repo.Name, repo.Spec.Repository.Url)
 		log.Infof("comparing normalized url %s with received URL from payload %s", utils.NormalizeUrl(repo.Spec.Repository.Url), e.URL)
 		if e.URL == utils.NormalizeUrl(repo.Spec.Repository.Url) {
 			affectedRepositories = append(affectedRepositories, repo)

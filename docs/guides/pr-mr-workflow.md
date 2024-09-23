@@ -21,6 +21,8 @@ metadata:
 spec:
   repository:
     url: https://github.com/<your-github-handle>/burrito-examples
+  terraform:
+    enabled: true
 ```
 
 You will also need to setup a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) to allow Burrito to comment on your PRs/MRs. Follow the instructions in the [PR/MR workflow](../operator-manual/pr-mr-workflow.md#configuration) section of the operator manual to set up the GitHub app.
