@@ -93,7 +93,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if locked {
-		log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
+		log.Infof("TerraformLayer %s is locked, skipping reconciliation.", layer.Name)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}

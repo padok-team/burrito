@@ -125,7 +125,7 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		if err := install(binaryPath, "terragrunt", terragruntVersion); err != nil {
 			return nil, err
 		}
-		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, baseExec)
+		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, baseExec.TenvName())
 		if baseExec.TenvName() == "terraform" {
 			return &tg.Terragrunt{
 				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
