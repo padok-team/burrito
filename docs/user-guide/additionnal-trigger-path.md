@@ -15,10 +15,11 @@ metadata:
   name: random-pets-terragrunt
 spec:
   terraform:
+    enabled: true
     version: "1.3.1"
-    terragrunt:
-      enabled: true
-      version: "0.45.4"
+  terragrunt:
+    enabled: true
+    version: "0.45.4"
   remediationStrategy:
     autoApply: true
   path: "terragrunt/random-pets/test"
@@ -41,10 +42,11 @@ metadata:
     config.terraform.padok.cloud/additionnal-trigger-paths: "modules/random-pets"
 spec:
   terraform:
+    enabled: true
     version: "1.3.1"
-    terragrunt:
-      enabled: true
-      version: "0.45.4"
+  terragrunt:
+    enabled: true
+    version: "0.45.4"
   remediationStrategy:
     autoApply: true
   path: "terragrunt/random-pets/test"
