@@ -11,14 +11,14 @@ import ChiliDark from "@/assets/illustrations/ChiliDark";
 
 import { Layer } from "@/clients/layers/types";
 import GenericIconButton from "../buttons/GenericIconButton";
-import { syncLayer, fetchLayers } from "@/clients/layers/client";
+import { syncLayer } from "@/clients/layers/client";
 import SyncIcon from "@/assets/icons/SyncIcon";
 
 export interface CardProps {
   className?: string;
   variant?: "light" | "dark";
   layer: Layer;
-  onSyncRequestComplete: () => void; 
+  onSyncRequestComplete?: () => void ; 
 }
 
 const Card: React.FC<CardProps> = ({
@@ -36,7 +36,7 @@ const Card: React.FC<CardProps> = ({
     isRunning,
     isPR,
   },
-  onSyncRequestComplete,
+  onSyncRequestComplete = () => {},
 }) => {
   const styles = {
     base: {

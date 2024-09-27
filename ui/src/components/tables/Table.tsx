@@ -27,7 +27,7 @@ export interface TableProps {
   variant?: "light" | "dark";
   isLoading?: boolean;
   data: Layer[];
-  onSyncRequestComplete: () => void;
+  onSyncRequestComplete?: () => void;
 }
 
 const Table: React.FC<TableProps> = ({
@@ -35,7 +35,7 @@ const Table: React.FC<TableProps> = ({
   variant = "light",
   isLoading,
   data,
-  onSyncRequestComplete,
+  onSyncRequestComplete = () => {},
 }) => {
   const columnHelper = createColumnHelper<Layer>();
   const [hoveredRow, setHoveredRow] = useState<Layer | null>(null);
