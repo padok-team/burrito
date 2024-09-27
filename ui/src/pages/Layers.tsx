@@ -335,7 +335,7 @@ const Layers: React.FC = () => {
                 layersQuery.data.results
                   .slice(layerOffset, layerOffset + layerLimit)
                   .map((layer, index) => (
-                    <Card key={index} variant={theme} layer={layer} />
+                    <Card key={index} variant={theme} layer={layer} onSyncRequestComplete={() => setTimeout(() => layersQuery.refetch(), 2000)}/> // wait for the runner to stard syncing the layer
                   ))
               ) : (
                 <span
@@ -374,7 +374,7 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                <Table variant={theme} data={layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit)} />
+                <Table variant={theme} data={layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit)} onSyncRequestComplete={() => setTimeout(() => layersQuery.refetch(), 2000)}/>
               ) : (
                 <div className="p-6">
                   <span
