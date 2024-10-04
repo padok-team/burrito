@@ -164,7 +164,7 @@ const Logs: React.FC = () => {
             isLoading={layersQuery.isRefetching}
             onClick={() => layersQuery.refetch()}
           >
-            Refresh layers
+            Refresh
           </Button>
         </div>
         <Input
