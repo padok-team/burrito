@@ -335,7 +335,7 @@ const Layers: React.FC = () => {
                 layersQuery.data.results
                   .slice(layerOffset, layerOffset + layerLimit)
                   .map((layer, index) => (
-                    <Card key={index} variant={theme} layer={layer} onSyncRequestComplete={() => setTimeout(() => layersQuery.refetch(), 2000)}/> // wait for the runner to stard syncing the layer
+                    <Card key={index} variant={theme} layer={layer} onSyncRequestComplete={() => setTimeout(() => layersQuery.refetch(), 2000)}/> // wait for the runner to start syncing the layer
                   ))
               ) : (
                 <span
