@@ -27,22 +27,23 @@ export interface TableProps {
   variant?: "light" | "dark";
   isLoading?: boolean;
   data: Layer[];
-  onSyncRequestComplete?: () => void;
 }
 
 const Table: React.FC<TableProps> = ({
   className,
   variant = "light",
   isLoading,
-  data,
-  onSyncRequestComplete = () => {},
+  data
 }) => {
   const columnHelper = createColumnHelper<Layer>();
   const [hoveredRow, setHoveredRow] = useState<Layer | null>(null);
-  const syncSelectedLayer = async (namespace: string, name: string) => {
-    await syncLayer(namespace, name);
-    onSyncRequestComplete();
+  const syncSelectedLayer = async (index: number) => {
+    const sync = await syncLayer(data[index].namespace, data[index].name);
+    if (sync.status === 200) {
+      data[index].manualSyncStatus = "pending";
+    }
   }
+
   const columns = [
     columnHelper.accessor("isPR", {
       header: "",
@@ -102,7 +103,7 @@ const Table: React.FC<TableProps> = ({
               <GenericIconButton variant={variant} 
                     Icon={SyncIcon} 
                     disabled={result.row.original.manualSyncStatus === "pending" || result.row.original.manualSyncStatus === "annotated"}
-                    onClick={() => syncSelectedLayer(result.row.original.namespace, result.row.original.name)} 
+                    onClick={() => syncSelectedLayer(result.row.index)} 
                     tooltip={result.row.original.manualSyncStatus === "pending" || result.row.original.manualSyncStatus === "annotated" ? "Sync in progress..." : "Sync now"} />
             </div>
           ) : result.row.original.isRunning ? (

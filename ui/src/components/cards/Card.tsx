@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "react-tooltip";
 
@@ -18,7 +18,6 @@ export interface CardProps {
   className?: string;
   variant?: "light" | "dark";
   layer: Layer;
-  onSyncRequestComplete?: () => void ; 
 }
 
 const Card: React.FC<CardProps> = ({
@@ -34,9 +33,8 @@ const Card: React.FC<CardProps> = ({
     path,
     lastResult,
     isRunning,
-    isPR,
-  },
-  onSyncRequestComplete = () => {},
+    isPR
+  }
 }) => {
   const styles = {
     base: {
@@ -77,11 +75,13 @@ const Card: React.FC<CardProps> = ({
   };
   
   const syncSelectedLayer = async (layer: Layer) => {
-    await syncLayer(layer.namespace, layer.name);
-    onSyncRequestComplete();
+    const sync = await syncLayer(layer.namespace, layer.name);
+    if (sync.status === 200) {
+      setIsManualSyncPending(true);
+    }
   }
 
-  const isManualSyncPending = layer.manualSyncStatus === "pending" || layer.manualSyncStatus === "annotated";
+  const [isManualSyncPending, setIsManualSyncPending] = useState(layer.manualSyncStatus === "pending" || layer.manualSyncStatus === "annotated");
 
   return (
     <div
