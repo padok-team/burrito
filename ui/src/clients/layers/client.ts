@@ -8,3 +8,10 @@ export const fetchLayers = async () => {
   );
   return response.data;
 };
+
+export const syncLayer = async (namespace: string, name: string) => {
+  const response = await axios.post(
+    `${import.meta.env.VITE_API_BASE_URL}/layers/${namespace}/${name}/sync`
+  );
+  return response;
+}

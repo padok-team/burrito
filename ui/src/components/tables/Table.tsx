@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { Tooltip } from "react-tooltip";
 
+
 import TableLoader from "@/components/loaders/TableLoader";
 import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
 import Running from "@/components/widgets/Running";
@@ -15,8 +16,11 @@ import Tag from "@/components/widgets/Tag";
 import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
+import SyncIcon from "@/assets/icons/SyncIcon";
+import GenericIconButton from "@/components/buttons/GenericIconButton";
 
 import { Layer, LayerState } from "@/clients/layers/types";
+import { syncLayer } from "@/clients/layers/client";
 
 export interface TableProps {
   className?: string;
@@ -29,10 +33,16 @@ const Table: React.FC<TableProps> = ({
   className,
   variant = "light",
   isLoading,
-  data,
+  data
 }) => {
   const columnHelper = createColumnHelper<Layer>();
   const [hoveredRow, setHoveredRow] = useState<Layer | null>(null);
+  const syncSelectedLayer = async (index: number) => {
+    const sync = await syncLayer(data[index].namespace, data[index].name);
+    if (sync.status === 200) {
+      data[index].manualSyncStatus = "pending";
+    }
+  }
 
   const columns = [
     columnHelper.accessor("isPR", {
@@ -60,7 +70,8 @@ const Table: React.FC<TableProps> = ({
     }),
     columnHelper.accessor("lastResult", {
       header: "Last result",
-      cell: (result) => (
+      cell: (result) => 
+        (
         <div className="relative flex items-center h-full">
           <span>{result.getValue()}</span>
           {result.row.original === hoveredRow &&
@@ -70,6 +81,7 @@ const Table: React.FC<TableProps> = ({
                 absolute
                 -right-5
                 flex
+                gap-4
                 items-center
                 justify-end
                 h-[calc(100%_+_25px)]
@@ -88,6 +100,11 @@ const Table: React.FC<TableProps> = ({
                 layer={result.row.original}
                 variant={variant}
               />
+              <GenericIconButton variant={variant} 
+                    Icon={SyncIcon} 
+                    disabled={result.row.original.manualSyncStatus === "pending" || result.row.original.manualSyncStatus === "annotated"}
+                    onClick={() => syncSelectedLayer(result.row.index)} 
+                    tooltip={result.row.original.manualSyncStatus === "pending" || result.row.original.manualSyncStatus === "annotated" ? "Sync in progress..." : "Sync now"} />
             </div>
           ) : result.row.original.isRunning ? (
             <div

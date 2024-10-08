@@ -9,6 +9,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -241,6 +242,31 @@ func (r *Reconciler) IsApplyUpToDate(t *configv1alpha1.TerraformLayer) (metav1.C
 	condition.Message = "Last planned artifact is the same as the last applied one"
 	condition.Status = metav1.ConditionTrue
 	return condition, true
+}
+
+func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsSyncScheduled",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	// check if annotations.SyncNow is present
+	if _, ok := t.Annotations[annotations.SyncNow]; ok {
+		condition.Reason = "SyncScheduled"
+		condition.Message = "A sync has been manually scheduled"
+		condition.Status = metav1.ConditionTrue
+		// Remove the annotation to avoid running the sync again
+		err := annotations.Remove(context.Background(), r.Client, t, annotations.SyncNow)
+		if err != nil {
+			log.Errorf("Failed to remove annotation %s from layer %s: %s", annotations.SyncNow, t.Name, err)
+		}
+		return condition, true
+	}
+	condition.Reason = "NoSyncScheduled"
+	condition.Message = "No sync has been manually scheduled"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
 }
 
 func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {

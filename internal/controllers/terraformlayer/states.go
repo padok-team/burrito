@@ -25,13 +25,17 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	c3, IsLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
 	c4, HasLastPlanFailed := r.HasLastPlanFailed(layer)
 	c5, IsApplyUpToDate := r.IsApplyUpToDate(layer)
-	conditions := []metav1.Condition{c1, c2, c3, c4, c5}
+	c6, IsSyncScheduled := r.IsSyncScheduled(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6}
 	switch {
 	case IsRunning:
 		log.Infof("layer %s is running, waiting for the run to finish", layer.Name)
 		return &Idle{}, conditions
 	case IsLastPlanTooOld || !IsLastRelevantCommitPlanned:
 		log.Infof("layer %s has an outdated plan, creating a new run", layer.Name)
+		return &PlanNeeded{}, conditions
+	case IsSyncScheduled:
+		log.Infof("layer %s has a sync scheduled, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
 	case !IsApplyUpToDate && !HasLastPlanFailed:
 		log.Infof("layer %s needs to be applied, creating a new run", layer.Name)

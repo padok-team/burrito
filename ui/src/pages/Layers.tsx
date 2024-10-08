@@ -2,7 +2,7 @@ import React, { useState, useContext, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchLayers } from "@/clients/layers/client";
+import { fetchLayers, syncLayer } from "@/clients/layers/client";
 import { reactQueryKeys } from "@/clients/reactQueryConfig";
 
 import { ThemeContext } from "@/contexts/ThemeContext";
@@ -23,6 +23,9 @@ import CardLoader from "@/components/loaders/CardLoader";
 
 import { LayerState } from "@/clients/layers/types";
 import PaginationDropdown from "@/components/dropdowns/PaginationDropdown";
+import SlidingPane from "@/modals/SlidingPane";
+import LayerChecklist from "@/components/tools/LayerChecklist";
+import ProgressBar from "@/components/widgets/ProgressBar";
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -83,6 +86,8 @@ const Layers: React.FC = () => {
     [searchParams, setSearchParams]
   );
 
+  const [showRefreshPane, setShowRefreshPane] = useState(false);
+
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
     queryFn: fetchLayers,
@@ -117,8 +122,59 @@ const Layers: React.FC = () => {
     [layerOffset, layersQuery]
   );
 
+  const [selectedLayersForSync, setSelectedLayersForSync] = useState<{ name: string; namespace: string }[]>([]);
+  const [syncProgressValue, setSyncProgressValue] = useState(0);
+  const syncSelectedLayers = async () => {
+    const totalLayers = selectedLayersForSync.length;
+    for (const layer of selectedLayersForSync) {
+      try {
+        await syncLayer(layer.namespace, layer.name);
+      } catch (error) {
+        console.error(`Failed to sync layer ${layer.name}:`, error);
+      }
+      setSyncProgressValue((prev) => prev + 100 / totalLayers)
+    }
+    setTimeout(() => {
+      setSyncProgressValue(0);
+      setShowRefreshPane(false);
+      layersQuery.refetch();
+    }, 1000);
+  }
+
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
+    <SlidingPane isOpen={showRefreshPane} onClose={() => setShowRefreshPane(false)}>
+      <div className="relative h-full">
+      <div className="overflow-auto h-[calc(100%-90px)]">
+        <h2
+        className={`
+          text-lg
+          font-semibold
+          ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+        `}
+        >
+        Select Layers to synchronize
+        </h2>
+
+        {layersQuery.isSuccess && (
+        <LayerChecklist layers={layersQuery.data.results} variant={theme} onSelectionChange={(layers) => setSelectedLayersForSync(layers)}/>
+        )}
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
+        <Button
+        variant={theme === "light" ? "primary" : "secondary"}
+        className="w-full"
+        disabled={selectedLayersForSync.length === 0}
+        onClick={() => {
+          syncSelectedLayers();
+        }}
+        >
+        Synchronize
+        </Button>
+        <ProgressBar value={syncProgressValue} className="mt-4"/>
+      </div>
+      </div>
+    </SlidingPane>
       <div
         className={`
           flex
@@ -140,13 +196,24 @@ const Layers: React.FC = () => {
           >
             Layers
           </h1>
-          <Button
-            variant={theme === "light" ? "primary" : "secondary"}
-            isLoading={layersQuery.isRefetching}
-            onClick={() => layersQuery.refetch()}
-          >
-            Refresh layers
-          </Button>
+          <div className="space-x-2">
+            <Button
+                theme={theme}
+                variant={"secondary"}
+                onClick={() =>
+                  setShowRefreshPane((showRefreshPane) => !showRefreshPane)
+                }
+              >
+                Run Sync  
+            </Button>
+            <Button
+              variant={theme === "light" ? "primary" : "secondary"}
+              isLoading={layersQuery.isRefetching}
+              onClick={() => layersQuery.refetch()}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
         <Input
           variant={theme}
@@ -374,7 +441,7 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                <Table variant={theme} data={layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit)} />
+                <Table variant={theme} data={layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit)}/>
               ) : (
                 <div className="p-6">
                   <span

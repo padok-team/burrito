@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Tooltip } from "react-tooltip";
 
@@ -10,6 +10,9 @@ import ChiliLight from "@/assets/illustrations/ChiliLight";
 import ChiliDark from "@/assets/illustrations/ChiliDark";
 
 import { Layer } from "@/clients/layers/types";
+import GenericIconButton from "../buttons/GenericIconButton";
+import { syncLayer } from "@/clients/layers/client";
+import SyncIcon from "@/assets/icons/SyncIcon";
 
 export interface CardProps {
   className?: string;
@@ -30,8 +33,8 @@ const Card: React.FC<CardProps> = ({
     path,
     lastResult,
     isRunning,
-    isPR,
-  },
+    isPR
+  }
 }) => {
   const styles = {
     base: {
@@ -70,6 +73,15 @@ const Card: React.FC<CardProps> = ({
       </div>
     );
   };
+  
+  const syncSelectedLayer = async (layer: Layer) => {
+    const sync = await syncLayer(layer.namespace, layer.name);
+    if (sync.status === 200) {
+      setIsManualSyncPending(true);
+    }
+  }
+
+  const [isManualSyncPending, setIsManualSyncPending] = useState(layer.manualSyncStatus === "pending" || layer.manualSyncStatus === "annotated");
 
   return (
     <div
@@ -159,9 +171,17 @@ const Card: React.FC<CardProps> = ({
           </React.Fragment>
         ))}
       </div>
-      {layer.latestRuns.length > 0 && (
-        <ModalLogsTerminal layer={layer} variant={variant} />
-      )}
+      <div className="flex gap-4">
+        {layer.latestRuns.length > 0 && (
+          <ModalLogsTerminal layer={layer} variant={variant} />
+        )}
+        <GenericIconButton variant={variant} 
+                           Icon={SyncIcon} 
+                           disabled={isManualSyncPending}
+                           onClick={() => syncSelectedLayer(layer)}
+                           tooltip={isManualSyncPending ? "Sync in progress..." : "Sync now"} 
+                           />
+      </div>
       <Tooltip
         opacity={1}
         id="card-tooltip"
