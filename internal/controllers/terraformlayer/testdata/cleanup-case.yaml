@@ -6,6 +6,8 @@ metadata:
 spec:
   repository:
     url: git@github.com:padok-team/burrito-examples.git
+  terraform:
+    enabled: true
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer

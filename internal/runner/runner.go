@@ -9,6 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/runner/tools"
+	e "github.com/padok-team/burrito/internal/runner/tools/exec"
 	"github.com/padok-team/burrito/internal/utils"
 	runnerutils "github.com/padok-team/burrito/internal/utils/runner"
 	log "github.com/sirupsen/logrus"
@@ -18,7 +19,7 @@ import (
 
 type Runner struct {
 	config        *config.Config
-	exec          tools.TerraformExec
+	exec          e.Exec
 	Datastore     datastore.Client
 	Client        client.Client
 	Layer         *configv1alpha1.TerraformLayer

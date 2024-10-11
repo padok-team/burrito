@@ -24,6 +24,8 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // TerraformLayerSpec defines the desired state of TerraformLayer
+// +kubebuilder:validation:XValidation:rule="!(has(self.terraform) && has(self.opentofu) && has(self.terraform.enabled) && has(self.opentofu.enabled) && self.terraform.enabled == true && self.opentofu.enabled == true)",message="Both terraform.enabled and opentofu.enabled cannot be true at the same time"
+// +kubebuilder:validation:XValidation:rule="!(has(self.terraform) && has(self.opentofu) && has(self.terraform.enabled) && has(self.opentofu.enabled) && self.terraform.enabled == false && self.opentofu.enabled == false)",message="Both terraform.enabled and opentofu.enabled cannot be false at the same time"
 type TerraformLayerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
@@ -31,6 +33,8 @@ type TerraformLayerSpec struct {
 	Path                string                   `json:"path,omitempty"`
 	Branch              string                   `json:"branch,omitempty"`
 	TerraformConfig     TerraformConfig          `json:"terraform,omitempty"`
+	OpenTofuConfig      OpenTofuConfig           `json:"opentofu,omitempty"`
+	TerragruntConfig    TerragruntConfig         `json:"terragrunt,omitempty"`
 	Repository          TerraformLayerRepository `json:"repository,omitempty"`
 	RemediationStrategy RemediationStrategy      `json:"remediationStrategy,omitempty"`
 	OverrideRunnerSpec  OverrideRunnerSpec       `json:"overrideRunnerSpec,omitempty"`

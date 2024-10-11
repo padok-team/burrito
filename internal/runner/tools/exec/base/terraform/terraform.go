@@ -15,6 +15,10 @@ type Terraform struct {
 	ExecPath string
 }
 
+func (t *Terraform) TenvName() string {
+	return "terraform"
+}
+
 func (t *Terraform) Init(workingDir string) error {
 	exec, err := tfexec.NewTerraform(workingDir, t.ExecPath)
 	if err != nil {
@@ -73,6 +77,10 @@ func (t *Terraform) Show(planArtifactPath, mode string) ([]byte, error) {
 	default:
 		return nil, errors.New("invalid mode")
 	}
+}
+
+func (t *Terraform) GetExecPath() string {
+	return t.ExecPath
 }
 
 func (t *Terraform) silent() {

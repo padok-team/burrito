@@ -47,10 +47,11 @@ metadata:
   name: terragrunt-private-module
 spec:
   terraform:
+    enabled: true
     version: "1.3.1"
-    terragrunt:
-      enabled: true
-      version: "0.45.4"
+  terragrunt:
+    enabled: true
+    version: "0.45.4"
   remediationStrategy:
     autoApply: true
   path: "terragrunt/random-pets-private-module/test"
@@ -111,9 +112,10 @@ metadata:
 spec:
   terraform:
     version: "1.3.1"
-    terragrunt:
-      enabled: true
-      version: "0.45.4"
+    enabled: true
+  terragrunt:
+    enabled: true
+    version: "0.45.4"
   remediationStrategy:
     autoApply: true
   path: "terragrunt/random-pets-private-module-ssh/test"
