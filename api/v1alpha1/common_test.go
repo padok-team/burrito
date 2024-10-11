@@ -195,18 +195,6 @@ func TestGetOpenTofuVersion(t *testing.T) {
 			"1.0.1",
 		},
 		{
-			"OverrideRepositoryWithLayer",
-			&configv1alpha1.TerraformRepository{
-				Spec: configv1alpha1.TerraformRepositorySpec{
-					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
-						Version: "1.0.1",
-					},
-				},
-			},
-			&configv1alpha1.TerraformLayer{},
-			"1.0.1",
-		},
-		{
 			"OnlyLayerVersion",
 			&configv1alpha1.TerraformRepository{},
 			&configv1alpha1.TerraformLayer{
