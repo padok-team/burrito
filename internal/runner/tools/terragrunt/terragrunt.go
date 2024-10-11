@@ -4,16 +4,13 @@ import (
 	"errors"
 	"os/exec"
 
-	"github.com/padok-team/burrito/internal/runner/tools/opentofu"
-	"github.com/padok-team/burrito/internal/runner/tools/terraform"
 	c "github.com/padok-team/burrito/internal/utils/cmd"
 )
 
 type Terragrunt struct {
-	ExecPath   string
-	WorkingDir string
-	Terraform  *terraform.Terraform
-	OpenTofu   *opentofu.OpenTofu
+	ExecPath      string
+	WorkingDir    string
+	ChildExecPath string
 }
 
 func (t *Terragrunt) TenvName() string {
@@ -21,18 +18,10 @@ func (t *Terragrunt) TenvName() string {
 }
 
 func (t *Terragrunt) getDefaultOptions(command string) ([]string, error) {
-	var execPath string
-	if t.Terraform != nil {
-		execPath = t.Terraform.ExecPath
-	} else if t.OpenTofu != nil {
-		execPath = t.OpenTofu.ExecPath
-	} else {
-		return nil, errors.New("Cannot find a valid binary to use with Terragrunt")
-	}
 	return []string{
 		command,
 		"--terragrunt-tfpath",
-		execPath,
+		t.ChildExecPath,
 		"--terragrunt-working-dir",
 		t.WorkingDir,
 		"-no-color",
@@ -109,4 +98,8 @@ func (t *Terragrunt) Show(planArtifactPath, mode string) ([]byte, error) {
 		return nil, err
 	}
 	return output, nil
+}
+
+func (t *Terragrunt) GetExecPath() string {
+	return t.ExecPath
 }

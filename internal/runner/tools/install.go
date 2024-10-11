@@ -126,20 +126,10 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 			return nil, err
 		}
 		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, baseExec.TenvName())
-		if baseExec.TenvName() == "terraform" {
-			return &tg.Terragrunt{
-				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-				Terraform: baseExec.(*tf.Terraform),
-				OpenTofu:  nil,
-			}, nil
-		} else if baseExec.TenvName() == "tofu" {
-			return &tg.Terragrunt{
-				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-				Terraform: nil,
-				OpenTofu:  baseExec.(*ot.OpenTofu),
-			}, nil
-		}
-
+		return &tg.Terragrunt{
+			ExecPath:      filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
+			ChildExecPath: baseExec.GetExecPath(),
+		}, nil
 	}
 	return baseExec, nil
 }

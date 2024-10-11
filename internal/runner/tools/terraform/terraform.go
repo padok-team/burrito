@@ -79,6 +79,10 @@ func (t *Terraform) Show(planArtifactPath, mode string) ([]byte, error) {
 	}
 }
 
+func (t *Terraform) GetExecPath() string {
+	return t.ExecPath
+}
+
 func (t *Terraform) silent() {
 	t.exec.SetStdout(io.Discard)
 	t.exec.SetStderr(io.Discard)
