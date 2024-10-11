@@ -1,6 +1,6 @@
-package tools
+package exec
 
-type BaseExec interface {
+type Exec interface {
 	Init(string) error
 	Plan(string) error
 	Apply(string) error

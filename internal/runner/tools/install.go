@@ -7,9 +7,10 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclparse"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	ot "github.com/padok-team/burrito/internal/runner/tools/opentofu"
-	tf "github.com/padok-team/burrito/internal/runner/tools/terraform"
-	tg "github.com/padok-team/burrito/internal/runner/tools/terragrunt"
+	e "github.com/padok-team/burrito/internal/runner/tools/exec"
+	ot "github.com/padok-team/burrito/internal/runner/tools/exec/base/opentofu"
+	tf "github.com/padok-team/burrito/internal/runner/tools/exec/base/terraform"
+	tg "github.com/padok-team/burrito/internal/runner/tools/exec/wrapper/terragrunt"
 	log "github.com/sirupsen/logrus"
 	tenvconfig "github.com/tofuutils/tenv/v3/config"
 	"github.com/tofuutils/tenv/v3/versionmanager"
@@ -72,7 +73,7 @@ func install(binaryPath, toolName, version string) error {
 }
 
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
-func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (BaseExec, error) {
+func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (e.Exec, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Errorf("error getting current working directory: %s", err)
@@ -90,7 +91,7 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		}
 	}()
 
-	var baseExec BaseExec
+	var baseExec e.Exec
 	var baseExecVersion string
 	if configv1alpha1.GetTerraformEnabled(repo, layer) {
 		baseExecVersion, err = detect(binaryPath, "terraform", configv1alpha1.GetTerraformVersion(repo, layer))
@@ -128,15 +129,13 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, baseExec.TenvName())
 		if baseExec.TenvName() == "terraform" {
 			return &tg.Terragrunt{
-				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-				Terraform: baseExec.(*tf.Terraform),
-				OpenTofu:  nil,
+				ExecPath: filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
+				BaseExec: baseExec.(*tf.Terraform),
 			}, nil
 		} else if baseExec.TenvName() == "tofu" {
 			return &tg.Terragrunt{
-				ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-				Terraform: nil,
-				OpenTofu:  baseExec.(*ot.OpenTofu),
+				ExecPath: filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
+				BaseExec: baseExec.(*ot.OpenTofu),
 			}, nil
 		}
 

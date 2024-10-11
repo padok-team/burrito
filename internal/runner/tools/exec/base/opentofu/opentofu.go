@@ -73,3 +73,7 @@ func (t *OpenTofu) Show(planArtifactPath, mode string) ([]byte, error) {
 	}
 	return out, nil
 }
+
+func (t *OpenTofu) GetExecPath() string {
+	return t.ExecPath
+}
