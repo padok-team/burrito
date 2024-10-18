@@ -2,7 +2,7 @@ module github.com/padok-team/burrito
 
 go 1.22.0
 
-toolchain go1.22.4
+toolchain go1.22.8
 
 require (
 	cloud.google.com/go/storage v1.45.0
@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/bradleyfalzon/ghinstallation/v2 v2.11.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/gruntwork-io/go-commons v0.17.1
+	github.com/gruntwork-io/go-commons v0.17.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/hashicorp/terraform-json v0.17.1
@@ -21,9 +21,9 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tofuutils/tenv/v3 v3.1.0
 	google.golang.org/api v0.197.0
-	k8s.io/apimachinery v0.30.2
-	k8s.io/client-go v0.30.2
-	sigs.k8s.io/controller-runtime v0.18.4
+	k8s.io/apimachinery v0.30.5
+	k8s.io/client-go v0.30.5
+	sigs.k8s.io/controller-runtime v0.18.5
 )
 
 require (
@@ -207,7 +207,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.30.2
+	k8s.io/api v0.30.5
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
