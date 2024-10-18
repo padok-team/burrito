@@ -62,6 +62,13 @@ spec:
             properties:
               branch:
                 type: string
+              opentofu:
+                properties:
+                  enabled:
+                    type: boolean
+                  version:
+                    type: string
+                type: object
               overrideRunnerSpec:
                 properties:
                   env:
@@ -2231,17 +2238,30 @@ spec:
                 type: object
               terraform:
                 properties:
-                  terragrunt:
-                    properties:
-                      enabled:
-                        type: boolean
-                      version:
-                        type: string
-                    type: object
+                  enabled:
+                    type: boolean
+                  version:
+                    type: string
+                type: object
+              terragrunt:
+                properties:
+                  enabled:
+                    type: boolean
                   version:
                     type: string
                 type: object
             type: object
+            x-kubernetes-validations:
+            - message: Both terraform.enabled and opentofu.enabled cannot be true
+                at the same time
+              rule: '!(has(self.terraform) && has(self.opentofu) && has(self.terraform.enabled)
+                && has(self.opentofu.enabled) && self.terraform.enabled == true &&
+                self.opentofu.enabled == true)'
+            - message: Both terraform.enabled and opentofu.enabled cannot be false
+                at the same time
+              rule: '!(has(self.terraform) && has(self.opentofu) && has(self.terraform.enabled)
+                && has(self.opentofu.enabled) && self.terraform.enabled == false &&
+                self.opentofu.enabled == false)'
           status:
             description: TerraformLayerStatus defines the observed state of TerraformLayer
             properties:

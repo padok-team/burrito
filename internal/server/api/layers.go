@@ -46,14 +46,14 @@ func (a *API) getLayersAndRuns() ([]configv1alpha1.TerraformLayer, map[string]co
 	layers := &configv1alpha1.TerraformLayerList{}
 	err := a.Client.List(context.Background(), layers)
 	if err != nil {
-		log.Errorf("could not list terraform layers: %s", err)
+		log.Errorf("could not list TerraformLayers: %s", err)
 		return nil, nil, err
 	}
 	runs := &configv1alpha1.TerraformRunList{}
 	indexedRuns := map[string]configv1alpha1.TerraformRun{}
 	err = a.Client.List(context.Background(), runs)
 	if err != nil {
-		log.Errorf("could not list terraform runs: %s", err)
+		log.Errorf("could not list TerraformRuns: %s", err)
 		return nil, nil, err
 	}
 	for _, run := range runs.Items {

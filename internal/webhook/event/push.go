@@ -25,19 +25,19 @@ func (e *PushEvent) Handle(c client.Client) error {
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := c.List(context.Background(), repositories)
 	if err != nil {
-		log.Errorf("could not list terraform repositories: %s", err)
+		log.Errorf("could not list TerraformRepositories: %s", err)
 		return err
 	}
 	layers := &configv1alpha1.TerraformLayerList{}
 	err = c.List(context.Background(), layers)
 	if err != nil {
-		log.Errorf("could not list terraform layers: %s", err)
+		log.Errorf("could not list TerraformLayers: %s", err)
 		return err
 	}
 	prs := &configv1alpha1.TerraformPullRequestList{}
 	err = c.List(context.Background(), prs)
 	if err != nil {
-		log.Errorf("could not list terraform prs: %s", err)
+		log.Errorf("could not list TerraformPullRequests: %s", err)
 		return err
 	}
 	affectedRepositories := e.getAffectedRepositories(repositories.Items)
@@ -47,16 +47,16 @@ func (e *PushEvent) Handle(c client.Client) error {
 		ann[annotations.LastBranchCommitDate] = date
 		err := annotations.Add(context.TODO(), c, &repo, ann)
 		if err != nil {
-			log.Errorf("could not add annotation to terraform repository %s", err)
+			log.Errorf("could not add annotation to TerraformRepository %s", err)
 			return err
 		}
 	}
 
 	for _, layer := range e.getAffectedLayers(layers.Items, affectedRepositories) {
 		ann := map[string]string{}
-		log.Printf("evaluating terraform layer %s for revision %s", layer.Name, e.Revision)
+		log.Printf("evaluating TerraformLayer %s for revision %s", layer.Name, e.Revision)
 		if layer.Spec.Branch != e.Revision {
-			log.Infof("branch %s for terraform layer %s not matching revision %s", layer.Spec.Branch, layer.Name, e.Revision)
+			log.Infof("branch %s for TerraformLayer %s not matching revision %s", layer.Spec.Branch, layer.Name, e.Revision)
 			continue
 		}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
@@ -70,7 +70,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 
 		err := annotations.Add(context.TODO(), c, &layer, ann)
 		if err != nil {
-			log.Errorf("could not add annotation to terraform layer %s", err)
+			log.Errorf("could not add annotation to TerraformLayer %s", err)
 			return err
 		}
 	}
@@ -81,7 +81,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		ann[annotations.LastBranchCommitDate] = date
 		err := annotations.Add(context.TODO(), c, &pr, ann)
 		if err != nil {
-			log.Errorf("could not add annotation to terraform pr %s", err)
+			log.Errorf("could not add annotation to TerraformPullRequest %s", err)
 			return err
 		}
 	}

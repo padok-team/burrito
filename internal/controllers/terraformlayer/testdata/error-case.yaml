@@ -19,10 +19,10 @@ spec:
   repository:
     name: burrito
     namespace: default
+  terragrunt:
+    enabled: true
+    version: 0.45.4
   terraform:
-    terragrunt:
-      enabled: true
-      version: 0.45.4
     version: 1.3.1
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -49,10 +49,10 @@ spec:
     name: burrito
     namespace: default
   terraform:
-    terragrunt:
-      enabled: true
-      version: 0.45.4
     version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -75,10 +75,11 @@ spec:
     name: burrito
     namespace: default
   terraform:
-    terragrunt:
-      enabled: true
-      version: 0.45.4
+    enabled: true
     version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -105,10 +106,11 @@ spec:
     name: burrito
     namespace: default
   terraform:
-    terragrunt:
-      enabled: true
-      version: 0.45.4
+    enabled: true
     version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
 status:
   lastRun:
     name: run-failed
@@ -139,10 +141,11 @@ spec:
     name: burrito
     namespace: default
   terraform:
-    terragrunt:
-      enabled: true
-      version: 0.45.4
+    enabled: true
     version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
 status:
   lastRun:
     name: run-failed

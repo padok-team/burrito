@@ -52,24 +52,24 @@ func (r *Runner) ExecAction() error {
 
 	err := annotations.Add(context.TODO(), r.Client, r.Layer, ann)
 	if err != nil {
-		log.Errorf("could not update terraform layer annotations: %s", err)
+		log.Errorf("could not update TerraformLayer annotations: %s", err)
 		return err
 	}
-	log.Infof("successfully updated terraform layer annotations")
+	log.Infof("successfully updated TerraformLayer annotations")
 
 	return nil
 }
 
 // Run the `init` command
 func (r *Runner) ExecInit() error {
-	log.Infof("launching terraform init in %s", r.workingDir)
+	log.Infof("launching %s init in %s", r.exec.TenvName(), r.workingDir)
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return err
 	}
 	err := r.exec.Init(r.workingDir)
 	if err != nil {
-		log.Errorf("error executing terraform init: %s", err)
+		log.Errorf("error executing %s init: %s", r.exec.TenvName(), err)
 		return err
 	}
 	return nil
@@ -78,24 +78,24 @@ func (r *Runner) ExecInit() error {
 // Run the `plan` command and save the plan artifact in the datastore
 // Returns the sha256 sum of the plan artifact
 func (r *Runner) execPlan() (string, error) {
-	log.Infof("starting terraform plan")
+	log.Infof("running %s plan", r.exec.TenvName())
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return "", err
 	}
 	err := r.exec.Plan(PlanArtifact)
 	if err != nil {
-		log.Errorf("error executing terraform plan: %s", err)
+		log.Errorf("error executing %s plan: %s", r.exec.TenvName(), err)
 		return "", err
 	}
 	planJsonBytes, err := r.exec.Show(PlanArtifact, "json")
 	if err != nil {
-		log.Errorf("error getting terraform plan json: %s", err)
+		log.Errorf("error getting %s plan json: %s", r.exec.TenvName(), err)
 		return "", err
 	}
 	prettyPlan, err := r.exec.Show(PlanArtifact, "pretty")
 	if err != nil {
-		log.Errorf("error getting terraform pretty plan: %s", err)
+		log.Errorf("error getting %s pretty plan: %s", r.exec.TenvName(), err)
 		return "", err
 	}
 	log.Infof("sending plan to datastore")
@@ -106,7 +106,7 @@ func (r *Runner) execPlan() (string, error) {
 	plan := &tfjson.Plan{}
 	err = json.Unmarshal(planJsonBytes, plan)
 	if err != nil {
-		log.Errorf("error parsing terraform json plan: %s", err)
+		log.Errorf("error parsing %s json plan: %s", r.exec.TenvName(), err)
 		return "", err
 	}
 	_, shortDiff := runnerutils.GetDiff(plan)
@@ -129,19 +129,19 @@ func (r *Runner) execPlan() (string, error) {
 		log.Errorf("could not put plan binary in cache: %s", err)
 		return "", err
 	}
-	log.Infof("terraform plan ran successfully")
+	log.Infof("%s plan ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
 // Run the `apply` command, by default with the plan artifact from the previous plan run
 // Returns the sha256 sum of the plan artifact used
 func (r *Runner) execApply() (string, error) {
-	log.Infof("starting terraform apply")
+	log.Infof("starting %s apply", r.exec.TenvName())
 	if r.exec == nil {
-		err := errors.New("terraform or terragrunt binary not installed")
+		err := fmt.Errorf("%s binary not installed", r.exec.TenvName())
 		return "", err
 	}
-	log.Info("getting plan binary in datastore at key")
+	log.Infof("getting plan binary in datastore at key %s/%s/%s/%s", r.Layer.Namespace, r.Layer.Name, r.Run.Spec.Artifact.Run, r.Run.Spec.Artifact.Attempt)
 	plan, err := r.Datastore.GetPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Spec.Artifact.Run, r.Run.Spec.Artifact.Attempt, "bin")
 	if err != nil {
 		log.Errorf("could not get plan artifact: %s", err)
@@ -153,7 +153,7 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("could not write plan artifact to disk: %s", err)
 		return "", err
 	}
-	log.Print("launching terraform apply")
+	log.Infof("launching %s apply", r.exec.TenvName())
 	if configv1alpha1.GetApplyWithoutPlanArtifactEnabled(r.Repository, r.Layer) {
 		log.Infof("applying without reusing plan artifact from previous plan run")
 		err = r.exec.Apply("")
@@ -161,13 +161,13 @@ func (r *Runner) execApply() (string, error) {
 		err = r.exec.Apply(PlanArtifact)
 	}
 	if err != nil {
-		log.Errorf("error executing terraform apply: %s", err)
+		log.Errorf("error executing %s apply: %s", r.exec.TenvName(), err)
 		return "", err
 	}
 	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "short", []byte("Apply Successful"))
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
-	log.Infof("terraform apply ran successfully")
+	log.Infof("%s apply ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }

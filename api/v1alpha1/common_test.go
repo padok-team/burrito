@@ -9,6 +9,233 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
+func TestGetTerraformEnabled(t *testing.T) {
+	tt := []struct {
+		name       string
+		repository *configv1alpha1.TerraformRepository
+		layer      *configv1alpha1.TerraformLayer
+		expected   bool
+	}{
+		{"OnlyRepositoryEnabling",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			true,
+		},
+		{"OnlyLayerEnabling",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		// Edge case: Merging config from repository and layer should
+		// never set several base execution tools to true at the same time.
+		{"OverrideRepositoryTerraformWithLayerOpenTofu",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			false,
+		},
+		{"OverrideRepositoryOpentofuWithLayerTerraform",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetTerraformEnabled(tc.repository, tc.layer)
+			if tc.expected != result {
+				t.Errorf("different base exec enabled status computed: expected %t go %t", tc.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetOpenTofuEnabled(t *testing.T) {
+	tt := []struct {
+		name       string
+		repository *configv1alpha1.TerraformRepository
+		layer      *configv1alpha1.TerraformLayer
+		expected   bool
+	}{
+		{"OnlyRepositoryEnabling",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			true,
+		},
+		{"OnlyLayerEnabling",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		// Edge case: Merging config from repository and layer should
+		// never set several base execution tools to true at the same time.
+		{"OverrideRepositoryTerraformWithLayerOpenTofu",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		{"OverrideRepositoryOpentofuWithLayerTerraform",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					TerraformConfig: configv1alpha1.TerraformConfig{
+						Enabled: &[]bool{true}[0],
+					},
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetOpenTofuEnabled(tc.repository, tc.layer)
+			if tc.expected != result {
+				t.Errorf("different base exec enabled status computed: expected %t go %t", tc.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetOpenTofuVersion(t *testing.T) {
+	tt := []struct {
+		name            string
+		repository      *configv1alpha1.TerraformRepository
+		layer           *configv1alpha1.TerraformLayer
+		expectedVersion string
+	}{
+		{
+			"OnlyRepositoryVersion",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			"1.0.1",
+		},
+		{
+			"OnlyLayerVersion",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			"1.0.1",
+		},
+		{
+			"OnlyLayerVersion",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			"1.0.1",
+		},
+		{
+			"OverrideRepositoryWithLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Version: "1.0.1",
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OpenTofuConfig: configv1alpha1.OpenTofuConfig{
+						Version: "1.0.6",
+					},
+				},
+			},
+			"1.0.6",
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetOpenTofuVersion(tc.repository, tc.layer)
+			if tc.expectedVersion != result {
+				t.Errorf("different version computed: expected %s go %s", tc.expectedVersion, result)
+			}
+		})
+	}
+}
+
 func TestGetTerraformVersion(t *testing.T) {
 	tt := []struct {
 		name            string
@@ -81,10 +308,8 @@ func TestGetTerragruntVersion(t *testing.T) {
 			"OnlyRepositoryVersion",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Version: "0.43.0",
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Version: "0.43.0",
 					},
 				},
 			},
@@ -96,10 +321,8 @@ func TestGetTerragruntVersion(t *testing.T) {
 			&configv1alpha1.TerraformRepository{},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Version: "0.43.0",
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Version: "0.43.0",
 					},
 				},
 			},
@@ -109,19 +332,15 @@ func TestGetTerragruntVersion(t *testing.T) {
 			"OverrideRepositoryWithLayer",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Version: "0.43.0",
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Version: "0.43.0",
 					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Version: "0.45.0",
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Version: "0.45.0",
 					},
 				},
 			},
@@ -150,10 +369,8 @@ func TestGetTerragruntEnabled(t *testing.T) {
 			"OnlyRepositoryEnabling",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Enabled: &[]bool{true}[0],
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Enabled: &[]bool{true}[0],
 					},
 				},
 			},
@@ -165,10 +382,8 @@ func TestGetTerragruntEnabled(t *testing.T) {
 			&configv1alpha1.TerraformRepository{},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Enabled: &[]bool{true}[0],
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Enabled: &[]bool{true}[0],
 					},
 				},
 			},
@@ -178,19 +393,15 @@ func TestGetTerragruntEnabled(t *testing.T) {
 			"DisabledInRepositoryEnabledInLayer",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Enabled: &[]bool{false}[0],
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Enabled: &[]bool{false}[0],
 					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Enabled: &[]bool{true}[0],
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Enabled: &[]bool{true}[0],
 					},
 				},
 			},
@@ -200,19 +411,15 @@ func TestGetTerragruntEnabled(t *testing.T) {
 			"EnabledInRepositoryDisabledInLayer",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Enabled: &[]bool{true}[0],
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Enabled: &[]bool{true}[0],
 					},
 				},
 			},
 			&configv1alpha1.TerraformLayer{
 				Spec: configv1alpha1.TerraformLayerSpec{
-					TerraformConfig: configv1alpha1.TerraformConfig{
-						TerragruntConfig: configv1alpha1.TerragruntConfig{
-							Enabled: &[]bool{false}[0],
-						},
+					TerragruntConfig: configv1alpha1.TerragruntConfig{
+						Enabled: &[]bool{false}[0],
 					},
 				},
 			},

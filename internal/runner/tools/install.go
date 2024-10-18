@@ -1,11 +1,13 @@
 package tools
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2/hclparse"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	ot "github.com/padok-team/burrito/internal/runner/tools/opentofu"
 	tf "github.com/padok-team/burrito/internal/runner/tools/terraform"
 	tg "github.com/padok-team/burrito/internal/runner/tools/terragrunt"
 	log "github.com/sirupsen/logrus"
@@ -70,7 +72,7 @@ func install(binaryPath, toolName, version string) error {
 }
 
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
-func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (TerraformExec, error) {
+func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository, binaryPath, workingDir string) (BaseExec, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Errorf("error getting current working directory: %s", err)
@@ -88,18 +90,32 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		}
 	}()
 
-	terraformVersion := configv1alpha1.GetTerraformVersion(repo, layer)
-	terraformVersion, err = detect(binaryPath, "terraform", terraformVersion)
-	if err != nil {
-		return nil, err
+	var baseExec BaseExec
+	var baseExecVersion string
+	if configv1alpha1.GetTerraformEnabled(repo, layer) {
+		baseExecVersion, err = detect(binaryPath, "terraform", configv1alpha1.GetTerraformVersion(repo, layer))
+		if err != nil {
+			return nil, err
+		}
+		baseExec = &tf.Terraform{
+			ExecPath: filepath.Join(binaryPath, "Terraform", baseExecVersion, "terraform"),
+		}
+	} else if configv1alpha1.GetOpenTofuEnabled(repo, layer) {
+		baseExecVersion, err = detect(binaryPath, "tofu", configv1alpha1.GetOpenTofuVersion(repo, layer))
+		if err != nil {
+			return nil, err
+		}
+		baseExec = &ot.OpenTofu{
+			ExecPath: filepath.Join(binaryPath, "OpenTofu", baseExecVersion, "tofu"),
+		}
+	} else {
+		return nil, errors.New("Please enable either Terraform or OpenTofu in the repository or layer configuration")
 	}
-	if err := install(binaryPath, "terraform", terraformVersion); err != nil {
-		return nil, err
-	}
-	tf := &tf.Terraform{
-		ExecPath: filepath.Join(binaryPath, "Terraform", terraformVersion, "terraform"),
-	}
+	log.Infof("using %s version %s", baseExec.TenvName(), baseExecVersion)
 
+	if err := install(binaryPath, baseExec.TenvName(), baseExecVersion); err != nil {
+		return nil, err
+	}
 	if configv1alpha1.GetTerragruntEnabled(repo, layer) {
 		terragruntVersion := configv1alpha1.GetTerragruntVersion(repo, layer)
 		terragruntVersion, err := detect(binaryPath, "terragrunt", terragruntVersion)
@@ -109,12 +125,11 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		if err := install(binaryPath, "terragrunt", terragruntVersion); err != nil {
 			return nil, err
 		}
+		log.Infof("using Terragrunt version %s as wrapper for %s", terragruntVersion, baseExec.TenvName())
 		return &tg.Terragrunt{
-			ExecPath:  filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
-			Terraform: tf,
+			ExecPath:      filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
+			ChildExecPath: baseExec.GetExecPath(),
 		}, nil
 	}
-
-	log.Infof("binaries successfully installed")
-	return tf, nil
+	return baseExec, nil
 }

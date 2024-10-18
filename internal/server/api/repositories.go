@@ -22,7 +22,7 @@ func (a *API) RepositoriesHandler(c echo.Context) error {
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := a.Client.List(context.Background(), repositories)
 	if err != nil {
-		log.Errorf("could not list terraform repositories: %s", err)
+		log.Errorf("could not list TerraformRepositories: %s", err)
 		return c.String(http.StatusInternalServerError, "could not list terraform repositories")
 	}
 	results := []repository{}

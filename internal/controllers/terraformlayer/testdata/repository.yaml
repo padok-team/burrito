@@ -12,3 +12,5 @@ spec:
   repository:
     secretName: burrito-repo
     url: git@github.com:padok-team/burrito-examples.git
+  terraform:
+    enabled: true

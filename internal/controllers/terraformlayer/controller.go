@@ -18,6 +18,7 @@ package terraformlayer
 
 import (
 	"context"
+	e "errors"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -93,7 +94,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if locked {
-		log.Infof("terraform layer %s is locked, skipping reconciliation.", layer.Name)
+		log.Infof("TerraformLayer %s is locked, skipping reconciliation.", layer.Name)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	}
 	repository := &configv1alpha1.TerraformRepository{}
@@ -109,6 +110,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Errorf("failed to get TerraformRepository linked to layer %s: %s", layer.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	}
+	err = validateLayerConfig(layer, repository)
+	if err != nil {
+		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", err.Error())
+		return ctrl.Result{}, err
 	}
 	state, conditions := r.GetState(ctx, layer)
 	lastResult, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
@@ -225,4 +231,11 @@ func ignorePredicate() predicate.Predicate {
 			return !e.DeleteStateUnknown
 		},
 	}
+}
+
+func validateLayerConfig(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {
+	if !configv1alpha1.GetTerraformEnabled(repository, layer) && !configv1alpha1.GetOpenTofuEnabled(repository, layer) {
+		return e.New("TerraformLayer configuration is invalid: Neither Terraform nor OpenTofu is enabled for this layer. Please enable one of them in the TerraformLayer or the TerraformRepository referenced by the layer.")
+	}
+	return nil
 }

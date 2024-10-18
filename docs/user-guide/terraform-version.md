@@ -24,9 +24,10 @@ metadata:
 spec:
   terraform:
     version: "~> 1.3.0"
-    terragrunt:
-      enabled: true
-      version: "0.44.5"
+    enabled: true
+  terragrunt:
+    enabled: true
+    version: "0.44.5"
   remediationStrategy:
     autoApply: false
   path: "internal/e2e/testdata/terragrunt/random-pets/prod"
