@@ -7,6 +7,7 @@ interface SlidingPaneProps {
   onClose: () => void;
   children?: React.ReactNode;
   width?: string; 
+  variant?: "light" | "dark";
 }
 
 const SlidingPane: React.FC<SlidingPaneProps> = ({
@@ -14,6 +15,7 @@ const SlidingPane: React.FC<SlidingPaneProps> = ({
   onClose,
   children,
   width = 'w-1/3',
+  variant = 'light',
 }) => {
   // Handle Escape key to close the pane
   useEffect(() => {
@@ -55,18 +57,20 @@ const SlidingPane: React.FC<SlidingPaneProps> = ({
       {/* Sliding Pane */}
       <FocusLock disabled={!isOpen}>
         <div
-          className={`fixed top-0 right-0 h-screen bg-primary-100 z-10 shadow-lg transform transition-transform duration-300 ease-in-out ${
+          className={`fixed top-0 right-0 h-screen z-10 shadow-lg transform transition-transform duration-300 ease-in-out ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
-          } ${width}`}
+          } ${width} ${variant === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}`}
         >
           {/* Close Button */}
-          <button
+            <button
             aria-label="Close"
-            className="absolute top-4 right-8 text-2xl text-gray-600 focus:outline-none"
+            className={`absolute top-4 right-8 text-2xl focus:outline-none ${
+              variant === 'light' ? 'text-gray-600' : 'text-nuances-50'
+            }`}
             onClick={onClose}
-          >
+            >
             &times;
-          </button>
+            </button>
           {/* Content */}
           <div className="p-8 pt-12 overflow-y-auto h-full">{children}</div>
         </div>

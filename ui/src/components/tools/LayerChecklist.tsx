@@ -62,12 +62,14 @@ const LayerChecklist: React.FC<LayerChecklistProps> = ({
             <div className="flex justify-start items-center mb-4 space-x-2">
                 <Button
                     variant={"tertiary"}
+                    theme={variant}
                     className='text-sm px-0'
                     onClick={handleSelectAll}>
                     Select All
                 </Button>
                 <Button
                     variant={"tertiary"}
+                    theme={variant}
                     className='text-sm'
                     onClick={handleUnselectAll}>
                     Unselect All
