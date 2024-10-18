@@ -3,14 +3,14 @@ name: Helm CI/CD
 on:
   push:
     branches:
-    - main
+      - main
     tags:
-    - v*
+      - v*
   pull_request:
     branches:
-    - main
+      - main
     paths:
-    - 'deploy/charts/**'
+      - "deploy/charts/**"
 
 env:
   CHART_NAME: burrito
@@ -22,40 +22,40 @@ jobs:
     name: Helm Render
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Helm Render
-      run: helm template ${{ env.CHART_PATH }}
+      - name: Helm Render
+        run: helm template ${{ env.CHART_PATH }}
 
   helm-push:
     name: Helm Push
     runs-on: ubuntu-latest
     needs: helm-render
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: GHCR Login
-      run: echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+      - name: GHCR Login
+        run: echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
-    - name: Compute versions
-      shell: bash
-      run: |
-        CURRENT_VERSION=$(yq $CHART_PATH/Chart.yaml --expression .version)
-        if [[ ${{ github.event_name }} == 'pull_request' || ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'branch' ]]; then
-          echo "VERSION=$(echo $CURRENT_VERSION-${{ github.sha }})" >> $GITHUB_ENV
-          echo "APP_VERSION=${{ github.sha }}" >> $GITHUB_ENV
-        elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'tag' ]]; then
-          echo "VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')" >> $GITHUB_ENV
-          echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-        else
-          echo "Unsupported event type"
-          exit 1
-        fi
+      - name: Compute versions
+        shell: bash
+        run: |
+          CURRENT_VERSION=$(yq $CHART_PATH/Chart.yaml --expression .version)
+          if [[ ${{ github.event_name }} == 'pull_request' || ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'branch' ]]; then
+            echo "VERSION=$(echo $CURRENT_VERSION-${{ github.sha }})" >> $GITHUB_ENV
+            echo "APP_VERSION=${{ github.sha }}" >> $GITHUB_ENV
+          elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'tag' ]]; then
+            echo "VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')" >> $GITHUB_ENV
+            echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            echo "Unsupported event type"
+            exit 1
+          fi
 
-    - name: Helm Package
-      run: helm package ${{ env.CHART_PATH }} -u --version ${{ env.VERSION }} --app-version ${{ env.APP_VERSION }}
+      - name: Helm Package
+        run: helm package ${{ env.CHART_PATH }} -u --version ${{ env.VERSION }} --app-version ${{ env.APP_VERSION }}
 
-    - name: Helm Push
-      run: helm push ./${{ env.CHART_NAME }}-${{ env.VERSION }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+      - name: Helm Push
+        run: helm push ./${{ env.CHART_NAME }}-${{ env.VERSION }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts

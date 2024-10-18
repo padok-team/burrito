@@ -3,13 +3,13 @@ name: Conventional Commits check
 on:
   pull_request:
     branches:
-    - main
+      - main
 
 jobs:
   commitlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v3
