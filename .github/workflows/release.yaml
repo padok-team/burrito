@@ -39,7 +39,7 @@ jobs:
           echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6
         with:
           distribution: goreleaser
           version: latest
