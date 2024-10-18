@@ -143,7 +143,7 @@ const Layers: React.FC = () => {
 
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
-    <SlidingPane isOpen={showRefreshPane} onClose={() => setShowRefreshPane(false)}>
+    <SlidingPane isOpen={showRefreshPane} onClose={() => setShowRefreshPane(false)} variant={theme}>
       <div className="relative h-full">
       <div className="overflow-auto h-[calc(100%-90px)]">
         <h2
@@ -157,7 +157,7 @@ const Layers: React.FC = () => {
         </h2>
 
         {layersQuery.isSuccess && (
-        <LayerChecklist layers={layersQuery.data.results} variant={theme} onSelectionChange={(layers) => setSelectedLayersForSync(layers)}/>
+        <LayerChecklist layers={layersQuery.data.results} variant={theme} onSelectionChange={(layers) => setSelectedLayersForSync(layers)} />
         )}
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
