@@ -1,9 +1,15 @@
-name: Pull Request Continuous Integration
+name: Continuous Integration
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
+
+permissions:
+  packages: write
 
 env:
   GO_VERSION: 1.22
@@ -32,6 +38,8 @@ jobs:
         run: make test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
+        with:
+          use_oidc: true
 
   check-codegen:
     name: Check Codegen
