@@ -10,6 +10,7 @@ on:
 
 permissions:
   packages: write
+  id-token: write # Required for Codecov
 
 env:
   GO_VERSION: 1.22
