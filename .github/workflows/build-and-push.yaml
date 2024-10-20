@@ -102,6 +102,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Get branch name
+        run: |
+          echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+
       - name: Docker tags & labels
         id: meta
         uses: docker/metadata-action@v5
