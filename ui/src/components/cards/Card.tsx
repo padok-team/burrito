@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { twMerge } from "tailwind-merge";
-import { Tooltip } from "react-tooltip";
+import React, { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { Tooltip } from 'react-tooltip';
 
-import Running from "@/components/widgets/Running";
-import Tag from "@/components/widgets/Tag";
-import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
-import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
-import ChiliLight from "@/assets/illustrations/ChiliLight";
-import ChiliDark from "@/assets/illustrations/ChiliDark";
+import Running from '@/components/widgets/Running';
+import Tag from '@/components/widgets/Tag';
+import ModalLogsTerminal from '@/components/tools/ModalLogsTerminal';
+import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
+import ChiliLight from '@/assets/illustrations/ChiliLight';
+import ChiliDark from '@/assets/illustrations/ChiliDark';
 
-import { Layer } from "@/clients/layers/types";
-import GenericIconButton from "../buttons/GenericIconButton";
-import { syncLayer } from "@/clients/layers/client";
-import SyncIcon from "@/assets/icons/SyncIcon";
+import { Layer } from '@/clients/layers/types';
+import GenericIconButton from '../buttons/GenericIconButton';
+import { syncLayer } from '@/clients/layers/client';
+import SyncIcon from '@/assets/icons/SyncIcon';
 
 export interface CardProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   layer: Layer;
 }
 
 const Card: React.FC<CardProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   layer,
   layer: {
     name,
@@ -42,22 +42,22 @@ const Card: React.FC<CardProps> = ({
         shadow-light`,
 
       dark: `bg-nuances-400
-        shadow-dark`,
+        shadow-dark`
     },
 
     isRunning: {
       light: `outline-blue-400`,
 
-      dark: `outline-blue-500`,
-    },
+      dark: `outline-blue-500`
+    }
   };
 
   const getTag = () => {
     return (
       <div className="flex items-center">
         <Tag variant={state} />
-        {state === "error" &&
-          (variant === "light" ? (
+        {state === 'error' &&
+          (variant === 'light' ? (
             <ChiliLight
               className="absolute translate-x-16 rotate-[-21deg]"
               height={40}
@@ -73,15 +73,18 @@ const Card: React.FC<CardProps> = ({
       </div>
     );
   };
-  
+
   const syncSelectedLayer = async (layer: Layer) => {
     const sync = await syncLayer(layer.namespace, layer.name);
     if (sync.status === 200) {
       setIsManualSyncPending(true);
     }
-  }
+  };
 
-  const [isManualSyncPending, setIsManualSyncPending] = useState(layer.manualSyncStatus === "pending" || layer.manualSyncStatus === "annotated");
+  const [isManualSyncPending, setIsManualSyncPending] = useState(
+    layer.manualSyncStatus === 'pending' ||
+      layer.manualSyncStatus === 'annotated'
+  );
 
   return (
     <div
@@ -112,7 +115,7 @@ const Card: React.FC<CardProps> = ({
             font-black
             leading-6
             truncate
-            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}
+            ${variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
           `}
         >
           {name}
@@ -122,19 +125,19 @@ const Card: React.FC<CardProps> = ({
         ) : isPR ? (
           <CodeBranchIcon
             className={`
-              ${variant === "light" ? "fill-nuances-black" : "fill-nuances-50"}
+              ${variant === 'light' ? 'fill-nuances-black' : 'fill-nuances-50'}
             `}
           />
         ) : null}
       </div>
       <div className="grid grid-cols-[min-content_1fr] items-start gap-x-7 gap-y-2">
         {[
-          ["Namespace", namespace],
-          ["State", getTag()],
-          ["Repository", repository],
-          ["Branch", branch],
-          ["Path", path],
-          ["Last result", lastResult],
+          ['Namespace', namespace],
+          ['State', getTag()],
+          ['Repository', repository],
+          ['Branch', branch],
+          ['Path', path],
+          ['Last result', lastResult]
         ].map(([label, value], index) => (
           <React.Fragment key={index}>
             <span
@@ -142,7 +145,7 @@ const Card: React.FC<CardProps> = ({
                 text-base
                 font-normal
                 truncate
-                ${variant === "light" ? "text-primary-600" : "text-nuances-300"}
+                ${variant === 'light' ? 'text-primary-600' : 'text-nuances-300'}
               `}
             >
               {label}
@@ -153,14 +156,14 @@ const Card: React.FC<CardProps> = ({
                 font-semibold
                 truncate
                 ${
-                  variant === "light" ? "text-nuances-black" : "text-nuances-50"
+                  variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'
                 }
               `}
             >
               <span
                 data-tooltip-id="card-tooltip"
                 data-tooltip-content={
-                  label === "Path" || label === "Last result"
+                  label === 'Path' || label === 'Last result'
                     ? (value as string)
                     : null
                 }
@@ -175,17 +178,18 @@ const Card: React.FC<CardProps> = ({
         {layer.latestRuns.length > 0 && (
           <ModalLogsTerminal layer={layer} variant={variant} />
         )}
-        <GenericIconButton variant={variant} 
-                           Icon={SyncIcon} 
-                           disabled={isManualSyncPending}
-                           onClick={() => syncSelectedLayer(layer)}
-                           tooltip={isManualSyncPending ? "Sync in progress..." : "Sync now"} 
-                           />
+        <GenericIconButton
+          variant={variant}
+          Icon={SyncIcon}
+          disabled={isManualSyncPending}
+          onClick={() => syncSelectedLayer(layer)}
+          tooltip={isManualSyncPending ? 'Sync in progress...' : 'Sync now'}
+        />
       </div>
       <Tooltip
         opacity={1}
         id="card-tooltip"
-        variant={variant === "light" ? "dark" : "light"}
+        variant={variant === 'light' ? 'dark' : 'light'}
       />
     </div>
   );

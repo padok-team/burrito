@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import Running from "@/components/widgets/Running";
+import Running from '@/components/widgets/Running';
 
-import AngleDownIcon from "@/assets/icons/AngleDownIcon";
+import AngleDownIcon from '@/assets/icons/AngleDownIcon';
 
-import { Layer } from "@/clients/layers/types";
+import { Layer } from '@/clients/layers/types';
 
 export interface RunCardProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   isActive?: boolean;
   onClick?: () => void;
   handleActive?: (layer: Layer, run: string) => void;
@@ -18,12 +18,12 @@ export interface RunCardProps {
 
 const RunCard: React.FC<RunCardProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   isActive,
   onClick,
   handleActive,
   layer,
-  layer: { name, namespace, runCount, latestRuns, isRunning },
+  layer: { name, namespace, runCount, latestRuns, isRunning }
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -33,7 +33,7 @@ const RunCard: React.FC<RunCardProps> = ({
     run: string
   ) => {
     event.stopPropagation();
-    handleActive && handleActive(layer, run);
+    handleActive?.(layer, run);
   };
 
   const handleExpand = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -51,7 +51,7 @@ const RunCard: React.FC<RunCardProps> = ({
       dark: `bg-nuances-black
         text-nuances-50
         outline-nuances-50
-        hover:bg-nuances-400`,
+        hover:bg-nuances-400`
     },
 
     isActive: {
@@ -59,14 +59,14 @@ const RunCard: React.FC<RunCardProps> = ({
         shadow-light`,
 
       dark: `bg-nuances-400
-        shadow-dark`,
+        shadow-dark`
     },
 
     isRunning: {
       light: `outline-blue-400`,
 
-      dark: `outline-blue-500`,
-    },
+      dark: `outline-blue-500`
+    }
   };
 
   return (
@@ -103,7 +103,7 @@ const RunCard: React.FC<RunCardProps> = ({
       >
         <span
           className={
-            variant === "light" ? "text-primary-600" : "text-nuances-300"
+            variant === 'light' ? 'text-primary-600' : 'text-nuances-300'
           }
         >
           Runs
@@ -113,7 +113,7 @@ const RunCard: React.FC<RunCardProps> = ({
           className={`
             -ml-2
             fill-blue-500
-            ${isExpanded && "transform -rotate-180"}
+            ${isExpanded && 'transform -rotate-180'}
             transition-transform
             duration-500
           `}
@@ -128,7 +128,7 @@ const RunCard: React.FC<RunCardProps> = ({
           overflow-hidden
           transition-all
           duration-500
-          ${isExpanded ? "max-h-[152px] opacity-100" : "max-h-0 opacity-0"}
+          ${isExpanded ? 'max-h-[152px] opacity-100' : 'max-h-0 opacity-0'}
         `}
       >
         <div className="flex flex-col gap-1 pt-4">

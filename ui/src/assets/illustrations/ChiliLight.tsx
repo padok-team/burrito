@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { SVGProps } from 'react';
 
 const ChiliLight = (props: SVGProps<SVGSVGElement>) => (
   <svg
@@ -29,7 +29,7 @@ const ChiliLight = (props: SVGProps<SVGSVGElement>) => (
       y={135}
       maskUnits="userSpaceOnUse"
       style={{
-        maskType: "alpha",
+        maskType: 'alpha'
       }}
     >
       <path

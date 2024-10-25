@@ -1,16 +1,16 @@
-import React, { useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { ThemeContext } from "@/contexts/ThemeContext";
+import { ThemeContext } from '@/contexts/ThemeContext';
 
-import Input from "@/components/core/Input";
-import Button from "@/components/core/Button";
-import SocialButton from "@/components/buttons/SocialButton";
+import Input from '@/components/core/Input';
+import Button from '@/components/core/Button';
+import SocialButton from '@/components/buttons/SocialButton';
 
-import Burrito from "@/assets/illustrations/Burrito";
-import EyeSlashIcon from "@/assets/icons/EyeSlashIcon";
-import CoverLight from "@/assets/covers/cover-light.png";
-import CoverDark from "@/assets/covers/cover-dark.png";
+import Burrito from '@/assets/illustrations/Burrito';
+import EyeSlashIcon from '@/assets/icons/EyeSlashIcon';
+import CoverLight from '@/assets/covers/cover-light.png';
+import CoverDark from '@/assets/covers/cover-dark.png';
 
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -24,7 +24,7 @@ const Login: React.FC = () => {
           w-[500px]
           min-w-[500px]
           overflow-auto
-          ${theme === "light" ? "bg-nuances-white" : "bg-nuances-black"}
+          ${theme === 'light' ? 'bg-nuances-white' : 'bg-nuances-black'}
         `}
       >
         <div className="flex flex-col items-center justify-center gap-10 w-[300px] m-auto">
@@ -35,9 +35,9 @@ const Login: React.FC = () => {
                 text-3xl
                 font-extrabold
                 ${
-                  theme === "light"
-                    ? "text-nuances-black"
-                    : "text-nuances-white"
+                  theme === 'light'
+                    ? 'text-nuances-black'
+                    : 'text-nuances-white'
                 }
               `}
             >
@@ -60,8 +60,8 @@ const Login: React.FC = () => {
             />
             <Button
               className="w-full"
-              variant={theme === "light" ? "primary" : "secondary"}
-              onClick={() => navigate("/")}
+              variant={theme === 'light' ? 'primary' : 'secondary'}
+              onClick={() => navigate('/')}
             >
               Login
             </Button>
@@ -73,9 +73,9 @@ const Login: React.FC = () => {
                 w-full
                 gap-4
                 ${
-                  theme === "light"
-                    ? "text-nuances-black border-nuances-black"
-                    : "text-nuances-white border-nuances-white"
+                  theme === 'light'
+                    ? 'text-nuances-black border-nuances-black'
+                    : 'text-nuances-white border-nuances-white'
                 }
               `}
             >
@@ -87,12 +87,12 @@ const Login: React.FC = () => {
               <SocialButton
                 className="w-full"
                 variant="github"
-                onClick={() => navigate("/")}
+                onClick={() => navigate('/')}
               />
               <SocialButton
                 className="w-full"
                 variant="gitlab"
-                onClick={() => navigate("/")}
+                onClick={() => navigate('/')}
               />
             </div>
           </div>
@@ -107,9 +107,9 @@ const Login: React.FC = () => {
               p-6
               rounded-lg
               ${
-                theme === "light"
-                  ? "bg-primary-400 text-nuances-black"
-                  : "bg-nuances-400 text-nuances-50"
+                theme === 'light'
+                  ? 'bg-primary-400 text-nuances-black'
+                  : 'bg-nuances-400 text-nuances-50'
               }
             `}
           >
@@ -131,9 +131,9 @@ const Login: React.FC = () => {
           px-16
           gap-6
           ${
-            theme === "light"
-              ? "bg-background-login-light"
-              : "bg-background-login-dark"
+            theme === 'light'
+              ? 'bg-background-login-light'
+              : 'bg-background-login-dark'
           }
         `}
       >
@@ -141,7 +141,7 @@ const Login: React.FC = () => {
           className={`
             flex
             flex-col
-            ${theme === "light" ? "text-nuances-black" : "text-nuances-white"}
+            ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-white'}
           `}
         >
           <span className="text-5xl font-extrabold">Burrito is a TACoS</span>
@@ -158,9 +158,9 @@ const Login: React.FC = () => {
             translate-y-20
             translate-x-28
             rounded-lg
-            ${theme === "light" ? "shadow-light" : "shadow-dark"}
+            ${theme === 'light' ? 'shadow-light' : 'shadow-dark'}
           `}
-          src={theme === "light" ? CoverLight : CoverDark}
+          src={theme === 'light' ? CoverLight : CoverDark}
         />
       </div>
     </div>

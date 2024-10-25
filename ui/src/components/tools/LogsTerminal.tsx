@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { twMerge } from "tailwind-merge";
-import { useQuery } from "@tanstack/react-query";
-import { Tooltip } from "react-tooltip";
+import React, { useState, useEffect } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { useQuery } from '@tanstack/react-query';
+import { Tooltip } from 'react-tooltip';
 
-import { fetchAttempts } from "@/clients/runs/client";
-import { fetchLogs } from "@/clients/logs/client";
-import { reactQueryKeys } from "@/clients/reactQueryConfig";
+import { fetchAttempts } from '@/clients/runs/client';
+import { fetchLogs } from '@/clients/logs/client';
+import { reactQueryKeys } from '@/clients/reactQueryConfig';
 
-import AttemptsDropdown from "@/components/dropdowns/AttemptsDropdown";
-import AttemptButton from "@/components/buttons/AttemptButton";
+import AttemptsDropdown from '@/components/dropdowns/AttemptsDropdown';
+import AttemptButton from '@/components/buttons/AttemptButton';
 
-import SyncIcon from "@/assets/icons/SyncIcon";
-import CopyIcon from "@/assets/icons/CopyIcon";
-import DownloadAltIcon from "@/assets/icons/DownloadAltIcon";
+import SyncIcon from '@/assets/icons/SyncIcon';
+import CopyIcon from '@/assets/icons/CopyIcon';
+import DownloadAltIcon from '@/assets/icons/DownloadAltIcon';
 
-import { Layer } from "@/clients/layers/types";
+import { Layer } from '@/clients/layers/types';
 
 export interface LogsTerminalProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   layer: Layer;
   run: string;
 }
 
 const LogsTerminal: React.FC<LogsTerminalProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   layer: { namespace, name },
-  run,
+  run
 }) => {
   const styles = {
     light: `bg-nuances-50
@@ -37,7 +37,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
     dark: `bg-nuances-400
       text-nuances-50
       fill-nuances-50
-      border-nuances-black`,
+      border-nuances-black`
   };
 
   const [selectedAttempts, setSelectedAttempts] = useState<number[]>([]);
@@ -50,13 +50,13 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
 
   const attemptsQuery = useQuery({
     queryKey: reactQueryKeys.attempts(namespace, name, run),
-    queryFn: () => fetchAttempts(namespace, name, run),
+    queryFn: () => fetchAttempts(namespace, name, run)
   });
 
   const logsQuery = useQuery({
     queryKey: reactQueryKeys.logs(namespace, name, run, activeAttempt),
     queryFn: () => fetchLogs(namespace, name, run, activeAttempt),
-    enabled: activeAttempt !== null && !attemptsQuery.isFetching,
+    enabled: activeAttempt !== null && !attemptsQuery.isFetching
   });
 
   useEffect(() => {
@@ -71,7 +71,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
 
   const handleCopy = () => {
     if (logsQuery.isSuccess) {
-      navigator.clipboard.writeText(logsQuery.data.results.join("")); // TODO: check if this works properly
+      navigator.clipboard.writeText(logsQuery.data.results.join('')); // TODO: check if this works properly
       setDisplayLogsCopiedTooltip(true);
     }
   };
@@ -98,9 +98,9 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           <span className="text-base font-semibold">{namespace}</span>
           <AttemptsDropdown
             className={
-              variant === "light"
-                ? "bg-primary-300 text-primary-600 fill-primary-600"
-                : "bg-nuances-300 text-nuances-400 fill-nuances-400"
+              variant === 'light'
+                ? 'bg-primary-300 text-primary-600 fill-primary-600'
+                : 'bg-nuances-300 text-nuances-400 fill-nuances-400'
             }
             variant={variant}
             runId={run}
@@ -114,15 +114,15 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
           <SyncIcon
             className={`
               cursor-pointer
-              ${logsQuery.isRefetching && "animate-spin-slow"}
+              ${logsQuery.isRefetching && 'animate-spin-slow'}
             `}
             height={30}
             width={30}
             onClick={() => logsQuery.refetch()}
           />
           <div
-            data-tooltip-id={"terminal-tooltip"}
-            data-tooltip-content={"Copied to clipboard"}
+            data-tooltip-id={'terminal-tooltip'}
+            data-tooltip-content={'Copied to clipboard'}
             onMouseLeave={() => setDisplayLogsCopiedTooltip(false)}
           >
             <CopyIcon
@@ -143,7 +143,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
         className={`
           h-[1px]
           w-full
-          ${variant === "light" ? "border-primary-600" : "border-nuances-300"}
+          ${variant === 'light' ? 'border-primary-600' : 'border-nuances-300'}
         `}
       />
       <div className="flex flex-row items-center gap-1 p-4 flex-shrink-0 overflow-auto">
@@ -172,9 +172,9 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
                       text-sm
                       px-4
                       ${
-                        variant === "light"
-                          ? "text-primary-600"
-                          : "text-nuances-300"
+                        variant === 'light'
+                          ? 'text-primary-600'
+                          : 'text-nuances-300'
                       }
                     `}
                   >
@@ -190,7 +190,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
         id="terminal-tooltip"
         isOpen={displayLogsCopiedTooltip}
         opacity={1}
-        variant={variant === "light" ? "dark" : "light"}
+        variant={variant === 'light' ? 'dark' : 'light'}
       />
     </div>
   );

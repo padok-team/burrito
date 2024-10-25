@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import SyncIcon from "@/assets/icons/SyncIcon";
+import SyncIcon from '@/assets/icons/SyncIcon';
 
 const Running: React.FC = () => {
   return (

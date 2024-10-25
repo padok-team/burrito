@@ -1,18 +1,18 @@
-import React, { useState, useRef } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState, useRef } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import ThemeToggle from "@/components/misc/ThemeToggle";
+import ThemeToggle from '@/components/misc/ThemeToggle';
 
-import Sombrero from "@/assets/illustrations/Sombrero";
+import Sombrero from '@/assets/illustrations/Sombrero';
 
 export interface ProfilePictureProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
 }
 
 const ProfilePicture: React.FC<ProfilePictureProps> = ({
   className,
-  variant = "light",
+  variant = 'light'
 }) => {
   const [open, setOpen] = useState(false);
   const pictureRef = useRef<HTMLDivElement>(null);
@@ -37,12 +37,12 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
       text-primary-600`,
     dark: `bg-nuances-black
       outline-nuances-300
-      text-primary-100`,
+      text-primary-100`
   };
 
   return (
     <div
-      className={twMerge("relative flex items-center", className)}
+      className={twMerge('relative flex items-center', className)}
       tabIndex={0}
       onBlur={handleBlur}
     >

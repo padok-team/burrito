@@ -1,11 +1,11 @@
-import React from "react";
-import { twMerge } from "tailwind-merge";
+import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import AngleDownIcon from "@/assets/icons/AngleDownIcon";
+import AngleDownIcon from '@/assets/icons/AngleDownIcon';
 
 export interface DropdownProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   label: string;
   filled?: boolean;
   disabled?: boolean;
@@ -13,7 +13,7 @@ export interface DropdownProps {
 
 const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
   (
-    { className, variant = "light", label, filled, disabled, ...props },
+    { className, variant = 'light', label, filled, disabled, ...props },
     ref
   ) => {
     const styles = {
@@ -24,12 +24,12 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
 
         dark: `bg-nuances-400
         text-nuances-300
-        fill-nuances-300`,
+        fill-nuances-300`
       },
 
       filled: {
         light: `text-nuances-black`,
-        dark: `text-nuances-50`,
+        dark: `text-nuances-50`
       },
 
       disabled: `bg-nuances-50
@@ -37,7 +37,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
         fill-nuances-200
         hover:outline-0
         focus:outline-0
-        cursor-default`,
+        cursor-default`
     };
 
     return (

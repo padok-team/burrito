@@ -1,12 +1,12 @@
-import React from "react";
+import React from 'react';
 
-import Button from "@/components/core/Button";
-import GithubIcon from "@/assets/icons/GithubIcon";
-import GitlabIcon from "@/assets/icons/GitlabIcon";
+import Button from '@/components/core/Button';
+import GithubIcon from '@/assets/icons/GithubIcon';
+import GitlabIcon from '@/assets/icons/GitlabIcon';
 
 export interface SocialButtonProps {
   className?: string;
-  variant: "github" | "gitlab";
+  variant: 'github' | 'gitlab';
   isLoading?: boolean;
   onClick?: () => void;
 }
@@ -15,18 +15,18 @@ const SocialButton: React.FC<SocialButtonProps> = ({
   className,
   variant,
   isLoading,
-  onClick,
+  onClick
 }) => {
   const getContent = () => {
     switch (variant) {
-      case "github":
+      case 'github':
         return (
           <>
             <GithubIcon />
             <span>Login with GitHub</span>
           </>
         );
-      case "gitlab":
+      case 'gitlab':
         return (
           <>
             <GitlabIcon />

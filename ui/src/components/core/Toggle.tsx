@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import AvocadoOn from "@/assets/avocado/AvocadoOn";
-import AvocadoOff from "@/assets/avocado/AvocadoOff";
-import AvocadoSeed from "@/assets/avocado/AvocadoSeed";
+import AvocadoOn from '@/assets/avocado/AvocadoOn';
+import AvocadoOff from '@/assets/avocado/AvocadoOff';
+import AvocadoSeed from '@/assets/avocado/AvocadoSeed';
 
 export interface ToggleProps {
   className?: string;
   checked?: boolean;
   defaultChecked?: boolean;
   label?: string;
-  labelPlacement?: "left" | "right";
+  labelPlacement?: 'left' | 'right';
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -19,8 +19,8 @@ const Toggle: React.FC<ToggleProps> = ({
   checked,
   defaultChecked,
   label,
-  labelPlacement = "left",
-  onChange,
+  labelPlacement = 'left',
+  onChange
 }) => {
   const [internalChecked, setInternalChecked] = useState(
     defaultChecked ?? false
@@ -32,7 +32,7 @@ const Toggle: React.FC<ToggleProps> = ({
 
   return (
     <label className={twMerge(`flex items-center cursor-pointer`, className)}>
-      {labelPlacement === "left" && label && (
+      {labelPlacement === 'left' && label && (
         <span className="mr-2">{label}</span>
       )}
       <div className="relative rotate-180 ">
@@ -45,7 +45,9 @@ const Toggle: React.FC<ToggleProps> = ({
             ease-in-out
             duration-500
             ${
-              checked ?? internalChecked ? "opacity-100" : "opacity-0 delay-150"
+              (checked ?? internalChecked)
+                ? 'opacity-100'
+                : 'opacity-0 delay-150'
             }
           `}
           height={32}
@@ -60,7 +62,9 @@ const Toggle: React.FC<ToggleProps> = ({
             ease-in-out
             duration-500
             ${
-              checked ?? internalChecked ? "opacity-0 delay-150" : "opacity-100"
+              (checked ?? internalChecked)
+                ? 'opacity-0 delay-150'
+                : 'opacity-100'
             }
           `}
           height={32}
@@ -73,7 +77,7 @@ const Toggle: React.FC<ToggleProps> = ({
             left-0
             transition-all
             duration-500
-            ${checked ?? internalChecked ? "rotate-90" : "translate-x-[22px] "}
+            ${(checked ?? internalChecked) ? 'rotate-90' : 'translate-x-[22px] '}
           `}
           height={32}
           width={32}
@@ -85,7 +89,7 @@ const Toggle: React.FC<ToggleProps> = ({
           onChange={onChange ?? handleChange}
         />
       </div>
-      {labelPlacement === "right" && label && (
+      {labelPlacement === 'right' && label && (
         <span className="ml-2">{label}</span>
       )}
     </label>

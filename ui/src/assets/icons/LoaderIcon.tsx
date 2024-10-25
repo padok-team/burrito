@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { SVGProps } from 'react';
 
 const LoaderIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg height={24} width={24} viewBox="0 0 24 24" {...props}>

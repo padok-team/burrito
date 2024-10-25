@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 
-import { Repositories } from "@/clients/repositories/types.ts";
+import { Repositories } from '@/clients/repositories/types.ts';
 
 export const fetchRepositories = async () => {
   const response = await axios.get<Repositories>(

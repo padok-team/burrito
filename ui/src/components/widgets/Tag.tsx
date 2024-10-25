@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { LayerState } from "@/clients/layers/types";
+import { LayerState } from '@/clients/layers/types';
 
 export interface TagProps {
   variant: LayerState;
@@ -15,19 +15,19 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
     error: `bg-status-error-default
       text-nuances-white`,
     disabled: `bg-nuances-50
-      text-nuances-200`,
+      text-nuances-200`
   };
 
   const getContent = () => {
     switch (variant) {
-      case "success":
-        return "OK";
-      case "warning":
-        return "OutOfSync";
-      case "error":
-        return "Error";
-      case "disabled":
-        return "Disabled";
+      case 'success':
+        return 'OK';
+      case 'warning':
+        return 'OutOfSync';
+      case 'error':
+        return 'Error';
+      case 'disabled':
+        return 'Disabled';
     }
   };
 

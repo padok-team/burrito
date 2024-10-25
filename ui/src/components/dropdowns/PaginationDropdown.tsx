@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState, useRef } from 'react';
+import { twMerge } from 'tailwind-merge';
 import {
   useFloating,
   useClick,
@@ -13,32 +13,32 @@ import {
   flip,
   size,
   autoUpdate,
-  FloatingPortal,
-} from "@floating-ui/react";
+  FloatingPortal
+} from '@floating-ui/react';
 
-import Dropdown from "@/components/core/Dropdown";
+import Dropdown from '@/components/core/Dropdown';
 
 export interface PaginationDropdownProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   disabled?: boolean;
   selectedPagination: number;
   setSelectedPagination: (pagination: number) => void;
 }
 
 const options: Array<{ value: number; label: string }> = [
-  { value: 5, label: "5" },
-  { value: 10, label: "10" },
-  { value: 25, label: "25" },
-  { value: 50, label: "50" },
+  { value: 5, label: '5' },
+  { value: 10, label: '10' },
+  { value: 25, label: '25' },
+  { value: 50, label: '50' }
 ];
 
 const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   disabled,
   selectedPagination,
-  setSelectedPagination,
+  setSelectedPagination
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -48,7 +48,7 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
   const isTypingRef = useRef(false);
 
   const { refs, floatingStyles, context } = useFloating<HTMLElement>({
-    placement: "bottom-start",
+    placement: 'bottom-start',
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
@@ -59,20 +59,20 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
         apply({ availableHeight, elements }) {
           elements.floating.style.maxHeight = `${availableHeight}px`;
         },
-        padding: 8,
-      }),
-    ],
+        padding: 8
+      })
+    ]
   });
 
   const click = useClick(context, {
     enabled: !disabled,
-    event: "mousedown",
+    event: 'mousedown'
   });
   const listNavigation = useListNavigation(context, {
     enabled: !disabled,
     listRef: listElementsRef,
     activeIndex: activeIndex,
-    onNavigate: setActiveIndex,
+    onNavigate: setActiveIndex
   });
   const typeahead = useTypeahead(context, {
     enabled: !disabled,
@@ -81,15 +81,18 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
     onMatch: setActiveIndex,
     onTypingChange(isTyping) {
       isTypingRef.current = isTyping;
-    },
+    }
   });
   const dismiss = useDismiss(context);
-  const role = useRole(context, { role: "select" });
+  const role = useRole(context, { role: 'select' });
 
-  const { getReferenceProps, getFloatingProps } = useInteractions(
-    [click, listNavigation, typeahead, dismiss, role]
-  );
-
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    listNavigation,
+    typeahead,
+    dismiss,
+    role
+  ]);
 
   const styles = {
     light: `bg-nuances-white
@@ -97,7 +100,7 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
       shadow-light`,
     dark: `bg-nuances-black
       text-nuances-300
-      shadow-dark`,
+      shadow-dark`
   };
 
   return (
@@ -133,11 +136,11 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
                     key={value}
                     className="outline-none"
                     onClick={() => {
-                      setSelectedPagination(value)
-                      setIsOpen(false)
+                      setSelectedPagination(value);
+                      setIsOpen(false);
                     }}
                   >
-                  {label}
+                    {label}
                   </button>
                 ))}
               </div>

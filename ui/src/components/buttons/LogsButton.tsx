@@ -1,23 +1,23 @@
-import React from "react";
-import { twMerge } from "tailwind-merge";
+import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import WindowIcon from "@/assets/icons/WindowIcon";
+import WindowIcon from '@/assets/icons/WindowIcon';
 
 export interface LogsButtonProps
   extends React.HTMLAttributes<HTMLButtonElement> {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
 }
 
 const LogsButton = React.forwardRef<HTMLButtonElement, LogsButtonProps>(
-  ({ className, variant = "light", ...props }, ref) => {
+  ({ className, variant = 'light', ...props }, ref) => {
     return (
       <button
         className={twMerge(
           `${
-            variant === "light"
-              ? "hover:bg-primary-300 "
-              : "hover:bg-nuances-black"
+            variant === 'light'
+              ? 'hover:bg-primary-300 '
+              : 'hover:bg-nuances-black'
           }
           rounded-full
           cursor-pointer

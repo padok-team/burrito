@@ -1,86 +1,86 @@
-import React, { useState, useContext, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useContext, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
-import { fetchLayers, syncLayer } from "@/clients/layers/client";
-import { reactQueryKeys } from "@/clients/reactQueryConfig";
+import { fetchLayers, syncLayer } from '@/clients/layers/client';
+import { reactQueryKeys } from '@/clients/reactQueryConfig';
 
-import { ThemeContext } from "@/contexts/ThemeContext";
+import { ThemeContext } from '@/contexts/ThemeContext';
 
-import Button from "@/components/core/Button";
-import Input from "@/components/core/Input";
-import StatesDropdown from "@/components/dropdowns/StatesDropdown";
-import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
-import Toggle from "@/components/core/Toggle";
-import NavigationButton from "@/components/navigation/NavigationButton";
-import Card from "@/components/cards/Card";
-import Table from "@/components/tables/Table";
+import Button from '@/components/core/Button';
+import Input from '@/components/core/Input';
+import StatesDropdown from '@/components/dropdowns/StatesDropdown';
+import RepositoriesDropdown from '@/components/dropdowns/RepositoriesDropdown';
+import Toggle from '@/components/core/Toggle';
+import NavigationButton from '@/components/navigation/NavigationButton';
+import Card from '@/components/cards/Card';
+import Table from '@/components/tables/Table';
 
-import SearchIcon from "@/assets/icons/SearchIcon";
-import AppsIcon from "@/assets/icons/AppsIcon";
-import BarsIcon from "@/assets/icons/BarsIcon";
-import CardLoader from "@/components/loaders/CardLoader";
+import SearchIcon from '@/assets/icons/SearchIcon';
+import AppsIcon from '@/assets/icons/AppsIcon';
+import BarsIcon from '@/assets/icons/BarsIcon';
+import CardLoader from '@/components/loaders/CardLoader';
 
-import { LayerState } from "@/clients/layers/types";
-import PaginationDropdown from "@/components/dropdowns/PaginationDropdown";
-import SlidingPane from "@/modals/SlidingPane";
-import LayerChecklist from "@/components/tools/LayerChecklist";
-import ProgressBar from "@/components/widgets/ProgressBar";
+import { LayerState } from '@/clients/layers/types';
+import PaginationDropdown from '@/components/dropdowns/PaginationDropdown';
+import SlidingPane from '@/modals/SlidingPane';
+import LayerChecklist from '@/components/tools/LayerChecklist';
+import ProgressBar from '@/components/widgets/ProgressBar';
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
-  const [view, setView] = useState<"grid" | "table">("grid");
+  const [view, setView] = useState<'grid' | 'table'>('grid');
   const [layerOffset, setLayerOffset] = useState(0);
   const [layerLimit, setLayerLimit] = useState(10);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const search = useMemo<string>(() => {
     setLayerOffset(0);
-    return searchParams.get("search") || "";
+    return searchParams.get('search') || '';
   }, [searchParams]);
 
   const setSearch = useCallback(
     (search: string) => {
-      searchParams.set("search", search);
+      searchParams.set('search', search);
       setSearchParams(searchParams);
     },
     [searchParams, setSearchParams]
   );
 
   const stateFilter = useMemo<LayerState[]>(() => {
-    const param = searchParams.get("states");
-    return (param ? param.split(",") : []) as LayerState[];
+    const param = searchParams.get('states');
+    return (param ? param.split(',') : []) as LayerState[];
   }, [searchParams]);
 
   const setStateFilter = useCallback(
     (stateFilter: LayerState[]) => {
-      searchParams.set("states", stateFilter.join(","));
+      searchParams.set('states', stateFilter.join(','));
       setSearchParams(searchParams);
     },
     [searchParams, setSearchParams]
   );
 
   const repositoryFilter = useMemo<string[]>(() => {
-    const param = searchParams.get("repositories");
-    return param ? param.split(",") : [];
+    const param = searchParams.get('repositories');
+    return param ? param.split(',') : [];
   }, [searchParams]);
 
   const setRepositoryFilter = useCallback(
     (repositoryFilter: string[]) => {
-      searchParams.set("repositories", repositoryFilter.join(","));
+      searchParams.set('repositories', repositoryFilter.join(','));
       setSearchParams(searchParams);
     },
     [searchParams, setSearchParams]
   );
 
   const hidePRFilter = useMemo<boolean>(
-    () => searchParams.get("hidepr") !== "false",
+    () => searchParams.get('hidepr') !== 'false',
     [searchParams]
   );
 
   const setHidePRFilter = useCallback(
     (hidePRFilter: boolean) => {
-      searchParams.set("hidepr", hidePRFilter.toString());
+      searchParams.set('hidepr', hidePRFilter.toString());
       setSearchParams(searchParams);
     },
     [searchParams, setSearchParams]
@@ -106,8 +106,8 @@ const Layers: React.FC = () => {
             repositoryFilter.length === 0 ||
             repositoryFilter.includes(layer.repository)
         )
-        .filter((layer) => !hidePRFilter || !layer.isPR),
-    }),
+        .filter((layer) => !hidePRFilter || !layer.isPR)
+    })
   });
 
   const updateLimit = useCallback(
@@ -122,7 +122,9 @@ const Layers: React.FC = () => {
     [layerOffset, layersQuery]
   );
 
-  const [selectedLayersForSync, setSelectedLayersForSync] = useState<{ name: string; namespace: string }[]>([]);
+  const [selectedLayersForSync, setSelectedLayersForSync] = useState<
+    { name: string; namespace: string }[]
+  >([]);
   const [syncProgressValue, setSyncProgressValue] = useState(0);
   const syncSelectedLayers = async () => {
     const totalLayers = selectedLayersForSync.length;
@@ -132,49 +134,57 @@ const Layers: React.FC = () => {
       } catch (error) {
         console.error(`Failed to sync layer ${layer.name}:`, error);
       }
-      setSyncProgressValue((prev) => prev + 100 / totalLayers)
+      setSyncProgressValue((prev) => prev + 100 / totalLayers);
     }
     setTimeout(() => {
       setSyncProgressValue(0);
       setShowRefreshPane(false);
       layersQuery.refetch();
     }, 1000);
-  }
+  };
 
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
-    <SlidingPane isOpen={showRefreshPane} onClose={() => setShowRefreshPane(false)} variant={theme}>
-      <div className="relative h-full">
-      <div className="overflow-auto h-[calc(100%-90px)]">
-        <h2
-        className={`
+      <SlidingPane
+        isOpen={showRefreshPane}
+        onClose={() => setShowRefreshPane(false)}
+        variant={theme}
+      >
+        <div className="relative h-full">
+          <div className="overflow-auto h-[calc(100%-90px)]">
+            <h2
+              className={`
           text-lg
           font-semibold
-          ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+          ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
         `}
-        >
-        Select Layers to synchronize
-        </h2>
+            >
+              Select Layers to synchronize
+            </h2>
 
-        {layersQuery.isSuccess && (
-        <LayerChecklist layers={layersQuery.data.results} variant={theme} onSelectionChange={(layers) => setSelectedLayersForSync(layers)} />
-        )}
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
-        <Button
-        variant={theme === "light" ? "primary" : "secondary"}
-        className="w-full"
-        disabled={selectedLayersForSync.length === 0}
-        onClick={() => {
-          syncSelectedLayers();
-        }}
-        >
-        Synchronize
-        </Button>
-        <ProgressBar value={syncProgressValue} className="mt-4"/>
-      </div>
-      </div>
-    </SlidingPane>
+            {layersQuery.isSuccess && (
+              <LayerChecklist
+                layers={layersQuery.data.results}
+                variant={theme}
+                onSelectionChange={(layers) => setSelectedLayersForSync(layers)}
+              />
+            )}
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
+            <Button
+              variant={theme === 'light' ? 'primary' : 'secondary'}
+              className="w-full"
+              disabled={selectedLayersForSync.length === 0}
+              onClick={() => {
+                syncSelectedLayers();
+              }}
+            >
+              Synchronize
+            </Button>
+            <ProgressBar value={syncProgressValue} className="mt-4" />
+          </div>
+        </div>
+      </SlidingPane>
       <div
         className={`
           flex
@@ -182,7 +192,7 @@ const Layers: React.FC = () => {
           p-6
           pb-3
           gap-6
-          ${theme === "light" ? "bg-primary-100" : "bg-nuances-black"}
+          ${theme === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}
         `}
       >
         <div className="flex justify-between">
@@ -191,23 +201,23 @@ const Layers: React.FC = () => {
               text-[32px]
               font-extrabold
               leading-[130%]
-              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
             `}
           >
             Layers
           </h1>
           <div className="space-x-2">
             <Button
-                theme={theme}
-                variant={"secondary"}
-                onClick={() =>
-                  setShowRefreshPane((showRefreshPane) => !showRefreshPane)
-                }
-              >
-                Run Sync  
+              theme={theme}
+              variant={'secondary'}
+              onClick={() =>
+                setShowRefreshPane((showRefreshPane) => !showRefreshPane)
+              }
+            >
+              Run Sync
             </Button>
             <Button
-              variant={theme === "light" ? "primary" : "secondary"}
+              variant={theme === 'light' ? 'primary' : 'secondary'}
               isLoading={layersQuery.isRefetching}
               onClick={() => layersQuery.refetch()}
             >
@@ -229,7 +239,7 @@ const Layers: React.FC = () => {
               className={`
                 text-base
                 font-semibold
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
             >
               {`
@@ -243,9 +253,9 @@ const Layers: React.FC = () => {
                 border-l
                 h-6
                 ${
-                  theme === "light"
-                    ? "border-primary-600"
-                    : "border-nuances-200"
+                  theme === 'light'
+                    ? 'border-primary-600'
+                    : 'border-nuances-200'
                 }
               `}
             ></span>
@@ -253,7 +263,7 @@ const Layers: React.FC = () => {
               className={`
                 text-base
                 font-medium
-                ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+                ${theme === 'light' ? 'text-primary-600' : 'text-nuances-200'}
               `}
             >
               Filter by
@@ -274,7 +284,7 @@ const Layers: React.FC = () => {
               className={`
                 text-sm
                 font-medium
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
               checked={hidePRFilter}
               onChange={() => setHidePRFilter(!hidePRFilter)}
@@ -285,7 +295,7 @@ const Layers: React.FC = () => {
             <div className="flex flex-row items-center gap-2">
               <Button
                 theme={theme}
-                variant={"tertiary"}
+                variant={'tertiary'}
                 onClick={() =>
                   setLayerOffset(Math.max(0, layerOffset - layerLimit))
                 }
@@ -298,15 +308,15 @@ const Layers: React.FC = () => {
                   className={`
                       text-base
                       font-semibold
-                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                      ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
                     `}
                 >
-                  {layerOffset + 1} -{" "}
+                  {layerOffset + 1} -{' '}
                   {Math.min(
                     layerOffset + layerLimit,
                     layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                  )}{" "}
-                  of{" "}
+                  )}{' '}
+                  of{' '}
                   {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
                 </span>
               ) : (
@@ -314,15 +324,15 @@ const Layers: React.FC = () => {
                   className={`
                       text-base
                       font-semibold
-                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                      ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
                     `}
                 >
-                  {layersQuery.isLoading ? "Loading..." : "0 - 0 of 0"}
+                  {layersQuery.isLoading ? 'Loading...' : '0 - 0 of 0'}
                 </span>
               )}
               <Button
                 theme={theme}
-                variant={"tertiary"}
+                variant={'tertiary'}
                 onClick={() =>
                   setLayerOffset(
                     Math.min(
@@ -344,10 +354,10 @@ const Layers: React.FC = () => {
                 className={`
                   text-base
                   font-medium
-                  ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+                  ${theme === 'light' ? 'text-primary-600' : 'text-nuances-200'}
                 `}
               >
-                Items per page:{" "}
+                Items per page:{' '}
               </span>
               <PaginationDropdown
                 className="w-16"
@@ -360,14 +370,14 @@ const Layers: React.FC = () => {
               <NavigationButton
                 icon={<AppsIcon />}
                 variant={theme}
-                selected={view === "grid"}
-                onClick={() => setView("grid")}
+                selected={view === 'grid'}
+                onClick={() => setView('grid')}
               />
               <NavigationButton
                 icon={<BarsIcon />}
                 variant={theme}
-                selected={view === "table"}
-                onClick={() => setView("table")}
+                selected={view === 'table'}
+                onClick={() => setView('table')}
               />
             </div>
           </div>
@@ -376,10 +386,10 @@ const Layers: React.FC = () => {
       <div
         className={`
           relative
-          ${layersQuery.isSuccess ? "overflow-auto" : "overflow-hidden"}
+          ${layersQuery.isSuccess ? 'overflow-auto' : 'overflow-hidden'}
         `}
       >
-        {view === "grid" ? (
+        {view === 'grid' ? (
           <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))] p-6 gap-6">
             {layersQuery.isLoading ? (
               Array.from({ length: 100 }).map((_, index) => (
@@ -391,7 +401,7 @@ const Layers: React.FC = () => {
                   text-lg
                   font-semibold
                   ${
-                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                    theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'
                   }
                 `}
               >
@@ -410,9 +420,9 @@ const Layers: React.FC = () => {
                     text-lg
                     font-semibold
                     ${
-                      theme === "light"
-                        ? "text-nuances-black"
-                        : "text-nuances-50"
+                      theme === 'light'
+                        ? 'text-nuances-black'
+                        : 'text-nuances-50'
                     }
                   `}
                 >
@@ -423,7 +433,7 @@ const Layers: React.FC = () => {
               <></>
             )}
           </div>
-        ) : view === "table" ? (
+        ) : view === 'table' ? (
           <div>
             {layersQuery.isLoading ? (
               <Table variant={theme} isLoading data={[]} />
@@ -433,7 +443,7 @@ const Layers: React.FC = () => {
                   text-lg
                   font-semibold
                   ${
-                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                    theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'
                   }
                 `}
               >
@@ -441,7 +451,13 @@ const Layers: React.FC = () => {
               </span>
             ) : layersQuery.isSuccess ? (
               layersQuery.data.results.length > 0 ? (
-                <Table variant={theme} data={layersQuery.data.results.slice(layerOffset, layerOffset + layerLimit)}/>
+                <Table
+                  variant={theme}
+                  data={layersQuery.data.results.slice(
+                    layerOffset,
+                    layerOffset + layerLimit
+                  )}
+                />
               ) : (
                 <div className="p-6">
                   <span
@@ -449,9 +465,9 @@ const Layers: React.FC = () => {
                     text-lg
                     font-semibold
                     ${
-                      theme === "light"
-                        ? "text-nuances-black"
-                        : "text-nuances-50"
+                      theme === 'light'
+                        ? 'text-nuances-black'
+                        : 'text-nuances-50'
                     }
                   `}
                   >

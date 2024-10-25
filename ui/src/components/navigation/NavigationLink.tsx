@@ -1,11 +1,11 @@
-import React from "react";
-import { twMerge } from "tailwind-merge";
+import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import { Link, LinkProps } from "react-router-dom";
+import { Link, LinkProps } from 'react-router-dom';
 
 export interface NavigationLinkProps {
   className?: string;
-  to: LinkProps["to"];
+  to: LinkProps['to'];
   children: React.ReactNode;
   disabled?: boolean;
 }
@@ -14,7 +14,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
   className,
   to,
   children,
-  disabled,
+  disabled
 }) => {
   return !disabled ? (
     <Link to={to}>

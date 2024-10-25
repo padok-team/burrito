@@ -1,17 +1,17 @@
-import React from "react";
+import React from 'react';
 
 export interface NavigationButtonProps {
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   icon: React.ReactNode;
   selected?: boolean;
   onClick?: () => void;
 }
 
 const NavigationButton: React.FC<NavigationButtonProps> = ({
-  variant = "dark",
+  variant = 'dark',
   icon,
   selected,
-  onClick,
+  onClick
 }) => {
   const styles = {
     base: {
@@ -23,7 +23,7 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
       dark: `bg-nuances-400
         fill-nuances-300
         hover:bg-nuances-black
-        focus-visible:outline-nuances-300`,
+        focus-visible:outline-nuances-300`
     },
 
     selected: {
@@ -33,8 +33,8 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
 
       dark: `bg-nuances-50
         fill-nuances-black
-        focus-visible:outline-nuances-50`,
-    },
+        focus-visible:outline-nuances-50`
+    }
   };
 
   return (

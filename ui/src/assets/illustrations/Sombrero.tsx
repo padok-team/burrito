@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { SVGProps } from 'react';
 
 const Sombrero = (props: SVGProps<SVGSVGElement>) => (
   <svg
@@ -23,7 +23,7 @@ const Sombrero = (props: SVGProps<SVGSVGElement>) => (
       y={246}
       maskUnits="userSpaceOnUse"
       style={{
-        maskType: "alpha",
+        maskType: 'alpha'
       }}
     >
       <path
