@@ -43,6 +43,12 @@ TLS certificates
 {{- $_ := set $config.datastore "certificateSecretName" .Values.datastore.tls.secretName }}
 {{- end }}
 
+{{/*
+Runner
+*/}}
+{{ if eq .Values.config.burrito.runner.image.tag "" }}
+{{- $_ := set $config.runner.image "tag" .Chart.AppVersion }}
+{{- end }}
 
 apiVersion: v1
 kind: ConfigMap

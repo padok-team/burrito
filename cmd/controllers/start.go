@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/padok-team/burrito/internal/burrito"
+	"github.com/padok-team/burrito/internal/version"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func buildControllersStartCmd(app *burrito.App) *cobra.Command {
@@ -41,5 +43,8 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 	cmd.Flags().StringVar(&app.Config.Controller.HealthProbeBindAddress, "health-probe-bind-address", ":8081", "address to bind the metrics server embedded in the controllers")
 	cmd.Flags().StringVar(&app.Config.Controller.MetricsBindAddress, "metrics-bind-address", ":8080", "address to bind the health probe server embedded in the controllers")
 	cmd.Flags().IntVar(&app.Config.Controller.KubernetesWebhookPort, "kubernetes-webhook-port", 9443, "port used by the validating webhook server embedded in the controllers")
+	cmd.Flags().StringVar(&app.Config.Runner.Image.Repository, "runner-image-repository", "ghcr.io/padok-team/burrito-runner", "Repository of the image to use for the runner pods created by the controller")
+	cmd.Flags().StringVar(&app.Config.Runner.Image.Tag, "runner-image-tag", version.Version, "Tag of the image to use for the runner pods created by the controller")
+	cmd.Flags().StringVar(&app.Config.Runner.Image.PullPolicy, "runner-image-pull-policy", string(corev1.PullIfNotPresent), "Pull policy of the image to use for the runner pods created by the controller")
 	return cmd
 }

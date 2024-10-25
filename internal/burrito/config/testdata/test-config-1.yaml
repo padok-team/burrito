@@ -3,6 +3,10 @@ runner:
   layer:
     name: test
     namespace: default
+  image:
+    repository: test-repository
+    tag: test-tag
+    pullPolicy: Always
   repository:
     sshPrivateKey: "private-key"
     username: "test"
