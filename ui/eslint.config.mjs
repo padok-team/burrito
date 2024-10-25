@@ -13,7 +13,7 @@ export default [
     },
     settings: {
       react: {
-        version: 'detect', // You can add this if you get a warning about the React version when you lint
+        version: 'detect',
       },
     },
   },
