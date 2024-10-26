@@ -21,8 +21,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tofuutils/tenv/v3 v3.1.0
 	google.golang.org/api v0.197.0
-	k8s.io/apimachinery v0.30.5
-	k8s.io/client-go v0.30.5
+	k8s.io/apimachinery v0.30.6
+	k8s.io/client-go v0.30.6
 	sigs.k8s.io/controller-runtime v0.18.5
 )
 
@@ -141,7 +141,7 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.1
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -207,7 +207,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.30.5
+	k8s.io/api v0.30.6
 	k8s.io/apiextensions-apiserver v0.30.1 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
