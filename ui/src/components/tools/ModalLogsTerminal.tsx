@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   useFloating,
   useDismiss,
@@ -7,40 +7,40 @@ import {
   useInteractions,
   FloatingFocusManager,
   FloatingOverlay,
-  FloatingPortal,
-} from "@floating-ui/react";
-import { useNavigate } from "react-router-dom";
+  FloatingPortal
+} from '@floating-ui/react';
+import { useNavigate } from 'react-router-dom';
 
-import LogsButton from "@/components/buttons/LogsButton";
-import LogsTerminal from "@/components/tools/LogsTerminal";
-import OpenInLogsButton from "@/components/buttons/OpenInLogsButton";
+import LogsButton from '@/components/buttons/LogsButton';
+import LogsTerminal from '@/components/tools/LogsTerminal';
+import OpenInLogsButton from '@/components/buttons/OpenInLogsButton';
 
-import { Layer } from "@/clients/layers/types";
+import { Layer } from '@/clients/layers/types';
 
 export interface ModalLogsTerminalProps {
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   layer: Layer;
 }
 
 const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
-  variant = "light",
-  layer,
+  variant = 'light',
+  layer
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const { refs, context } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange: setIsOpen
   });
 
   const click = useClick(context);
   const role = useRole(context);
-  const dismiss = useDismiss(context, { outsidePressEvent: "mousedown" });
+  const dismiss = useDismiss(context, { outsidePressEvent: 'mousedown' });
 
   const { getReferenceProps, getFloatingProps } = useInteractions([
     click,
     role,
-    dismiss,
+    dismiss
   ]);
 
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ const ModalLogsTerminal: React.FC<ModalLogsTerminalProps> = ({
                 />
                 <OpenInLogsButton
                   className="absolute -top-14 right-0"
-                  variant={variant === "light" ? "primary" : "secondary"}
+                  variant={variant === 'light' ? 'primary' : 'secondary'}
                   onClick={handleOpenInLogs}
                 />
               </div>

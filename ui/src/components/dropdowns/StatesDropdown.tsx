@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState, useRef } from 'react';
+import { twMerge } from 'tailwind-merge';
 import {
   useFloating,
   useClick,
@@ -13,34 +13,34 @@ import {
   flip,
   size,
   autoUpdate,
-  FloatingPortal,
-} from "@floating-ui/react";
+  FloatingPortal
+} from '@floating-ui/react';
 
-import Dropdown from "@/components/core/Dropdown";
-import Checkbox from "@/components/core/Checkbox";
+import Dropdown from '@/components/core/Dropdown';
+import Checkbox from '@/components/core/Checkbox';
 
-import { LayerState } from "@/clients/layers/types";
+import { LayerState } from '@/clients/layers/types';
 
 export interface StatesDropdownProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   disabled?: boolean;
   selectedStates: LayerState[];
   setSelectedStates: (states: LayerState[]) => void;
 }
 
 const options: Array<{ value: LayerState; label: string }> = [
-  { value: "success", label: "OK" },
-  { value: "warning", label: "OutOfSync" },
-  { value: "error", label: "Error" },
+  { value: 'success', label: 'OK' },
+  { value: 'warning', label: 'OutOfSync' },
+  { value: 'error', label: 'Error' }
 ];
 
 const StatesDropdown: React.FC<StatesDropdownProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   disabled,
   selectedStates,
-  setSelectedStates,
+  setSelectedStates
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -50,7 +50,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
   const isTypingRef = useRef(false);
 
   const { refs, floatingStyles, context } = useFloating<HTMLElement>({
-    placement: "bottom-start",
+    placement: 'bottom-start',
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
@@ -61,20 +61,20 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
         apply({ availableHeight, elements }) {
           elements.floating.style.maxHeight = `${availableHeight}px`;
         },
-        padding: 8,
-      }),
-    ],
+        padding: 8
+      })
+    ]
   });
 
   const click = useClick(context, {
     enabled: !disabled,
-    event: "mousedown",
+    event: 'mousedown'
   });
   const listNavigation = useListNavigation(context, {
     enabled: !disabled,
     listRef: listElementsRef,
     activeIndex: activeIndex,
-    onNavigate: setActiveIndex,
+    onNavigate: setActiveIndex
   });
   const typeahead = useTypeahead(context, {
     enabled: !disabled,
@@ -83,10 +83,10 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
     onMatch: setActiveIndex,
     onTypingChange(isTyping) {
       isTypingRef.current = isTyping;
-    },
+    }
   });
   const dismiss = useDismiss(context);
-  const role = useRole(context, { role: "select" });
+  const role = useRole(context, { role: 'select' });
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
     [click, listNavigation, typeahead, dismiss, role]
@@ -106,7 +106,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
       shadow-light`,
     dark: `bg-nuances-black
       text-nuances-300
-      shadow-dark`,
+      shadow-dark`
   };
 
   return (
@@ -144,9 +144,9 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
                   -mx-2
                   my-2
                   ${
-                    variant === "light"
-                      ? "border-primary-600"
-                      : "border-nuances-300"
+                    variant === 'light'
+                      ? 'border-primary-600'
+                      : 'border-nuances-300'
                   }
                 `}
               />
@@ -169,16 +169,16 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
                         handleSelect(value);
                       },
                       onKeyDown(event) {
-                        if (event.key === "Enter") {
+                        if (event.key === 'Enter') {
                           event.preventDefault();
                           handleSelect(value);
                         }
 
-                        if (event.key === " " && !isTypingRef.current) {
+                        if (event.key === ' ' && !isTypingRef.current) {
                           event.preventDefault();
                           handleSelect(value);
                         }
-                      },
+                      }
                     })}
                   />
                 ))}

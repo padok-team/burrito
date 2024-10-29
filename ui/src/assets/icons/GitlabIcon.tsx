@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { SVGProps } from 'react';
 
 const GitlabIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg

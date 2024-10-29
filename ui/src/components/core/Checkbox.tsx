@@ -1,18 +1,18 @@
-import React from "react";
-import { twMerge } from "tailwind-merge";
+import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import CheckIcon from "@/assets/icons/CheckIcon";
-import MinusIcon from "@/assets/icons/MinusIcon";
+import CheckIcon from '@/assets/icons/CheckIcon';
+import MinusIcon from '@/assets/icons/MinusIcon';
 
 export interface CheckboxProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   label: string;
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, variant = "light", label, disabled, ...props }, ref) => {
+  ({ className, variant = 'light', label, disabled, ...props }, ref) => {
     const styles = {
       base: {
         light: `bg-nuances-white
@@ -35,12 +35,12 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           focus:outline-nuances-100
           checked:bg-primary-600
           checked:border-primary-600
-          checked:hover:border-primary-600`,
+          checked:hover:border-primary-600`
       },
 
       disabled: `bg-nuances-50
         border-nuances-200
-        hover:border-nuances-200`,
+        hover:border-nuances-200`
     };
 
     return (
@@ -102,8 +102,8 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           className={twMerge(
             `text-base
             font-normal
-            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
-            disabled && "text-nuances-200"
+            ${variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'}`,
+            disabled && 'text-nuances-200'
           )}
         >
           {label}

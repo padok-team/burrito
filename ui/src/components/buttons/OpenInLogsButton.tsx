@@ -1,18 +1,18 @@
-import React from "react";
+import React from 'react';
 
-import Button from "@/components/core/Button";
-import ArrowResizeDiagonalIcon from "@/assets/icons/ArrowResizeDiagonalIcon";
+import Button from '@/components/core/Button';
+import ArrowResizeDiagonalIcon from '@/assets/icons/ArrowResizeDiagonalIcon';
 
 export interface OpenInLogsButtonProps {
   className?: string;
-  variant?: "primary" | "secondary" | "tertiary";
+  variant?: 'primary' | 'secondary' | 'tertiary';
   onClick?: () => void;
 }
 
 const OpenInLogsButton: React.FC<OpenInLogsButtonProps> = ({
   className,
-  variant = "primary",
-  onClick,
+  variant = 'primary',
+  onClick
 }) => {
   return (
     <Button

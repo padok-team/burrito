@@ -1,37 +1,36 @@
-import React, { useState } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { Tooltip } from "react-tooltip";
+  useReactTable
+} from '@tanstack/react-table';
+import { Tooltip } from 'react-tooltip';
 
+import TableLoader from '@/components/loaders/TableLoader';
+import ModalLogsTerminal from '@/components/tools/ModalLogsTerminal';
+import Running from '@/components/widgets/Running';
+import Tag from '@/components/widgets/Tag';
+import ChiliLight from '@/assets/illustrations/ChiliLight';
+import ChiliDark from '@/assets/illustrations/ChiliDark';
+import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
+import SyncIcon from '@/assets/icons/SyncIcon';
+import GenericIconButton from '@/components/buttons/GenericIconButton';
 
-import TableLoader from "@/components/loaders/TableLoader";
-import ModalLogsTerminal from "@/components/tools/ModalLogsTerminal";
-import Running from "@/components/widgets/Running";
-import Tag from "@/components/widgets/Tag";
-import ChiliLight from "@/assets/illustrations/ChiliLight";
-import ChiliDark from "@/assets/illustrations/ChiliDark";
-import CodeBranchIcon from "@/assets/icons/CodeBranchIcon";
-import SyncIcon from "@/assets/icons/SyncIcon";
-import GenericIconButton from "@/components/buttons/GenericIconButton";
-
-import { Layer, LayerState } from "@/clients/layers/types";
-import { syncLayer } from "@/clients/layers/client";
+import { Layer, LayerState } from '@/clients/layers/types';
+import { syncLayer } from '@/clients/layers/client';
 
 export interface TableProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   isLoading?: boolean;
   data: Layer[];
 }
 
 const Table: React.FC<TableProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   isLoading,
   data
 }) => {
@@ -40,38 +39,37 @@ const Table: React.FC<TableProps> = ({
   const syncSelectedLayer = async (index: number) => {
     const sync = await syncLayer(data[index].namespace, data[index].name);
     if (sync.status === 200) {
-      data[index].manualSyncStatus = "pending";
+      data[index].manualSyncStatus = 'pending';
     }
-  }
+  };
 
   const columns = [
-    columnHelper.accessor("isPR", {
-      header: "",
-      cell: (isPR) => isPR.getValue() && <CodeBranchIcon className="-mr-6" />,
+    columnHelper.accessor('isPR', {
+      header: '',
+      cell: (isPR) => isPR.getValue() && <CodeBranchIcon className="-mr-6" />
     }),
-    columnHelper.accessor("namespace", {
-      header: "Namespace",
+    columnHelper.accessor('namespace', {
+      header: 'Namespace'
     }),
-    columnHelper.accessor("name", {
-      header: "Name",
+    columnHelper.accessor('name', {
+      header: 'Name'
     }),
-    columnHelper.accessor("state", {
-      header: "State",
-      cell: (state) => getTag(state.getValue()),
+    columnHelper.accessor('state', {
+      header: 'State',
+      cell: (state) => getTag(state.getValue())
     }),
-    columnHelper.accessor("repository", {
-      header: "Repository",
+    columnHelper.accessor('repository', {
+      header: 'Repository'
     }),
-    columnHelper.accessor("branch", {
-      header: "Branch",
+    columnHelper.accessor('branch', {
+      header: 'Branch'
     }),
-    columnHelper.accessor("path", {
-      header: "Path",
+    columnHelper.accessor('path', {
+      header: 'Path'
     }),
-    columnHelper.accessor("lastResult", {
-      header: "Last result",
-      cell: (result) => 
-        (
+    columnHelper.accessor('lastResult', {
+      header: 'Last result',
+      cell: (result) => (
         <div className="relative flex items-center h-full">
           <span>{result.getValue()}</span>
           {result.row.original === hoveredRow &&
@@ -88,11 +86,11 @@ const Table: React.FC<TableProps> = ({
                 min-w-full
                 w-full
                 pr-4
-                ${result.row.original.isRunning && "rounded-xl"}
+                ${result.row.original.isRunning && 'rounded-xl'}
                 ${
-                  variant === "light"
-                    ? "bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]"
-                    : "bg-[linear-gradient(270deg,_#252525_58.7%,_rgba(37,_37,_37,_0.00)_100%)]"
+                  variant === 'light'
+                    ? 'bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]'
+                    : 'bg-[linear-gradient(270deg,_#252525_58.7%,_rgba(37,_37,_37,_0.00)_100%)]'
                 }
               `}
             >
@@ -100,11 +98,21 @@ const Table: React.FC<TableProps> = ({
                 layer={result.row.original}
                 variant={variant}
               />
-              <GenericIconButton variant={variant} 
-                    Icon={SyncIcon} 
-                    disabled={result.row.original.manualSyncStatus === "pending" || result.row.original.manualSyncStatus === "annotated"}
-                    onClick={() => syncSelectedLayer(result.row.index)} 
-                    tooltip={result.row.original.manualSyncStatus === "pending" || result.row.original.manualSyncStatus === "annotated" ? "Sync in progress..." : "Sync now"} />
+              <GenericIconButton
+                variant={variant}
+                Icon={SyncIcon}
+                disabled={
+                  result.row.original.manualSyncStatus === 'pending' ||
+                  result.row.original.manualSyncStatus === 'annotated'
+                }
+                onClick={() => syncSelectedLayer(result.row.index)}
+                tooltip={
+                  result.row.original.manualSyncStatus === 'pending' ||
+                  result.row.original.manualSyncStatus === 'annotated'
+                    ? 'Sync in progress...'
+                    : 'Sync now'
+                }
+              />
             </div>
           ) : result.row.original.isRunning ? (
             <div
@@ -121,9 +129,9 @@ const Table: React.FC<TableProps> = ({
                 pr-4
                 pointer-events-none
                 ${
-                  variant === "light"
-                    ? "bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]"
-                    : "bg-[linear-gradient(270deg,_#000_58.7%,_rgba(0,_0,_0,_0.00)_100%)]"
+                  variant === 'light'
+                    ? 'bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]'
+                    : 'bg-[linear-gradient(270deg,_#000_58.7%,_rgba(0,_0,_0,_0.00)_100%)]'
                 }
               `}
             >
@@ -131,16 +139,16 @@ const Table: React.FC<TableProps> = ({
             </div>
           ) : null}
         </div>
-      ),
-    }),
+      )
+    })
   ];
 
   const getTag = (state: LayerState) => {
     return (
       <div className="relative flex items-center">
         <Tag variant={state} />
-        {state === "error" &&
-          (variant === "light" ? (
+        {state === 'error' &&
+          (variant === 'light' ? (
             <ChiliLight
               className="absolute translate-x-16 rotate-[-21deg]"
               height={24}
@@ -160,13 +168,13 @@ const Table: React.FC<TableProps> = ({
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
+    getCoreRowModel: getCoreRowModel()
   });
 
   const styles = {
     header: {
       light: `text-primary-600`,
-      dark: `text-nuances-300`,
+      dark: `text-nuances-300`
     },
     row: {
       base: {
@@ -177,17 +185,17 @@ const Table: React.FC<TableProps> = ({
         dark: `text-nuances-50
           fill-nuances-50
           hover:bg-nuances-400
-          hover:shadow-dark`, // BUG: not working on Safari
+          hover:shadow-dark` // BUG: not working on Safari
       },
       running: {
         light: `outline-blue-400`,
-        dark: `outline-blue-500`,
-      },
+        dark: `outline-blue-500`
+      }
     },
     separator: {
       light: `border-primary-500`,
-      dark: `border-nuances-300`,
-    },
+      dark: `border-nuances-300`
+    }
   };
 
   return (
@@ -336,11 +344,11 @@ const Table: React.FC<TableProps> = ({
                         px-6
                         py-4`,
                         cell.row.original.isRunning &&
-                          "first:rounded-l-2xl last:rounded-r-2xl"
+                          'first:rounded-l-2xl last:rounded-r-2xl'
                       )}
                       data-tooltip-id="table-tooltip"
                       data-tooltip-content={
-                        cell.column.id === "lastResult" &&
+                        cell.column.id === 'lastResult' &&
                         cell.row.original.isRunning
                           ? (cell.getValue() as string)
                           : null
@@ -390,7 +398,7 @@ const Table: React.FC<TableProps> = ({
       <Tooltip
         opacity={1}
         id="table-tooltip"
-        variant={variant === "light" ? "dark" : "light"}
+        variant={variant === 'light' ? 'dark' : 'light'}
       />
     </div>
   );

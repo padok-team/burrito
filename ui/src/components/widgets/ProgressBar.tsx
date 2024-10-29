@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface ProgressBarProps {
-  /** 
-   * Progress value between 0 and 100 
+  /**
+   * Progress value between 0 and 100
    */
   value: number;
   label?: string;
@@ -14,13 +14,16 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   value,
   label,
   color = 'bg-blue-500',
-  className = '',
+  className = ''
 }) => {
   // Ensure the value is between 0 and 100
   const normalizedValue = Math.min(Math.max(value, 0), 100);
 
   return (
-    <div className={`w-full bg-gray-200 rounded-full h-4 ${className}`} aria-label="Progress Bar">
+    <div
+      className={`w-full bg-gray-200 rounded-full h-4 ${className}`}
+      aria-label="Progress Bar"
+    >
       <div
         className={`${color} h-4 rounded-full transition-width duration-300 ease-in-out`}
         style={{ width: `${normalizedValue}%` }}
@@ -29,11 +32,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        {label && (
-          <span className="sr-only">
-            {label}
-          </span>
-        )}
+        {label && <span className="sr-only">{label}</span>}
       </div>
     </div>
   );

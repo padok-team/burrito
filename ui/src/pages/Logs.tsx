@@ -1,25 +1,25 @@
-import React, { useContext, useCallback, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import React, { useContext, useCallback, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
-import { fetchLayers } from "@/clients/layers/client";
-import { reactQueryKeys } from "@/clients/reactQueryConfig";
+import { fetchLayers } from '@/clients/layers/client';
+import { reactQueryKeys } from '@/clients/reactQueryConfig';
 
-import { ThemeContext } from "@/contexts/ThemeContext";
+import { ThemeContext } from '@/contexts/ThemeContext';
 
-import Button from "@/components/core/Button";
-import Input from "@/components/core/Input";
-import RepositoriesDropdown from "@/components/dropdowns/RepositoriesDropdown";
-import PaginationDropdown from "@/components/dropdowns/PaginationDropdown";
-import DateDropdown from "@/components/dropdowns/DateDropdown";
-import Toggle from "@/components/core/Toggle";
-import RunCardLoader from "@/components/loaders/RunCardLoader";
-import RunCard from "@/components/cards/RunCard";
-import LogsTerminal from "@/components/tools/LogsTerminal";
+import Button from '@/components/core/Button';
+import Input from '@/components/core/Input';
+import RepositoriesDropdown from '@/components/dropdowns/RepositoriesDropdown';
+import PaginationDropdown from '@/components/dropdowns/PaginationDropdown';
+import DateDropdown from '@/components/dropdowns/DateDropdown';
+import Toggle from '@/components/core/Toggle';
+import RunCardLoader from '@/components/loaders/RunCardLoader';
+import RunCard from '@/components/cards/RunCard';
+import LogsTerminal from '@/components/tools/LogsTerminal';
 
-import SearchIcon from "@/assets/icons/SearchIcon";
+import SearchIcon from '@/assets/icons/SearchIcon';
 
-import { Layer } from "@/clients/layers/types";
+import { Layer } from '@/clients/layers/types';
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -30,56 +30,56 @@ const Logs: React.FC = () => {
   const navigate = useNavigate();
 
   const search = useMemo<string>(
-    () => searchParams.get("search") || "",
+    () => searchParams.get('search') || '',
     [searchParams]
   );
 
   const setSearch = useCallback(
     (search: string) => {
-      searchParams.set("search", search);
+      searchParams.set('search', search);
       setSerchParams(searchParams);
     },
     [searchParams, setSerchParams]
   );
 
   const repositoryFilter = useMemo<string[]>(() => {
-    const param = searchParams.get("repositories");
-    return param ? param.split(",") : [];
+    const param = searchParams.get('repositories');
+    return param ? param.split(',') : [];
   }, [searchParams]);
 
   const setRepositoryFilter = useCallback(
     (repositoryFilter: string[]) => {
-      searchParams.set("repositories", repositoryFilter.join(","));
+      searchParams.set('repositories', repositoryFilter.join(','));
       setSerchParams(searchParams);
     },
     [searchParams, setSerchParams]
   );
 
-  const dateFilter = useMemo<"ascending" | "descending" | null>(() => {
-    const param = searchParams.get("date");
-    return param === "ascending"
-      ? "ascending"
-      : param === "descending"
-        ? "descending"
+  const dateFilter = useMemo<'ascending' | 'descending' | null>(() => {
+    const param = searchParams.get('date');
+    return param === 'ascending'
+      ? 'ascending'
+      : param === 'descending'
+        ? 'descending'
         : null;
   }, [searchParams]);
 
   const setDateFilter = useCallback(
-    (dateFilter: "ascending" | "descending" | null) => {
-      searchParams.set("date", dateFilter || "");
+    (dateFilter: 'ascending' | 'descending' | null) => {
+      searchParams.set('date', dateFilter || '');
       setSerchParams(searchParams);
     },
     [searchParams, setSerchParams]
   );
 
   const hidePRFilter = useMemo<boolean>(
-    () => searchParams.get("hidepr") !== "false",
+    () => searchParams.get('hidepr') !== 'false',
     [searchParams]
   );
 
   const setHidePRFilter = useCallback(
     (hidePRFilter: boolean) => {
-      searchParams.set("hidepr", hidePRFilter.toString());
+      searchParams.set('hidepr', hidePRFilter.toString());
       setSerchParams(searchParams);
     },
     [searchParams, setSerchParams]
@@ -101,14 +101,14 @@ const Logs: React.FC = () => {
         )
         .filter((layer) => !hidePRFilter || !layer.isPR)
         .sort((a, b) =>
-          dateFilter === "ascending"
+          dateFilter === 'ascending'
             ? new Date(a.lastRunAt).getTime() - new Date(b.lastRunAt).getTime()
-            : dateFilter === "descending"
+            : dateFilter === 'descending'
               ? new Date(b.lastRunAt).getTime() -
                 new Date(a.lastRunAt).getTime()
               : 0
-        ),
-    }),
+        )
+    })
   });
 
   const updateLimit = useCallback(
@@ -130,9 +130,9 @@ const Logs: React.FC = () => {
           ? `/${run}`
           : layer.latestRuns.length > 0
             ? `/${layer.lastRun.id}`
-            : ""
+            : ''
       }`,
-      search: searchParams.toString(),
+      search: searchParams.toString()
     });
   };
 
@@ -145,7 +145,7 @@ const Logs: React.FC = () => {
           p-6
           pb-3
           gap-6
-          ${theme === "light" ? "bg-primary-100" : "bg-nuances-black"}
+          ${theme === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}
         `}
       >
         <div className="flex justify-between">
@@ -154,13 +154,13 @@ const Logs: React.FC = () => {
               text-[32px]
               font-extrabold
               leading-[130%]
-              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
             `}
           >
             Logs
           </h1>
           <Button
-            variant={theme === "light" ? "primary" : "secondary"}
+            variant={theme === 'light' ? 'primary' : 'secondary'}
             isLoading={layersQuery.isRefetching}
             onClick={() => layersQuery.refetch()}
           >
@@ -181,7 +181,7 @@ const Logs: React.FC = () => {
               className={`
               text-base
               font-semibold
-              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
             >
               {`
@@ -195,9 +195,9 @@ const Logs: React.FC = () => {
                 border-l
                 h-6
                 ${
-                  theme === "light"
-                    ? "border-primary-600"
-                    : "border-nuances-200"
+                  theme === 'light'
+                    ? 'border-primary-600'
+                    : 'border-nuances-200'
                 }
                 `}
             ></span>
@@ -205,7 +205,7 @@ const Logs: React.FC = () => {
               className={`
               text-base
               font-medium
-              ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+              ${theme === 'light' ? 'text-primary-600' : 'text-nuances-200'}
               `}
             >
               Filter by
@@ -226,7 +226,7 @@ const Logs: React.FC = () => {
               className={`
               text-sm
               font-medium
-              ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+              ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
               checked={hidePRFilter}
               onChange={() => setHidePRFilter(!hidePRFilter)}
@@ -236,7 +236,7 @@ const Logs: React.FC = () => {
           <div className="flex flex-row items-center gap-2">
             <Button
               theme={theme}
-              variant={"tertiary"}
+              variant={'tertiary'}
               onClick={() =>
                 setLayerOffset(Math.max(0, layerOffset - layerLimit))
               }
@@ -249,14 +249,14 @@ const Logs: React.FC = () => {
                 className={`
                       text-base
                       font-semibold
-                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                      ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
                     `}
               >
-                {layerOffset + 1} -{" "}
+                {layerOffset + 1} -{' '}
                 {Math.min(
                   layerOffset + layerLimit,
                   layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                )}{" "}
+                )}{' '}
                 of {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
               </span>
             ) : (
@@ -264,15 +264,15 @@ const Logs: React.FC = () => {
                 className={`
                       text-base
                       font-semibold
-                      ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                      ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
                     `}
               >
-                {layersQuery.isLoading ? "Loading..." : "0 - 0 of 0"}
+                {layersQuery.isLoading ? 'Loading...' : '0 - 0 of 0'}
               </span>
             )}
             <Button
               theme={theme}
-              variant={"tertiary"}
+              variant={'tertiary'}
               onClick={() =>
                 setLayerOffset(
                   Math.min(
@@ -292,10 +292,10 @@ const Logs: React.FC = () => {
               className={`
                       text-base
                       font-medium
-                      ${theme === "light" ? "text-primary-600" : "text-nuances-200"}
+                      ${theme === 'light' ? 'text-primary-600' : 'text-nuances-200'}
                     `}
             >
-              Items per page:{" "}
+              Items per page:{' '}
             </span>
             <PaginationDropdown
               className="w-16"
@@ -312,7 +312,7 @@ const Logs: React.FC = () => {
           flex-row
           gap-6
           p-6
-          ${layersQuery.isSuccess ? "overflow-auto" : "overflow-hidden"}
+          ${layersQuery.isSuccess ? 'overflow-auto' : 'overflow-hidden'}
         `}
       >
         <div className="flex flex-col w-1/3 h-fit gap-6">
@@ -325,7 +325,7 @@ const Logs: React.FC = () => {
               className={`
                 text-lg
                 font-semibold
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
             >
               An error has occurred
@@ -349,7 +349,7 @@ const Logs: React.FC = () => {
                 className={`
                 text-lg
                 font-semibold
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
               >
                 No layers found
@@ -382,7 +382,7 @@ const Logs: React.FC = () => {
                   text-xl
                   font-black
                   ${
-                    theme === "light" ? "text-nuances-black" : "text-nuances-50"
+                    theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'
                   }
                 `}
                 >
@@ -396,7 +396,7 @@ const Logs: React.FC = () => {
                 className={`
                 text-xl
                 font-black
-                ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+                ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
               >
                 Select a layer...

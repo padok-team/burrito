@@ -1,11 +1,11 @@
-import React, { useRef, useId } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useRef, useId } from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import ExclamationTriangleIcon from "@/assets/icons/ExclamationTriangleIcon";
+import ExclamationTriangleIcon from '@/assets/icons/ExclamationTriangleIcon';
 
 export interface InputProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   label?: string;
   type?: React.HTMLInputTypeAttribute;
   placeholder?: string;
@@ -20,7 +20,7 @@ export interface InputProps {
 
 const Input: React.FC<InputProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   label,
   type,
   placeholder,
@@ -30,13 +30,13 @@ const Input: React.FC<InputProps> = ({
   caption,
   error,
   disabled,
-  onChange,
+  onChange
 }) => {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleEscape = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (inputRef.current && event.key === "Escape") {
+    if (inputRef.current && event.key === 'Escape') {
       // event.preventDefault();
       inputRef.current.blur();
     }
@@ -54,7 +54,7 @@ const Input: React.FC<InputProps> = ({
         text-nuances-50
         caret-nuances-50
         placeholder-nuances-300
-        fill-nuances-300`,
+        fill-nuances-300`
     },
 
     error: `outline
@@ -67,7 +67,7 @@ const Input: React.FC<InputProps> = ({
       outline-0
       hover:outline-0
       focus:outline-0
-      active:outline-0`,
+      active:outline-0`
   };
 
   return (
@@ -79,8 +79,8 @@ const Input: React.FC<InputProps> = ({
             font-normal
             text-base
             mb-2
-            ${variant === "light" ? "text-nuances-black" : "text-nuances-50"}`,
-            disabled && "text-nuances-300"
+            ${variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'}`,
+            disabled && 'text-nuances-300'
           )}
           htmlFor={inputId}
         >
@@ -120,10 +120,10 @@ const Input: React.FC<InputProps> = ({
             active:outline
             active:outline-2
             ${styles.base[variant]}`,
-            leftIcon && "pl-12",
-            rightIcon && "pr-12",
+            leftIcon && 'pl-12',
+            rightIcon && 'pr-12',
             error && styles.error,
-            error && "pr-12",
+            error && 'pr-12',
             disabled && styles.disabled,
             className
           )}
@@ -172,9 +172,9 @@ const Input: React.FC<InputProps> = ({
             font-normal
             text-sm
             mt-2
-            ${variant === "light" ? "text-primary-600" : "text-nuances-300"}`,
-            error && "text-status-error-default",
-            disabled && "text-nuances-300"
+            ${variant === 'light' ? 'text-primary-600' : 'text-nuances-300'}`,
+            error && 'text-status-error-default',
+            disabled && 'text-nuances-300'
           )}
         >
           {caption}

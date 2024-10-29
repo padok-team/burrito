@@ -1,8 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext } from 'react';
 
-import { ThemeContext } from "@/contexts/ThemeContext";
+import { ThemeContext } from '@/contexts/ThemeContext';
 
-import TrafficCone from "@/components/temp/TrafficCone";
+import TrafficCone from '@/components/temp/TrafficCone';
 
 const Pulls: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -14,7 +14,7 @@ const Pulls: React.FC = () => {
           className={`
             text-5xl
             font-bold
-            ${theme === "light" ? "text-nuances-black" : "text-nuances-50"}
+            ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
           `}
         >
           Pull requests page

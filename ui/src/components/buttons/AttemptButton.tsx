@@ -1,11 +1,11 @@
-import React from "react";
-import { twMerge } from "tailwind-merge";
+import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-import TimesIcon from "@/assets/icons/TimesIcon";
+import TimesIcon from '@/assets/icons/TimesIcon';
 
 export interface AttemptButtonProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   attempt: number;
   isActive?: boolean;
   onClick?: () => void;
@@ -14,11 +14,11 @@ export interface AttemptButtonProps {
 
 const AttemptButton: React.FC<AttemptButtonProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   attempt,
   isActive,
   onClick,
-  onClose,
+  onClose
 }) => {
   const styles = {
     base: {
@@ -28,7 +28,7 @@ const AttemptButton: React.FC<AttemptButtonProps> = ({
 
       dark: `bg-nuances-300
         text-nuances-400
-        fill-nuances-400`,
+        fill-nuances-400`
     },
 
     isActive: {
@@ -38,13 +38,13 @@ const AttemptButton: React.FC<AttemptButtonProps> = ({
 
       dark: `bg-nuances-black
         text-nuances-white
-        fill-nuances-50`,
-    },
+        fill-nuances-50`
+    }
   };
 
   const handleClose = (e: React.MouseEvent<SVGSVGElement>) => {
     e.stopPropagation();
-    onClose && onClose();
+    onClose?.();
   };
 
   return (

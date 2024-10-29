@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState, useRef } from 'react';
+import { twMerge } from 'tailwind-merge';
 import {
   useFloating,
   useClick,
@@ -12,20 +12,20 @@ import {
   flip,
   size,
   autoUpdate,
-  FloatingPortal,
-} from "@floating-ui/react";
-import { useQuery } from "@tanstack/react-query";
+  FloatingPortal
+} from '@floating-ui/react';
+import { useQuery } from '@tanstack/react-query';
 
-import { fetchRepositories } from "@/clients/repositories/client";
-import { reactQueryKeys } from "@/clients/reactQueryConfig";
+import { fetchRepositories } from '@/clients/repositories/client';
+import { reactQueryKeys } from '@/clients/reactQueryConfig';
 
-import Dropdown from "@/components/core/Dropdown";
-import Input from "@/components/core/Input";
-import Checkbox from "@/components/core/Checkbox";
+import Dropdown from '@/components/core/Dropdown';
+import Input from '@/components/core/Input';
+import Checkbox from '@/components/core/Checkbox';
 
 export interface RepositoriesDropdownProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   disabled?: boolean;
   selectedRepositories: string[];
   setSelectedRepositories: (repositories: string[]) => void;
@@ -33,19 +33,19 @@ export interface RepositoriesDropdownProps {
 
 const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   disabled,
   selectedRepositories,
-  setSelectedRepositories,
+  setSelectedRepositories
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState<string>('');
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const listElementsRef = useRef<Array<HTMLElement | null>>([]);
 
   const { refs, floatingStyles, context } = useFloating<HTMLElement>({
-    placement: "bottom-start",
+    placement: 'bottom-start',
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
@@ -56,23 +56,23 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
         apply({ availableHeight, elements }) {
           elements.floating.style.maxHeight = `${availableHeight}px`;
         },
-        padding: 8,
-      }),
-    ],
+        padding: 8
+      })
+    ]
   });
 
   const click = useClick(context, {
     enabled: !disabled,
-    event: "mousedown",
+    event: 'mousedown'
   });
   const listNavigation = useListNavigation(context, {
     enabled: !disabled,
     listRef: listElementsRef,
     activeIndex: activeIndex,
-    onNavigate: setActiveIndex,
+    onNavigate: setActiveIndex
   });
   const dismiss = useDismiss(context);
-  const role = useRole(context, { role: "combobox" });
+  const role = useRole(context, { role: 'combobox' });
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
     [click, listNavigation, dismiss, role]
@@ -85,8 +85,8 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
       ...data,
       results: data.results.filter((r) =>
         r.name.toLowerCase().includes(search.toLowerCase())
-      ),
-    }),
+      )
+    })
   });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,7 +110,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
       shadow-light`,
     dark: `bg-nuances-black
       text-nuances-300
-      shadow-dark`,
+      shadow-dark`
   };
 
   return (
@@ -152,9 +152,9 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                   -mx-2
                   my-2
                   ${
-                    variant === "light"
-                      ? "border-primary-600"
-                      : "border-nuances-300"
+                    variant === 'light'
+                      ? 'border-primary-600'
+                      : 'border-nuances-300'
                   }
                 `}
               />
@@ -171,9 +171,9 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                   -mx-2
                   my-2
                   ${
-                    variant === "light"
-                      ? "border-primary-600"
-                      : "border-nuances-300"
+                    variant === 'light'
+                      ? 'border-primary-600'
+                      : 'border-nuances-300'
                   }
                 `}
               />
@@ -199,11 +199,11 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                             handleSelect(repository.name);
                           },
                           onKeyDown(event) {
-                            if (event.key === "Enter" || event.key === " ") {
+                            if (event.key === 'Enter' || event.key === ' ') {
                               event.preventDefault();
                               handleSelect(repository.name);
                             }
-                          },
+                          }
                         })}
                       />
                     ))

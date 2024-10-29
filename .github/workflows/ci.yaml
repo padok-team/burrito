@@ -58,8 +58,8 @@ jobs:
         run: |
           git diff --exit-code ./manifests
 
-  lint:
-    name: Lint
+  lint-go:
+    name: Lint Go
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,6 +72,30 @@ jobs:
         with:
           version: v1.55
           args: --timeout=5m
+
+  lint-ts:
+    name: Lint TS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: ui
+      - name: Run eslint
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: lint
+          dir: ui
+      - name: Run prettier
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: format-check
+          dir: ui
 
   build-and-push:
     uses: ./.github/workflows/build-and-push.yaml

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { twMerge } from "tailwind-merge";
+import React, { useState, useRef } from 'react';
+import { twMerge } from 'tailwind-merge';
 import {
   useFloating,
   useClick,
@@ -13,31 +13,31 @@ import {
   flip,
   size,
   autoUpdate,
-  FloatingPortal,
-} from "@floating-ui/react";
+  FloatingPortal
+} from '@floating-ui/react';
 
-import Dropdown from "@/components/core/Dropdown";
-import Checkbox from "@/components/core/Checkbox";
+import Dropdown from '@/components/core/Dropdown';
+import Checkbox from '@/components/core/Checkbox';
 
 export interface DateDropdownProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   disabled?: boolean;
-  selectedSort: "ascending" | "descending" | null;
-  setSelectedSort: (sort: "ascending" | "descending" | null) => void;
+  selectedSort: 'ascending' | 'descending' | null;
+  setSelectedSort: (sort: 'ascending' | 'descending' | null) => void;
 }
 
-const options: Array<{ value: "ascending" | "descending"; label: string }> = [
-  { value: "descending", label: "Recent to old" },
-  { value: "ascending", label: "Old to recent" },
+const options: Array<{ value: 'ascending' | 'descending'; label: string }> = [
+  { value: 'descending', label: 'Recent to old' },
+  { value: 'ascending', label: 'Old to recent' }
 ];
 
 const DateDropdown: React.FC<DateDropdownProps> = ({
   className,
-  variant = "light",
+  variant = 'light',
   disabled,
   selectedSort,
-  setSelectedSort,
+  setSelectedSort
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -47,7 +47,7 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
   const isTypingRef = useRef(false);
 
   const { refs, floatingStyles, context } = useFloating<HTMLElement>({
-    placement: "bottom-start",
+    placement: 'bottom-start',
     open: isOpen,
     onOpenChange: setIsOpen,
     whileElementsMounted: autoUpdate,
@@ -58,21 +58,21 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
         apply({ availableHeight, elements }) {
           elements.floating.style.maxHeight = `${availableHeight}px`;
         },
-        padding: 8,
-      }),
-    ],
+        padding: 8
+      })
+    ]
   });
 
   const click = useClick(context, {
     enabled: !disabled,
-    event: "mousedown",
+    event: 'mousedown'
   });
   const listNavigation = useListNavigation(context, {
     enabled: !disabled,
     listRef: listElementsRef,
     activeIndex: activeIndex,
     onNavigate: setActiveIndex,
-    selectedIndex: options.findIndex((option) => option.value === selectedSort),
+    selectedIndex: options.findIndex((option) => option.value === selectedSort)
   });
   const typeahead = useTypeahead(context, {
     enabled: !disabled,
@@ -82,16 +82,16 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
     onMatch: setActiveIndex,
     onTypingChange(isTyping) {
       isTypingRef.current = isTyping;
-    },
+    }
   });
   const dismiss = useDismiss(context);
-  const role = useRole(context, { role: "select" });
+  const role = useRole(context, { role: 'select' });
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
     [click, listNavigation, typeahead, dismiss, role]
   );
 
-  const handleSelect = (sort: "ascending" | "descending") => {
+  const handleSelect = (sort: 'ascending' | 'descending') => {
     setSelectedSort(selectedSort === sort ? null : sort);
   };
 
@@ -101,7 +101,7 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
       shadow-light`,
     dark: `bg-nuances-black
       text-nuances-300
-      shadow-dark`,
+      shadow-dark`
   };
 
   return (
@@ -139,9 +139,9 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
                   -mx-2
                   my-2
                   ${
-                    variant === "light"
-                      ? "border-primary-600"
-                      : "border-nuances-300"
+                    variant === 'light'
+                      ? 'border-primary-600'
+                      : 'border-nuances-300'
                   }
                 `}
               />
@@ -164,16 +164,16 @@ const DateDropdown: React.FC<DateDropdownProps> = ({
                         handleSelect(value);
                       },
                       onKeyDown(event) {
-                        if (event.key === "Enter") {
+                        if (event.key === 'Enter') {
                           event.preventDefault();
                           handleSelect(value);
                         }
 
-                        if (event.key === " " && !isTypingRef.current) {
+                        if (event.key === ' ' && !isTypingRef.current) {
                           event.preventDefault();
                           handleSelect(value);
                         }
-                      },
+                      }
                     })}
                   />
                 ))}

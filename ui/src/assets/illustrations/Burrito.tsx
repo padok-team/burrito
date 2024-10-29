@@ -1,4 +1,4 @@
-import { SVGProps } from "react";
+import { SVGProps } from 'react';
 
 const Burrito = (props: SVGProps<SVGSVGElement>) => (
   <svg

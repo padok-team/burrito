@@ -1,9 +1,9 @@
-import React from "react";
-import { twMerge } from "tailwind-merge";
-import { Tooltip } from "react-tooltip";
+import React from 'react';
+import { twMerge } from 'tailwind-merge';
+import { Tooltip } from 'react-tooltip';
 export interface GenericIconButtonProps {
   className?: string;
-  variant?: "light" | "dark";
+  variant?: 'light' | 'dark';
   disabled?: boolean;
   tooltip?: string;
   width?: number;
@@ -11,7 +11,6 @@ export interface GenericIconButtonProps {
   onClick?: () => void;
   Icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }
-
 
 const GenericIconButton: React.FC<GenericIconButtonProps> = ({
   className,
@@ -23,13 +22,17 @@ const GenericIconButton: React.FC<GenericIconButtonProps> = ({
   height = 40,
   Icon
 }) => {
-  const hoverClass = !disabled ? (variant === "light" ? "hover:bg-primary-300" : "hover:bg-nuances-black") : "";
+  const hoverClass = !disabled
+    ? variant === 'light'
+      ? 'hover:bg-primary-300'
+      : 'hover:bg-nuances-black'
+    : '';
   return (
     <div style={{ width: `${width}px`, height: `${height}px` }}>
       <Tooltip
-      opacity={1}
-      id="generic-button-tooltip"
-      variant={variant === "light" ? "dark" : "light"}
+        opacity={1}
+        id="generic-button-tooltip"
+        variant={variant === 'light' ? 'dark' : 'light'}
       />
       <button
         onClick={disabled ? undefined : onClick}
@@ -45,7 +48,13 @@ const GenericIconButton: React.FC<GenericIconButtonProps> = ({
           className
         )}
       >
-        <Icon data-tooltip-id="generic-button-tooltip" data-tooltip-content={tooltip} className="p-2 fill-blue-500" width={width} height={height} />
+        <Icon
+          data-tooltip-id="generic-button-tooltip"
+          data-tooltip-content={tooltip}
+          className="p-2 fill-blue-500"
+          width={width}
+          height={height}
+        />
       </button>
     </div>
   );
