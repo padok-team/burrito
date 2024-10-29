@@ -95,6 +95,11 @@ config:
     runner:
       # -- Configmap name to store the SSH known hosts in the runner
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
+      image:
+        # -- Default image to use for runners, can be overriden with spec.OverrideRunnerSpec in repositories and layer definitions
+        repository: ghcr.io/padok-team/burrito
+        tag: "" # By default use Chart's appVersion
+        pullPolicy: Always
 
 hermitcrab:
   # -- Enable/Disable Hermitcrab (terraform provider cache in cluster)

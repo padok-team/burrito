@@ -44,6 +44,11 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				Name:      "test",
 				Namespace: "default",
 			},
+			Image: config.ImageConfig{
+				Repository: "test-repository",
+				Tag:        "test-tag",
+				PullPolicy: "Always",
+			},
 			Repository: config.RepositoryConfig{
 				SSHPrivateKey: "private-key",
 				Username:      "test",
@@ -130,6 +135,9 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_USERNAME", "other-username", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_PASSWORD", "other-password", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY", "other-private-key", &envVarList)
+	setEnvVar(t, "BURRITO_RUNNER_IMAGE_REPOSITORY", "other-repository", &envVarList)
+	setEnvVar(t, "BURRITO_RUNNER_IMAGE_TAG", "other-tag", &envVarList)
+	setEnvVar(t, "BURRITO_RUNNER_IMAGE_PULLPOLICY", "Always", &envVarList)
 	// Controller
 	setEnvVar(t, "BURRITO_CONTROLLER_TYPES", "layer,repository", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_NAMESPACES", "default,burrito,other", &envVarList)
@@ -175,6 +183,11 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			Layer: config.Layer{
 				Name:      "other-layer",
 				Namespace: "other-namespace",
+			},
+			Image: config.ImageConfig{
+				Repository: "other-repository",
+				Tag:        "other-tag",
+				PullPolicy: "Always",
 			},
 			Repository: config.RepositoryConfig{
 				SSHPrivateKey: "other-private-key",
