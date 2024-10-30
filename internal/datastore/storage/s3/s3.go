@@ -3,7 +3,9 @@ package s3
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
+	"strings"
 
 	sdk "github.com/aws/aws-sdk-go-v2/config"
 	storage "github.com/aws/aws-sdk-go-v2/service/s3"
@@ -86,7 +88,7 @@ func (a *S3) Delete(key string) error {
 func (a *S3) List(prefix string) ([]string, error) {
 	input := &storage.ListObjectsV2Input{
 		Bucket:    &a.Config.Bucket,
-		Prefix:    &prefix,
+		Prefix:    aws.String(fmt.Sprintf("%s/", strings.TrimPrefix(prefix, "/"))),
 		Delimiter: aws.String("/"),
 	}
 	result, err := a.Client.ListObjectsV2(context.TODO(), input)
