@@ -8,6 +8,7 @@ The Datastore storage backend can be configured using the following yaml configu
 config:
   burrito:
     datastore:
+      skipLeadingSlashInKey: <false|true> # default: false
       storage:
         mock: <false|true> # default: false
         s3:

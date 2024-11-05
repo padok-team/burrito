@@ -13,18 +13,18 @@ import (
 type GCS struct {
 	// GCS Blob Storage client
 	Client *storage.Client
-	Config config.GCSConfig
+	Config *config.GCSConfig
 }
 
 // New creates a new Google Cloud Storage client
-func New(config config.GCSConfig) *GCS {
+func New(config *config.GCSConfig) *GCS {
 	client, err := storage.NewClient(context.Background())
 	if err != nil {
 		panic(err)
 	}
 	return &GCS{
-		Config: config,
 		Client: client,
+		Config: config,
 	}
 }
 

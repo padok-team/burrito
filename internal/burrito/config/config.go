@@ -26,6 +26,7 @@ type DatastoreConfig struct {
 	CertificateSecretName     string        `mapstructure:"certificateSecretName"`
 	Storage                   StorageConfig `mapstructure:"storage"`
 	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
+	SkipLeadingSlashInKey     bool          `mapstructure:"skipLeadingSlashInKey"`
 }
 
 type StorageConfig struct {

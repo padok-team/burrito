@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/api"
 	"github.com/padok-team/burrito/internal/datastore/storage"
 	"github.com/padok-team/burrito/internal/datastore/storage/mock"
@@ -28,8 +29,9 @@ func TestDatastoreAPI(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
-	s := storage.Storage{
+	s := &storage.Storage{
 		Backend: mock.New(),
+		Config:  config.TestConfig(),
 	}
 	API = &api.API{}
 	API.Storage = s

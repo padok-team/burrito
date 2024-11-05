@@ -25,13 +25,22 @@ const (
 	RepositoriesPrefix     string = "repositories"
 )
 
-func computeLogsKey(namespace string, layer string, run string, attempt string) string {
-	return fmt.Sprintf("/%s/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt, LogFile)
+func (s *Storage) ComputeLayerKeyPrefix(namespace string, layer string, run string) string {
+	prefix := fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
+	log.Warnf("Compute layer key prefix with leading slash: %t", s.Config.Datastore.SkipLeadingSlashInKey)
+	if !s.Config.Datastore.SkipLeadingSlashInKey {
+		prefix = fmt.Sprintf("/%s", prefix)
+	}
+	return prefix
 }
 
-func computePlanKey(namespace string, layer string, run string, attempt string, format string) string {
+func (s *Storage) ComputeLogsKey(namespace string, layer string, run string, attempt string) string {
+	return fmt.Sprintf("%s/%s/%s", s.ComputeLayerKeyPrefix(namespace, layer, run), attempt, LogFile)
+}
+
+func (s *Storage) ComputePlanKey(namespace string, layer string, run string, attempt string, format string) string {
 	key := ""
-	prefix := fmt.Sprintf("/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt)
+	prefix := fmt.Sprintf("%s/%s", s.ComputeLayerKeyPrefix(namespace, layer, run), attempt)
 	switch format {
 	case "json":
 		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
@@ -47,13 +56,18 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 	return key
 }
 
-func computeGitBundleKey(namespace string, repository string, branch string, commit string) string {
-	return fmt.Sprintf("/%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
+func (s *Storage) ComputeGitBundleKey(namespace string, repository string, branch string, commit string) string {
+	key := fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
+	log.Warnf("Compute git bundle key with leading slash: %t", s.Config.Datastore.SkipLeadingSlashInKey)
+	if !s.Config.Datastore.SkipLeadingSlashInKey {
+		key = fmt.Sprintf("/%s", key)
+	}
+	return key
 }
 
 type Storage struct {
 	Backend StorageBackend
-	Config  config.Config
+	Config  *config.Config
 }
 
 type StorageBackend interface {
@@ -63,23 +77,24 @@ type StorageBackend interface {
 	List(prefix string) ([]string, error)
 }
 
-func New(config config.Config) Storage {
+func New(config *config.Config) *Storage {
+	log.Warnf("Datastore#Common#New SkipLeadingSlashInKey: %t", config.Datastore.SkipLeadingSlashInKey)
 	switch {
 	case config.Datastore.Storage.Azure.Container != "":
-		return Storage{Backend: azure.New(config.Datastore.Storage.Azure)}
+		return &Storage{Backend: azure.New(&config.Datastore.Storage.Azure), Config: config}
 	case config.Datastore.Storage.GCS.Bucket != "":
-		return Storage{Backend: gcs.New(config.Datastore.Storage.GCS)}
+		return &Storage{Backend: gcs.New(&config.Datastore.Storage.GCS), Config: config}
 	case config.Datastore.Storage.S3.Bucket != "":
-		return Storage{Backend: s3.New(config.Datastore.Storage.S3)}
+		return &Storage{Backend: s3.New(&config.Datastore.Storage.S3), Config: config}
 	case config.Datastore.Storage.Mock:
 		log.Warn("Using mock storage backend - for testing only - data will only be stored in memory and will be lost when the process exits")
-		return Storage{Backend: mock.New()}
+		return &Storage{Backend: mock.New(), Config: config}
 	}
-	return Storage{}
+	return &Storage{}
 }
 
 func (s *Storage) GetLogs(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	return s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
+	return s.Backend.Get(s.ComputeLogsKey(namespace, layer, run, attempt))
 }
 
 func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]byte, error) {
@@ -91,15 +106,15 @@ func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]b
 		return nil, &errors.StorageError{Nil: true}
 	}
 	attempt := strconv.Itoa(attempts - 1)
-	return s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
+	return s.Backend.Get(s.ComputeLogsKey(namespace, layer, run, attempt))
 }
 
 func (s *Storage) PutLogs(namespace string, layer string, run string, attempt string, logs []byte) error {
-	return s.Backend.Set(computeLogsKey(namespace, layer, run, attempt), logs, 0)
+	return s.Backend.Set(s.ComputeLogsKey(namespace, layer, run, attempt), logs, 0)
 }
 
 func (s *Storage) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
-	return s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
+	return s.Backend.Get(s.ComputePlanKey(namespace, layer, run, attempt, format))
 }
 
 func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
@@ -111,23 +126,22 @@ func (s *Storage) GetLatestPlan(namespace string, layer string, run string, form
 		return nil, &errors.StorageError{Nil: true}
 	}
 	attempt := strconv.Itoa(attempts - 1)
-	return s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
+	return s.Backend.Get(s.ComputePlanKey(namespace, layer, run, attempt, format))
 }
 
 func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, format string, plan []byte) error {
-	return s.Backend.Set(computePlanKey(namespace, layer, run, attempt, format), plan, 0)
+	return s.Backend.Set(s.ComputePlanKey(namespace, layer, run, attempt, format), plan, 0)
 }
 
 func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
-	attempts, err := s.Backend.List(key)
+	attempts, err := s.Backend.List(s.ComputeLayerKeyPrefix(namespace, layer, run))
 	return len(attempts), err
 }
 
 func (s *Storage) GetGitBundle(namespace string, repository string, branch string, commit string) ([]byte, error) {
-	return s.Backend.Get(computeGitBundleKey(namespace, repository, branch, commit))
+	return s.Backend.Get(s.ComputeGitBundleKey(namespace, repository, branch, commit))
 }
 
 func (s *Storage) PutGitBundle(namespace string, repository string, branch string, commit string, bundle []byte) error {
-	return s.Backend.Set(computeGitBundleKey(namespace, repository, branch, commit), bundle, 0)
+	return s.Backend.Set(s.ComputeGitBundleKey(namespace, repository, branch, commit), bundle, 0)
 }

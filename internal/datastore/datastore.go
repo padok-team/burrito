@@ -31,7 +31,7 @@ func New(c *config.Config) *Datastore {
 
 func (s *Datastore) Exec() {
 	s.API = api.New(s.Config)
-	s.API.Storage = storage.New(*s.Config)
+	s.API.Storage = storage.New(s.Config)
 	authz := authz.NewAuthz()
 	for _, sa := range s.Config.Datastore.AuthorizedServiceAccounts {
 		l := strings.Split(sa, "/")

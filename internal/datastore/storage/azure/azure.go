@@ -18,11 +18,11 @@ import (
 type Azure struct {
 	// Azure Blob Storage client
 	Client *storage.Client
-	Config config.AzureConfig
+	Config *config.AzureConfig
 }
 
 // New creates a new Azure Blob Storage client
-func New(config config.AzureConfig) *Azure {
+func New(config *config.AzureConfig) *Azure {
 	credential, err := identity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		panic(err)
@@ -33,6 +33,7 @@ func New(config config.AzureConfig) *Azure {
 	}
 	return &Azure{
 		Client: client,
+		Config: config,
 	}
 }
 
