@@ -26,12 +26,12 @@ const (
 )
 
 func computeLogsKey(namespace string, layer string, run string, attempt string) string {
-	return fmt.Sprintf("/%s/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt, LogFile)
+	return fmt.Sprintf("%s/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt, LogFile)
 }
 
 func computePlanKey(namespace string, layer string, run string, attempt string, format string) string {
 	key := ""
-	prefix := fmt.Sprintf("/%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt)
+	prefix := fmt.Sprintf("%s/%s/%s/%s/%s", LayersPrefix, namespace, layer, run, attempt)
 	switch format {
 	case "json":
 		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
@@ -48,7 +48,7 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 }
 
 func computeGitBundleKey(namespace string, repository string, branch string, commit string) string {
-	return fmt.Sprintf("/%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
+	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
 }
 
 type Storage struct {
@@ -119,7 +119,7 @@ func (s *Storage) PutPlan(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, error) {
-	key := fmt.Sprintf("/%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
+	key := fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
 	attempts, err := s.Backend.List(key)
 	return len(attempts), err
 }
