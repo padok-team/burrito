@@ -6,3 +6,5 @@ metadata:
 spec:
   repository:
     url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
