@@ -82,7 +82,7 @@ jobs:
         with:
           node-version: 20
       - name: Run install
-        uses: borales/actions-yarn@v4
+        uses: borales/actions-yarn@v5
         with:
           cmd: install
           dir: ui
