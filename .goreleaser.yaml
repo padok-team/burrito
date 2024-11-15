@@ -38,4 +38,5 @@ changelog:
       - "^refactor"
       - "^build"
       - "^ci"
+      - "^chore(docker)"
       - "^chore(release)"
