@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	sdk "github.com/aws/aws-sdk-go-v2/config"
 	storage "github.com/aws/aws-sdk-go-v2/service/s3"
@@ -15,7 +14,6 @@ import (
 
 // Implements Storage interface using AWS S3
 type S3 struct {
-	// GCS Blob Storage client
 	Client *storage.Client
 	Config config.S3Config
 }
@@ -88,7 +86,7 @@ func (a *S3) Delete(key string) error {
 func (a *S3) List(prefix string) ([]string, error) {
 	input := &storage.ListObjectsV2Input{
 		Bucket:    &a.Config.Bucket,
-		Prefix:    aws.String(fmt.Sprintf("%s/", strings.TrimPrefix(prefix, "/"))),
+		Prefix:    aws.String(fmt.Sprintf("%s/", prefix)),
 		Delimiter: aws.String("/"),
 	}
 	result, err := a.Client.ListObjectsV2(context.TODO(), input)
