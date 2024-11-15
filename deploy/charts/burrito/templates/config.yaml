@@ -14,6 +14,7 @@ Tenant Namespaces
 {{/*
 Datastore Authorized Service Accounts
 */}}
+{{- if not $config.datastore.serviceAccounts }}
 {{- $datastoreAuthorizedServiceAccounts := list }}
 {{- range $tenant := .Values.tenants }}
 {{- range $sa := $tenant.serviceAccounts }}
@@ -26,6 +27,7 @@ Datastore Authorized Service Accounts
 {{- $server := printf "%s/%s" .Release.Namespace "burrito-server" }}
 {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $server }}
 {{- $_ := set $config.datastore "serviceAccounts" $datastoreAuthorizedServiceAccounts }}
+{{- end }}
 
 {{/*
 TLS certificates
