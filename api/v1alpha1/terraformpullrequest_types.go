@@ -25,7 +25,6 @@ import (
 
 // TerraformPullRequestSpec defines the desired state of TerraformPullRequest
 type TerraformPullRequestSpec struct {
-	Provider   string                   `json:"provider,omitempty"`
 	Branch     string                   `json:"branch,omitempty"`
 	Base       string                   `json:"base,omitempty"`
 	ID         string                   `json:"id,omitempty"`
@@ -45,7 +44,6 @@ type TerraformPullRequestStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="ID",type=string,JSONPath=`.spec.id`
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
-// +kubebuilder:printcolumn:name="Provider",type=string,JSONPath=`.spec.provider`
 // +kubebuilder:printcolumn:name="Base",type=string,JSONPath=`.spec.base`
 // +kubebuilder:printcolumn:name="Branch",type=string,JSONPath=`.spec.branch`
 // TerraformPullRequest is the Schema for the TerraformPullRequests API

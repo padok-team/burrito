@@ -2275,9 +2275,6 @@ spec:
     - jsonPath: .status.state
       name: State
       type: string
-    - jsonPath: .spec.provider
-      name: Provider
-      type: string
     - jsonPath: .spec.base
       name: Base
       type: string
@@ -2314,8 +2311,6 @@ spec:
               branch:
                 type: string
               id:
-                type: string
-              provider:
                 type: string
               repository:
                 properties:

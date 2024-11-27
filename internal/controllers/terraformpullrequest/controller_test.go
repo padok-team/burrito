@@ -108,8 +108,8 @@ var _ = BeforeSuite(func() {
 		Config:    config.TestConfig(),
 		Scheme:    scheme.Scheme,
 		Datastore: datastore.NewMockClient(),
-		Providers: []controller.Provider{
-			&provider.Mock{},
+		Providers: map[string]controller.Provider{
+			"mock": &provider.Mock{},
 		},
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",

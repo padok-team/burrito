@@ -2,12 +2,12 @@ package gitlab
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
@@ -16,26 +16,21 @@ import (
 
 type Gitlab struct {
 	*gitlab.Client
+	ApiToken string
+	Url      string
 }
 
-func (g *Gitlab) IsConfigPresent(c *config.Config) bool {
-	return c.Controller.GitlabConfig.APIToken != ""
-}
-
-func (g *Gitlab) Init(c *config.Config) error {
-	if !g.IsConfigPresent(c) {
-		return fmt.Errorf("gitlab config is not present")
+func (g *Gitlab) Init() error {
+	apiUrl, err := inferBaseURL(g.Url)
+	if err != nil {
+		return err
 	}
-	client, err := gitlab.NewClient(c.Controller.GitlabConfig.APIToken, gitlab.WithBaseURL(c.Controller.GitlabConfig.URL))
+	client, err := gitlab.NewClient(g.ApiToken, gitlab.WithBaseURL(apiUrl))
 	if err != nil {
 		return err
 	}
 	g.Client = client
 	return nil
-}
-
-func (g *Gitlab) IsFromProvider(pr *configv1alpha1.TerraformPullRequest) bool {
-	return pr.Spec.Provider == "gitlab"
 }
 
 func (g *Gitlab) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {
@@ -91,4 +86,15 @@ func (g *Gitlab) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 func getGitlabNamespacedName(url string) string {
 	normalizedUrl := utils.NormalizeUrl(url)
 	return strings.Join(strings.Split(normalizedUrl[8:], "/")[1:], "/")
+}
+
+func inferBaseURL(repoURL string) (string, error) {
+	parsedURL, err := url.Parse(repoURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid repository URL: %w", err)
+	}
+
+	host := parsedURL.Host
+	host = strings.TrimPrefix(host, "www.")
+	return fmt.Sprintf("https://%s/api/v4", host), nil
 }

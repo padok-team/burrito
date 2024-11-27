@@ -8,7 +8,6 @@ import (
 	utils "github.com/padok-team/burrito/internal/utils/url"
 
 	"github.com/go-playground/webhooks/github"
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/webhook/event"
 
 	log "github.com/sirupsen/logrus"
@@ -16,10 +15,11 @@ import (
 
 type Github struct {
 	github *github.Webhook
+	Secret string
 }
 
-func (g *Github) Init(c *config.Config) error {
-	githubWebhook, err := github.New(github.Options.Secret(c.Server.Webhook.Github.Secret))
+func (g *Github) Init() error {
+	githubWebhook, err := github.New(github.Options.Secret(g.Secret))
 	if err != nil {
 		return err
 	}
@@ -27,22 +27,26 @@ func (g *Github) Init(c *config.Config) error {
 	return nil
 }
 
-func (g *Github) IsFromProvider(r *http.Request) bool {
-	return r.Header.Get("X-GitHub-Event") != ""
+func (g *Github) ParseFromProvider(r *http.Request) (interface{}, bool) {
+	// if the request is not a GitHub event, return false
+	if r.Header.Get("X-GitHub-Event") == "" {
+		return nil, false
+	} else {
+		// check if the request can be verified with the secret of this provider
+		p, err := g.github.Parse(r, github.PushEvent, github.PingEvent, github.PullRequestEvent)
+		if errors.Is(err, github.ErrHMACVerificationFailed) {
+			return nil, false
+		} else if err != nil {
+			log.Errorf("an error occurred during request parsing : %s", err)
+			return nil, false
+		}
+		return p, true
+	}
 }
 
-func (g *Github) GetEvent(r *http.Request) (event.Event, error) {
-	p, err := g.github.Parse(r, github.PushEvent, github.PingEvent, github.PullRequestEvent)
-	if errors.Is(err, github.ErrHMACVerificationFailed) {
-		log.Errorf("GitHub webhook HMAC verification failed: %s", err)
-		return nil, err
-	}
-	if err != nil {
-		log.Errorf("an error occurred during request parsing: %s", err)
-		return nil, err
-	}
-
+func (g *Github) GetEvent(p interface{}) (event.Event, error) {
 	var e event.Event
+	var err error
 	switch payload := p.(type) {
 	case github.PushPayload:
 		log.Infof("parsing Github push event payload")

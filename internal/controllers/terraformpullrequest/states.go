@@ -110,15 +110,8 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 	}
 
-	var provider Provider
-	found := false
-	for _, p := range r.Providers {
-		if p.IsFromProvider(pr) {
-			provider = p
-			found = true
-		}
-	}
-	if !found {
+	provider, err := GetProviderForPullRequest(pr, r)
+	if err != nil {
 		log.Infof("failed to get pull request provider. Requeuing")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 	}

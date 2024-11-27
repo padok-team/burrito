@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	"github.com/padok-team/burrito/internal/webhook/github"
 
@@ -60,16 +59,6 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 
 	secret := "test-secret"
 	github := github.Github{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Github: config.WebhookGithubConfig{
-					Secret: secret,
-				},
-			},
-		},
-	}
-	err = github.Init(config)
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitHub-Event", "push")
@@ -117,16 +106,6 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 
 	secret := "test-secret"
 	github := github.Github{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Github: config.WebhookGithubConfig{
-					Secret: secret,
-				},
-			},
-		},
-	}
-	err = github.Init(config)
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitHub-Event", "pull_request")

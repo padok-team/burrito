@@ -2,20 +2,15 @@ package mock
 
 import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	log "github.com/sirupsen/logrus"
 )
 
 type Mock struct{}
 
-func (m *Mock) Init(c *config.Config) error {
+func (m *Mock) Init() error {
 	log.Infof("Mock provider initialized")
 	return nil
-}
-
-func (m *Mock) IsFromProvider(pr *configv1alpha1.TerraformPullRequest) bool {
-	return pr.Spec.Provider == "mock"
 }
 
 func (m *Mock) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {

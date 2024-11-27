@@ -22,16 +22,10 @@ func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepos
 	if err != nil {
 		return nil, err
 	}
-	var provider Provider
-	for _, p := range r.Providers {
-		if p.IsFromProvider(pr) {
-			provider = p
-			break
-		}
-	}
-	if provider == nil {
-		r.Recorder.Event(pr, corev1.EventTypeWarning, "Provider error", "Could not find provider (gitlab, github...)")
-		return nil, fmt.Errorf("could not find provider for pull request %s", pr.Name)
+	provider, err := GetProviderForPullRequest(pr, r)
+	if err != nil {
+		r.Recorder.Event(pr, corev1.EventTypeWarning, "Provider error", "Could not find provider (gitlab, github...) for pull request")
+		return nil, err
 	}
 	changes, err := provider.GetChanges(repository, pr)
 	if err != nil {

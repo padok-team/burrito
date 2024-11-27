@@ -67,6 +67,34 @@ subjects:
   name: {{ $serviceAccount.name }}
   namespace: {{ $tenant.namespace.name }}
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secret-access
+  labels:
+    app: burrito
+  namespace: {{ $tenant.namespace.name }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: burrito-server-secret-access
+  labels:
+    app: burrito
+  namespace: {{ $tenant.namespace.name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: secret-access
+subjects:
+- kind: ServiceAccount
+  name: burrito-server
+  namespace: {{ $.Release.Namespace }}
+---
 {{- range $additionalRoleBinding := $serviceAccount.additionalRoleBindings }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

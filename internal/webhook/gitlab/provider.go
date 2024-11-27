@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/go-playground/webhooks/gitlab"
-	"github.com/padok-team/burrito/internal/burrito/config"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
@@ -14,10 +13,11 @@ import (
 
 type Gitlab struct {
 	gitlab *gitlab.Webhook
+	Secret string
 }
 
-func (g *Gitlab) Init(c *config.Config) error {
-	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(c.Server.Webhook.Gitlab.Secret))
+func (g *Gitlab) Init() error {
+	gitlabWebhook, err := gitlab.New(gitlab.Options.Secret(g.Secret))
 	if err != nil {
 		return err
 	}
@@ -25,21 +25,26 @@ func (g *Gitlab) Init(c *config.Config) error {
 	return nil
 }
 
-func (g *Gitlab) IsFromProvider(r *http.Request) bool {
-	return r.Header.Get("X-Gitlab-Event") != ""
+func (g *Gitlab) ParseFromProvider(r *http.Request) (interface{}, bool) {
+	// if the request is not a GitLab event, return false
+	if r.Header.Get("X-Gitlab-Event") == "" {
+		return nil, false
+	} else {
+		// check if the request can be verified with the secret of this provider
+		p, err := g.gitlab.Parse(r, gitlab.PushEvents, gitlab.TagEvents, gitlab.MergeRequestEvents)
+		if errors.Is(err, gitlab.ErrGitLabTokenVerificationFailed) {
+			return nil, false
+		} else if err != nil {
+			log.Errorf("an error occurred during request parsing: %s", err)
+			return nil, false
+		}
+		return p, true
+	}
 }
 
-func (g *Gitlab) GetEvent(r *http.Request) (event.Event, error) {
+func (g *Gitlab) GetEvent(p interface{}) (event.Event, error) {
 	var e event.Event
-	p, err := g.gitlab.Parse(r, gitlab.PushEvents, gitlab.TagEvents, gitlab.MergeRequestEvents)
-	if errors.Is(err, gitlab.ErrGitLabTokenVerificationFailed) {
-		log.Errorf("GitLab webhook token verification failed: %s", err)
-		return nil, err
-	}
-	if err != nil {
-		log.Errorf("an error occurred during event parsing: %s", err)
-		return nil, err
-	}
+
 	switch payload := p.(type) {
 	case gitlab.PushEventPayload:
 		log.Infof("parsing Gitlab push event payload")

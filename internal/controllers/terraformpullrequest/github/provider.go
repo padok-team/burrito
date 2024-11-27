@@ -3,7 +3,9 @@ package github
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -11,7 +13,6 @@ import (
 	"github.com/google/go-github/v66/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
@@ -20,43 +21,65 @@ import (
 
 type Github struct {
 	*github.Client
+	AppId             string
+	AppInstallationId string
+	AppPrivateKey     string
+	ApiToken          string
+	Url               string
 }
 
-func (g *Github) IsAppConfigPresent(c *config.Config) bool {
-	return c.Controller.GithubConfig.AppId != 0 && c.Controller.GithubConfig.InstallationId != 0 && len(c.Controller.GithubConfig.PrivateKey) != 0
+type GitHubSubscription string
+
+const (
+	GitHubEnterprise GitHubSubscription = "enterprise"
+	GitHubClassic    GitHubSubscription = "classic"
+)
+
+func (g *Github) IsAppConfigPresent() bool {
+	return g.AppId != "" && g.AppInstallationId != "" && g.AppPrivateKey != ""
 }
 
-func (g *Github) IsAPITokenConfigPresent(c *config.Config) bool {
-	return len(c.Controller.GithubConfig.APIToken) != 0
+func (g *Github) IsAPITokenConfigPresent() bool {
+	return g.ApiToken != ""
 }
 
-func (g *Github) Init(c *config.Config) error {
-	if g.IsAppConfigPresent(c) {
-		itr, err := ghinstallation.New(http.DefaultTransport, c.Controller.GithubConfig.AppId, c.Controller.GithubConfig.InstallationId, []byte(c.Controller.GithubConfig.PrivateKey))
-
+func (g *Github) Init() error {
+	apiUrl, subscription, err := inferBaseURL(g.Url)
+	httpClient := &http.Client{}
+	if g.IsAppConfigPresent() {
+		appId, err := strconv.ParseInt(g.AppId, 10, 64)
+		if err != nil {
+			return errors.New("error while parsing github app id: " + err.Error())
+		}
+		appInstallationId, err := strconv.ParseInt(g.AppInstallationId, 10, 64)
+		if err != nil {
+			return errors.New("error while parsing github app installation id: " + err.Error())
+		}
+		itr, err := ghinstallation.New(http.DefaultTransport, appId, appInstallationId, []byte(g.AppPrivateKey))
 		if err != nil {
 			return errors.New("error while creating github installation client: " + err.Error())
 		}
-
-		g.Client = github.NewClient(&http.Client{Transport: itr})
-		return nil
-	} else if g.IsAPITokenConfigPresent(c) {
+		httpClient.Transport = itr
+	} else if g.IsAPITokenConfigPresent() {
 		ctx := context.Background()
 
 		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: c.Controller.GithubConfig.APIToken},
+			&oauth2.Token{AccessToken: g.ApiToken},
 		)
-		tc := oauth2.NewClient(ctx, ts)
-
-		g.Client = github.NewClient(tc)
-		return nil
+		httpClient = oauth2.NewClient(ctx, ts)
 	} else {
 		return errors.New("github config is not present")
 	}
-}
 
-func (g *Github) IsFromProvider(pr *configv1alpha1.TerraformPullRequest) bool {
-	return pr.Spec.Provider == "github"
+	if subscription == GitHubEnterprise {
+		g.Client, err = github.NewClient(httpClient).WithEnterpriseURLs(apiUrl, apiUrl)
+		if err != nil {
+			return errors.New("error while creating github enterprise client: " + err.Error())
+		}
+	} else if subscription == GitHubClassic {
+		g.Client = github.NewClient(httpClient)
+	}
+	return nil
 }
 
 func (g *Github) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {
@@ -114,4 +137,20 @@ func parseGithubUrl(url string) (string, string) {
 	// we remove "https://" then split on "/"
 	split := strings.Split(normalizedUrl[8:], "/")
 	return split[1], split[2]
+}
+
+func inferBaseURL(repoURL string) (string, GitHubSubscription, error) {
+	parsedURL, err := url.Parse(repoURL)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid repository URL: %w", err)
+	}
+
+	host := parsedURL.Host
+	host = strings.TrimPrefix(host, "www.")
+
+	if host != "github.com" {
+		return fmt.Sprintf("https://%s/api/v3", host), GitHubEnterprise, nil
+	} else {
+		return "", GitHubClassic, nil
+	}
 }

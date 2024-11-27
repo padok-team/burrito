@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	"github.com/padok-team/burrito/internal/webhook/gitlab"
 
@@ -56,16 +55,7 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 
 	secret := "test-secret"
 	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
-		},
-	}
-	err = gitlab.Init(config)
+	err = gitlab.Init()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitLab-Event", "Push Hook")
@@ -87,16 +77,7 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 	// Test GitLab initialization
 	secret := "test-secret"
 	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
-		},
-	}
-	err := gitlab.Init(config)
+	err := gitlab.Init()
 	assert.NoError(t, err)
 
 	// Test event handling
