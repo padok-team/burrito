@@ -107,6 +107,20 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
+NEW_VERSION := $(shell date +%s)
+
+.PHONY: upgrade-dev-kind
+upgrade-dev-kind:
+	docker buildx build --tag burrito:$(NEW_VERSION) --build-arg VERSION=${NEW_VERSION} .
+	kind load docker-image burrito:$(NEW_VERSION)
+	yq e '.global.deployment.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/values-dev.yaml
+	yq e '.config.burrito.runner.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/values-dev.yaml
+	helm upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/values-dev.yaml -n burrito-system --create-namespace burrito-system deploy/charts/burrito
+
+.PHONY: upgrade-dev-helm
+upgrade-dev-helm:
+	helm upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/values-dev.yaml -n burrito-system --create-namespace burrito-system deploy/charts/burrito
+
 ##@ Build
 
 .PHONY: build

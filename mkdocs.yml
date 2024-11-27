@@ -39,10 +39,9 @@ nav:
   - user-guide/terraform-version.md
   - user-guide/private-modules.md
   - user-guide/additionnal-trigger-path.md
+- Contributing: contributing.md
 # - Reference:
 #   - reference/index.md
 #   - reference/api.md
 #   - reference/crds.md
 # - FAQ: faq.md
-# - Contributing:
-#   - contributing.md

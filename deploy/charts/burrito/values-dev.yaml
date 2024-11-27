@@ -1,0 +1,22 @@
+config:
+  burrito:
+    runner:
+      image:
+        repository: burrito
+        tag: DEV_TAG
+        pullPolicy: Never
+    datastore:
+      storage:
+        mock: true
+global:
+  deployment:
+    image:
+      repository: burrito
+      tag: DEV_TAG
+      pullPolicy: Never
+tenants:
+  - namespace:
+      create: true
+      name: "burrito-project"
+    serviceAccounts:
+      - name: burrito-runner
