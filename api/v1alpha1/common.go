@@ -90,7 +90,7 @@ func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer
 
 func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
 	return OverrideRunnerSpec{
-		Tolerations:  mergeTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
+		Tolerations:  overrideTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
 		NodeSelector: mergeMaps(repository.Spec.OverrideRunnerSpec.NodeSelector, layer.Spec.OverrideRunnerSpec.NodeSelector),
 		Metadata: MetadataOverride{
 			Annotations: mergeMaps(repository.Spec.OverrideRunnerSpec.Metadata.Annotations, layer.Spec.OverrideRunnerSpec.Metadata.Annotations),
@@ -274,20 +274,13 @@ func mergeVolumes(a, b []corev1.Volume) []corev1.Volume {
 	return result
 }
 
-func mergeTolerations(a, b []corev1.Toleration) []corev1.Toleration {
-	result := []corev1.Toleration{}
-	tempMap := map[string]corev1.Toleration{}
+func overrideTolerations(a, b []corev1.Toleration) []corev1.Toleration {
+	result := b
 
-	for _, elt := range a {
-		tempMap[elt.Key] = elt
-	}
-	for _, elt := range b {
-		tempMap[elt.Key] = elt
+	if len(result) == 0 {
+		result = a
 	}
 
-	for _, v := range tempMap {
-		result = append(result, v)
-	}
 	return result
 }
 

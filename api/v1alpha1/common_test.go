@@ -638,7 +638,7 @@ func TestOverrideRunnerSpec(t *testing.T) {
 		expectedSpec configv1alpha1.OverrideRunnerSpec
 	}{
 		{
-			"MergeTolerations",
+			"OverrideTolerations",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
 					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
@@ -677,11 +677,6 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			},
 			configv1alpha1.OverrideRunnerSpec{
 				Tolerations: []corev1.Toleration{
-					{
-						Key:    "only-exists-in-repository",
-						Value:  "true",
-						Effect: "NoSchedule",
-					},
 					{
 						Key:    "does-not-exists-in-layer",
 						Value:  "false",
@@ -763,6 +758,116 @@ func TestOverrideRunnerSpec(t *testing.T) {
 						Key:    "only-exists-in-layer",
 						Value:  "true",
 						Effect: "NoSchedule",
+					},
+				},
+			},
+		},
+		{
+			"TolerationsWithSameKeyButDifferentValuesExistInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Tolerations: []corev1.Toleration{
+							{
+								Key:    "exists-in-both",
+								Value:  "true",
+								Effect: "NoExecute",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Tolerations: []corev1.Toleration{
+							{
+								Key:    "exists-in-both",
+								Value:  "false",
+								Effect: "NoExecute",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Tolerations: []corev1.Toleration{
+					{
+						Key:    "exists-in-both",
+						Value:  "false",
+						Effect: "NoExecute",
+					},
+				},
+			},
+		},
+		{
+			"TolerationsWithSameKeyButDifferentValuesOnlyInRepository",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Tolerations: []corev1.Toleration{
+							{
+								Key:    "same-key",
+								Value:  "value-1",
+								Effect: "NoExecute",
+							},
+							{
+								Key:    "same-key",
+								Value:  "value-2",
+								Effect: "NoExecute",
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				Tolerations: []corev1.Toleration{
+					{
+						Key:    "same-key",
+						Value:  "value-1",
+						Effect: "NoExecute",
+					},
+					{
+						Key:    "same-key",
+						Value:  "value-2",
+						Effect: "NoExecute",
+					},
+				},
+			},
+		},
+		{
+			"TolerationsWithSameKeyButDifferentValuesOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Tolerations: []corev1.Toleration{
+							{
+								Key:    "same-key",
+								Value:  "value-1",
+								Effect: "NoExecute",
+							},
+							{
+								Key:    "same-key",
+								Value:  "value-2",
+								Effect: "NoExecute",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Tolerations: []corev1.Toleration{
+					{
+						Key:    "same-key",
+						Value:  "value-1",
+						Effect: "NoExecute",
+					},
+					{
+						Key:    "same-key",
+						Value:  "value-2",
+						Effect: "NoExecute",
 					},
 				},
 			},
