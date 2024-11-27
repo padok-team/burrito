@@ -41,20 +41,6 @@ config:
       healthProbeBindAddress: ":8081"
       # -- Port used to handle the Kubernetes webhook
       kubernetesWebhookPort: 9443
-      githubConfig:
-        # -- Github app ID, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APPID environment variable
-        appId: ""
-        # -- Github app unstallation ID, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID environment variable
-        installationId: ""
-        # -- Github app private key, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY environment variable
-        privateKey: ""
-        # -- Github API token, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable
-        apiToken: ""
-      gitlabConfig:
-        # -- Gitlab API token Prefer override with the BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN environment variable
-        apiToken: ""
-        # -- Gitlab URL
-        url: ""
     # -- Provider cache custom configuration
     hermitcrab: {}
     datastore:
@@ -84,13 +70,6 @@ config:
     server:
       # -- Server exposed port
       addr: ":8080"
-      webhook:
-        github:
-          # -- Secret to validate webhook payload, prefer override with the BURRITO_SERVER_WEBHOOK_GITHUB_SECRET environment variable
-          secret: ""
-        gitlab:
-          # -- Secret to validate webhook payload, Prefer override with the BURRITO_SERVER_WEBHOOK_GITLAB_SECRET environment variable
-          secret: ""
 
     runner:
       # -- Configmap name to store the SSH known hosts in the runner
