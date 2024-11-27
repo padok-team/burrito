@@ -3,8 +3,8 @@
 ## Pre-requisites
 
 - A kubernetes cluster
-- [Optionnal for testing, necessary for production use] A storage bucket in a cloud provider (AWS, GCP, Azure)
-- [Optionnal, recommended for production use] cert-manager installed in your cluster (for internal encryption of plans and logs & provider cache)
+- [Optional for testing, necessary for production use] A storage bucket in a cloud provider (AWS, GCP, Azure)
+- [Optional, recommended for production use] cert-manager installed in your cluster (for internal encryption of plans and logs & provider cache)
 
 ## Requirements
 
@@ -17,13 +17,28 @@ Copy and modify the [default values](https://github.com/padok-team/burrito/blob/
 
 Make sure to configure a tenant by updating the `tenant` field in the `values.yaml` file. The associated namespace will be created automatically and used to deploy Burrito resources on step 3.
 
+For example, here is a default `values.yaml` file:
+```yaml
+config:
+  datastore:
+    storage:
+      mock: true
+
+tenants:
+  - namespace:
+      create: true
+      name: "burrito-project-1"
+    serviceAccounts:
+      - name: "runner-project-1"
+```
+
 !!! info
-    To try Burrito without setting up a local storage, set the `config.burrito.datastore.storage.mock` field to `true` in the `values.yaml` file. To persist data such as terraform logs, you must configure a storage bucket field. Make sure to specify a service account that has the necessary permissions to read/write to your remote bucket.
+    To try Burrito without setting up a remote storage, set the `config.burrito.datastore.storage.mock` field to `true` in the `values.yaml` file. To persist data such as terraform logs, you must configure a storage bucket field. Make sure to specify a service account that has the necessary permissions to read/write to your remote bucket.
 
 Then, install Burrito using the following command:
 
 ```bash
-helm install burrito oci://ghcr.io/padok-team/charts/burrito -n burrito-system -f ./values.yaml
+helm install burrito oci://ghcr.io/padok-team/charts/burrito --create-namespace -n burrito-system -f ./values.yaml
 ```
 
 This will create a new namespace, `burrito-system`, where burrito services will be deployed.
