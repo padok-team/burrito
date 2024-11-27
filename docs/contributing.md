@@ -56,91 +56,88 @@ Follow these steps to install a minimal working configuration of Burrito on a Ki
 - A datastore running with mock storage (in-memory)
 - A `TerraformRepository` and an associated `TerraformLayer` resource in the `burrito-project` namespace, pointing to the [padok-team/burrito-examples](https://github.com/padok-team/burrito-examples) repository
 
-** Before starting, check that your local Kind cluster is running and that your context is set to target this cluster**
+*Before starting, check that your local Kind cluster is running and that your context is set to target this cluster*
 
 1. **Install cert-manager on your cluster:**
-
-   ```bash
-   helm repo add bitnami https://charts.bitnami.com/bitnami
-   helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/cert-manager --set installCRDs=true
-   ```
-
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/cert-manager --set installCRDs=true
+```
 2. **Fork and clone this repository.**
 
 3. **Run the following command to build a local image of Burrito, load it into your Kind cluster, and install Burrito with development Helm values:**
-
-   ```bash
-   make upgrade-dev-kind
-   ```
+    
+    ```bash
+    make upgrade-dev-kind
+    ```
 
 4. **Check that Burrito is running in the `burrito-system` namespace:**
+    ```bash
+    kubectl get pods -n burrito-system
+    ```
 
-   ```bash
-   kubectl get pods -n burrito-system
-   ```
+    The output should be similar to:
 
-   The output should be similar to:
-
-   ```
-   NAME                                  READY   STATUS    RESTARTS   AGE
-   burrito-controllers-7657b7455-2ldtd   1/1     Running   0          5m32s
-   burrito-datastore-5967f46497-tfzgg    1/1     Running   0          5m32s
-   burrito-server-5b6fb78949-ngcnt       1/1     Running   0          5m32s
-   ```
+    ```bash
+    NAME                                  READY   STATUS    RESTARTS   AGE
+    burrito-controllers-7657b7455-2ldtd   1/1     Running   0          5m32s
+    burrito-datastore-5967f46497-tfzgg    1/1     Running   0          5m32s
+    burrito-server-5b6fb78949-ngcnt       1/1     Running   0          5m32s
+    ```
 
 5. **Create layers and repository resources:**
 
-   Create a `dev` directory in `deploy/charts/burrito/templates/` and add a `dev.yaml` manifest with development resources:
+    Create a `dev` directory in `deploy/charts/burrito/templates/` and add a `dev.yaml` manifest with development resources:
 
-   ```yaml
-   apiVersion: config.terraform.padok.cloud/v1alpha1
-   kind: TerraformLayer
-   metadata:
-     name: my-layer
-     namespace: burrito-project
-   spec:
-     branch: main
-     path: terraform/
-     repository:
-       name: my-repository
-       namespace: burrito-project
-   ---
-   apiVersion: config.terraform.padok.cloud/v1alpha1
-   kind: TerraformRepository
-   metadata:
-     name: my-repository
-     namespace: burrito-project
-   spec:
-     repository:
-       url: https://github.com/padok-team/burrito-examples
-     remediationStrategy:
-       autoApply: true
-     terraform:
-       enabled: true
-     opentofu:
-       enabled: false
-     terragrunt:
-       enabled: false
-   ```
+    ```yaml
+    apiVersion: config.terraform.padok.cloud/v1alpha1
+    kind: TerraformLayer
+    metadata:
+        name: my-layer
+        namespace: burrito-project
+    spec:
+        branch: main
+        path: terraform/
+        repository:
+        name: my-repository
+        namespace: burrito-project
+    ---
+    apiVersion: config.terraform.padok.cloud/v1alpha1
+    kind: TerraformRepository
+    metadata:
+        name: my-repository
+        namespace: burrito-project
+    spec:
+        repository:
+        url: https://github.com/padok-team/burrito-examples
+        remediationStrategy:
+        autoApply: true
+        terraform:
+        enabled: true
+        opentofu:
+        enabled: false
+        terragrunt:
+        enabled: false
+    ```
 
 6. **Refresh your Helm configuration:**
 
-   ```bash
-   make upgrade-dev-helm
-   ```
+    ```bash
+    make upgrade-dev-helm
+    ```
 
 7. **Check that a runner pod is created for the newly created layer:**
 
-   ```bash
-   kubectl get pods -n burrito-project
-   ```
+    ```bash
+    kubectl get pods -n burrito-project
+    ```
 
-   The output should be similar to:
+    The output should be similar to:
 
-   ```
-   NAME                   READY   STATUS      RESTARTS   AGE
-   my-layer-apply-gxjhd   0/1     Completed   0          2m36s
-   ```
+    ```
+    NAME                   READY   STATUS      RESTARTS   AGE
+    my-layer-apply-gxjhd   0/1     Completed   0          2m36s
+    ```
 
 ### Refresh Commands
 
