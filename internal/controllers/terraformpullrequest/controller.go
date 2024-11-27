@@ -9,6 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/github"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/gitlab"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/mock"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -83,10 +84,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	if _, ok := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]; !ok {
 		log.Infof("initializing provider for repository %s/%s", repository.Namespace, repository.Name)
-		r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)], err = r.initializeProvider(ctx, repository)
+		provider, err := r.initializeProvider(ctx, repository)
 		if err != nil {
 			log.Errorf("could not initialize provider for repository %s: %s", repository.Name, err)
-			return ctrl.Result{}, err
+		} else {
+			r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)] = provider
 		}
 	}
 	state := r.GetState(ctx, pr)
@@ -153,8 +155,9 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 	if repository.Spec.Repository.Url == "" {
 		return nil, fmt.Errorf("no repository URL found in TerraformRepository.spec.repository.url, %s", repository.Name)
 	}
-
-	if secret.Data["githubAppId"] != nil && secret.Data["githubAppInstallationId"] != nil && secret.Data["githubAppPrivateKey"] != nil {
+	if secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true" {
+		provider = &mock.Mock{}
+	} else if secret.Data["githubAppId"] != nil && secret.Data["githubAppInstallationId"] != nil && secret.Data["githubAppPrivateKey"] != nil {
 		provider = &github.Github{
 			AppId:             string(secret.Data["githubAppId"]),
 			AppInstallationId: string(secret.Data["githubAppInstallationId"]),
@@ -172,7 +175,7 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 			Url:      repository.Spec.Repository.Url,
 		}
 	} else {
-		return nil, fmt.Errorf("no valid provider credentials found in secret. %s Please provide at least one of the following: <githubAppId, githubAppInstallationId, githubAppPrivateKey>, <githubToken>, <gitlabToken> in the secret referenced in TerraformRepository.spec.repository.secretName, %s", repository.Spec.Repository.SecretName)
+		return nil, fmt.Errorf("no valid provider credentials found in secret %s. Please provide at least one of the following: <githubAppId, githubAppInstallationId, githubAppPrivateKey>, <githubToken>, <gitlabToken> in the secret referenced in TerraformRepository.spec.repository.secretName", repository.Spec.Repository.SecretName)
 	}
 
 	err = provider.Init()

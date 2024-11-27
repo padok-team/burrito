@@ -16,7 +16,6 @@ import (
 )
 
 type PullRequestEvent struct {
-	Provider string
 	URL      string
 	Revision string
 	Base     string

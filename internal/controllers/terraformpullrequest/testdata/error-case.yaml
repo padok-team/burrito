@@ -8,7 +8,6 @@ metadata:
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
-  provider: mock
   branch: feature-branch
   id: "42"
   base: main
@@ -26,10 +25,9 @@ metadata:
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
-  provider: no-exist
   branch: feature-branch
   id: "42"
   base: main
   repository:
-    name: burrito
+    name: burrito-no-provider
     namespace: default

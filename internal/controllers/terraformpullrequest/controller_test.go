@@ -179,8 +179,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					},
 				},
 				Spec: configv1alpha1.TerraformPullRequestSpec{
-					Provider: "gitlab",
-					Branch:   "test",
+					Branch: "test",
 					Repository: configv1alpha1.TerraformLayerRepository{
 						Name:      "test-repository",
 						Namespace: "default",

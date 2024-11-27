@@ -108,7 +108,6 @@ var PushEventMultiplePathChanges = event.PushEvent{
 }
 
 var PullRequestOpenedEventNotAffected = event.PullRequestEvent{
-	Provider: "github",
 	URL:      "https://github.com/example/repo",
 	Revision: "feature/branch",
 	Base:     "main",
@@ -118,7 +117,6 @@ var PullRequestOpenedEventNotAffected = event.PullRequestEvent{
 }
 
 var PullRequestClosedEventNotAffected = event.PullRequestEvent{
-	Provider: "github",
 	URL:      "https://github.com/example/repo",
 	Revision: "feature/branch",
 	Base:     "main",
@@ -128,7 +126,6 @@ var PullRequestClosedEventNotAffected = event.PullRequestEvent{
 }
 
 var PullRequestOpenedEventSingleAffected = event.PullRequestEvent{
-	Provider: "github",
 	URL:      "https://github.com/padok-team/burrito-examples",
 	Revision: "feature/branch",
 	Base:     "main",
@@ -138,7 +135,6 @@ var PullRequestOpenedEventSingleAffected = event.PullRequestEvent{
 }
 
 var PullRequestClosedEventSingleAffected = event.PullRequestEvent{
-	Provider: "github",
 	URL:      "https://github.com/padok-team/burrito-closed-single-pr",
 	Revision: "feature/branch",
 	Base:     "main",
@@ -148,7 +144,6 @@ var PullRequestClosedEventSingleAffected = event.PullRequestEvent{
 }
 
 var PullRequestOpenedEventMultipleAffected = event.PullRequestEvent{
-	Provider: "github",
 	URL:      "https://github.com/example/other-repo",
 	Revision: "feature/branch",
 	Base:     "main",
@@ -158,7 +153,6 @@ var PullRequestOpenedEventMultipleAffected = event.PullRequestEvent{
 }
 
 var PullRequestClosedEventMultipleAffected = event.PullRequestEvent{
-	Provider: "github",
 	URL:      "https://github.com/padok-team/burrito-closed-multi-pr",
 	Revision: "feature/branch",
 	Base:     "main",

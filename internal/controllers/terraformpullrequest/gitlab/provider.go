@@ -21,7 +21,7 @@ type Gitlab struct {
 }
 
 func (g *Gitlab) Init() error {
-	apiUrl, err := inferBaseURL(g.Url)
+	apiUrl, err := inferBaseURL(utils.NormalizeUrl(g.Url))
 	if err != nil {
 		return err
 	}

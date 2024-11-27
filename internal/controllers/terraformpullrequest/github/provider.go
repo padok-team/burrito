@@ -44,7 +44,10 @@ func (g *Github) IsAPITokenConfigPresent() bool {
 }
 
 func (g *Github) Init() error {
-	apiUrl, subscription, err := inferBaseURL(g.Url)
+	apiUrl, subscription, err := inferBaseURL(utils.NormalizeUrl(g.Url))
+	if err != nil {
+		return err
+	}
 	httpClient := &http.Client{}
 	if g.IsAppConfigPresent() {
 		appId, err := strconv.ParseInt(g.AppId, 10, 64)

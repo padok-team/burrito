@@ -72,7 +72,6 @@ func (g *Github) GetEvent(p interface{}) (event.Event, error) {
 			return nil, err
 		}
 		e = &event.PullRequestEvent{
-			Provider: "github",
 			ID:       strconv.FormatInt(payload.PullRequest.Number, 10),
 			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
 			Revision: payload.PullRequest.Head.Ref,

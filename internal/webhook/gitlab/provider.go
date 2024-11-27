@@ -66,7 +66,6 @@ func (g *Gitlab) GetEvent(p interface{}) (event.Event, error) {
 	case gitlab.MergeRequestEventPayload:
 		log.Infof("parsing Gitlab merge request event payload")
 		e = &event.PullRequestEvent{
-			Provider: "gitlab",
 			ID:       strconv.Itoa(int(payload.ObjectAttributes.IID)),
 			URL:      utils.NormalizeUrl(payload.Project.WebURL),
 			Revision: payload.ObjectAttributes.SourceBranch,
