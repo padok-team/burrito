@@ -104,7 +104,7 @@ func handleHealthz(c echo.Context) error {
 }
 
 func (s *Server) refreshWebhookHandlers(ctx context.Context) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 	for {
 		select {

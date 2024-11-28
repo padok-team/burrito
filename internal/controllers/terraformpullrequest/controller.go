@@ -82,13 +82,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRepository: %s", err)
 		return ctrl.Result{}, err
 	}
+
 	if _, ok := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]; !ok {
-		log.Infof("initializing provider for repository %s/%s", repository.Namespace, repository.Name)
 		provider, err := r.initializeProvider(ctx, repository)
 		if err != nil {
 			log.Errorf("could not initialize provider for repository %s: %s", repository.Name, err)
-		} else {
+		}
+		if provider != nil {
 			r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)] = provider
+			log.Infof("initialized webhook handlers for repository %s/%s", repository.Namespace, repository.Name)
 		}
 	}
 	state := r.GetState(ctx, pr)
@@ -106,6 +108,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Providers = make(map[string]Provider)
+	err := r.initializeDefaultProviders()
+	if err != nil {
+		log.Errorf("Some legacy configuration was found, but could not initialize default providers: %s", err)
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformPullRequest{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
@@ -141,6 +147,10 @@ func ignorePredicate() predicate.Predicate {
 }
 
 func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv1alpha1.TerraformRepository) (Provider, error) {
+	if repository.Spec.Repository.SecretName == "" {
+		log.Debugf("no webhook secret configured for repository %s/%s, skipping provider initialization", repository.Namespace, repository.Name)
+		return nil, nil
+	}
 	secret := &corev1.Secret{}
 	err := r.Client.Get(ctx, types.NamespacedName{
 		Name:      repository.Spec.Repository.SecretName,
@@ -184,4 +194,51 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 		return nil, err
 	}
 	return provider, nil
+}
+
+func (r *Reconciler) initializeDefaultProviders() error {
+	// This initializes default providers for the controller if user has provided legacy configuration
+	if r.Config.Controller.GithubConfig.AppId != 0 && r.Config.Controller.GithubConfig.InstallationId != 0 && r.Config.Controller.GithubConfig.PrivateKey != "" {
+		provider := &github.Github{
+			AppId:             fmt.Sprintf("%d", r.Config.Controller.GithubConfig.AppId),
+			AppInstallationId: fmt.Sprintf("%d", r.Config.Controller.GithubConfig.InstallationId),
+			AppPrivateKey:     r.Config.Controller.GithubConfig.PrivateKey,
+			Url:               "https://github.com",
+		}
+		err := provider.Init()
+		if err != nil {
+			return err
+		}
+		r.Providers["defaultGitHubApp"] = provider
+		log.Infof("initialized default GitHub provider (GitHub App)")
+	}
+	if r.Config.Controller.GithubConfig.APIToken != "" {
+		provider := &github.Github{
+			ApiToken: r.Config.Controller.GithubConfig.APIToken,
+			Url:      "https://github.com",
+		}
+		err := provider.Init()
+		if err != nil {
+			return err
+		}
+		r.Providers["defaultGitHubApiToken"] = provider
+		log.Infof("initialized default GitHub provider (API Token)")
+	}
+	if r.Config.Controller.GitlabConfig.APIToken != "" {
+		gitlabURL := "https://gitlab.com"
+		if r.Config.Controller.GitlabConfig.URL == "" {
+			gitlabURL = r.Config.Controller.GitlabConfig.URL
+		}
+		provider := &gitlab.Gitlab{
+			ApiToken: r.Config.Controller.GitlabConfig.APIToken,
+			Url:      gitlabURL,
+		}
+		err := provider.Init()
+		if err != nil {
+			return err
+		}
+		r.Providers["defaultGitLabApiToken"] = provider
+		log.Infof("initialized default GitLab provider (API Token)")
+	}
+	return nil
 }

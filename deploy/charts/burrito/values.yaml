@@ -314,11 +314,9 @@ server:
       initialDelaySeconds: 5
       periodSeconds: 20
     # -- Environment variables to pass to the Burrito server container
-    envFrom:
-      # -- Reference the webhook secret here, it should define a BURRITO_SERVER_WEBHOOK_GITHUB_SECRET and/or BURRITO_SERVER_WEBHOOK_GITLAB_SECRET key
-      - secretRef:
-          name: burrito-webhook-secret
-          optional: true
+    env: [] 
+    # -- Environment variables to pass to the Burrito server container
+    envFrom: []
     # -- Additional volumes
     extraVolumes: {}
     # -- Additional volume mounts

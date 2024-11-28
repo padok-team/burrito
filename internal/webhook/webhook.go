@@ -48,14 +48,20 @@ func (w *Webhook) Init() error {
 	if err != nil {
 		return fmt.Errorf("failed to list TerraformRepository objects: %w", err)
 	}
-
+	err = w.initializeDefaultProvider()
+	if err != nil {
+		return fmt.Errorf("Some legacy webhook configuration was found but default providers could not be initialized: %w", err)
+	}
 	for _, r := range repositories.Items {
 		if _, ok := w.Providers[fmt.Sprintf("%s/%s", r.Namespace, r.Name)]; !ok {
-			w.Providers[fmt.Sprintf("%s/%s", r.Namespace, r.Name)], err = w.initializeProviders(r)
+			provider, err := w.initializeProviders(r)
 			if err != nil {
 				log.Errorf("could not initialize provider for repository %s/%s: %s", r.Namespace, r.Name, err)
 			}
-			log.Infof("initialized webhook handlers for repository %s/%s", r.Namespace, r.Name)
+			if provider != nil {
+				w.Providers[fmt.Sprintf("%s/%s", r.Namespace, r.Name)] = provider
+				log.Infof("initialized webhook handlers for repository %s/%s", r.Namespace, r.Name)
+			}
 		}
 	}
 	return nil
@@ -99,7 +105,7 @@ func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
 
 func (w *Webhook) initializeProviders(r configv1alpha1.TerraformRepository) ([]Provider, error) {
 	if r.Spec.Repository.SecretName == "" {
-		log.Infof("no webhook secret configured for repository %s/%s", r.Namespace, r.Name)
+		log.Debugf("Tried to initialize default providers, but no webhook secret configured for repository %s/%s", r.Namespace, r.Name)
 		return nil, nil
 	}
 	secret := &corev1.Secret{}
@@ -129,4 +135,26 @@ func (w *Webhook) initializeProviders(r configv1alpha1.TerraformRepository) ([]P
 	}
 
 	return providers, nil
+}
+
+func (w *Webhook) initializeDefaultProvider() error {
+	if w.Providers["githubDefault"] != nil && w.Config.Server.Webhook.Github.Secret != "" {
+		provider := &github.Github{Secret: w.Config.Server.Webhook.Github.Secret}
+		err := provider.Init()
+		if err != nil {
+			return fmt.Errorf("failed to initialize default provider: %w", err)
+		}
+		w.Providers["githubDefault"] = []Provider{provider}
+		log.Info("initialized default GitHub webhook handler")
+	}
+	if w.Providers["gitlabDefault"] != nil && w.Config.Server.Webhook.Gitlab.Secret != "" {
+		provider := &gitlab.Gitlab{Secret: w.Config.Server.Webhook.Gitlab.Secret}
+		err := provider.Init()
+		if err != nil {
+			return fmt.Errorf("failed to initialize default provider: %w", err)
+		}
+		w.Providers["gitlabDefault"] = []Provider{provider}
+		log.Info("initialized default Gitlab webhook handler")
+	}
+	return nil
 }
