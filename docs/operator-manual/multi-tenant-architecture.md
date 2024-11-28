@@ -55,7 +55,7 @@ tenants:
 
 ### 2. Configure service accounts
 
-Each service account created in a tenant is binded to the `burrito-runner` ClusterRole, it is a basic role with the required permissions for a burrito runner pod to work properly.
+Each service account created in a tenant is bound to the `burrito-runner` ClusterRole, it is a basic role with the required permissions for a burrito runner pod to work properly.
 
 You can add additional role bindings to the service accounts if you need special permissions in the cluster (e.g. a Terraform layer deploying to Kubernetes) as well as annotations and labels (e.g. assume a role on a cloud provider).
 
