@@ -54,7 +54,6 @@ func (w *Webhook) Init() error {
 			w.Providers[fmt.Sprintf("%s/%s", r.Namespace, r.Name)], err = w.initializeProviders(r)
 			if err != nil {
 				log.Errorf("could not initialize provider for repository %s/%s: %s", r.Namespace, r.Name, err)
-				return err
 			}
 			log.Infof("initialized webhook handlers for repository %s/%s", r.Namespace, r.Name)
 		}
@@ -99,6 +98,10 @@ func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
 }
 
 func (w *Webhook) initializeProviders(r configv1alpha1.TerraformRepository) ([]Provider, error) {
+	if r.Spec.Repository.SecretName == "" {
+		log.Infof("no webhook secret configured for repository %s/%s", r.Namespace, r.Name)
+		return nil, nil
+	}
 	secret := &corev1.Secret{}
 	err := w.Client.Get(context.Background(), types.NamespacedName{
 		Namespace: r.Namespace,
