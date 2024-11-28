@@ -19,7 +19,6 @@ FROM docker.io/library/golang:1.22.9@sha256:147f428a24c6b80b8afbdaec7f245b9e7ac3
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
-ARG VERSION
 ARG COMMIT_HASH
 ARG BUILD_TIMESTAMP
 
@@ -44,7 +43,9 @@ COPY --from=builder-ui /workspace/dist internal/server/dist
 # was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
 # the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
+ARG VERSION
+ENV GOCACHE=/root/.cache/go-build
+RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
   -ldflags="\
   -X ${PACKAGE}/internal/version.Version=${VERSION} \
   -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
