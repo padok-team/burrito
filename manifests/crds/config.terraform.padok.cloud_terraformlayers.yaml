@@ -243,6 +243,18 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     type: array
+                  extraApplyArgs:
+                    items:
+                      type: string
+                    type: array
+                  extraInitArgs:
+                    items:
+                      type: string
+                    type: array
+                  extraPlanArgs:
+                    items:
+                      type: string
+                    type: array
                   image:
                     type: string
                   imagePullPolicy:

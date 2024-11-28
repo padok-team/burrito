@@ -9,6 +9,8 @@ const (
 	DefaultRunRetention int = 10
 )
 
+type ExtraArgs []string
+
 type OverrideRunnerSpec struct {
 	ImagePullSecrets   []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	Image              string                        `json:"image,omitempty"`
@@ -22,6 +24,9 @@ type OverrideRunnerSpec struct {
 	Volumes            []corev1.Volume               `json:"volumes,omitempty"`
 	VolumeMounts       []corev1.VolumeMount          `json:"volumeMounts,omitempty"`
 	Metadata           MetadataOverride              `json:"metadata,omitempty"`
+	ExtraInitArgs      ExtraArgs                     `json:"extraInitArgs,omitempty"`
+	ExtraPlanArgs      ExtraArgs                     `json:"extraPlanArgs,omitempty"`
+	ExtraApplyArgs     ExtraArgs                     `json:"extraApplyArgs,omitempty"`
 }
 
 type MetadataOverride struct {
@@ -105,6 +110,9 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 		ImagePullPolicy:    chooseImagePullPolicy(repository.Spec.OverrideRunnerSpec.ImagePullPolicy, layer.Spec.OverrideRunnerSpec.ImagePullPolicy),
 		ServiceAccountName: chooseString(repository.Spec.OverrideRunnerSpec.ServiceAccountName, layer.Spec.OverrideRunnerSpec.ServiceAccountName),
 		ImagePullSecrets:   mergeImagePullSecrets(repository.Spec.OverrideRunnerSpec.ImagePullSecrets, layer.Spec.OverrideRunnerSpec.ImagePullSecrets),
+		ExtraInitArgs:      overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraInitArgs, layer.Spec.OverrideRunnerSpec.ExtraInitArgs),
+		ExtraPlanArgs:      overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraPlanArgs, layer.Spec.OverrideRunnerSpec.ExtraPlanArgs),
+		ExtraApplyArgs:     overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraApplyArgs, layer.Spec.OverrideRunnerSpec.ExtraApplyArgs),
 	}
 }
 
@@ -311,5 +319,15 @@ func mergeMaps(a, b map[string]string) map[string]string {
 	for k, v := range b {
 		result[k] = v
 	}
+	return result
+}
+
+func overrideExtraArgs(a, b ExtraArgs) ExtraArgs {
+	result := b
+
+	if len(result) == 0 {
+		result = a
+	}
+
 	return result
 }
