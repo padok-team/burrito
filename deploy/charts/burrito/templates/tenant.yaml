@@ -13,6 +13,13 @@ spec:
   - kubernetes
 ---
 {{- end }}
+# Default service account for running Burrito pods, this makes it optional to create at least one service account for each tenant
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: burrito-runner
+  namespace: {{ $tenant.namespace.name }}
+---
 {{- range $serviceAccount := .serviceAccounts }}
 apiVersion: v1
 kind: ServiceAccount
