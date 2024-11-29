@@ -1,0 +1,21 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-extra-args-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: pod-nominal-case-extra-args
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-extra-args-apply
+  namespace: default
+spec:
+  action: apply
+  layer:
+    name: pod-nominal-case-extra-args
+    namespace: default

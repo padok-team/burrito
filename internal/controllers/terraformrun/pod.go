@@ -3,6 +3,7 @@ package terraformrun
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -215,6 +216,26 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 	if len(overrideSpec.Image) > 0 {
 		defaultSpec.Containers[0].Image = overrideSpec.Image
 	}
+
+	if len(overrideSpec.ExtraInitArgs) > 0 {
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name:  "TF_CLI_ARGS_init",
+			Value: strings.Join(overrideSpec.ExtraInitArgs, " "),
+		})
+	}
+	if len(overrideSpec.ExtraPlanArgs) > 0 {
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name:  "TF_CLI_ARGS_plan",
+			Value: strings.Join(overrideSpec.ExtraPlanArgs, " "),
+		})
+	}
+	if len(overrideSpec.ExtraApplyArgs) > 0 {
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name:  "TF_CLI_ARGS_apply",
+			Value: strings.Join(overrideSpec.ExtraApplyArgs, " "),
+		})
+	}
+
 	pod := corev1.Pod{
 		Spec: defaultSpec,
 		ObjectMeta: metav1.ObjectMeta{
