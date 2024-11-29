@@ -1,0 +1,16 @@
+
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: pod-nominal-case-extra-args
+  namespace: default
+spec:
+  branch: main
+  path: terraform/
+  repository:
+    name: burrito
+    namespace: default
+  overrideRunnerSpec:
+    extraPlanArgs: ["--target", "'module.this.random_pet.this[\"first\"]'"]
+    extraApplyArgs: ["--target", "'module.this.random_pet.this[\"first\"]'"]
+    extraInitArgs: ["--upgrade"]
