@@ -1,6 +1,7 @@
 package v1alpha1_test
 
 import (
+	"reflect"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -1265,16 +1266,139 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			configv1alpha1.OverrideRunnerSpec{
 				Env: []corev1.EnvVar{
 					{
-						Name:  "ONLY_REPO",
+						Name:  "ONLY_LAYER",
 						Value: "1",
 					},
 					{
 						Name:  "IN_BOTH",
 						Value: "1",
 					},
+				},
+			},
+		},
+		{
+			"EnvValueFromOnlyInRepo",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name: "NODE_NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "spec.nodeName",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				Env: []corev1.EnvVar{
 					{
-						Name:  "ONLY_LAYER",
-						Value: "1",
+						Name: "NODE_NAME",
+						ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "spec.nodeName",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			"EnvValueFromOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name: "NODE_NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "spec.nodeName",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Env: []corev1.EnvVar{
+					{
+						Name: "NODE_NAME",
+						ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "spec.nodeName",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			"EnvValueFromInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name: "NODE_NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "spec.nodeName",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name: "POD_NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "metadata.name",
+									},
+								},
+							},
+							{
+								Name: "POD_IP",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "status.podIP",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				Env: []corev1.EnvVar{
+					{
+						Name: "POD_NAME",
+						ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "metadata.name",
+							},
+						},
+					},
+					{
+						Name: "POD_IP",
+						ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "status.podIP",
+							},
+						},
 					},
 				},
 			},
@@ -1785,15 +1909,22 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			if len(result.Env) != len(tc.expectedSpec.Env) {
 				t.Errorf("differents env size: got %d expected %d", len(result.Env), len(tc.expectedSpec.Env))
 			}
-			for _, env := range result.Env {
+			for _, expectedEnv := range tc.expectedSpec.Env {
 				found := false
-				for _, expected := range tc.expectedSpec.Env {
-					if env.Name == expected.Name && env.Value == expected.Value {
-						found = true
+				for _, givenEnv := range result.Env {
+					if givenEnv.Name == expectedEnv.Name {
+						if expectedEnv.ValueFrom != nil {
+							if reflect.DeepEqual(givenEnv.ValueFrom, expectedEnv.ValueFrom) {
+								found = true
+							}
+						} else if givenEnv.Value == expectedEnv.Value {
+							found = true
+						}
+
 					}
 				}
 				if !found {
-					t.Errorf("env %v not found in expected list %v", env, tc.expectedSpec.Env)
+					t.Errorf("env %v not found in given list %v", expectedEnv, result.Env)
 				}
 			}
 
