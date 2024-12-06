@@ -196,6 +196,66 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 				},
 			},
 		})
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBAPPID",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "githubAppId",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBAPPINSTALLATIONID",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "githubAppInstallationId",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBAPPPRIVATEKEY",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "githubAppPrivateKey",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBTOKEN",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "githubToken",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name: "BURRITO_RUNNER_REPOSITORY_GITLABTOKEN",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: repository.Spec.Repository.SecretName,
+					},
+					Key:      "gitlabToken",
+					Optional: &[]bool{true}[0],
+				},
+			},
+		})
 	}
 
 	overrideSpec := configv1alpha1.GetOverrideRunnerSpec(repository, layer)
