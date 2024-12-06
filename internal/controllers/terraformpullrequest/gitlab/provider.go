@@ -45,7 +45,9 @@ func (g *Gitlab) GetChanges(repository *configv1alpha1.TerraformRepository, pr *
 		return []string{}, err
 	}
 	listOpts := gitlab.ListMergeRequestDiffsOptions{
-		PerPage: 20,
+		ListOptions: gitlab.ListOptions{
+			PerPage: 20,
+		},
 	}
 	var changes []string
 	for {
@@ -77,7 +79,7 @@ func (g *Gitlab) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 		return err
 	}
 	_, _, err = g.Client.Notes.CreateMergeRequestNote(getGitlabNamespacedName(repository.Spec.Repository.Url), id, &gitlab.CreateMergeRequestNoteOptions{
-		Body: gitlab.String(body),
+		Body: gitlab.Ptr(body),
 	})
 	if err != nil {
 		log.Errorf("Error while creating merge request note: %s", err)
