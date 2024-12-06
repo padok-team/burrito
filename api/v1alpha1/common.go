@@ -293,22 +293,13 @@ func overrideTolerations(a, b []corev1.Toleration) []corev1.Toleration {
 }
 
 func mergeEnvVars(a, b []corev1.EnvVar) []corev1.EnvVar {
-	result := []corev1.EnvVar{}
-	tempMap := map[string]string{}
+	result := b
 
-	for _, elt := range a {
-		tempMap[elt.Name] = elt.Value
-	}
-	for _, elt := range b {
-		tempMap[elt.Name] = elt.Value
-	}
-
-	for k, v := range tempMap {
-		result = append(result, corev1.EnvVar{Name: k, Value: v})
+	if len(result) == 0 {
+		result = a
 	}
 
 	return result
-
 }
 
 func mergeMaps(a, b map[string]string) map[string]string {

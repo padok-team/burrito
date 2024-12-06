@@ -6,6 +6,10 @@ If the field is specified for a given `TerraformRepository` it will be applied b
 
 If the field is specified for a given `TerraformLayer` it will take precedence over the `TerraformRepository` configuration.
 
+!!! info
+    - Maps (dictionaries): A deep merge is performed. Keys in `TerraformLayer` overwrite those in `TerraformRepository`, but unmatched keys are preserved.
+    - Arrays (lists): Arrays are not merged; they are fully replaced.
+
 Available overrides are:
 
 |         Fields         |
@@ -22,6 +26,9 @@ Available overrides are:
 |     `VolumeMounts`     |
 | `Metadata.Annotations` |
 |   `Metadata.Labels`    |
+|    `ExtraInitArgs`     |
+|    `ExtraPlanArgs`     |
+|    `ExtraApplyArgs`    |
 
 For instance with the following configuration, all the runner pods will have the specifications described inside the `TerraformRepository`:
 
@@ -62,7 +69,7 @@ spec:
     namespace: burrito
 ```
 
-In the following case, `tolerations` and `nodeSelector` will be merged:
+In the following case, `nodeSelector` will be merged and `tolerations` will be replaced:
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
