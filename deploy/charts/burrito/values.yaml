@@ -58,7 +58,7 @@ config:
     # -- Provider cache custom configuration
     hermitcrab: {}
     datastore:
-      # -- Service account to use for datastore operations (e.g. reading/writing to storage)
+      # -- Service accounts that are allowed to access the datastore API in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that)
       serviceAccounts: []
       storage:
         # -- Use in-memory storage for testing - not intended for production use, data will be lost on datastore restart
@@ -369,6 +369,7 @@ datastore:
     labels:
       app.kubernetes.io/component: datastore
       app.kubernetes.io/name: burrito-datastore
+  # -- Service account configuration for the Burrito datastore deployment. Use this to grant permission to the datastore to interact with external storage
   serviceAccount:
     metadata:
       annotations: {}
