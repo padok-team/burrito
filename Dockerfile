@@ -1,6 +1,6 @@
 # Build Burrito UI
 
-FROM docker.io/library/node:22.11.0@sha256:5c76d05034644fa8ecc9c2aa84e0a83cd981d0ef13af5455b87b9adf5b216561 AS builder-ui
+FROM docker.io/library/node:22.11.0@sha256:ec878c763e9fad09d22aae86e2edcb7a05b397dfe8411c16e2b90158d595e2ce AS builder-ui
 
 WORKDIR /workspace
 # Copy the node modules manifests
@@ -15,7 +15,7 @@ ENV VITE_API_BASE_URL=/api
 RUN yarn build
 
 # Build the manager binary
-FROM docker.io/library/golang:1.22.9@sha256:147f428a24c6b80b8afbdaec7f245b9e7ac342601e3aeaffb321a103b7c6b3f4 AS builder
+FROM docker.io/library/golang:1.22.9@sha256:89ba45d0421d0a4404249abb3fee78fbc98b01b0bd0bf478d3db9ac35af54495 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
