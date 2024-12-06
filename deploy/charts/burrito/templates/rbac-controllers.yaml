@@ -43,6 +43,8 @@ rules:
   - list
   - create
   - update
+  - watch
+  - get
 - apiGroups:
   - config.terraform.padok.cloud
   resources:
@@ -160,21 +162,3 @@ rules:
   - update
   - patch
   - delete
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/component: controllers
-    app.kubernetes.io/name: burrito-controllers
-    app.kubernetes.io/part-of: burrito
-  name: burrito-controllers-secrets
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - watch
-  - list
-  - get

@@ -1,3 +1,5 @@
+{{- $metadataControllers := .Values.controllers.metadata }}
+
 {{- range $tenant := .Values.tenants }}
 {{- if $tenant.namespace.create }}
 apiVersion: v1
@@ -13,6 +15,24 @@ spec:
   - kubernetes
 ---
 {{- end }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: burrito-controllers
+  labels:
+    {{- toYaml $metadataControllers.labels | nindent 4 }}
+  annotations:
+    {{- toYaml $metadataControllers.annotations | nindent 4 }}
+  namespace: {{ $tenant.namespace.name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-controllers
+subjects:
+  - kind: ServiceAccount
+    name: burrito-controllers
+    namespace: {{ $.Release.Namespace }}
+---
 # Default service account for running Burrito pods, this makes it optional to create at least one service account for each tenant
 apiVersion: v1
 kind: ServiceAccount
