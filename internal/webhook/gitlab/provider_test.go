@@ -9,27 +9,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	"github.com/padok-team/burrito/internal/webhook/gitlab"
 
 	webhook "github.com/go-playground/webhooks/gitlab"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestGilab_IsFromProvider(t *testing.T) {
-	gitlab := gitlab.Gitlab{}
-
-	req, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("X-GitHub-Event", "test")
-	assert.False(t, gitlab.IsFromProvider(req))
-
-	req, err = http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("X-GitLab-Event", "test")
-	assert.True(t, gitlab.IsFromProvider(req))
-}
 
 func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 	payloadFile, err := os.Open("testdata/gitlab-push-main-event.json")
@@ -55,23 +40,18 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 	}
 
 	secret := "test-secret"
-	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
-		},
+	gitlab := gitlab.Gitlab{
+		Secret: secret,
 	}
-	err = gitlab.Init(config)
+	err = gitlab.Init()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitLab-Event", "Push Hook")
 	req.Header.Set("X-Gitlab-Token", secret)
 
-	evt, err := gitlab.GetEvent(req)
+	parsed, ok := gitlab.ParseFromProvider(req)
+	assert.True(t, ok)
+	evt, err := gitlab.GetEvent(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PushEvent{}, evt)
 
@@ -86,17 +66,10 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 	// Test GitLab initialization
 	secret := "test-secret"
-	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
-		},
+	gitlab := gitlab.Gitlab{
+		Secret: secret,
 	}
-	err := gitlab.Init(config)
+	err := gitlab.Init()
 	assert.NoError(t, err)
 
 	// Test event handling
@@ -130,13 +103,14 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 		req.Header.Set("X-GitLab-Event", "Merge Request Hook")
 		req.Header.Set("X-Gitlab-Token", secret)
 
-		evt, err := gitlab.GetEvent(req)
+		parsed, ok := gitlab.ParseFromProvider(req)
+		assert.True(t, ok)
+		evt, err := gitlab.GetEvent(parsed)
 		assert.NoError(t, err)
 		assert.IsType(t, &event.PullRequestEvent{}, evt)
 
 		pullRequestEvt := evt.(*event.PullRequestEvent)
 		assert.Equal(t, "1", pullRequestEvt.ID)
-		assert.Equal(t, "gitlab", pullRequestEvt.Provider)
 		assert.Equal(t, "https://example.com/gitlabhq/gitlab-test", pullRequestEvt.URL)
 		assert.Equal(t, "demo", pullRequestEvt.Revision)
 		assert.Equal(t, "main", pullRequestEvt.Base)

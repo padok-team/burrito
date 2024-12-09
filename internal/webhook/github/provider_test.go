@@ -13,27 +13,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	"github.com/padok-team/burrito/internal/webhook/github"
 
 	webhook "github.com/go-playground/webhooks/github"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestGithub_IsFromProvider(t *testing.T) {
-	github := github.Github{}
-
-	req, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("X-GitHub-Event", "test")
-	assert.True(t, github.IsFromProvider(req))
-
-	req, err = http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("X-GitLab-Event", "test")
-	assert.False(t, github.IsFromProvider(req))
-}
 
 func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	payloadFile, err := os.Open("testdata/github-push-main-event.json")
@@ -59,17 +44,10 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	}
 
 	secret := "test-secret"
-	github := github.Github{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Github: config.WebhookGithubConfig{
-					Secret: secret,
-				},
-			},
-		},
+	github := github.Github{
+		Secret: secret,
 	}
-	err = github.Init(config)
+	err = github.Init()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitHub-Event", "push")
@@ -79,8 +57,9 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	assert.NoError(t, err)
 	expectedMac := hex.EncodeToString(mac.Sum(nil))
 	req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha1=%s", expectedMac))
-
-	evt, err := github.GetEvent(req)
+	parsed, ok := github.ParseFromProvider(req)
+	assert.True(t, ok)
+	evt, err := github.GetEvent(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PushEvent{}, evt)
 
@@ -116,17 +95,10 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	}
 
 	secret := "test-secret"
-	github := github.Github{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Github: config.WebhookGithubConfig{
-					Secret: secret,
-				},
-			},
-		},
+	github := github.Github{
+		Secret: secret,
 	}
-	err = github.Init(config)
+	err = github.Init()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitHub-Event", "pull_request")
@@ -137,13 +109,14 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	expectedMac := hex.EncodeToString(mac.Sum(nil))
 	req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha1=%s", expectedMac))
 
-	evt, err := github.GetEvent(req)
+	parsed, ok := github.ParseFromProvider(req)
+	assert.True(t, ok)
+	evt, err := github.GetEvent(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PullRequestEvent{}, evt)
 
 	pullRequestEvt := evt.(*event.PullRequestEvent)
 	assert.Equal(t, "20", pullRequestEvt.ID)
-	assert.Equal(t, "github", pullRequestEvt.Provider)
 	assert.Equal(t, "https://github.com/padok-team/burrito-examples", pullRequestEvt.URL)
 	assert.Equal(t, "demo", pullRequestEvt.Revision)
 	assert.Equal(t, "main", pullRequestEvt.Base)

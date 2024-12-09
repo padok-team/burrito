@@ -27,10 +27,11 @@ nav:
 - Operator Manual:
   - operator-manual/index.md
   - operator-manual/architecture.md
+  - operator-manual/git-authentication.md
+  - operator-manual/pr-mr-workflow.md
   - operator-manual/git-webhook.md
   - operator-manual/advanced-configuration.md
   - operator-manual/multi-tenant-architecture.md
-  - operator-manual/pr-mr-workflow.md
   - operator-manual/datastore.md
   - operator-manual/provider-caching.md
 - User Guide:

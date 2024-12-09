@@ -15,23 +15,38 @@ The webhook should be triggered on `push` and `pull_request` events.
 GitLab triggers:  
 The webhook should be triggered on `Push events` from all branches and `Merge request events`.
 
-## Reference the webhook secret in the controller
+## Reference the webhook secret in the repository secret
 
-Create a secret called `burrito-webhook-secret` in the controller namespace with the webhook secret.
+Add the webhook secret to the secret used to authenticate to the repository. If the repository is public, create a secret in the same namespace as the `TerraformRepository` and reference it in the `spec.repository.secretName`.
+Reference the webhook secret in the webhookSecret key of the Kubernetes secret.
+
 ```yaml
-kind: Secret
-apiVersion: v1
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
 metadata:
-  name: burrito-webhook-secret
-  namespace: burrito-system
-type: Opaque
-stringData:
-  burrito-webhook-secret: <my-webhook-secret>
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/owner/repo
+    secretName: burrito-repo
+  terraform:
+    enabled: true
 ```
 
-Add the webhook secret as an environment variable of the `burrito-server`. The variables depends on your git provider.
-
-| Git provider |          Environment Variable          |
-| :----------: | :------------------------------------: |
-|    GitHub    | `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET` |
-|    GitLab    | `BURRITO_SERVER_WEBHOOK_GITLAB_SECRET` |
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: Opaque
+stringData:
+  githubAppId: "123456"
+  githubAppInstallationId: "12345678"
+  githubAppPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    my-private-key
+    -----END RSA PRIVATE KEY-----
+  webhookSecret: "my-webhook-secret" 
+```
