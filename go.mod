@@ -190,7 +190,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/xanzy/go-gitlab v0.114.0
+	github.com/xanzy/go-gitlab v0.115.0
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
