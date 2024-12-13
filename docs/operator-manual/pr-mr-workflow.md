@@ -102,29 +102,37 @@ You need a private key for your GitHub app to configure Burrito.
 
 - Save the private key file to your local machine. GitHub only stores the public portion of the key.
 
-#### Configure Burrito
+#### Configure a repository secret with the GitHub App credentials
 
-Add the following environment variables to your Burrito controller deployment:
-
-- `BURRITO_CONTROLLER_GITHUBCONFIG_APPID`: The App ID of your GitHub app.
-- `BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID`: The Installation ID of your GitHub app.
-- `BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY`: The private key of your GitHub app.
+Add the credentials of your newly created app to the secret associated to your `TerraformRepository` resource. If the repository is public, create a secret in the same namespace as the `TerraformRepository` and reference it in the `spec.repository.secretName`.
 
 For example:
-
 ```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/owner/repo
+    secretName: burrito-repo
+  terraform:
+    enabled: true
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: burrito-github-config
-  namespace: burrito
+  name: burrito-repo
+  namespace: burrito-project
 type: Opaque
 stringData:
-  BURRITO_CONTROLLER_GITHUBCONFIG_APPID: "123456"
-  BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID: "12345678"
-  BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY: |
+  webhookSecret: "my-webhook-secret"
+  githubAppId: "123456"
+  githubAppInstallationId: "12345678"
+  githubAppPrivateKey: |
     -----BEGIN RSA PRIVATE KEY-----
-    ...
+    my-private-key
     -----END RSA PRIVATE KEY-----
 ```
 
@@ -144,21 +152,30 @@ Follow the instructions in the GitHub documentation for [creating a personal acc
 
 #### Configure Burrito
 
-Add the following environment variables to your Burrito controller deployment:
-
-- `BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN`: The personal access token of your GitHub app.
+Set the `githubToken` key in the secret associated to your `TerraformRepository` resource.
 
 For example:
-
 ```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/owner/repo
+    secretName: burrito-repo
+  terraform:
+    enabled: true
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: burrito-github-config
-  namespace: burrito
+  name: burrito-repo
+  namespace: burrito-project
 type: Opaque
 stringData:
-  BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN: github_pat_123456
+  githubToken: "123456"
 ```
 
 ### GitLab
@@ -169,30 +186,29 @@ You need a private token for your GitLab app to configure Burrito. You can gener
 
 #### Configure Burrito
 
-Add the following environment variables to your Burrito controller deployment:
+Set the `gitlabToken` key in the secret associated to your `TerraformRepository` resource.
 
-- `BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN`: The private token of your GitLab app.
-- `BURRITO_CONTROLLER_GITLABCONFIG_URL`: The URL of your GitLab instance.
 
 For example:
-
 ```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://gitlab.com/owner/repo
+    secretName: burrito-repo
+  terraform:
+    enabled: true
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: burrito-gitlab-config
-  namespace: burrito
+  name: burrito-repo
+  namespace: burrito-project
 type: Opaque
 stringData:
-  BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN: "123456"
-  BURRITO_CONTROLLER_GITLABCONFIG_URL: "https://gitlab.example.com"
+  gitlabToken: "123456"
 ```
-
-|               Environment variable               |                        Description                         |
-| :----------------------------------------------: | :--------------------------------------------------------: |
-|     `BURRITO_CONTROLLER_GITHUBCONFIG_APPID`      |     the GtiHub App ID to send comment to GitHub's API      |
-| `BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID` | the GitHub Installation ID to send comment to GitHub's API |
-|   `BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY`   | the GitHub App private key to send comment to GitHub's API |
-|    `BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN`    |       the API token to send comment to GitHub's API        |
-|    `BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN`    |       the API token to send comment to GitLab's API        |
-|      `BURRITO_CONTROLLER_GITLABCONFIG_URL`       |               the URL of the GitLab instance               |

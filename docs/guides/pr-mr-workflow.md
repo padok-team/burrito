@@ -26,33 +26,44 @@ spec:
 ```
 
 You will also need to setup a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) to allow Burrito to comment on your PRs/MRs. Follow the instructions in the [PR/MR workflow](../operator-manual/pr-mr-workflow.md#configuration) section of the operator manual to set up the GitHub app.
-Make sure that you updated the Burrito values file to include the GitHub app ID, installation ID, and private key to the Burrito controller deployment.
-
-!!! info
-    Your controller deployment should now have the following environment variables:  
-    - `BURRITO_CONTROLLER_GITHUBCONFIG_APPID`: The App ID of your GitHub app.  
-    - `BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID`: The Installation ID of your GitHub app.  
-    - `BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY`: The private key of your GitHub app.  
+Make sure that you created a secret associated to your repository that include the GitHub app ID, installation ID, and private key.
 
 !!! note
     You can also use a personal access token instead of a GitHub app. Your GitHub account will be used to comment on the PRs/MRs.
-    The environment variable to set is `BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN`
+    The secret should include the personal access token in the `githubToken` key.
 
 Now let's configure the GitHub webhook. Expose the `burrito-server` kubernetes service to the internet using the method of your choice. (for testing purposes on a local cluster, you can use `kubectl port-forward` and [ngrok](https://ngrok.com/) to expose the service to the internet).
 
-Configure a webhook in your GitHub repository to point to the exposed `burrito-server` service. **Make sure to specify the `/api/webhook` path in the target url.** The webhook should be triggered on `push` and `pull_request` events. You can reference your webhook secret in a secret named `burrito-webhook-secret` in the controller namespace (`burrito-system` in this tutorial).
+Configure a webhook in your GitHub repository to point to the exposed `burrito-server` service. **Make sure to specify the `/api/webhook` path in the target url.** The webhook should be triggered on `push` and `pull_request` events. Reference your webhook secret in the secret associated to your repository, in the `webhookSecret` key.
 
+Your `TerraformRepository` resource and secret should look like this:
 ```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/<your-github-handle>/burrito-examples
+    secretName: burrito-secret
+  terraform:
+    enabled: true
+---
 kind: Secret
 metadata:
   name: burrito-webhook-secret
-  namespace: burrito-system
+  namespace: burrito-project
 type: Opaque
 stringData:
-  burrito-webhook-secret: <my-webhook-secret>
+  githubAppId: "123456"
+  githubAppInstallationId: "12345678"
+  githubAppPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    my-private-key
+    -----END RSA PRIVATE KEY-----
+  webhookSecret: "my-webhook-secret" 
 ```
-
-You can also directly add the webhook secret as an environment variable of the `burrito-server` deployment. The variable name depends on your git provider. For GitHub, the environment variable is `BURRITO_SERVER_WEBHOOK_GITHUB_SECRET`.
 
 ### Experiment with the PR/MR workflow
 

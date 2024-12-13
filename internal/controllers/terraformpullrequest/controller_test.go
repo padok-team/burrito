@@ -108,8 +108,8 @@ var _ = BeforeSuite(func() {
 		Config:    config.TestConfig(),
 		Scheme:    scheme.Scheme,
 		Datastore: datastore.NewMockClient(),
-		Providers: []controller.Provider{
-			&provider.Mock{},
+		Providers: map[string]controller.Provider{
+			"mock": &provider.Mock{},
 		},
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
@@ -179,8 +179,7 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					},
 				},
 				Spec: configv1alpha1.TerraformPullRequestSpec{
-					Provider: "gitlab",
-					Branch:   "test",
+					Branch: "test",
 					Repository: configv1alpha1.TerraformLayerRepository{
 						Name:      "test-repository",
 						Namespace: "default",

@@ -8,7 +8,6 @@ metadata:
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
-  provider: mock
   branch: feature-branch
   id: "42"
   base: main
@@ -64,7 +63,6 @@ metadata:
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
-  provider: mock
   branch: feature-branch-2
   id: "84"
   base: main
@@ -106,7 +104,6 @@ metadata:
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
-  provider: mock
   branch: feature-branch-3
   id: "48"
   base: main
@@ -148,7 +145,6 @@ metadata:
   annotations:
     webhook.terraform.padok.cloud/branch-commit: 04410b5b7d90b82ad658b86564a9aa4bce411ac9
 spec:
-  provider: mock
   branch: update-readme
   id: "100"
   base: main
