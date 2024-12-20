@@ -8,19 +8,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
-
 	"net/http"
+	"os"
 	"testing"
 
+	"github.com/padok-team/burrito/internal/utils/gitprovider/github"
+	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
-	"github.com/padok-team/burrito/internal/webhook/github"
 
 	webhook "github.com/go-playground/webhooks/github"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGithub_GetEvent_PushEvent(t *testing.T) {
+func TestGithub_GetEventFromWebhookPayload_PushEvent(t *testing.T) {
 	payloadFile, err := os.Open("testdata/github-push-main-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
@@ -44,10 +44,12 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	}
 
 	secret := "test-secret"
-	github := github.Github{
-		Secret: secret,
+	github := &github.Github{
+		Config: types.Config{
+			WebhookSecret: secret,
+		},
 	}
-	err = github.Init()
+	err = github.InitWebhookHandler()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitHub-Event", "push")
@@ -57,9 +59,10 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	assert.NoError(t, err)
 	expectedMac := hex.EncodeToString(mac.Sum(nil))
 	req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha1=%s", expectedMac))
-	parsed, ok := github.ParseFromProvider(req)
+
+	parsed, ok := github.ParseWebhookPayload(req)
 	assert.True(t, ok)
-	evt, err := github.GetEvent(parsed)
+	evt, err := github.GetEventFromWebhookPayload(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PushEvent{}, evt)
 
@@ -71,7 +74,7 @@ func TestGithub_GetEvent_PushEvent(t *testing.T) {
 	assert.ElementsMatch(t, []string{"modules/random-pets/main.tf", "terragrunt/random-pets/test/inputs.hcl", "modules/random-pets/variables.tf"}, pushEvt.Changes)
 }
 
-func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
+func TestGithub_GetEventFromWebhookPayload_PullRequestEvent(t *testing.T) {
 	payloadFile, err := os.Open("testdata/github-open-pull-request-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
@@ -95,10 +98,12 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	}
 
 	secret := "test-secret"
-	github := github.Github{
-		Secret: secret,
+	github := &github.Github{
+		Config: types.Config{
+			WebhookSecret: secret,
+		},
 	}
-	err = github.Init()
+	err = github.InitWebhookHandler()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitHub-Event", "pull_request")
@@ -109,9 +114,9 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	expectedMac := hex.EncodeToString(mac.Sum(nil))
 	req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha1=%s", expectedMac))
 
-	parsed, ok := github.ParseFromProvider(req)
+	parsed, ok := github.ParseWebhookPayload(req)
 	assert.True(t, ok)
-	evt, err := github.GetEvent(parsed)
+	evt, err := github.GetEventFromWebhookPayload(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PullRequestEvent{}, evt)
 
@@ -122,4 +127,67 @@ func TestGithub_GetEvent_PullRequestEvent(t *testing.T) {
 	assert.Equal(t, "main", pullRequestEvt.Base)
 	assert.Equal(t, "faf5e25402a9bd10f7318c8a2cd984af576c687f", pullRequestEvt.Commit)
 	assert.Equal(t, "opened", pullRequestEvt.Action)
+}
+
+func TestGithub_IsAvailable(t *testing.T) {
+	tests := []struct {
+		name         string
+		config       types.Config
+		capabilities []string
+		want         bool
+	}{
+		{
+			name: "GitHub App credentials",
+			config: types.Config{
+				AppID:             123,
+				AppInstallationID: 456,
+				AppPrivateKey:     "test-key",
+				URL:               "https://github.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Clone, types.Capabilities.Comment},
+			want:         true,
+		},
+		{
+			name: "GitHub Token",
+			config: types.Config{
+				GitHubToken: "test-token",
+				URL:         "https://github.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Clone, types.Capabilities.Comment},
+			want:         true,
+		},
+		{
+			name: "Webhook only with secret",
+			config: types.Config{
+				WebhookSecret: "secret",
+				URL:           "https://github.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Webhook},
+			want:         true,
+		},
+		{
+			name: "Unsupported capability",
+			config: types.Config{
+				GitHubToken: "test-token",
+				URL:         "https://github.com/org/repo",
+			},
+			capabilities: []string{"unsupported"},
+			want:         false,
+		},
+		{
+			name: "No authentication",
+			config: types.Config{
+				URL: "https://github.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Clone},
+			want:         false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := github.IsAvailable(tt.config, tt.capabilities)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
