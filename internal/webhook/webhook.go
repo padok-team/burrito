@@ -35,12 +35,6 @@ func New(c *config.Config) *Webhook {
 	}
 }
 
-type Provider interface {
-	Init() error
-	ParseFromProvider(*http.Request) (interface{}, bool)
-	GetEvent(interface{}) (event.Event, error)
-}
-
 func (w *Webhook) Init() error {
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := w.Client.List(context.Background(), repositories)
