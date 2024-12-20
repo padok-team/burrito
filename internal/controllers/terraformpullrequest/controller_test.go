@@ -41,9 +41,9 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
-	provider "github.com/padok-team/burrito/internal/controllers/terraformpullrequest/mock"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	utils "github.com/padok-team/burrito/internal/testing"
+	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -108,8 +108,12 @@ var _ = BeforeSuite(func() {
 		Config:    config.TestConfig(),
 		Scheme:    scheme.Scheme,
 		Datastore: datastore.NewMockClient(),
-		Providers: map[string]controller.Provider{
-			"mock": &provider.Mock{},
+		Providers: map[string]gitprovider.Provider{
+			"mock": func() gitprovider.Provider {
+				provider, err := gitprovider.NewWithName(gitprovider.Config{EnableMock: true}, "mock")
+				Expect(err).NotTo(HaveOccurred())
+				return provider
+			}(),
 		},
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
