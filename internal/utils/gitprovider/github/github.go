@@ -107,6 +107,9 @@ func (g *Github) Init() error {
 	// Create the appropriate client based on GitHub type
 	if subscription == GitHubEnterprise {
 		g.Client, err = github.NewClient(httpClient).WithEnterpriseURLs(apiUrl, apiUrl)
+		if err != nil {
+			return fmt.Errorf("error creating GitHub Enterprise client: %w", err)
+		}
 	} else {
 		g.Client = github.NewClient(httpClient)
 	}
