@@ -1,8 +1,6 @@
 module github.com/padok-team/burrito
 
-go 1.23.3
-
-toolchain go1.23.4
+go 1.23.4
 
 require (
 	cloud.google.com/go/storage v1.45.0
@@ -18,8 +16,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.17.3
 	github.com/onsi/gomega v1.33.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
-	github.com/tofuutils/tenv/v3 v3.2.12
+	github.com/stretchr/testify v1.10.0
 	github.com/tofuutils/tenv/v4 v4.1.0
 	google.golang.org/api v0.197.0
 	k8s.io/apimachinery v0.30.8
@@ -191,7 +188,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/xanzy/go-gitlab v0.114.0
+	gitlab.com/gitlab-org/api/client-go v0.118.0
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
@@ -202,7 +199,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	google.golang.org/protobuf v1.36.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

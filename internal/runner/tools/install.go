@@ -12,9 +12,9 @@ import (
 	tf "github.com/padok-team/burrito/internal/runner/tools/terraform"
 	tg "github.com/padok-team/burrito/internal/runner/tools/terragrunt"
 	log "github.com/sirupsen/logrus"
-	tenvconfig "github.com/tofuutils/tenv/v3/config"
-	"github.com/tofuutils/tenv/v3/versionmanager"
-	"github.com/tofuutils/tenv/v3/versionmanager/builder"
+	tenvconfig "github.com/tofuutils/tenv/v4/config"
+	"github.com/tofuutils/tenv/v4/versionmanager"
+	"github.com/tofuutils/tenv/v4/versionmanager/builder"
 )
 
 type tenvWrapper = versionmanager.VersionManager
