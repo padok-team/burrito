@@ -13,7 +13,7 @@ permissions:
   id-token: write # Required for Codecov
 
 env:
-  GO_VERSION: 1.22
+  GO_VERSION: 1.23
 
 jobs:
   unit-tests:
