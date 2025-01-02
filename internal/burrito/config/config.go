@@ -103,9 +103,14 @@ type ControllerTimers struct {
 }
 
 type RepositoryConfig struct {
-	SSHPrivateKey string `mapstructure:"sshPrivateKey"`
-	Username      string `mapstructure:"username"`
-	Password      string `mapstructure:"password"`
+	SSHPrivateKey           string `mapstructure:"sshPrivateKey"`
+	Username                string `mapstructure:"username"`
+	Password                string `mapstructure:"password"`
+	GithubAppId             int64  `mapstructure:"githubAppId"`
+	GithubAppInstallationId int64  `mapstructure:"githubAppInstallationId"`
+	GithubAppPrivateKey     string `mapstructure:"githubAppPrivateKey"`
+	GithubToken             string `mapstructure:"githubToken"`
+	GitlabToken             string `mapstructure:"gitlabToken"`
 }
 
 type RunnerConfig struct {

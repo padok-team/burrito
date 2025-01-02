@@ -10,6 +10,8 @@ import (
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/runner/tools"
 	"github.com/padok-team/burrito/internal/utils"
+	"github.com/padok-team/burrito/internal/utils/gitprovider"
+	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	runnerutils "github.com/padok-team/burrito/internal/utils/runner"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/types"
@@ -21,6 +23,7 @@ type Runner struct {
 	exec          tools.BaseExec
 	Datastore     datastore.Client
 	Client        client.Client
+	GitProvider   gitprovider.Provider
 	Layer         *configv1alpha1.TerraformLayer
 	Run           *configv1alpha1.TerraformRun
 	Repository    *configv1alpha1.TerraformRepository
@@ -68,6 +71,7 @@ func (r *Runner) initClients() error {
 
 	datastoreClient := datastore.NewDefaultClient(r.config.Datastore)
 	r.Datastore = datastoreClient
+
 	return nil
 }
 
@@ -83,7 +87,12 @@ func (r *Runner) Init() error {
 
 	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.Layer.Spec.Path)
 
-	r.gitRepository, err = FetchRepositoryContent(r.Repository, r.Layer.Spec.Branch, r.config)
+	err = r.initGitProvider()
+	if err != nil {
+		log.Errorf("error initializing git provider: %s", err)
+	}
+	log.Info("successfully initialized git provider")
+	r.gitRepository, err = r.GitProvider.Clone(r.Repository, r.Layer.Spec.Branch, r.config.Runner.RepositoryPath)
 	if err != nil {
 		log.Errorf("error fetching repository: %s", err)
 		return err
@@ -152,7 +161,32 @@ func (r *Runner) GetResources() error {
 	}
 	log.Infof("successfully retrieved repo")
 	r.Repository = repository
-
 	log.Infof("kubernetes resources successfully retrieved")
+	return nil
+}
+
+func (r *Runner) initGitProvider() error {
+	config := gitprovider.Config{
+		URL:               r.Repository.Spec.Repository.Url,
+		AppID:             r.config.Runner.Repository.GithubAppId,
+		AppInstallationID: r.config.Runner.Repository.GithubAppInstallationId,
+		AppPrivateKey:     r.config.Runner.Repository.GithubAppPrivateKey,
+		GitHubToken:       r.config.Runner.Repository.GithubToken,
+		GitLabToken:       r.config.Runner.Repository.GitlabToken,
+		Username:          r.config.Runner.Repository.Username,
+		Password:          r.config.Runner.Repository.Password,
+		SSHPrivateKey:     r.config.Runner.Repository.SSHPrivateKey,
+	}
+	provider, err := gitprovider.New(config, []string{gt.Capabilities.Clone})
+	if err != nil {
+		log.Errorf("error initializing git provider: %s", err)
+		return err
+	}
+	r.GitProvider = provider
+	err = r.GitProvider.Init()
+	if err != nil {
+		log.Errorf("error initializing git provider: %s", err)
+		return err
+	}
 	return nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/gruntwork-io/go-commons/errors"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	coordination "k8s.io/api/coordination/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -24,6 +25,7 @@ type Resources struct {
 	Runs         []*configv1alpha1.TerraformRun
 	PullRequests []*configv1alpha1.TerraformPullRequest
 	Leases       []*coordination.Lease
+	Secrets      []*corev1.Secret
 }
 
 type GenericResource struct {
@@ -107,6 +109,13 @@ func LoadResources(client client.Client, path string) {
 			panic(err)
 		}
 	}
+	for _, r := range resources.Secrets {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func parseResources(path string) (*Resources, error) {
@@ -167,6 +176,10 @@ func parseResources(path string) (*Resources, error) {
 			pr := &configv1alpha1.TerraformPullRequest{}
 			err = yaml.Unmarshal([]byte(doc), &pr)
 			resources.PullRequests = append(resources.PullRequests, pr)
+		case "Secret":
+			secret := &corev1.Secret{}
+			err = yaml.Unmarshal([]byte(doc), &secret)
+			resources.Secrets = append(resources.Secrets, secret)
 		default:
 			continue
 		}

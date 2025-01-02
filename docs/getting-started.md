@@ -47,6 +47,15 @@ This will create a new namespace, `burrito-system`, where Burrito services will 
 
 Create a Kubernetes `Secret` to reference the necessary credentials to clone your IaC repository (GitHub or GitLab)
 
+!!! info
+    Supported authentication methods are:
+    - Username and password
+    - SSH private key
+    - GitHub App
+    - GitHub API token
+    - GitLab API token
+    More information on how to create a secret can be found in the [Secrets](./secrets/index.md) section.
+
 ```yaml
 kind: Secret
 metadata:

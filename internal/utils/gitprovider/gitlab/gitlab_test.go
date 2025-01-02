@@ -4,34 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"os"
-
 	"net/http"
+	"os"
 	"testing"
 
-	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/utils/gitprovider/gitlab"
+	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
-	"github.com/padok-team/burrito/internal/webhook/gitlab"
 
 	webhook "github.com/go-playground/webhooks/gitlab"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGilab_IsFromProvider(t *testing.T) {
-	gitlab := gitlab.Gitlab{}
-
-	req, err := http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("X-GitHub-Event", "test")
-	assert.False(t, gitlab.IsFromProvider(req))
-
-	req, err = http.NewRequest("GET", "/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("X-GitLab-Event", "test")
-	assert.True(t, gitlab.IsFromProvider(req))
-}
-
-func TestGitlab_GetEvent_PushEvent(t *testing.T) {
+func TestGitlab_GetEventFromWebhookPayload_PushEvent(t *testing.T) {
 	payloadFile, err := os.Open("testdata/gitlab-push-main-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
@@ -55,23 +40,20 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 	}
 
 	secret := "test-secret"
-	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
+	gitlab := &gitlab.Gitlab{
+		Config: types.Config{
+			WebhookSecret: secret,
 		},
 	}
-	err = gitlab.Init(config)
+	err = gitlab.InitWebhookHandler()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitLab-Event", "Push Hook")
 	req.Header.Set("X-Gitlab-Token", secret)
 
-	evt, err := gitlab.GetEvent(req)
+	parsed, ok := gitlab.ParseWebhookPayload(req)
+	assert.True(t, ok)
+	evt, err := gitlab.GetEventFromWebhookPayload(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PushEvent{}, evt)
 
@@ -83,23 +65,7 @@ func TestGitlab_GetEvent_PushEvent(t *testing.T) {
 	assert.ElementsMatch(t, []string{"test.hcl", "layer-1/prod.hcl", "layer-2/staging.hcl"}, pushEvt.Changes)
 }
 
-func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
-	// Test GitLab initialization
-	secret := "test-secret"
-	gitlab := gitlab.Gitlab{}
-	config := &config.Config{
-		Server: config.ServerConfig{
-			Webhook: config.WebhookConfig{
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: secret,
-				},
-			},
-		},
-	}
-	err := gitlab.Init(config)
-	assert.NoError(t, err)
-
-	// Test event handling
+func TestGitlab_GetEventFromWebhookPayload_MergeRequestEvent(t *testing.T) {
 	payloadFile, err := os.Open("testdata/gitlab-open-merge-request-event.json")
 	if err != nil {
 		t.Fatalf("failed to open payload file: %v", err)
@@ -127,16 +93,26 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 			t.Fatalf("failed to create request: %v", err)
 		}
 
+		secret := "test-secret"
+		gitlab := &gitlab.Gitlab{
+			Config: types.Config{
+				WebhookSecret: secret,
+			},
+		}
+		err = gitlab.InitWebhookHandler()
+		assert.NoError(t, err)
+
 		req.Header.Set("X-GitLab-Event", "Merge Request Hook")
 		req.Header.Set("X-Gitlab-Token", secret)
 
-		evt, err := gitlab.GetEvent(req)
+		parsed, ok := gitlab.ParseWebhookPayload(req)
+		assert.True(t, ok)
+		evt, err := gitlab.GetEventFromWebhookPayload(parsed)
 		assert.NoError(t, err)
 		assert.IsType(t, &event.PullRequestEvent{}, evt)
 
 		pullRequestEvt := evt.(*event.PullRequestEvent)
 		assert.Equal(t, "1", pullRequestEvt.ID)
-		assert.Equal(t, "gitlab", pullRequestEvt.Provider)
 		assert.Equal(t, "https://example.com/gitlabhq/gitlab-test", pullRequestEvt.URL)
 		assert.Equal(t, "demo", pullRequestEvt.Revision)
 		assert.Equal(t, "main", pullRequestEvt.Base)
@@ -148,4 +124,66 @@ func TestGitlab_GetEvent_MergeRequestEvent(t *testing.T) {
 	testWithGivenAction("reopen", event.PullRequestOpened)
 	testWithGivenAction("close", event.PullRequestClosed)
 	testWithGivenAction("merge", event.PullRequestClosed)
+}
+
+func TestGitlab_IsAvailable(t *testing.T) {
+	tests := []struct {
+		name         string
+		config       types.Config
+		capabilities []string
+		want         bool
+	}{
+		{
+			name: "GitLab Token",
+			config: types.Config{
+				GitLabToken: "test-token",
+				URL:         "https://gitlab.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Clone, types.Capabilities.Comment},
+			want:         true,
+		},
+		{
+			name: "Webhook only with secret",
+			config: types.Config{
+				WebhookSecret: "secret",
+				URL:           "https://gitlab.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Webhook},
+			want:         true,
+		},
+		{
+			name: "Unsupported capability",
+			config: types.Config{
+				GitLabToken: "test-token",
+				URL:         "https://gitlab.com/org/repo",
+			},
+			capabilities: []string{"unsupported"},
+			want:         false,
+		},
+		{
+			name: "No authentication",
+			config: types.Config{
+				URL: "https://gitlab.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Clone},
+			want:         false,
+		},
+		{
+			name: "Basic auth not supported",
+			config: types.Config{
+				Username: "user",
+				Password: "pass",
+				URL:      "https://gitlab.com/org/repo",
+			},
+			capabilities: []string{types.Capabilities.Clone},
+			want:         false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := gitlab.IsAvailable(tt.config, tt.capabilities)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

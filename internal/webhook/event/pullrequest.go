@@ -16,7 +16,6 @@ import (
 )
 
 type PullRequestEvent struct {
-	Provider string
 	URL      string
 	Revision string
 	Base     string
@@ -85,10 +84,9 @@ func (e *PullRequestEvent) generateTerraformPullRequests(repositories []configv1
 				},
 			},
 			Spec: configv1alpha1.TerraformPullRequestSpec{
-				Provider: e.Provider,
-				Branch:   e.Revision,
-				ID:       e.ID,
-				Base:     e.Base,
+				Branch: e.Revision,
+				ID:     e.ID,
+				Base:   e.Base,
 				Repository: configv1alpha1.TerraformLayerRepository{
 					Name:      repository.Name,
 					Namespace: repository.Namespace,
