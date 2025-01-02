@@ -13,19 +13,19 @@
 
 **Burrito** is a TACoS (**T**erraform **A**utomation **Co**llaboration **S**oftware) Kubernetes Operator.
 
-## Why does this exists?
+## Why does this exist?
 
 [`terraform`](https://www.terraform.io/) is a tremendous tool to manage your infrastructure in IaC.
 However, it lacks built-in solutions for managing [state drift](https://developer.hashicorp.com/terraform/tutorials/state/resource-drift).
 
-Additionally, configuring a CI/CD pipeline for Terraform can be challenging and often varies depending on the selected tools
+Additionally, configuring a CI/CD pipeline for Terraform can be challenging and often varies depending on the selected tools.
 
 Finally, currently, there is no easy way to navigate your Terraform state to truly understand the modifications it undergoes when running `terraform apply`.
 
 `burrito` aims to tackle those issues by:
 
-- Planning continuously your Terraform code and run applies if needed
-- Offering an out of the box PR/MR integration so you do not have to write CI/CD pipelines for Terraform ever again
+- Planning continuously your Terraform code and running applies if needed
+- Offering an out-of-the-box PR/MR integration so you do not have to write CI/CD pipelines for Terraform ever again
 - Showing your state's modifications in a simple Web UI
 
 ## Demo
@@ -39,12 +39,14 @@ To learn more about burrito [go to the complete documentation](https://padok-tea
 
 ## Community
 
-### Contibution, Discussion and Support
+### Contribution, Discussion and Support
 
-You can reach burrito's maintainers on Twitter:
+Please read our [Contribution Guide](https://padok-team.github.io/burrito/contributing/) for more information on how to get involved.
 
-- [@spoukke](https://twitter.com/spoukke)
-- [@LonguetAlan](https://twitter.com/LonguetAlan)
+You can reach burrito's maintainers on X:
+
+- [@spoukke](https://x.com/spoukke)
+- [@LonguetAlan](https://x.com/LonguetAlan)
 
 ### Blogs and Presentations
 
@@ -52,6 +54,6 @@ You can reach burrito's maintainers on Twitter:
 
 ## License
 
-© 2024 [Padok](https://www.padok.fr/).
+© 2025 [Padok](https://www.padok.fr/).
 
 Licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), Version 2.0 ([LICENSE](./LICENSE))
