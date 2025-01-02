@@ -20,6 +20,7 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,14 +29,18 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/utils/gitprovider"
 )
 
 // RepositoryReconciler reconciles a TerraformRepository object
 type Reconciler struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-	Config   *config.Config
+	Scheme    *runtime.Scheme
+	Recorder  record.EventRecorder
+	Config    *config.Config
+	Providers map[string]gitprovider.Provider
+	Datastore datastore.Client
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -52,11 +57,49 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.WithContext(ctx)
+	log := log.WithContext(ctx)
+	log.Infof("starting reconciliation for repository %s/%s ...", req.Namespace, req.Name)
 
-	// TODO(user): your logic here
+	// fetch the TerraformRepository instance
+	repository := &configv1alpha1.TerraformRepository{}
+	if err := r.Get(ctx, req.NamespacedName, repository); err != nil {
+		log.Errorf("failed to get TerraformRepository: %s", err)
+		// If the repository is not found, it might have been deleted
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	return ctrl.Result{}, nil
+	// Get the current state and conditions
+	state, conditions := r.GetState(ctx, repository)
+
+	// Update status conditions
+	repository.Status.Conditions = conditions
+	if err := r.Status().Update(ctx, repository); err != nil {
+		log.Errorf("failed to update repository status: %s", err)
+		return ctrl.Result{}, err
+	}
+
+	// Get the handler for the current state
+	handler := state.getHandler()
+
+	// Execute the handler
+	log.Infof("repository %s/%s is in state %s", repository.Namespace, repository.Name, getStateString(state))
+	result, err := handler(ctx, r, repository)
+	if err != nil {
+		log.Errorf("error handling state %s: %s", getStateString(state), err)
+		return ctrl.Result{}, err
+	}
+
+	// Update repository status with current state
+	repository.Status.State = getStateString(state)
+	if err := r.Status().Update(ctx, repository); err != nil {
+		log.Errorf("failed to update repository status: %s", err)
+		return ctrl.Result{}, err
+	}
+
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -65,4 +108,20 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
 		Complete(r)
+}
+
+// listManagedRefs returns the list of refs (branches and tags) that are managed by burrito for a specific repository
+func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1alpha1.TerraformRepository) (map[string]bool, error) {
+	// get all layers that depends on the repository (layer.spec.repository.name == repository.name)
+	layers := &configv1alpha1.TerraformLayerList{}
+	if err := r.List(ctx, layers); err != nil {
+		return nil, err
+	}
+	refs := map[string]bool{}
+	for _, layer := range layers.Items {
+		if layer.Spec.Repository.Name == repository.Name {
+			refs[layer.Spec.Branch] = true
+		}
+	}
+	return refs, nil
 }

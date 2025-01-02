@@ -21,6 +21,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
     - jsonPath: .spec.repository.url
       name: URL
       type: string
@@ -2260,6 +2263,8 @@ spec:
             description: TerraformRepositoryStatus defines the observed state of TerraformRepository
             properties:
               conditions:
+                description: Conditions hold the latest available observations of
+                  the repository's state
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -2315,6 +2320,9 @@ spec:
                   - type
                   type: object
                 type: array
+              state:
+                description: State is the current state of the repository
+                type: string
             type: object
         type: object
     served: true
