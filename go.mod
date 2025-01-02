@@ -19,7 +19,7 @@ require (
 	github.com/onsi/gomega v1.33.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/tofuutils/tenv/v3 v3.2.12
+	github.com/tofuutils/tenv/v4 v4.1.0
 	github.com/tofuutils/tenv/v4 v4.1.0
 	google.golang.org/api v0.197.0
 	k8s.io/apimachinery v0.30.8
