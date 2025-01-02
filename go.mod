@@ -13,8 +13,8 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/terraform-json v0.24.0
-	github.com/onsi/ginkgo/v2 v2.20.2
-	github.com/onsi/gomega v1.34.2
+	github.com/onsi/ginkgo/v2 v2.22.1
+	github.com/onsi/gomega v1.36.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	github.com/tofuutils/tenv/v4 v4.1.0
@@ -85,7 +85,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/pprof v0.0.0-20240827171923-fa2c70bbbfe5 // indirect
+	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
@@ -129,7 +129,7 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/tools v0.27.0 // indirect
+	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
@@ -201,7 +201,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/protobuf v1.36.0 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
