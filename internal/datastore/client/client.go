@@ -24,6 +24,8 @@ type Client interface {
 	PutPlan(namespace string, layer string, run string, attempt string, format string, content []byte) error
 	GetLogs(namespace string, layer string, run string, attempt string) ([]string, error)
 	PutLogs(namespace string, layer string, run string, attempt string, content []byte) error
+	GetLatestRevision(namespace, name, ref string) (string, error)
+	StoreRevision(namespace, name, ref, revision string, bundle []byte) error
 }
 
 type DefaultClient struct {
@@ -192,5 +194,74 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("could not put logs, there's an issue with the storage backend")
 	}
+	return nil
+}
+
+func (c *DefaultClient) GetLatestRevision(namespace, name, ref string) (string, error) {
+	req, err := c.buildRequest("/api/repositories/revision", url.Values{
+		"namespace": {namespace},
+		"name":      {name},
+		"ref":       {ref},
+	}, http.MethodGet, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return "", &storageerrors.StorageError{
+			Err: fmt.Errorf("no revision found"),
+			Nil: true,
+		}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("could not get latest revision, there's an issue with the storage backend")
+	}
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
+func (c *DefaultClient) StoreRevision(namespace, name, ref, revision string, bundle []byte) error {
+	req, err := c.buildRequest(
+		"/api/repositories/revision",
+		url.Values{
+			"namespace": {namespace},
+			"name":      {name},
+			"ref":       {ref},
+			"revision":  {revision},
+		},
+		http.MethodPut,
+		bytes.NewBuffer(bundle),
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/octet-stream")
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		message, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("could not store revision, there's an issue reading the response from datastore: %s", err)
+		}
+		return fmt.Errorf("could not store revision, there's an issue with the storage backend: %s", string(message))
+	}
+
 	return nil
 }
