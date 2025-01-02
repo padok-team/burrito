@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -48,7 +49,7 @@ func detect(binaryPath, toolName, versionConstraint string) (string, error) {
 			return "", err
 		}
 	}
-	version, err := tenvWrapper.Evaluate(versionConstraint, true)
+	version, err := tenvWrapper.Evaluate(context.TODO(), versionConstraint, true)
 	if err == versionmanager.ErrNoCompatibleLocally {
 		log.Infof("compatible %s version %s found remotely", toolName, version)
 		return version, nil
@@ -68,7 +69,7 @@ func install(binaryPath, toolName, version string) error {
 	if err != nil {
 		return err
 	}
-	return tenvWrapper.Install(version)
+	return tenvWrapper.Install(context.TODO(), version)
 }
 
 // If not already on the system, install Terraform and, if needed, Terragrunt binaries
