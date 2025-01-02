@@ -124,10 +124,10 @@ func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, 
 	return len(attempts), err
 }
 
-func (s *Storage) GetGitBundle(namespace string, repository string, branch string, commit string) ([]byte, error) {
-	return s.Backend.Get(computeGitBundleKey(namespace, repository, branch, commit))
+func (s *Storage) GetGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
+	return s.Backend.Get(computeGitBundleKey(namespace, repository, ref, commit))
 }
 
-func (s *Storage) PutGitBundle(namespace string, repository string, branch string, commit string, bundle []byte) error {
-	return s.Backend.Set(computeGitBundleKey(namespace, repository, branch, commit), bundle, 0)
+func (s *Storage) PutGitBundle(namespace string, repository string, ref string, commit string, bundle []byte) error {
+	return s.Backend.Set(computeGitBundleKey(namespace, repository, ref, commit), bundle, 0)
 }
