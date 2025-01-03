@@ -77,8 +77,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	// Get the current state and conditions
 	state, conditions := r.GetState(ctx, repository)
 
-	// Update status conditions
+	// Update status conditions and state
 	repository.Status.Conditions = conditions
+	repository.Status.State = getStateString(state)
+
 	if err := r.Status().Update(ctx, repository); err != nil {
 		log.Errorf("failed to update repository status: %s", err)
 		return ctrl.Result{}, err
@@ -94,14 +96,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("error handling state %s: %s", getStateString(state), err)
 		return ctrl.Result{}, err
 	}
-
-	// Update repository status with current state
-	repository.Status.State = getStateString(state)
-	if err := r.Status().Update(ctx, repository); err != nil {
-		log.Errorf("failed to update repository status: %s", err)
-		return ctrl.Result{}, err
-	}
-
 	return result, nil
 }
 

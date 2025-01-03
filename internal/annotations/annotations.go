@@ -28,7 +28,10 @@ const (
 	SyncNow string = "api.terraform.padok.cloud/sync-now"
 
 	// LastSyncDate is the annotation key for the last repository sync date
-	LastSyncDate = "repository.terraform.padok.cloud/last-sync-date"
+	LastSyncDate      string = "repository.terraform.padok.cloud/last-sync-date"
+	LastSyncStatus    string = "repository.terraform.padok.cloud/last-sync-status"
+	SyncStatusSuccess string = "success"
+	SyncStatusFailed  string = "failed"
 )
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {

@@ -23,9 +23,10 @@ type State interface {
 func (r *Reconciler) GetState(ctx context.Context, repository *configv1alpha1.TerraformRepository) (State, []metav1.Condition) {
 	log := log.WithContext(ctx)
 	c1, IsLastSyncTooOld := r.IsLastSyncTooOld(repository)
-	conditions := []metav1.Condition{c1}
+	c2, HasLastSyncFailed := r.HasLastSyncFailed(repository)
+	conditions := []metav1.Condition{c1, c2}
 
-	if IsLastSyncTooOld {
+	if IsLastSyncTooOld || HasLastSyncFailed {
 		log.Infof("repository %s needs to be synced", repository.Name)
 		return &SyncNeeded{}, conditions
 	}
@@ -75,12 +76,17 @@ func (s *SyncNeeded) getHandler() Handler {
 				continue
 			}
 		}
-
-		// Update last sync date annotation
+		// Update annotations
 		if repository.Annotations == nil {
 			repository.Annotations = make(map[string]string)
 		}
+		if syncError != nil {
+			repository.Annotations[annotations.LastSyncStatus] = annotations.SyncStatusFailed
+		} else {
+			repository.Annotations[annotations.LastSyncStatus] = annotations.SyncStatusSuccess
+		}
 		repository.Annotations[annotations.LastSyncDate] = time.Now().Format(time.UnixDate)
+
 		if err := r.Client.Update(ctx, repository); err != nil {
 			log.Errorf("failed to update repository annotations: %s", err)
 			return ctrl.Result{}, err
