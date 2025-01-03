@@ -80,3 +80,8 @@ func (m *Mock) GetEventFromWebhookPayload(payload interface{}) (event.Event, err
 	log.Infof("Mock provider webhook event parsed")
 	return nil, nil
 }
+
+func (m *Mock) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
+	log.Infof("Mock provider git bundle created")
+	return []byte("mock-bundle"), nil
+}
