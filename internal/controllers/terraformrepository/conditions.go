@@ -129,19 +129,17 @@ func (r *Reconciler) AreRemoteRevisionsDifferent(ctx context.Context, repository
 }
 
 // getRemoteRevision gets the latest revision for a given ref from the remote repository
-func (r *Reconciler) getRemoteRevision(ctx context.Context, repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+func (r *Reconciler) getRemoteRevision(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
 	// Get the appropriate provider for the repository
-	// provider, exists := r.Providers[repository.Spec.Repository.Provider]
-	// if !exists {
-	// 	return "", fmt.Errorf("provider %s not found", repository.Spec.Repository.Provider)
-	// }
-
-	// TODO: Implement provider-specific logic to get the latest revision
-	// This might involve:
-	// 1. Using the provider's API to get the latest commit for the ref
-	// 2. Cloning the repository and getting the ref's HEAD
-	// For now, return an error
-	return "", fmt.Errorf("getRemoteRevision not implemented")
+	provider, exists := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]
+	if !exists {
+		return "", fmt.Errorf("provider not found for repository %s/%s", repository.Namespace, repository.Name)
+	}
+	rev, err := provider.GetLatestRevisionForRef(repository, ref)
+	if err != nil {
+		return "", fmt.Errorf("failed to get latest revision for ref %s: %v", ref, err)
+	}
+	return rev, nil
 }
 
 // getRevisionBundle gets the git bundle for a given revision from the remote repository

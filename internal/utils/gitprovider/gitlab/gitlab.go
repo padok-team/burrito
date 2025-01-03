@@ -213,6 +213,20 @@ func (g *Gitlab) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 	return e, nil
 }
 
+// Required API scope: api read_api
+func (g *Gitlab) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	projectID := getGitlabNamespacedName(repository.Spec.Repository.Url)
+	b, _, err := g.Client.Branches.GetBranch(projectID, ref)
+	if err == nil {
+		return b.Commit.ID, nil
+	}
+	t, _, err := g.Client.Tags.GetTag(projectID, ref)
+	if err == nil {
+		return t.Commit.ID, nil
+	}
+	return "", fmt.Errorf("could not find revision for ref %s: %w", ref, err)
+}
+
 func getNormalizedAction(action string) string {
 	switch action {
 	case "open", "reopen":
