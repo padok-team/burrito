@@ -54,6 +54,37 @@ func (r *Reconciler) IsLastSyncTooOld(repository *configv1alpha1.TerraformReposi
 	return condition, false
 }
 
+// HasLastSyncFailed checks if the last sync failed
+// A sync can fail if at least one of the refs managed by burrito could not be synced with the datastore
+func (r *Reconciler) HasLastSyncFailed(repository *configv1alpha1.TerraformRepository) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "HasLastSyncFailed",
+		ObservedGeneration: repository.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+
+	lastSyncStatus, exists := repository.Annotations[annotations.LastSyncStatus]
+	if !exists {
+		condition.Reason = "NoSyncYet"
+		condition.Message = "Repository has never been synced"
+		condition.Status = metav1.ConditionTrue
+		return condition, false
+	}
+
+	if lastSyncStatus == annotations.SyncStatusFailed {
+		condition.Reason = "SyncFailed"
+		condition.Message = "Last sync failed"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+
+	condition.Reason = "SyncSucceeded"
+	condition.Message = "Last sync succeeded"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
+}
+
 // AreRemoteRevisionsDifferent checks if any remote revision is different from its stored version
 // Returns true if at least one ref has a different latest revision in datastore than in remote repository
 func (r *Reconciler) AreRemoteRevisionsDifferent(ctx context.Context, repository *configv1alpha1.TerraformRepository, refs map[string]bool) (metav1.Condition, bool) {
