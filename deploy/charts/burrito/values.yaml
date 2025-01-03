@@ -19,7 +19,7 @@ config:
         # -- Drift detection interval
         driftDetection: 10m
         # -- Repository polling interval
-        repositorySync: 1m
+        repositorySync: 5m
         # -- Duration to wait before retrying on error
         onError: 10s
         # -- Duration to wait before retrying on locked layer
