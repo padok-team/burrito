@@ -49,6 +49,8 @@ func (s *Datastore) Exec() {
 	api.PUT("/logs", s.API.PutLogsHandler)
 	api.GET("/plans", s.API.GetPlanHandler)
 	api.PUT("/plans", s.API.PutPlanHandler)
+	api.GET("/repository/revision/latest", s.API.GetLatestRevisionHandler)
+	api.PUT("/repository/revision/bundle", s.API.StoreRevisionHandler)
 	if s.Config.Datastore.TLS {
 		e.Logger.Fatal(e.StartTLS(s.Config.Datastore.Addr, DefaultCertPath, DefaultKeyPath))
 	} else {

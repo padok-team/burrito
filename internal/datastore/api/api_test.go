@@ -38,6 +38,7 @@ var _ = BeforeSuite(func() {
 	API.Storage.PutPlan("default", "test1", "test1", "0", "bin", []byte("test1"))
 	API.Storage.PutPlan("default", "test1", "test1", "0", "short", []byte("test1"))
 	API.Storage.PutPlan("default", "test1", "test1", "0", "pretty", []byte("test1"))
+	API.Storage.StoreRevision("default", "test1", "main", "abc123", []byte("test-bundle"))
 
 	e = echo.New()
 })
@@ -181,6 +182,58 @@ var _ = Describe("Datastore API", func() {
 					err := API.GetPlanHandler(context)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+				})
+			})
+		})
+		Describe("Revisions", func() {
+			Describe("Get Latest Revision", func() {
+				It("should return the revision with a 200 OK when it exists", func() {
+					context := getContext(http.MethodGet, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						"ref":       "main",
+					}, nil)
+					err := API.GetLatestRevisionHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().Status).To(Equal(http.StatusOK))
+				})
+
+				It("should return 404 Not Found when revision doesn't exist", func() {
+					context := getContext(http.MethodGet, "/revisions", map[string]string{
+						"namespace": "notfound",
+						"name":      "notfound",
+						"ref":       "notfound",
+					}, nil)
+					err := API.GetLatestRevisionHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+				})
+			})
+
+			Describe("Store Revision", func() {
+				It("should return 200 OK when storing a revision", func() {
+					body := []byte(`test-bundle`)
+					context := getContext(http.MethodPut, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						"ref":       "main",
+						"revision":  "def456",
+					}, body)
+					err := API.StoreRevisionHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().Status).To(Equal(http.StatusOK))
+				})
+
+				It("should return 400 Bad Request when missing parameters", func() {
+					body := []byte(`test-bundle`)
+					context := getContext(http.MethodPut, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						// missing ref and revision
+					}, body)
+					err := API.StoreRevisionHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
 				})
 			})
 		})

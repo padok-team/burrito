@@ -5,12 +5,14 @@ import (
 	"fmt"
 	nethttp "net/http"
 	"net/url"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/gitlab"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -18,6 +20,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	utils "github.com/padok-team/burrito/internal/utils/url"
+	"github.com/padok-team/burrito/internal/utils/zip"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
@@ -133,21 +136,18 @@ func (g *Gitlab) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 }
 
 func (g *Gitlab) Clone(repository *configv1alpha1.TerraformRepository, branch string, repositoryPath string) (*git.Repository, error) {
+	auth, err := g.getGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
 	}
 
-	if g.Config.GitLabToken != "" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Password: g.Config.GitLabToken,
-		}
-	} else if g.Config.Username != "" && g.Config.Password != "" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: g.Config.Username,
-			Password: g.Config.Password,
-		}
-	} else {
+	if auth == nil {
 		return nil, errors.New("no valid authentication method provided")
 	}
 
@@ -252,4 +252,71 @@ func inferBaseURL(repoURL string) (string, error) {
 	host := parsedURL.Host
 	host = strings.TrimPrefix(host, "www.")
 	return fmt.Sprintf("https://%s/api/v4", host), nil
+}
+
+// getGitAuth returns the appropriate authentication method for GitLab
+func (g *Gitlab) getGitAuth() (transport.AuthMethod, error) {
+	if g.Config.GitLabToken != "" {
+		return &http.BasicAuth{
+			Username: "oauth2",
+			Password: g.Config.GitLabToken,
+		}, nil
+	} else if g.Config.Username != "" && g.Config.Password != "" {
+		return &http.BasicAuth{
+			Username: g.Config.Username,
+			Password: g.Config.Password,
+		}, nil
+	}
+	return nil, nil
+}
+
+func (g *Gitlab) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
+	workDir := "/tmp/burrito/repositories"
+	repoDir := filepath.Join(workDir, fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, ref))
+
+	auth, err := g.getGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
+	// Try to open existing repository
+	repo, err := git.PlainOpen(repoDir)
+	if err != nil {
+		if err != git.ErrRepositoryNotExists {
+			return nil, fmt.Errorf("failed to open repository: %w", err)
+		}
+
+		// Clone if it doesn't exist
+		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
+		cloneOpts := &git.CloneOptions{
+			URL:  repository.Spec.Repository.Url,
+			Auth: auth,
+		}
+
+		repo, err = git.PlainClone(repoDir, false, cloneOpts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to clone repository: %w", err)
+		}
+	}
+
+	// Fetch latest changes
+	fetchOpts := &git.FetchOptions{
+		Auth: auth,
+	}
+	log.Infof("Fetching latest changes")
+	err = repo.Fetch(fetchOpts)
+	if err != nil {
+		if err == git.NoErrAlreadyUpToDate {
+			log.Info("Repository is already up-to-date")
+		} else {
+			return nil, fmt.Errorf("failed to fetch latest changes: %w", err)
+		}
+	}
+
+	bundle, err := zip.CreateTarGz(repoDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create bundle: %w", err)
+	}
+
+	return bundle, nil
 }
