@@ -21,6 +21,7 @@ const (
 	PrettyPlanFile         string = "pretty.plan"
 	ShortDiffFile          string = "short.diff"
 	GitBundleFileExtension string = ".tgz"
+	RevisionFile           string = "latest"
 	LayersPrefix           string = "layers"
 	RepositoriesPrefix     string = "repositories"
 )
@@ -47,8 +48,12 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 	return key
 }
 
-func computeGitBundleKey(namespace string, repository string, branch string, commit string) string {
-	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
+func computeGitBundleKey(namespace string, repository string, branch string, revision string) string {
+	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, revision, GitBundleFileExtension)
+}
+
+func computeLatestRevisionKey(namespace string, repository string, branch string) string {
+	return fmt.Sprintf("%s/%s/%s/%s/%s", RepositoriesPrefix, namespace, repository, branch, RevisionFile)
 }
 
 type Storage struct {
@@ -124,10 +129,29 @@ func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, 
 	return len(attempts), err
 }
 
-func (s *Storage) GetGitBundle(namespace string, repository string, branch string, commit string) ([]byte, error) {
-	return s.Backend.Get(computeGitBundleKey(namespace, repository, branch, commit))
+func (s *Storage) GetGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
+	return s.Backend.Get(computeGitBundleKey(namespace, repository, ref, commit))
 }
 
-func (s *Storage) PutGitBundle(namespace string, repository string, branch string, commit string, bundle []byte) error {
-	return s.Backend.Set(computeGitBundleKey(namespace, repository, branch, commit), bundle, 0)
+func (s *Storage) PutGitBundle(namespace string, repository string, ref string, commit string, bundle []byte) error {
+	// Store the git bundle
+	err := s.Backend.Set(computeGitBundleKey(namespace, repository, ref, commit), bundle, 0)
+	if err != nil {
+		return fmt.Errorf("failed to store git bundle: %w", err)
+	}
+
+	// Update the latest revision reference
+	err = s.Backend.Set(computeLatestRevisionKey(namespace, repository, ref), []byte(commit), 0)
+	if err != nil {
+		return fmt.Errorf("failed to update latest revision reference: %w", err)
+	}
+	return nil
+}
+
+func (s *Storage) GetLatestRevision(namespace string, repository string, ref string) (string, error) {
+	data, err := s.Backend.Get(computeLatestRevisionKey(namespace, repository, ref))
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
