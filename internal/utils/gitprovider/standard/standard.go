@@ -3,17 +3,20 @@ package standard
 import (
 	"fmt"
 	nethttp "net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v5/storage/memory"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
+	"github.com/padok-team/burrito/internal/utils/zip"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
 )
@@ -77,24 +80,18 @@ func (s *Standard) CreatePullRequest(repository *configv1alpha1.TerraformReposit
 }
 
 func (g *Standard) Clone(repository *configv1alpha1.TerraformRepository, branch string, repositoryPath string) (*git.Repository, error) {
+	auth, err := g.getGitAuth(repository.Spec.Repository.Url)
+	if err != nil {
+		return nil, err
+	}
+
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
 	}
-	isSSH := strings.HasPrefix(repository.Spec.Repository.Url, "git@") || strings.Contains(repository.Spec.Repository.Url, "ssh://")
 
-	if isSSH && g.Config.SSHPrivateKey != "" {
-		publicKeys, err := ssh.NewPublicKeys("git", []byte(g.Config.SSHPrivateKey), "")
-		if err != nil {
-			return nil, err
-		}
-		cloneOptions.Auth = publicKeys
-	} else if g.Config.Username != "" && g.Config.Password != "" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: g.Config.Username,
-			Password: g.Config.Password,
-		}
-	} else {
+	if auth == nil {
 		log.Info("No authentication method provided, falling back to unauthenticated clone")
 	}
 
@@ -113,4 +110,74 @@ func (m *Standard) ParseWebhookPayload(payload *nethttp.Request) (interface{}, b
 
 func (m *Standard) GetEventFromWebhookPayload(payload interface{}) (event.Event, error) {
 	return nil, fmt.Errorf("GetEventFromWebhookPayload not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
+}
+
+func (s *Standard) getGitAuth(repoURL string) (transport.AuthMethod, error) {
+	isSSH := strings.HasPrefix(repoURL, "git@") || strings.Contains(repoURL, "ssh://")
+
+	if isSSH && s.Config.SSHPrivateKey != "" {
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(s.Config.SSHPrivateKey), "")
+		if err != nil {
+			return nil, err
+		}
+		return publicKeys, nil
+	} else if s.Config.Username != "" && s.Config.Password != "" {
+		return &http.BasicAuth{
+			Username: s.Config.Username,
+			Password: s.Config.Password,
+		}, nil
+	}
+	return nil, nil
+}
+
+func (s *Standard) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
+	workDir := "/tmp/burrito/repositories"
+	repoDir := filepath.Join(workDir, fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, ref))
+
+	auth, err := s.getGitAuth(repository.Spec.Repository.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	// Try to open existing repository
+	repo, err := git.PlainOpen(repoDir)
+	if err != nil {
+		if err != git.ErrRepositoryNotExists {
+			return nil, fmt.Errorf("failed to open repository: %w", err)
+		}
+
+		// Clone if it doesn't exist
+		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
+		cloneOpts := &git.CloneOptions{
+			URL:  repository.Spec.Repository.Url,
+			Auth: auth,
+		}
+
+		repo, err = git.PlainClone(repoDir, false, cloneOpts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to clone repository: %w", err)
+		}
+	}
+
+	// Fetch latest changes
+	fetchOpts := &git.FetchOptions{
+		Auth: auth,
+	}
+
+	log.Infof("Fetching latest changes")
+	err = repo.Fetch(fetchOpts)
+	if err != nil {
+		if err == git.NoErrAlreadyUpToDate {
+			log.Info("Repository is already up-to-date")
+		} else {
+			return nil, fmt.Errorf("failed to fetch latest changes: %w", err)
+		}
+	}
+
+	bundle, err := zip.CreateTarGz(repoDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create bundle: %w", err)
+	}
+
+	return bundle, nil
 }

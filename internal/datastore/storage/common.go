@@ -145,14 +145,13 @@ func (s *Storage) PutGitBundle(namespace string, repository string, ref string, 
 	if err != nil {
 		return fmt.Errorf("failed to update latest revision reference: %w", err)
 	}
-
 	return nil
 }
 
 func (s *Storage) GetLatestRevision(namespace string, repository string, ref string) (string, error) {
 	data, err := s.Backend.Get(computeLatestRevisionKey(namespace, repository, ref))
 	if err != nil {
-		return "", fmt.Errorf("failed to get latest revision: %w", err)
+		return "", err
 	}
 	return string(data), nil
 }

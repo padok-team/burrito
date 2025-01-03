@@ -198,7 +198,7 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 }
 
 func (c *DefaultClient) GetLatestRevision(namespace, name, ref string) (string, error) {
-	req, err := c.buildRequest("/api/repositories/revision", url.Values{
+	req, err := c.buildRequest("/api/repository/revision/latest", url.Values{
 		"namespace": {namespace},
 		"name":      {name},
 		"ref":       {ref},
@@ -234,7 +234,7 @@ func (c *DefaultClient) GetLatestRevision(namespace, name, ref string) (string, 
 
 func (c *DefaultClient) StoreRevision(namespace, name, ref, revision string, bundle []byte) error {
 	req, err := c.buildRequest(
-		"/api/repositories/revision",
+		"/api/repository/revision/bundle",
 		url.Values{
 			"namespace": {namespace},
 			"name":      {name},

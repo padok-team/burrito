@@ -7,6 +7,7 @@ import (
 	"fmt"
 	nethttp "net/http"
 	"net/url"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/github"
 	"github.com/google/go-github/v66/github"
@@ -22,6 +24,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	utils "github.com/padok-team/burrito/internal/utils/url"
+	"github.com/padok-team/burrito/internal/utils/zip"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -175,32 +178,18 @@ func (g *Github) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 }
 
 func (g *Github) Clone(repository *configv1alpha1.TerraformRepository, branch string, repositoryPath string) (*git.Repository, error) {
+	auth, err := g.getGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
 	}
 
-	if g.GitHubClientType == "app" {
-		token, err := g.itr.Token(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error getting GitHub App token: %w", err)
-		}
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: "x-access-token",
-			Password: token,
-		}
-		cloneOptions.URL = repository.Spec.Repository.Url
-	} else if g.GitHubClientType == "token" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: "x-access-token",
-			Password: g.Config.GitHubToken,
-		}
-	} else if g.GitHubClientType == "basic" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: g.Config.Username,
-			Password: g.Config.Password,
-		}
-	} else {
+	if auth == nil {
 		log.Info("No authentication method provided, falling back to unauthenticated clone")
 	}
 
@@ -210,6 +199,73 @@ func (g *Github) Clone(repository *configv1alpha1.TerraformRepository, branch st
 		return nil, err
 	}
 	return repo, nil
+}
+
+func (g *Github) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
+	workDir := "/tmp/burrito/repositories"
+	repoDir := filepath.Join(workDir, fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, ref))
+
+	auth, err := g.getGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
+	// Try to open existing repository
+	repo, err := git.PlainOpen(repoDir)
+	if err != nil {
+		if err != git.ErrRepositoryNotExists {
+			return nil, fmt.Errorf("failed to open repository: %w", err)
+		}
+
+		// Clone if it doesn't exist
+		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
+		cloneOpts := &git.CloneOptions{
+			URL:  repository.Spec.Repository.Url,
+			Auth: auth,
+		}
+
+		repo, err = git.PlainClone(repoDir, false, cloneOpts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to clone repository: %w", err)
+		}
+	}
+
+	// Fetch latest changes with authentication
+	fetchOpts := &git.FetchOptions{
+		Auth: auth,
+	}
+
+	log.Infof("Fetching latest changes")
+	err = repo.Fetch(fetchOpts)
+	if err != nil {
+		if err == git.NoErrAlreadyUpToDate {
+			log.Info("Repository is already up-to-date")
+		} else {
+			return nil, fmt.Errorf("failed to fetch latest changes: %w", err)
+		}
+	}
+
+	// Checkout revision
+	w, err := repo.Worktree()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get worktree: %w", err)
+	}
+
+	log.Infof("Checking out revision %s", revision)
+	err = w.Checkout(&git.CheckoutOptions{
+		Hash:  plumbing.NewHash(revision),
+		Force: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to checkout revision: %w", err)
+	}
+
+	bundle, err := zip.CreateTarGz(repoDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create bundle: %w", err)
+	}
+
+	return bundle, nil
 }
 
 func (g *Github) ParseWebhookPayload(r *nethttp.Request) (interface{}, bool) {
@@ -315,5 +371,32 @@ func inferBaseURL(repoURL string) (string, GitHubSubscription, error) {
 		return fmt.Sprintf("https://%s/api/v3", host), GitHubEnterprise, nil
 	} else {
 		return "", GitHubClassic, nil
+	}
+}
+
+// getGitAuth returns the appropriate authentication method based on the GitHub client type
+func (g *Github) getGitAuth() (transport.AuthMethod, error) {
+	switch g.GitHubClientType {
+	case "app":
+		token, err := g.itr.Token(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error getting GitHub App token: %w", err)
+		}
+		return &http.BasicAuth{
+			Username: "x-access-token",
+			Password: token,
+		}, nil
+	case "token":
+		return &http.BasicAuth{
+			Username: "x-access-token",
+			Password: g.Config.GitHubToken,
+		}, nil
+	case "basic":
+		return &http.BasicAuth{
+			Username: g.Config.Username,
+			Password: g.Config.Password,
+		}, nil
+	default:
+		return nil, nil
 	}
 }

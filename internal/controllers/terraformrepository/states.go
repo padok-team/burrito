@@ -2,12 +2,14 @@ package terraformrepository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	"github.com/padok-team/burrito/internal/utils/typeutils"
@@ -68,7 +70,7 @@ func (s *SyncNeeded) getHandler() Handler {
 		// Update datastore with latest revisions
 		var syncError error
 		for ref := range managedRefs {
-			rev, err := r.getRemoteRevision(repository, ref)
+			latestRev, err := r.getRemoteRevision(repository, ref)
 			if err != nil {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s", ref))
 				log.Errorf("failed to get remote revision for ref %s: %s", ref, err)
@@ -76,20 +78,37 @@ func (s *SyncNeeded) getHandler() Handler {
 				continue
 			}
 
-			// TODO: Download git bundle for this revision
-			bundle, err := r.getRevisionBundle(ctx, repository, ref, rev)
-			if err != nil {
-				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get bundle for ref %s", ref))
-				log.Errorf("failed to get bundle for ref %s: %s", ref, err)
+			storedRev, err := r.Datastore.GetLatestRevision(repository.Namespace, repository.Name, ref)
+			var storageErr *storageerrors.StorageError
+			if errors.As(err, &storageErr) && storageErr.Nil {
+				log.Infof("no stored revision found for ref %s", ref)
+			} else {
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get stored revision for ref %s", ref))
+				log.Errorf("failed to get stored revision for ref %s: %s", ref, err)
 				syncError = err
 				continue
 			}
-			err = r.Datastore.StoreRevision(repository.Namespace, repository.Name, ref, rev, bundle)
-			if err != nil {
-				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s", ref))
-				log.Errorf("failed to store revision for ref %s: %s", ref, err)
-				syncError = err
+
+			if latestRev == storedRev {
+				log.Infof("repository %s/%s is in sync with remote for ref %s", repository.Namespace, repository.Name, ref)
 				continue
+			} else {
+				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, ref)
+				bundle, err := r.getRevisionBundle(ctx, repository, ref, latestRev)
+				if err != nil {
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s", ref))
+					log.Errorf("failed to get revision bundle for ref %s: %s", ref, err)
+					syncError = err
+					continue
+				}
+
+				err = r.Datastore.StoreRevision(repository.Namespace, repository.Name, ref, latestRev, bundle)
+				if err != nil {
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s", ref))
+					log.Errorf("failed to store revision for ref %s: %s", ref, err)
+					syncError = err
+					continue
+				}
 			}
 		}
 		// Update annotations

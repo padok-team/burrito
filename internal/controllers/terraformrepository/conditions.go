@@ -97,7 +97,7 @@ func (r *Reconciler) AreRemoteRevisionsDifferent(ctx context.Context, repository
 
 	for ref := range refs {
 		// Get latest revision from remote repository
-		remoteRevision, err := r.getRemoteRevision(ctx, repository, ref)
+		remoteRevision, err := r.getRemoteRevision(repository, ref)
 		if err != nil {
 			condition.Reason = "ErrorGettingRemoteRevision"
 			condition.Message = fmt.Sprintf("Failed to get remote revision for ref %s: %v", ref, err)
@@ -144,6 +144,13 @@ func (r *Reconciler) getRemoteRevision(repository *configv1alpha1.TerraformRepos
 
 // getRevisionBundle gets the git bundle for a given revision from the remote repository
 func (r *Reconciler) getRevisionBundle(ctx context.Context, repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
-	// TODO: Implement provider-specific logic to get the git bundle
-	return nil, fmt.Errorf("getRevisionBundle not implemented")
+	provider, exists := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]
+	if !exists {
+		return nil, fmt.Errorf("provider not found for repository %s/%s", repository.Namespace, repository.Name)
+	}
+	bundle, err := provider.GetGitBundle(repository, ref, revision)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get revision bundle for ref %s: %v", ref, err)
+	}
+	return bundle, nil
 }
