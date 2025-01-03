@@ -101,6 +101,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Providers = make(map[string]gitprovider.Provider)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).

@@ -270,6 +270,19 @@ func (g *Github) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 	return e, nil
 }
 
+func (g *Github) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	b, _, err := g.Client.Repositories.GetBranch(context.TODO(), owner, repoName, ref, 10)
+	if err == nil {
+		return b.Commit.GetSHA(), nil
+	}
+	t, _, err := g.Client.Git.GetRef(context.TODO(), owner, repoName, fmt.Sprintf("refs/tags/%s", ref))
+	if err == nil {
+		return t.Object.GetSHA(), nil
+	}
+	return "", fmt.Errorf("could not find revision for ref %s: %w", ref, err)
+}
+
 func getNormalizedAction(action string) string {
 	switch action {
 	case "opened", "reopened":

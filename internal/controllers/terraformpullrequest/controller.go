@@ -3,7 +3,6 @@ package terraformpullrequest
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -24,6 +23,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 )
 
 // Reconciler reconciles a TerraformPullRequest object
@@ -147,7 +147,6 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 		log.Debugf("no secret configured for repository %s/%s, skipping provider initialization", repository.Namespace, repository.Name)
 		return nil, nil
 	}
-	log.Infof("KUBE API REQUEST: getting secret %s/%s", repository.Namespace, repository.Spec.Repository.SecretName)
 	secret := &corev1.Secret{}
 	err := r.Client.Get(ctx, types.NamespacedName{
 		Name:      repository.Spec.Repository.SecretName,
@@ -158,9 +157,9 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 		return nil, err
 	}
 	config := gitprovider.Config{
-		AppID:             parseSecretInt64(secret.Data["githubAppId"]),
+		AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
 		URL:               repository.Spec.Repository.Url,
-		AppInstallationID: parseSecretInt64(secret.Data["githubAppInstallationId"]),
+		AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
 		AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
 		GitHubToken:       string(secret.Data["githubToken"]),
 		GitLabToken:       string(secret.Data["gitlabToken"]),
@@ -204,9 +203,4 @@ func (r *Reconciler) initializeDefaultProviders() error {
 		r.Providers["default_"+provider] = providerInstance
 	}
 	return nil
-}
-
-func parseSecretInt64(data []byte) int64 {
-	v, _ := strconv.ParseInt(string(data), 10, 64)
-	return v
 }

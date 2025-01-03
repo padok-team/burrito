@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/storage/memory"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
@@ -33,6 +35,37 @@ func (s *Standard) InitWebhookHandler() error {
 
 func (s *Standard) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {
 	return nil, fmt.Errorf("GetChanges not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
+}
+
+func (s *Standard) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	// Create an in-memory remote
+	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{repository.Spec.Repository.Url},
+	})
+
+	// List references on the remote (equivalent to `git ls-remote <repoURL>`)
+	refs, err := remote.List(&git.ListOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to list references: %v", err)
+	}
+
+	candidates := []string{
+		"refs/heads/" + ref,
+		"refs/tags/" + ref,
+		ref, // in case someone passes the full ref already
+	}
+
+	// Look for the ref in the remote’s references
+	for _, c := range candidates {
+		for _, r := range refs {
+			if r.Name().String() == c {
+				return r.Hash().String(), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("unable to find commit SHA for ref %q in %q", ref, repository.Spec.Repository.Url)
 }
 
 func (s *Standard) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {

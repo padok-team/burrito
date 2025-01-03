@@ -8,9 +8,13 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/utils/gitprovider"
+	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -40,6 +44,18 @@ type SyncNeeded struct{}
 func (s *SyncNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository) (ctrl.Result, error) {
 		log := log.WithContext(ctx)
+		// Initialize git providers for the repository if needed
+		if _, ok := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]; !ok {
+			provider, err := r.initializeProvider(ctx, repository)
+			if err != nil {
+				log.Errorf("could not initialize provider for repository %s: %s", repository.Name, err)
+				return ctrl.Result{}, err
+			}
+			if provider != nil {
+				log.Infof("initialized git provider for repository %s/%s", repository.Namespace, repository.Name)
+				r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)] = provider
+			}
+		}
 
 		// Get managed refs
 		managedRefs, err := r.listManagedRefs(ctx, repository)
@@ -52,7 +68,7 @@ func (s *SyncNeeded) getHandler() Handler {
 		// Update datastore with latest revisions
 		var syncError error
 		for ref := range managedRefs {
-			rev, err := r.getRemoteRevision(ctx, repository, ref)
+			rev, err := r.getRemoteRevision(repository, ref)
 			if err != nil {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s", ref))
 				log.Errorf("failed to get remote revision for ref %s: %s", ref, err)
@@ -113,4 +129,45 @@ func (s *Synced) getHandler() Handler {
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), ".")
 	return t[len(t)-1]
+}
+
+func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv1alpha1.TerraformRepository) (gitprovider.Provider, error) {
+	if repository.Spec.Repository.Url == "" {
+		return nil, fmt.Errorf("no repository URL found in TerraformRepository.spec.repository.url for repository %s. Skipping provider initialization", repository.Name)
+	}
+	if repository.Spec.Repository.SecretName == "" {
+		log.Debugf("no secret configured for repository %s/%s, skipping provider initialization", repository.Namespace, repository.Name)
+		return nil, nil
+	}
+	secret := &corev1.Secret{}
+	err := r.Client.Get(ctx, types.NamespacedName{
+		Name:      repository.Spec.Repository.SecretName,
+		Namespace: repository.Namespace,
+	}, secret)
+	if err != nil {
+		log.Errorf("failed to get credentials secret for repository %s: %s", repository.Name, err)
+		return nil, err
+	}
+	config := gitprovider.Config{
+		AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
+		URL:               repository.Spec.Repository.Url,
+		AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
+		AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
+		GitHubToken:       string(secret.Data["githubToken"]),
+		GitLabToken:       string(secret.Data["gitlabToken"]),
+		EnableMock:        secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
+	}
+
+	provider, err := gitprovider.New(config, []string{gt.Capabilities.Clone})
+	if err != nil {
+		log.Errorf("failed to create provider for repository %s: %s", repository.Name, err)
+		return nil, err
+	}
+
+	err = provider.Init()
+	if err != nil {
+		log.Errorf("failed to initialize provider for repository %s: %s", repository.Name, err)
+		return nil, err
+	}
+	return provider, nil
 }
