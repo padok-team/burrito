@@ -19,6 +19,7 @@ package terraformrepository
 import (
 	"context"
 
+	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +27,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -107,6 +110,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
+		WithEventFilter(ignorePredicate()).
 		Complete(r)
 }
 
@@ -124,4 +128,22 @@ func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1al
 		}
 	}
 	return refs, nil
+}
+
+func ignorePredicate() predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			// Update only if generation or annotations change, filter out anything else.
+			// We only need to check generation or annotations change here, because it is only
+			// updated on spec changes. On the other hand RevisionVersion
+			// changes also on status changes. We want to omit reconciliation
+			// for status updates.
+			return (e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()) ||
+				cmp.Diff(e.ObjectOld.GetAnnotations(), e.ObjectNew.GetAnnotations()) != ""
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			// Evaluates to false if the object has been confirmed deleted.
+			return !e.DeleteStateUnknown
+		},
+	}
 }
