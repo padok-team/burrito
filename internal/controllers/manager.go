@@ -123,10 +123,11 @@ func (c *Controllers) Exec() {
 			log.Infof("layer controller started successfully")
 		case "repository":
 			if err = (&terraformrepository.Reconciler{
-				Client:   mgr.GetClient(),
-				Scheme:   mgr.GetScheme(),
-				Recorder: mgr.GetEventRecorderFor("Burrito"),
-				Config:   c.config,
+				Client:    mgr.GetClient(),
+				Scheme:    mgr.GetScheme(),
+				Recorder:  mgr.GetEventRecorderFor("Burrito"),
+				Config:    c.config,
+				Datastore: datastoreClient,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create repository controller: %s", err)
 			}

@@ -100,7 +100,7 @@ type Synced struct{}
 func (s *Synced) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository) (ctrl.Result, error) {
 		r.Recorder.Event(repository, corev1.EventTypeNormal, "Reconciliation", "Repository is in sync with remote")
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.RepositorySync}, nil
 	}
 }
 
