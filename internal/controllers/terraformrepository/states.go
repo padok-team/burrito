@@ -94,7 +94,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, ref)
-				bundle, err := r.getRevisionBundle(ctx, repository, ref, latestRev)
+				bundle, err := r.getRevisionBundle(repository, ref, latestRev)
 				if err != nil {
 					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s", ref))
 					log.Errorf("failed to get revision bundle for ref %s: %s", ref, err)
@@ -102,7 +102,7 @@ func (s *SyncNeeded) getHandler() Handler {
 					continue
 				}
 
-				err = r.Datastore.StoreRevision(repository.Namespace, repository.Name, ref, latestRev, bundle)
+				err = r.Datastore.PutGitBundle(repository.Namespace, repository.Name, ref, latestRev, bundle)
 				if err != nil {
 					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s", ref))
 					log.Errorf("failed to store revision for ref %s: %s", ref, err)
@@ -154,27 +154,35 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 	if repository.Spec.Repository.Url == "" {
 		return nil, fmt.Errorf("no repository URL found in TerraformRepository.spec.repository.url for repository %s. Skipping provider initialization", repository.Name)
 	}
-	if repository.Spec.Repository.SecretName == "" {
-		log.Debugf("no secret configured for repository %s/%s, skipping provider initialization", repository.Namespace, repository.Name)
-		return nil, nil
-	}
-	secret := &corev1.Secret{}
-	err := r.Client.Get(ctx, types.NamespacedName{
-		Name:      repository.Spec.Repository.SecretName,
-		Namespace: repository.Namespace,
-	}, secret)
-	if err != nil {
-		log.Errorf("failed to get credentials secret for repository %s: %s", repository.Name, err)
-		return nil, err
-	}
-	config := gitprovider.Config{
-		AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
-		URL:               repository.Spec.Repository.Url,
-		AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
-		AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
-		GitHubToken:       string(secret.Data["githubToken"]),
-		GitLabToken:       string(secret.Data["gitlabToken"]),
-		EnableMock:        secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
+	var config gitprovider.Config
+
+	if repository.Spec.Repository.SecretName != "" {
+		secret := &corev1.Secret{}
+		err := r.Client.Get(ctx, types.NamespacedName{
+			Name:      repository.Spec.Repository.SecretName,
+			Namespace: repository.Namespace,
+		}, secret)
+		if err != nil {
+			log.Errorf("failed to get credentials secret for repository %s: %s", repository.Name, err)
+			config = gitprovider.Config{
+				URL: repository.Spec.Repository.Url,
+			}
+		} else {
+			config = gitprovider.Config{
+				AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
+				URL:               repository.Spec.Repository.Url,
+				AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
+				AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
+				GitHubToken:       string(secret.Data["githubToken"]),
+				GitLabToken:       string(secret.Data["gitlabToken"]),
+				EnableMock:        secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
+			}
+		}
+	} else {
+		log.Infof("no secret configured for repository %s/%s, using empty config", repository.Namespace, repository.Name)
+		config = gitprovider.Config{
+			URL: repository.Spec.Repository.Url,
+		}
 	}
 
 	provider, err := gitprovider.New(config, []string{gt.Capabilities.Clone})
