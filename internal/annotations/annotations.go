@@ -27,7 +27,6 @@ const (
 
 	SyncNow string = "api.terraform.padok.cloud/sync-now"
 
-	// LastSyncDate is the annotation key for the last repository sync date
 	LastSyncDate      string = "repository.terraform.padok.cloud/last-sync-date"
 	LastSyncStatus    string = "repository.terraform.padok.cloud/last-sync-status"
 	SyncStatusSuccess string = "success"

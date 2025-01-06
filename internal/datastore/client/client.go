@@ -25,7 +25,7 @@ type Client interface {
 	GetLogs(namespace string, layer string, run string, attempt string) ([]string, error)
 	PutLogs(namespace string, layer string, run string, attempt string, content []byte) error
 	GetLatestRevision(namespace, name, ref string) (string, error)
-	StoreRevision(namespace, name, ref, revision string, bundle []byte) error
+	PutGitBundle(namespace, name, ref, revision string, bundle []byte) error
 }
 
 type DefaultClient struct {
@@ -232,7 +232,7 @@ func (c *DefaultClient) GetLatestRevision(namespace, name, ref string) (string, 
 	return string(b), nil
 }
 
-func (c *DefaultClient) StoreRevision(namespace, name, ref, revision string, bundle []byte) error {
+func (c *DefaultClient) PutGitBundle(namespace, name, ref, revision string, bundle []byte) error {
 	req, err := c.buildRequest(
 		"/api/repository/revision/bundle",
 		url.Values{

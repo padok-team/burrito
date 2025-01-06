@@ -267,6 +267,7 @@ func (g *Gitlab) getGitAuth() (transport.AuthMethod, error) {
 			Password: g.Config.Password,
 		}, nil
 	}
+	log.Info("No authentication method provided, falling back to unauthenticated clone")
 	return nil, nil
 }
 

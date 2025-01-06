@@ -189,10 +189,6 @@ func (g *Github) Clone(repository *configv1alpha1.TerraformRepository, branch st
 		Auth:          auth,
 	}
 
-	if auth == nil {
-		log.Info("No authentication method provided, falling back to unauthenticated clone")
-	}
-
 	log.Infof("Cloning github repository %s on %s branch with github %s authentication", repository.Spec.Repository.Url, branch, g.GitHubClientType)
 	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
 	if err != nil {
@@ -397,6 +393,7 @@ func (g *Github) getGitAuth() (transport.AuthMethod, error) {
 			Password: g.Config.Password,
 		}, nil
 	default:
+		log.Info("No authentication method provided, falling back to unauthenticated clone")
 		return nil, nil
 	}
 }

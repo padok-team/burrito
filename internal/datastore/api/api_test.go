@@ -38,7 +38,7 @@ var _ = BeforeSuite(func() {
 	API.Storage.PutPlan("default", "test1", "test1", "0", "bin", []byte("test1"))
 	API.Storage.PutPlan("default", "test1", "test1", "0", "short", []byte("test1"))
 	API.Storage.PutPlan("default", "test1", "test1", "0", "pretty", []byte("test1"))
-	API.Storage.StoreRevision("default", "test1", "main", "abc123", []byte("test-bundle"))
+	API.Storage.PutGitBundle("default", "test1", "main", "abc123", []byte("test-bundle"))
 
 	e = echo.New()
 })
@@ -219,7 +219,7 @@ var _ = Describe("Datastore API", func() {
 						"ref":       "main",
 						"revision":  "def456",
 					}, body)
-					err := API.StoreRevisionHandler(context)
+					err := API.PutGitBundleHandler(context)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(context.Response().Status).To(Equal(http.StatusOK))
 				})
@@ -231,7 +231,7 @@ var _ = Describe("Datastore API", func() {
 						"name":      "test1",
 						// missing ref and revision
 					}, body)
-					err := API.StoreRevisionHandler(context)
+					err := API.PutGitBundleHandler(context)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
 				})

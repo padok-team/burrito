@@ -46,9 +46,7 @@ type TerraformRepositoryRepository struct {
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
-	// State is the current state of the repository
-	State string `json:"state,omitempty"`
-	// Conditions hold the latest available observations of the repository's state
+	State      string             `json:"state,omitempty"`
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 

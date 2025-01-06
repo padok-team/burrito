@@ -51,7 +51,7 @@ func (c *MockClient) GetLatestRevision(namespace, name, ref string) (string, err
 	}
 }
 
-func (c *MockClient) StoreRevision(namespace, name, ref, revision string, bundle []byte) error {
+func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle []byte) error {
 	revKey := fmt.Sprintf("%s/%s/%s", namespace, name, ref)
 	c.revisions[revKey] = revision
 

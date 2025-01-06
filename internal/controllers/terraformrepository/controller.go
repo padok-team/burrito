@@ -109,22 +109,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// listManagedRefs returns the list of refs (branches and tags) that are managed by burrito for a specific repository
-func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1alpha1.TerraformRepository) (map[string]bool, error) {
-	// get all layers that depends on the repository (layer.spec.repository.name == repository.name)
-	layers := &configv1alpha1.TerraformLayerList{}
-	if err := r.List(ctx, layers); err != nil {
-		return nil, err
-	}
-	refs := map[string]bool{}
-	for _, layer := range layers.Items {
-		if layer.Spec.Repository.Name == repository.Name {
-			refs[layer.Spec.Branch] = true
-		}
-	}
-	return refs, nil
-}
-
 func ignorePredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {

@@ -127,30 +127,3 @@ func (r *Reconciler) AreRemoteRevisionsDifferent(ctx context.Context, repository
 	condition.Status = metav1.ConditionFalse
 	return condition, false
 }
-
-// getRemoteRevision gets the latest revision for a given ref from the remote repository
-func (r *Reconciler) getRemoteRevision(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
-	// Get the appropriate provider for the repository
-	provider, exists := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]
-	if !exists {
-		return "", fmt.Errorf("provider not found for repository %s/%s", repository.Namespace, repository.Name)
-	}
-	rev, err := provider.GetLatestRevisionForRef(repository, ref)
-	if err != nil {
-		return "", fmt.Errorf("failed to get latest revision for ref %s: %v", ref, err)
-	}
-	return rev, nil
-}
-
-// getRevisionBundle gets the git bundle for a given revision from the remote repository
-func (r *Reconciler) getRevisionBundle(ctx context.Context, repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
-	provider, exists := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]
-	if !exists {
-		return nil, fmt.Errorf("provider not found for repository %s/%s", repository.Namespace, repository.Name)
-	}
-	bundle, err := provider.GetGitBundle(repository, ref, revision)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get revision bundle for ref %s: %v", ref, err)
-	}
-	return bundle, nil
-}

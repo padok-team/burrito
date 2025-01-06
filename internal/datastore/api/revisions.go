@@ -37,7 +37,7 @@ func (a *API) GetLatestRevisionHandler(c echo.Context) error {
 	return c.String(http.StatusOK, revision)
 }
 
-func (a *API) StoreRevisionHandler(c echo.Context) error {
+func (a *API) PutGitBundleHandler(c echo.Context) error {
 	namespace, name, ref, err := getRevisionArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())

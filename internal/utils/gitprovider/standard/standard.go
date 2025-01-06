@@ -127,6 +127,7 @@ func (s *Standard) getGitAuth(repoURL string) (transport.AuthMethod, error) {
 			Password: s.Config.Password,
 		}, nil
 	}
+	log.Info("No authentication method provided, falling back to unauthenticated clone")
 	return nil, nil
 }
 
@@ -136,7 +137,7 @@ func (s *Standard) GetGitBundle(repository *configv1alpha1.TerraformRepository, 
 
 	auth, err := s.getGitAuth(repository.Spec.Repository.Url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get git auth: %w", err)
 	}
 
 	// Try to open existing repository
