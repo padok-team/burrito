@@ -11,14 +11,29 @@
   ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["patch"],
-      "groupName": "all patch dependencies",
-      "groupSlug": "all-patch",
-      "matchPackageNames": ["*"]
+      "matchFileNames": [
+        "ui/**"
+      ],
+      "groupName": "ui dependencies",
+      "groupSlug": "ui-dependencies"
     },
     {
-      "matchManagers": ["dockerfile"],
-      "matchUpdateTypes": ["digest"],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "groupName": "all patch dependencies",
+      "groupSlug": "all-patch",
+      "matchPackageNames": [
+        "*"
+      ]
+    },
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
       "pinDigests": true,
       "commitMessagePrefix": "chore(docker):",
       "commitMessageAction": "pin digests",
