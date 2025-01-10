@@ -56,6 +56,11 @@ func (m *Mock) GetChanges(repository *configv1alpha1.TerraformRepository, pr *co
 	return allChangedFiles, nil
 }
 
+func (m *Mock) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	log.Infof("Gitlab provider latest revision for ref")
+	return "", nil
+}
+
 func (m *Mock) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {
 	log.Infof("Mock provider comment posted")
 	return nil
@@ -74,4 +79,9 @@ func (m *Mock) ParseWebhookPayload(payload *http.Request) (interface{}, bool) {
 func (m *Mock) GetEventFromWebhookPayload(payload interface{}) (event.Event, error) {
 	log.Infof("Mock provider webhook event parsed")
 	return nil, nil
+}
+
+func (m *Mock) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
+	log.Infof("Mock provider git bundle created")
+	return []byte("mock-bundle"), nil
 }

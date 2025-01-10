@@ -44,6 +44,8 @@ type Provider interface {
 	GetChanges(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest) ([]string, error)
 	Comment(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest, comment.Comment) error
 	Clone(*configv1alpha1.TerraformRepository, string, string) (*git.Repository, error)
+	GetLatestRevisionForRef(*configv1alpha1.TerraformRepository, string) (string, error)
+	GetGitBundle(*configv1alpha1.TerraformRepository, string, string) ([]byte, error)
 	ParseWebhookPayload(r *http.Request) (interface{}, bool)
 	GetEventFromWebhookPayload(interface{}) (event.Event, error)
 }

@@ -46,12 +46,14 @@ type TerraformRepositoryRepository struct {
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
+	State      string             `json:"state,omitempty"`
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:shortName=repositories;repository;repo;tfrs;tfr;
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="URL",type=string,JSONPath=`.spec.repository.url`
 // TerraformRepository is the Schema for the terraformrepositories API
 type TerraformRepository struct {

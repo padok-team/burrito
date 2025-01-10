@@ -100,6 +100,7 @@ type ControllerTimers struct {
 	OnError            time.Duration `mapstructure:"onError"`
 	WaitAction         time.Duration `mapstructure:"waitAction"`
 	FailureGracePeriod time.Duration `mapstructure:"failureGracePeriod"`
+	RepositorySync     time.Duration `mapstructure:"repositorySync"`
 }
 
 type RepositoryConfig struct {
@@ -233,6 +234,7 @@ func TestConfig() *Config {
 				WaitAction:         5 * time.Minute,
 				FailureGracePeriod: 15 * time.Second,
 				OnError:            1 * time.Minute,
+				RepositorySync:     5 * time.Minute,
 			},
 		},
 		Runner: RunnerConfig{
