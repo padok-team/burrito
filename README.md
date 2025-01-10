@@ -43,17 +43,22 @@ To learn more about burrito [go to the complete documentation](https://padok-tea
 
 Please read our [Contribution Guide](https://padok-team.github.io/burrito/contributing/) for more information on how to get involved.
 
-You can reach burrito's maintainers on X:
+Current maintainers:
+
+- [@corrieriluca](https://github.com/corrieriluca)
+- [@LucasMrqes](https://github.com/LucasMrqes)
+
+Former maintainers:
 
 - [@spoukke](https://x.com/spoukke)
 - [@LonguetAlan](https://x.com/LonguetAlan)
 
 ### Blogs and Presentations
 
-1. [Our burrito is a TACoS](https://www.padok.fr/en/blog/burrito-tacos)
+1. [Our burrito is a TACoS](https://cloud.theodo.com/en/blog/burrito-tacos)
 
 ## License
 
-© 2025 [Padok](https://www.padok.fr/).
+© 2025 [Theodo Cloud](https://cloud.theodo.com/en/)
 
 Licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), Version 2.0 ([LICENSE](./LICENSE))
