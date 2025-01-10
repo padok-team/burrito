@@ -14,8 +14,14 @@
       "matchFileNames": [
         "ui/**"
       ],
+      "matchUpdateTypes": [
+        "*"
+      ],
       "groupName": "ui dependencies",
-      "groupSlug": "ui-dependencies"
+      "groupSlug": "ui-dependencies",
+      "labels": [
+        "ui"
+      ]
     },
     {
       "matchUpdateTypes": [
