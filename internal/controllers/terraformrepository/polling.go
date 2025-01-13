@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	gitCommon "github.com/padok-team/burrito/internal/utils/gitprovider/common"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -28,7 +29,11 @@ func (r *Reconciler) getRevisionBundle(repository *configv1alpha1.TerraformRepos
 	if !exists {
 		return nil, fmt.Errorf("provider not found for repository %s/%s", repository.Namespace, repository.Name)
 	}
-	bundle, err := provider.GetGitBundle(repository, ref, revision)
+	auth, err := provider.GetGitAuth()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get git auth for repository %s/%s: %v", repository.Namespace, repository.Name, err)
+	}
+	bundle, err := gitCommon.GetGitBundle(repository, ref, revision, auth)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get revision bundle for ref %s: %v", ref, err)
 	}

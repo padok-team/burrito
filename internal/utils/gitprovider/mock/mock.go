@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
@@ -81,7 +82,7 @@ func (m *Mock) GetEventFromWebhookPayload(payload interface{}) (event.Event, err
 	return nil, nil
 }
 
-func (m *Mock) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
-	log.Infof("Mock provider git bundle created")
-	return []byte("mock-bundle"), nil
+func (m *Mock) GetGitAuth() (transport.AuthMethod, error) {
+	log.Infof("Mock provider git authentication")
+	return nil, nil
 }
