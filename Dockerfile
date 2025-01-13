@@ -46,7 +46,7 @@ COPY --from=builder-ui /workspace/dist internal/server/dist
 ARG VERSION
 ENV GOCACHE=/root/.cache/go-build
 RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
-  -ldflags="\
+  -ldflags="-w -s \
   -X ${PACKAGE}/internal/version.Version=${VERSION} \
   -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
   -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
