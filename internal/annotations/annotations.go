@@ -26,11 +26,6 @@ const (
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 
 	SyncNow string = "api.terraform.padok.cloud/sync-now"
-
-	LastSyncDate      string = "repository.terraform.padok.cloud/last-sync-date"
-	LastSyncStatus    string = "repository.terraform.padok.cloud/last-sync-status"
-	SyncStatusSuccess string = "success"
-	SyncStatusFailed  string = "failed"
 )
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {

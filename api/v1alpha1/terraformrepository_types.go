@@ -46,8 +46,10 @@ type TerraformRepositoryRepository struct {
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
-	State      string             `json:"state,omitempty"`
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	State          string             `json:"state,omitempty"`
+	LastSyncDate   string             `json:"lastSyncDate,omitempty"`
+	LastSyncStatus string             `json:"lastSyncStatus,omitempty"`
+	Conditions     []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 // +kubebuilder:object:root=true

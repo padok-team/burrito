@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/annotations"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
@@ -66,6 +64,9 @@ func (s *SyncNeeded) getHandler() Handler {
 			log.Errorf("failed to list managed refs: %s", err)
 			return ctrl.Result{}, err
 		}
+		if len(managedRefs) == 0 {
+			log.Infof("no managed refs found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
+		}
 
 		// Update datastore with latest revisions
 		var syncError error
@@ -109,24 +110,9 @@ func (s *SyncNeeded) getHandler() Handler {
 					syncError = err
 					continue
 				}
+				log.Infof("stored new bundle for repository %s/%s ref: %s revision: %s", repository.Namespace, repository.Name, ref, latestRev)
 			}
 		}
-		// Update annotations
-		if repository.Annotations == nil {
-			repository.Annotations = make(map[string]string)
-		}
-		if syncError != nil {
-			repository.Annotations[annotations.LastSyncStatus] = annotations.SyncStatusFailed
-		} else {
-			repository.Annotations[annotations.LastSyncStatus] = annotations.SyncStatusSuccess
-		}
-		repository.Annotations[annotations.LastSyncDate] = time.Now().Format(time.UnixDate)
-
-		if err := r.Client.Update(ctx, repository); err != nil {
-			log.Errorf("failed to update repository annotations: %s", err)
-			return ctrl.Result{}, err
-		}
-
 		if syncError != nil {
 			return ctrl.Result{}, syncError
 		}

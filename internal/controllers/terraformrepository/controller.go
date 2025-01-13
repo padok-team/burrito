@@ -18,9 +18,11 @@ package terraformrepository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -45,6 +47,11 @@ type Reconciler struct {
 	Providers map[string]gitprovider.Provider
 	Datastore datastore.Client
 }
+
+const (
+	SyncStatusSuccess string = "success"
+	SyncStatusFailed  string = "failed"
+)
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories/status,verbs=get;update;patch
@@ -76,26 +83,32 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	// Get the current state and conditions
 	state, conditions := r.GetState(ctx, repository)
+	stateString := getStateString(state)
 
 	// Update status conditions and state
 	repository.Status.Conditions = conditions
-	repository.Status.State = getStateString(state)
-
-	if err := r.Status().Update(ctx, repository); err != nil {
-		log.Errorf("failed to update repository status: %s", err)
-		return ctrl.Result{}, err
-	}
-
-	// Get the handler for the current state
-	handler := state.getHandler()
+	repository.Status.State = stateString
 
 	// Execute the handler
-	log.Infof("repository %s/%s is in state %s", repository.Namespace, repository.Name, getStateString(state))
-	result, err := handler(ctx, r, repository)
-	if err != nil {
-		log.Errorf("error handling state %s: %s", getStateString(state), err)
-		return ctrl.Result{}, err
+	log.Infof("repository %s/%s is in state %s", repository.Namespace, repository.Name, stateString)
+	result, handlerErr := state.getHandler()(ctx, r, repository)
+	if stateString == "SyncNeeded" {
+		repository.Status.LastSyncDate = time.Now().Format(time.UnixDate)
+		if handlerErr == nil {
+			repository.Status.LastSyncStatus = SyncStatusSuccess
+		} else {
+			repository.Status.LastSyncStatus = SyncStatusFailed
+		}
 	}
+	if err := r.Status().Update(ctx, repository); err != nil {
+		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
+		log.Errorf("failed to update repository status: %s", err)
+	}
+	if handlerErr != nil {
+		log.Errorf("error handling state %s: %s", stateString, handlerErr)
+		return ctrl.Result{}, handlerErr
+	}
+	log.Infof("finished reconciliation cycle for repository %s/%s", repository.Namespace, repository.Name)
 	return result, nil
 }
 
