@@ -111,7 +111,7 @@ helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/c
         repository:
             url: https://github.com/padok-team/burrito-examples
         remediationStrategy:
-        autoApply: true
+            autoApply: true
         terraform:
             enabled: true
         opentofu:
