@@ -45,7 +45,7 @@ COPY --from=builder-ui /workspace/dist internal/server/dist
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 ARG VERSION
 ENV GOCACHE=/root/.cache/go-build
-RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
+RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build \
   -ldflags="-w -s \
   -X ${PACKAGE}/internal/version.Version=${VERSION} \
   -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
