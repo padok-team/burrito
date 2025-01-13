@@ -20,7 +20,7 @@ const (
 	PlanJsonFile           string = "plan.json"
 	PrettyPlanFile         string = "pretty.plan"
 	ShortDiffFile          string = "short.diff"
-	GitBundleFileExtension string = ".tgz"
+	GitBundleFileExtension string = ".gitbundle"
 	RevisionFile           string = "latest"
 	LayersPrefix           string = "layers"
 	RepositoriesPrefix     string = "repositories"

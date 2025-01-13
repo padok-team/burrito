@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // getRemoteRevision gets the latest revision (commit sha) for a given ref from the remote repository
@@ -35,16 +36,18 @@ func (r *Reconciler) getRevisionBundle(repository *configv1alpha1.TerraformRepos
 }
 
 // listManagedRefs returns the list of refs (branches and tags) that are managed by burrito for a specific repository
-func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1alpha1.TerraformRepository) (map[string]bool, error) {
+func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1alpha1.TerraformRepository) ([]string, error) {
 	// get all layers that depends on the repository (layer.spec.repository.name == repository.name)
 	layers := &configv1alpha1.TerraformLayerList{}
-	if err := r.List(ctx, layers); err != nil {
+	if err := r.List(ctx, layers, &client.ListOptions{
+		Namespace: repository.Namespace,
+	}); err != nil {
 		return nil, err
 	}
-	refs := map[string]bool{}
+	refs := []string{}
 	for _, layer := range layers.Items {
 		if layer.Spec.Repository.Name == repository.Name {
-			refs[layer.Spec.Branch] = true
+			refs = append(refs, layer.Spec.Branch)
 		}
 	}
 	return refs, nil

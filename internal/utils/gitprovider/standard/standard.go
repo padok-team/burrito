@@ -3,6 +3,7 @@ package standard
 import (
 	"fmt"
 	nethttp "net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,10 +16,15 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/utils/gitprovider/common"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
-	"github.com/padok-team/burrito/internal/utils/zip"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	WorkingDir = "/tmp/burrito/repositories"
+	BundleDir  = "/tmp/burrito/gitbundles"
 )
 
 type Standard struct {
@@ -41,6 +47,11 @@ func (s *Standard) GetChanges(repository *configv1alpha1.TerraformRepository, pr
 }
 
 func (s *Standard) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	auth, err := s.getGitAuth(repository.Spec.Repository.Url)
+	if err != nil {
+		return "", fmt.Errorf("failed to get git auth: %w", err)
+	}
+
 	// Create an in-memory remote
 	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
 		Name: "origin",
@@ -48,7 +59,9 @@ func (s *Standard) GetLatestRevisionForRef(repository *configv1alpha1.TerraformR
 	})
 
 	// List references on the remote (equivalent to `git ls-remote <repoURL>`)
-	refs, err := remote.List(&git.ListOptions{})
+	refs, err := remote.List(&git.ListOptions{
+		Auth: auth,
+	})
 	if err != nil {
 		return "", fmt.Errorf("failed to list references: %v", err)
 	}
@@ -127,13 +140,13 @@ func (s *Standard) getGitAuth(repoURL string) (transport.AuthMethod, error) {
 			Password: s.Config.Password,
 		}, nil
 	}
-	log.Info("No authentication method provided, falling back to unauthenticated clone")
+	log.Info("no authentication method provided, falling back to unauthenticated clone")
 	return nil, nil
 }
 
 func (s *Standard) GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string) ([]byte, error) {
-	workDir := "/tmp/burrito/repositories"
-	repoDir := filepath.Join(workDir, fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, ref))
+	repoKey := fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, strings.ReplaceAll(ref, "/", "--"))
+	repoDir := filepath.Join(WorkingDir, repoKey)
 
 	auth, err := s.getGitAuth(repository.Spec.Repository.Url)
 	if err != nil {
@@ -144,19 +157,20 @@ func (s *Standard) GetGitBundle(repository *configv1alpha1.TerraformRepository, 
 	repo, err := git.PlainOpen(repoDir)
 	if err != nil {
 		if err != git.ErrRepositoryNotExists {
-			return nil, fmt.Errorf("failed to open repository: %w", err)
+			return nil, fmt.Errorf("failed to open repository %s: %w", repoKey, err)
 		}
 
 		// Clone if it doesn't exist
 		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
 		cloneOpts := &git.CloneOptions{
-			URL:  repository.Spec.Repository.Url,
-			Auth: auth,
+			URL:           repository.Spec.Repository.Url,
+			Auth:          auth,
+			ReferenceName: plumbing.NewBranchReferenceName(ref),
 		}
 
 		repo, err = git.PlainClone(repoDir, false, cloneOpts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to clone repository: %w", err)
+			return nil, fmt.Errorf("failed to clone repository %s: %w", repoKey, err)
 		}
 	}
 
@@ -165,17 +179,24 @@ func (s *Standard) GetGitBundle(repository *configv1alpha1.TerraformRepository, 
 		Auth: auth,
 	}
 
-	log.Infof("Fetching latest changes")
+	log.Infof("fetching latest changes for repo %s", repoKey)
 	err = repo.Fetch(fetchOpts)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
-			log.Info("Repository is already up-to-date")
+			log.Infof("repository %s is already up-to-date", repoKey)
 		} else {
 			return nil, fmt.Errorf("failed to fetch latest changes: %w", err)
 		}
 	}
 
-	bundle, err := zip.CreateTarGz(repoDir)
+	// Create BundleDir if it doesn't exist
+	if _, err := os.Stat(BundleDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(BundleDir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create BundleDir directory: %v", err)
+		}
+	}
+	bundleDest := filepath.Join(BundleDir, fmt.Sprintf("%s.gitbundle", repoKey))
+	bundle, err := common.CreateGitBundle(repoDir, bundleDest, ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bundle: %w", err)
 	}

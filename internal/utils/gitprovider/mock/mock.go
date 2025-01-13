@@ -57,7 +57,7 @@ func (m *Mock) GetChanges(repository *configv1alpha1.TerraformRepository, pr *co
 }
 
 func (m *Mock) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
-	log.Infof("Gitlab provider latest revision for ref")
+	log.Infof("Mock provider latest revision for ref")
 	return "", nil
 }
 

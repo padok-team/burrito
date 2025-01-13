@@ -65,12 +65,13 @@ func (s *SyncNeeded) getHandler() Handler {
 			return ctrl.Result{}, err
 		}
 		if len(managedRefs) == 0 {
-			log.Infof("no managed refs found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
+			log.Warningf("no managed refs found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
+			return ctrl.Result{}, errors.New("no managed refs found, have you created TerraformLayer resources?")
 		}
 
-		// Update datastore with latest revisions
+		// Update datastore with latest revisions for each ref
 		var syncError error
-		for ref := range managedRefs {
+		for _, ref := range managedRefs {
 			latestRev, err := r.getRemoteRevision(repository, ref)
 			if err != nil {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s", ref))
@@ -83,7 +84,7 @@ func (s *SyncNeeded) getHandler() Handler {
 			var storageErr *storageerrors.StorageError
 			if errors.As(err, &storageErr) && storageErr.Nil {
 				log.Infof("no stored revision found for ref %s", ref)
-			} else {
+			} else if err != nil {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get stored revision for ref %s", ref))
 				log.Errorf("failed to get stored revision for ref %s: %s", ref, err)
 				syncError = err
@@ -110,7 +111,7 @@ func (s *SyncNeeded) getHandler() Handler {
 					syncError = err
 					continue
 				}
-				log.Infof("stored new bundle for repository %s/%s ref: %s revision: %s", repository.Namespace, repository.Name, ref, latestRev)
+				log.Infof("stored new bundle for repository %s/%s ref:%s revision:%s", repository.Namespace, repository.Name, ref, latestRev)
 			}
 		}
 		if syncError != nil {
@@ -155,13 +156,20 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 			}
 		} else {
 			config = gitprovider.Config{
+				URL:        repository.Spec.Repository.Url,
+				EnableMock: secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
+				// GitHub App Auth
 				AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
-				URL:               repository.Spec.Repository.Url,
 				AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
 				AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
-				GitHubToken:       string(secret.Data["githubToken"]),
-				GitLabToken:       string(secret.Data["gitlabToken"]),
-				EnableMock:        secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
+				// Token Auth
+				GitHubToken: string(secret.Data["githubToken"]),
+				GitLabToken: string(secret.Data["gitlabToken"]),
+				// Basic Auth
+				Username: string(secret.Data["username"]),
+				Password: string(secret.Data["password"]),
+				// SSH Auth
+				SSHPrivateKey: string(secret.Data["sshPrivateKey"]),
 			}
 		}
 	} else {
