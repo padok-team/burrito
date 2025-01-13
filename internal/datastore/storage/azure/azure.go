@@ -33,6 +33,7 @@ func New(config config.AzureConfig) *Azure {
 	}
 	return &Azure{
 		Client: client,
+		Config: config,
 	}
 }
 
