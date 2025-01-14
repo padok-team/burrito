@@ -60,6 +60,10 @@ spec:
             - name: burrito-config
               mountPath: /etc/burrito
               readOnly: true
+            - name: ssh-known-hosts
+              mountPath: /home/burrito/.ssh/known_hosts
+              subPath: known_hosts
+              readOnly: true
             - name: burrito-token
               mountPath: /var/run/secrets/token
               readOnly: true
@@ -88,6 +92,9 @@ spec:
         - name: burrito-config
           configMap:
             name: burrito-config
+        - name: ssh-known-hosts
+          configMap:
+            name: burrito-ssh-known-hosts
         - name: burrito-token
           projected:
             sources:

@@ -79,6 +79,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				syncError = err
 				continue
 			}
+			log.Infof("latest revision for repository %s/%s ref:%s is %s", repository.Namespace, repository.Name, ref, latestRev)
 
 			storedRev, err := r.Datastore.GetLatestRevision(repository.Namespace, repository.Name, ref)
 			var storageErr *storageerrors.StorageError
@@ -89,6 +90,9 @@ func (s *SyncNeeded) getHandler() Handler {
 				log.Errorf("failed to get stored revision for ref %s: %s", ref, err)
 				syncError = err
 				continue
+			}
+			if storedRev != "" {
+				log.Infof("current stored revision for repository %s/%s ref:%s is %s", repository.Namespace, repository.Name, ref, storedRev)
 			}
 
 			if latestRev == storedRev {

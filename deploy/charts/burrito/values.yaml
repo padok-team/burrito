@@ -273,7 +273,9 @@ controllers:
     # -- Environment variables to pass to the Burrito controller container
     envFrom: []
     # -- Environment variables to pass to the Burrito controller container
-    env: []
+    env:
+      - name: SSH_KNOWN_HOSTS
+        value: /home/burrito/.ssh/known_hosts
     # -- Additional volumes
     extraVolumes: {}
     # -- Additional volume mounts
@@ -316,7 +318,7 @@ server:
       initialDelaySeconds: 5
       periodSeconds: 20
     # -- Environment variables to pass to the Burrito server container
-    env: [] 
+    env: []
     # -- Environment variables to pass to the Burrito server container
     envFrom: []
     # -- Additional volumes
