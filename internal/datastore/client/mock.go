@@ -2,8 +2,6 @@ package client
 
 import (
 	"fmt"
-
-	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 type MockClient struct {
@@ -40,17 +38,6 @@ func (c *MockClient) GetAttempts(namespace string, layer string, run string) (in
 	return 0, nil
 }
 
-func (c *MockClient) GetLatestRevision(namespace, name, ref string) (string, error) {
-	key := fmt.Sprintf("%s/%s/%s", namespace, name, ref)
-	if revision, exists := c.revisions[key]; exists {
-		return revision, nil
-	}
-	return "", &storageerrors.StorageError{
-		Err: fmt.Errorf("no revision found"),
-		Nil: true,
-	}
-}
-
 func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle []byte) error {
 	revKey := fmt.Sprintf("%s/%s/%s", namespace, name, ref)
 	c.revisions[revKey] = revision
@@ -59,4 +46,8 @@ func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle 
 	c.bundles[bundleKey] = bundle
 
 	return nil
+}
+
+func (c *MockClient) CheckGitBundle(namespace, name, ref, revision string) (bool, error) {
+	return false, nil
 }

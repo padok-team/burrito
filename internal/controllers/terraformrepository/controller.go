@@ -18,7 +18,6 @@ package terraformrepository
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
@@ -51,11 +50,6 @@ type Reconciler struct {
 	Datastore datastore.Client
 }
 
-const (
-	SyncStatusSuccess string = "success"
-	SyncStatusFailed  string = "failed"
-)
-
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories/finalizers,verbs=update
@@ -84,14 +78,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// Get associated layers
-	managedRefs, err := r.listManagedRefs(ctx, repository)
-	if err != nil {
-		log.Errorf("failed to get associated TerraformLayers: %s", err)
-		return ctrl.Result{}, err
-	}
-	repository.Status.Branches = managedRefs
-
 	// Get the current state and conditions
 	state, conditions := r.GetState(ctx, repository)
 	stateString := getStateString(state)
@@ -102,22 +88,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	// Execute the handler
 	log.Infof("repository %s/%s is in state %s", repository.Namespace, repository.Name, stateString)
-	result, handlerErr := state.getHandler()(ctx, r, repository)
-	if stateString == "SyncNeeded" {
-		repository.Status.LastSyncDate = time.Now().Format(time.UnixDate)
-		if handlerErr == nil {
-			repository.Status.LastSyncStatus = SyncStatusSuccess
-		} else {
-			repository.Status.LastSyncStatus = SyncStatusFailed
-		}
-	}
+	result, branchStates := state.getHandler()(ctx, r, repository)
+	repository.Status.Branches = branchStates
 	if err := r.Status().Update(ctx, repository); err != nil {
 		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
 		log.Errorf("failed to update repository status: %s", err)
-	}
-	if handlerErr != nil {
-		log.Errorf("error handling state %s: %s", stateString, handlerErr)
-		return ctrl.Result{}, handlerErr
 	}
 	log.Infof("finished reconciliation cycle for repository %s/%s", repository.Namespace, repository.Name)
 	return result, nil
@@ -131,6 +106,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
 		Watches(&configv1alpha1.TerraformLayer{}, handler.EnqueueRequestsFromMapFunc(
 			func(ctx context.Context, obj client.Object) []reconcile.Request {
+				// TODO: remove/improve this log
 				log.Infof("REPO CONTROLLER WATCHING LAYER %s/%s", obj.GetNamespace(), obj.GetName())
 				layer := obj.(*configv1alpha1.TerraformLayer)
 				return []reconcile.Request{

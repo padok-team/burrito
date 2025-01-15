@@ -19,24 +19,6 @@ func getRevisionArgs(c echo.Context) (string, string, string, error) {
 	return namespace, name, ref, nil
 }
 
-func (a *API) GetLatestRevisionHandler(c echo.Context) error {
-	namespace, name, ref, err := getRevisionArgs(c)
-	if err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
-	}
-
-	revision, err := a.Storage.GetLatestRevision(namespace, name, ref)
-	if err != nil {
-		if storageerrors.NotFound(err) {
-			return c.String(http.StatusNotFound, "No revision found")
-		}
-		c.Logger().Errorf("Could not get revision, there's an issue with the storage backend: %s", err)
-		return c.String(http.StatusInternalServerError, "could not get revision, there's an issue with the storage backend")
-	}
-
-	return c.String(http.StatusOK, revision)
-}
-
 func (a *API) PutGitBundleHandler(c echo.Context) error {
 	namespace, name, ref, err := getRevisionArgs(c)
 	if err != nil {

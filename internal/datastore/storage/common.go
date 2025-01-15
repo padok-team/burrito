@@ -52,10 +52,6 @@ func computeGitBundleKey(namespace string, repository string, branch string, rev
 	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, revision, GitBundleFileExtension)
 }
 
-func computeLatestRevisionKey(namespace string, repository string, branch string) string {
-	return fmt.Sprintf("%s/%s/%s/%s/%s", RepositoriesPrefix, namespace, repository, branch, RevisionFile)
-}
-
 type Storage struct {
 	Backend StorageBackend
 	Config  config.Config
@@ -144,19 +140,5 @@ func (s *Storage) PutGitBundle(namespace string, repository string, ref string, 
 	if err != nil {
 		return fmt.Errorf("failed to store git bundle: %w", err)
 	}
-
-	// Update the latest revision reference
-	err = s.Backend.Set(computeLatestRevisionKey(namespace, repository, ref), []byte(commit), 0)
-	if err != nil {
-		return fmt.Errorf("failed to update latest revision reference: %w", err)
-	}
 	return nil
-}
-
-func (s *Storage) GetLatestRevision(namespace string, repository string, ref string) (string, error) {
-	data, err := s.Backend.Get(computeLatestRevisionKey(namespace, repository, ref))
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
 }

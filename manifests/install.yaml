@@ -4775,6 +4775,20 @@ spec:
           status:
             description: TerraformRepositoryStatus defines the observed state of TerraformRepository
             properties:
+              branches:
+                items:
+                  description: BranchState describes the sync state of a branch
+                  properties:
+                    lastSyncDate:
+                      type: string
+                    lastSyncStatus:
+                      type: string
+                    latestRev:
+                      type: string
+                    name:
+                      type: string
+                  type: object
+                type: array
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current
@@ -4831,10 +4845,6 @@ spec:
                   - type
                   type: object
                 type: array
-              lastSyncDate:
-                type: string
-              lastSyncStatus:
-                type: string
               state:
                 type: string
             type: object

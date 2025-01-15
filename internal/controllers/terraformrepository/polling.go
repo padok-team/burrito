@@ -39,8 +39,8 @@ func (r *Reconciler) getRevisionBundle(repository *configv1alpha1.TerraformRepos
 	return bundle, nil
 }
 
-// listManagedRefs returns the list of refs (branches and tags) that are managed by burrito for a specific repository
-func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1alpha1.TerraformRepository) ([]string, error) {
+// retrieveLayerBranches returns the list of refs (branches and tags) that are managed by burrito for a specific repository
+func (r *Reconciler) retrieveLayerBranches(ctx context.Context, repository *configv1alpha1.TerraformRepository) ([]string, error) {
 	// get all layers that depends on the repository (layer.spec.repository.name == repository.name)
 	layers := &configv1alpha1.TerraformLayerList{}
 	if err := r.List(ctx, layers); err != nil {

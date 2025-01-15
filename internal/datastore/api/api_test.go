@@ -186,30 +186,6 @@ var _ = Describe("Datastore API", func() {
 			})
 		})
 		Describe("Revisions", func() {
-			Describe("Get Latest Revision", func() {
-				It("should return the revision with a 200 OK when it exists", func() {
-					context := getContext(http.MethodGet, "/revisions", map[string]string{
-						"namespace": "default",
-						"name":      "test1",
-						"ref":       "main",
-					}, nil)
-					err := API.GetLatestRevisionHandler(context)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
-				})
-
-				It("should return 404 Not Found when revision doesn't exist", func() {
-					context := getContext(http.MethodGet, "/revisions", map[string]string{
-						"namespace": "notfound",
-						"name":      "notfound",
-						"ref":       "notfound",
-					}, nil)
-					err := API.GetLatestRevisionHandler(context)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusNotFound))
-				})
-			})
-
 			Describe("Store Revision", func() {
 				It("should return 200 OK when storing a revision", func() {
 					body := []byte(`test-bundle`)
