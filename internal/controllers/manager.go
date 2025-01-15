@@ -108,6 +108,8 @@ func (c *Controllers) Exec() {
 		panic(err.Error())
 	}
 
+	log.Infof("starting these controllers: %v", c.config.Controller.Types)
+
 	for _, ctrlType := range c.config.Controller.Types {
 		switch ctrlType {
 		case "layer":

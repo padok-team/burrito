@@ -106,8 +106,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
 		Watches(&configv1alpha1.TerraformLayer{}, handler.EnqueueRequestsFromMapFunc(
 			func(ctx context.Context, obj client.Object) []reconcile.Request {
-				// TODO: remove/improve this log
-				log.Infof("REPO CONTROLLER WATCHING LAYER %s/%s", obj.GetNamespace(), obj.GetName())
+				log.Infof("repository controller has detected the following layer creation: %s/%s", obj.GetNamespace(), obj.GetName())
 				layer := obj.(*configv1alpha1.TerraformLayer)
 				return []reconcile.Request{
 					{NamespacedName: types.NamespacedName{Namespace: layer.Spec.Repository.Namespace, Name: layer.Spec.Repository.Name}},
@@ -122,7 +121,7 @@ func ignorePredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates on TerraformLayer objects, we only watch their creation
-			if e.ObjectNew.GetObjectKind().GroupVersionKind().Kind == "TerraformLayer" {
+			if _, ok := e.ObjectNew.(*configv1alpha1.TerraformLayer); ok {
 				return false
 			}
 			// Update only if generation or annotations change, filter out anything else.
