@@ -6,7 +6,6 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	gitCommon "github.com/padok-team/burrito/internal/utils/gitprovider/common"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // getRemoteRevision gets the latest revision (commit sha) for a given ref from the remote repository
@@ -44,9 +43,7 @@ func (r *Reconciler) getRevisionBundle(repository *configv1alpha1.TerraformRepos
 func (r *Reconciler) listManagedRefs(ctx context.Context, repository *configv1alpha1.TerraformRepository) ([]string, error) {
 	// get all layers that depends on the repository (layer.spec.repository.name == repository.name)
 	layers := &configv1alpha1.TerraformLayerList{}
-	if err := r.List(ctx, layers, &client.ListOptions{
-		Namespace: repository.Namespace,
-	}); err != nil {
+	if err := r.List(ctx, layers); err != nil {
 		return nil, err
 	}
 	refs := []string{}

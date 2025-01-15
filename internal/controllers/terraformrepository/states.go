@@ -66,7 +66,7 @@ func (s *SyncNeeded) getHandler() Handler {
 		}
 		if len(managedRefs) == 0 {
 			log.Warningf("no managed refs found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
-			return ctrl.Result{}, errors.New("no managed refs found, have you created TerraformLayer resources?")
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
 
 		// Update datastore with latest revisions for each ref

@@ -25,12 +25,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -81,6 +84,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// Get associated layers
+	managedRefs, err := r.listManagedRefs(ctx, repository)
+	if err != nil {
+		log.Errorf("failed to get associated TerraformLayers: %s", err)
+		return ctrl.Result{}, err
+	}
+	repository.Status.Branches = managedRefs
+
 	// Get the current state and conditions
 	state, conditions := r.GetState(ctx, repository)
 	stateString := getStateString(state)
@@ -118,6 +129,15 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
+		Watches(&configv1alpha1.TerraformLayer{}, handler.EnqueueRequestsFromMapFunc(
+			func(ctx context.Context, obj client.Object) []reconcile.Request {
+				log.Infof("REPO CONTROLLER WATCHING LAYER %s/%s", obj.GetNamespace(), obj.GetName())
+				layer := obj.(*configv1alpha1.TerraformLayer)
+				return []reconcile.Request{
+					{NamespacedName: types.NamespacedName{Namespace: layer.Spec.Repository.Namespace, Name: layer.Spec.Repository.Name}},
+				}
+			},
+		)).
 		WithEventFilter(ignorePredicate()).
 		Complete(r)
 }
@@ -125,6 +145,10 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 func ignorePredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
+			// Ignore updates on TerraformLayer objects, we only watch their creation
+			if e.ObjectNew.GetObjectKind().GroupVersionKind().Kind == "TerraformLayer" {
+				return false
+			}
 			// Update only if generation or annotations change, filter out anything else.
 			// We only need to check generation or annotations change here, because it is only
 			// updated on spec changes. On the other hand RevisionVersion

@@ -49,6 +49,7 @@ type TerraformRepositoryStatus struct {
 	State          string             `json:"state,omitempty"`
 	LastSyncDate   string             `json:"lastSyncDate,omitempty"`
 	LastSyncStatus string             `json:"lastSyncStatus,omitempty"`
+	Branches       []string           `json:"branches,omitempty"`
 	Conditions     []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
