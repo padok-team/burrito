@@ -19,7 +19,7 @@ type Event interface {
 	Handle(client.Client) error
 }
 
-func ParseRevision(ref string) string {
+func ParseReference(ref string) string {
 	refParts := strings.SplitN(ref, "/", 3)
 	return refParts[len(refParts)-1]
 }

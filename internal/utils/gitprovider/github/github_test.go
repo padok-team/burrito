@@ -68,7 +68,7 @@ func TestGithub_GetEventFromWebhookPayload_PushEvent(t *testing.T) {
 
 	pushEvt := evt.(*event.PushEvent)
 	assert.Equal(t, "https://github.com/padok-team/burrito-examples", pushEvt.URL)
-	assert.Equal(t, "main", pushEvt.Revision)
+	assert.Equal(t, "main", pushEvt.Reference)
 	assert.Equal(t, "6f51b4ffd5e3adadfc3ee649d5ea2499472ea33b", pushEvt.ShaBefore)
 	assert.Equal(t, "ca9b6c80ac8fb5cd837ae9b374b79ff33f472558", pushEvt.ShaAfter)
 	assert.ElementsMatch(t, []string{"modules/random-pets/main.tf", "terragrunt/random-pets/test/inputs.hcl", "modules/random-pets/variables.tf"}, pushEvt.Changes)
@@ -123,7 +123,7 @@ func TestGithub_GetEventFromWebhookPayload_PullRequestEvent(t *testing.T) {
 	pullRequestEvt := evt.(*event.PullRequestEvent)
 	assert.Equal(t, "20", pullRequestEvt.ID)
 	assert.Equal(t, "https://github.com/padok-team/burrito-examples", pullRequestEvt.URL)
-	assert.Equal(t, "demo", pullRequestEvt.Revision)
+	assert.Equal(t, "demo", pullRequestEvt.Reference)
 	assert.Equal(t, "main", pullRequestEvt.Base)
 	assert.Equal(t, "faf5e25402a9bd10f7318c8a2cd984af576c687f", pullRequestEvt.Commit)
 	assert.Equal(t, "opened", pullRequestEvt.Action)

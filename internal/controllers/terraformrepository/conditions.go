@@ -6,6 +6,7 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -19,6 +20,20 @@ func mergeBranchesWithBranchState(found []string, branchStates []configv1alpha1.
 		}
 	}
 	return branchStates
+}
+
+func isSyncNowRequested(repo *configv1alpha1.TerraformRepository, branch string, lastSyncDate time.Time) (bool, error) {
+	if syncNow, ok := repo.Annotations[annotations.ComputeKeyForSyncBranchNow(branch)]; ok {
+		syncNowDate, err := time.Parse(time.UnixDate, syncNow)
+		if err != nil {
+			return false, err
+		}
+		if syncNowDate.After(lastSyncDate) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // IsLastSyncTooOld checks if the last sync was too long ago for at least one of the branches tracked by the repository
@@ -61,6 +76,19 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		if err != nil {
 			condition.Reason = "InvalidSyncDate"
 			condition.Message = fmt.Sprintf("Invalid last sync date format for branch %s: %v", branch.Name, err)
+			condition.Status = metav1.ConditionTrue
+			return condition, true
+		}
+		syncNow, err := isSyncNowRequested(repo, branch.Name, lastSync)
+		if err != nil {
+			condition.Reason = "InvalidSyncNowDate"
+			condition.Message = fmt.Sprintf("Invalid sync now date in annotation %s: %v", annotations.ComputeKeyForSyncBranchNow(branch.Name), err)
+			condition.Status = metav1.ConditionTrue
+			return condition, true
+		}
+		if syncNow {
+			condition.Reason = "SyncNowRequested"
+			condition.Message = fmt.Sprintf("Branch %s has been requested for sync", branch.Name)
 			condition.Status = metav1.ConditionTrue
 			return condition, true
 		}

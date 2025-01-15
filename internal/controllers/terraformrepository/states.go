@@ -80,11 +80,16 @@ func (s *SyncNeeded) getHandler() Handler {
 		// Update datastore with latest revisions for each ref that needs to be synced
 		var syncError error
 		for _, branch := range branchStates {
-			// Filter out branches that have been synced recently
+			// Filter out branches that have been synced succesfully recently or do not have been requested to sync now
 			if lastSync, err := time.Parse(time.UnixDate, branch.LastSyncDate); err == nil {
+				syncNow, err := isSyncNowRequested(repository, branch.Name, lastSync)
+				if err != nil {
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to parse sync now annotation for ref %s", branch.Name))
+					continue
+				}
 				nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
 				now := time.Now()
-				if !nextSyncTime.Before(now) {
+				if !syncNow && !nextSyncTime.Before(now) && branch.LastSyncStatus == SyncStatusSuccess {
 					continue
 				}
 			}

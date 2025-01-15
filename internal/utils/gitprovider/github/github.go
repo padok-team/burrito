@@ -225,8 +225,8 @@ func (g *Github) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 		e = &event.PushEvent{
-			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
-			Revision: event.ParseRevision(payload.Ref),
+			URL:       utils.NormalizeUrl(payload.Repository.HTMLURL),
+			Reference: event.ParseReference(payload.Ref),
 			ChangeInfo: event.ChangeInfo{
 				ShaBefore: payload.Before,
 				ShaAfter:  payload.After,
@@ -240,12 +240,12 @@ func (g *Github) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 			return nil, err
 		}
 		e = &event.PullRequestEvent{
-			ID:       strconv.FormatInt(payload.PullRequest.Number, 10),
-			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
-			Revision: payload.PullRequest.Head.Ref,
-			Action:   getNormalizedAction(payload.Action),
-			Base:     payload.PullRequest.Base.Ref,
-			Commit:   payload.PullRequest.Head.Sha,
+			ID:        strconv.FormatInt(payload.PullRequest.Number, 10),
+			URL:       utils.NormalizeUrl(payload.Repository.HTMLURL),
+			Reference: payload.PullRequest.Head.Ref,
+			Action:    getNormalizedAction(payload.Action),
+			Base:      payload.PullRequest.Base.Ref,
+			Commit:    payload.PullRequest.Head.Sha,
 		}
 	default:
 		return nil, errors.New("unsupported Event")

@@ -14,8 +14,8 @@ import (
 )
 
 type PushEvent struct {
-	URL      string
-	Revision string
+	URL       string
+	Reference string
 	ChangeInfo
 	Changes []string
 }
@@ -43,8 +43,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 	affectedRepositories := e.getAffectedRepositories(repositories.Items)
 	for _, repo := range affectedRepositories {
 		ann := map[string]string{}
-		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
-		ann[annotations.LastBranchCommitDate] = date
+		ann[annotations.ComputeKeyForSyncBranchNow(e.Reference)] = time.Now().Format(time.UnixDate)
 		err := annotations.Add(context.TODO(), c, &repo, ann)
 		if err != nil {
 			log.Errorf("could not add annotation to TerraformRepository %s", err)
@@ -54,9 +53,9 @@ func (e *PushEvent) Handle(c client.Client) error {
 
 	for _, layer := range e.getAffectedLayers(layers.Items, affectedRepositories) {
 		ann := map[string]string{}
-		log.Printf("evaluating TerraformLayer %s for revision %s", layer.Name, e.Revision)
-		if layer.Spec.Branch != e.Revision {
-			log.Infof("branch %s for TerraformLayer %s not matching revision %s", layer.Spec.Branch, layer.Name, e.Revision)
+		log.Printf("evaluating TerraformLayer %s for revision %s", layer.Name, e.Reference)
+		if layer.Spec.Branch != e.Reference {
+			log.Infof("branch %s for TerraformLayer %s not matching revision %s", layer.Spec.Branch, layer.Name, e.Reference)
 			continue
 		}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
@@ -113,7 +112,7 @@ func (e *PushEvent) getAffectedLayers(allLayers []configv1alpha1.TerraformLayer,
 func (e *PushEvent) getAffectedPullRequests(prs []configv1alpha1.TerraformPullRequest, affectedRepositories []configv1alpha1.TerraformRepository) []configv1alpha1.TerraformPullRequest {
 	affectedPRs := []configv1alpha1.TerraformPullRequest{}
 	for _, pr := range prs {
-		if isPRLinkedToAnyRepositories(pr, affectedRepositories) && pr.Spec.Branch == e.Revision {
+		if isPRLinkedToAnyRepositories(pr, affectedRepositories) && pr.Spec.Branch == e.Reference {
 			affectedPRs = append(affectedPRs, pr)
 		}
 	}

@@ -187,8 +187,8 @@ func (g *Gitlab) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 		e = &event.PushEvent{
-			URL:      utils.NormalizeUrl(payload.Project.WebURL),
-			Revision: event.ParseRevision(payload.Ref),
+			URL:       utils.NormalizeUrl(payload.Project.WebURL),
+			Reference: event.ParseReference(payload.Ref),
 			ChangeInfo: event.ChangeInfo{
 				ShaBefore: payload.Before,
 				ShaAfter:  payload.After,
@@ -198,12 +198,12 @@ func (g *Gitlab) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 	case wh.MergeRequestEventPayload:
 		log.Infof("parsing Gitlab merge request event payload")
 		e = &event.PullRequestEvent{
-			ID:       strconv.Itoa(int(payload.ObjectAttributes.IID)),
-			URL:      utils.NormalizeUrl(payload.Project.WebURL),
-			Revision: payload.ObjectAttributes.SourceBranch,
-			Action:   getNormalizedAction(payload.ObjectAttributes.Action),
-			Base:     payload.ObjectAttributes.TargetBranch,
-			Commit:   payload.ObjectAttributes.LastCommit.ID,
+			ID:        strconv.Itoa(int(payload.ObjectAttributes.IID)),
+			URL:       utils.NormalizeUrl(payload.Project.WebURL),
+			Reference: payload.ObjectAttributes.SourceBranch,
+			Action:    getNormalizedAction(payload.ObjectAttributes.Action),
+			Base:      payload.ObjectAttributes.TargetBranch,
+			Commit:    payload.ObjectAttributes.LastCommit.ID,
 		}
 	default:
 		return nil, errors.New("unsupported event")
