@@ -46,5 +46,9 @@
       "groupName": "docker pin digests",
       "groupSlug": "docker-all-digests"
     }
+  ],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
   ]
 }
