@@ -61,3 +61,45 @@ func (a *API) PutGitBundleHandler(c echo.Context) error {
 
 	return c.NoContent(http.StatusOK)
 }
+
+func (a *API) HeadGitBundleHandler(c echo.Context) error {
+	namespace, name, ref, err := getRevisionArgs(c)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+	revision := c.QueryParam("revision")
+	if revision == "" {
+		return c.String(http.StatusBadRequest, "missing revision parameter")
+	}
+	checksum, err := a.Storage.CheckGitBundle(namespace, name, ref, revision)
+	if err != nil {
+		if storageerrors.NotFound(err) {
+			return c.String(http.StatusNotFound, "No bundle found for this revision")
+		}
+		c.Logger().Errorf("Could not get bundle for revision, there's an issue with the storage backend: %s", err)
+		return c.String(http.StatusInternalServerError, "could not get bundle for revision, there's an issue with the storage backend")
+	}
+
+	return c.String(http.StatusOK, string(checksum))
+}
+
+func (a *API) GetGitBundleHandler(c echo.Context) error {
+	namespace, name, ref, err := getRevisionArgs(c)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+	revision := c.QueryParam("revision")
+	if revision == "" {
+		return c.String(http.StatusBadRequest, "missing revision parameter")
+	}
+	content, err := a.Storage.GetGitBundle(namespace, name, ref, revision)
+	if err != nil {
+		if storageerrors.NotFound(err) {
+			return c.String(http.StatusNotFound, "No bundle found for this revision")
+		}
+		c.Logger().Errorf("Could not get bundle for revision, there's an issue with the storage backend: %s", err)
+		return c.String(http.StatusInternalServerError, "could not get bundle for revision, there's an issue with the storage backend")
+	}
+
+	return c.Blob(http.StatusOK, "application/octet-stream", content)
+}

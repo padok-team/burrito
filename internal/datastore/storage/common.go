@@ -63,6 +63,7 @@ type Storage struct {
 
 type StorageBackend interface {
 	Get(key string) ([]byte, error)
+	Check(key string) ([]byte, error)
 	Set(key string, value []byte, ttl int) error
 	Delete(key string) error
 	List(prefix string) ([]string, error)
@@ -131,6 +132,10 @@ func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, 
 
 func (s *Storage) GetGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
 	return s.Backend.Get(computeGitBundleKey(namespace, repository, ref, commit))
+}
+
+func (s *Storage) CheckGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
+	return s.Backend.Check(computeGitBundleKey(namespace, repository, ref, commit))
 }
 
 func (s *Storage) PutGitBundle(namespace string, repository string, ref string, commit string, bundle []byte) error {

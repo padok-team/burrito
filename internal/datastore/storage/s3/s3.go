@@ -54,6 +54,20 @@ func (a *S3) Get(key string) ([]byte, error) {
 	return data, nil
 }
 
+func (a *S3) Check(key string) ([]byte, error) {
+	input := &storage.HeadObjectInput{
+		Bucket: &a.Config.Bucket,
+		Key:    &key,
+	}
+
+	result, err := a.Client.HeadObject(context.TODO(), input)
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(*result.ChecksumSHA256), nil
+}
+
 func (a *S3) Set(key string, data []byte, ttl int) error {
 	input := &storage.PutObjectInput{
 		Bucket: &a.Config.Bucket,

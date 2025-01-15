@@ -33,6 +33,17 @@ func (s *Mock) Set(key string, value []byte, ttl int) error {
 	return nil
 }
 
+func (s *Mock) Check(key string) ([]byte, error) {
+	val, ok := s.data[key]
+	if !ok {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("%s", "Not found"),
+			Nil: true,
+		}
+	}
+	return val, nil
+}
+
 func (s *Mock) Delete(key string) error {
 	delete(s.data, key)
 	return nil
