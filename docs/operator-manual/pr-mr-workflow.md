@@ -49,6 +49,7 @@ With those 3 conditions, we defined 3 states:
 
 Follow the instructions in [Setting up a Git Webhook](./git-webhook.md) to configure a webhook in your repository.
 The webhook will be used to trigger:
+
 - Drift detection when a push event is received.
 - The PR/MR workflow when a pull request event is received.
 
@@ -61,11 +62,11 @@ You can create and register GitHub Apps in your personal GitHub account or in an
 Follow the instructions in the GitHub documentation on [Creating a GitHub App](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app). Populate the settings as follows:
 
 - **GitHub App Name**: Choose a name for your GitHub App. For example, something featuring `burrito`.
-- **Homepage URL**: Enter https://padok-team.github.io/burrito.
-- **Webhook**: Deselect Active. The app doesn't use this webhook events mechanism at the moment.
-- **Permissions**: Configure the following **Repository Permissions**.
-  - **Metadata**: Select Read-only.
-  - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
+- **Homepage URL**: Enter <https://padok-team.github.io/burrito>.
+- **Webhook**: Unselect Active. The app doesn't use this webhook events mechanism at the moment.
+- **Permissions**: Configure the following **Repository Permissions**:
+    - **Metadata**: Select Read-only.
+    - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
 - Where can this GitHub App be installed: Select **Any account**.
 
 #### Creating a custom badge for your GitHub App
@@ -86,13 +87,12 @@ Follow the instructions in the GitHub documentation on [Installing your own GitH
 
 You need the **Installation ID** and **App ID** to configure Burrito.
 
+<!-- markdownlint-disable MD032 -->
 1. Get the **Installation ID** from the URL of the installed app, such as:
-
-<p align="center"><img src="../../assets/pr-mr-workflow/github_installation_id.png" /></p>
-
+  <p align="center"><img src="../../assets/pr-mr-workflow/github_installation_id.png" /></p>
 2. Get the **App ID** from the app's General tab.
-
-<p align="center"><img src="../../assets/pr-mr-workflow/github_app_id.png" /></p>
+  <p align="center"><img src="../../assets/pr-mr-workflow/github_app_id.png" /></p>
+<!-- markdownlint-enable MD032 -->
 
 #### Generate a private key
 
@@ -107,6 +107,7 @@ You need a private key for your GitHub app to configure Burrito.
 Add the credentials of your newly created app to the secret associated to your `TerraformRepository` resource. If the repository is public, create a secret in the same namespace as the `TerraformRepository` and reference it in the `spec.repository.secretName`.
 
 For example:
+
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
@@ -145,9 +146,9 @@ You need a personal access token to configure Burrito. You can generate a person
 Follow the instructions in the GitHub documentation for [creating a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token):
 
 - It should be a **fine-grained token**.
-- **Permissions**: Configure the following **Repository Permissions**.
-  - **Metadata**: Select Read-only.
-  - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
+- **Permissions**: Configure the following **Repository Permissions**:
+    - **Metadata**: Select Read-only.
+    - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
 - Under **Repository access**, select which repositories you want the token to access.
 
 #### Configure Burrito
@@ -155,6 +156,7 @@ Follow the instructions in the GitHub documentation for [creating a personal acc
 Set the `githubToken` key in the secret associated to your `TerraformRepository` resource.
 
 For example:
+
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
@@ -188,8 +190,8 @@ You need a private token for your GitLab app to configure Burrito. You can gener
 
 Set the `gitlabToken` key in the secret associated to your `TerraformRepository` resource.
 
-
 For example:
+
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository

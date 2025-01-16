@@ -31,7 +31,6 @@ helm show values oci://ghcr.io/padok-team/charts/burrito
 
 The [source code](https://github.com/padok-team/burrito/tree/main/deploy/charts/burrito) and [values file](https://github.com/padok-team/burrito/blob/main/deploy/charts/burrito/values.yaml) of the chart is available on [burrito GitHub repository](https://github.com/padok-team/burrito).
 
-
 Here is an example of a simple burrito Helm values file that you can use to bootstrap your installation:
 
 ```yaml

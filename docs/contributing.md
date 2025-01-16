@@ -56,22 +56,25 @@ Follow these steps to install a minimal working configuration of Burrito on a Ki
 - A datastore running with mock storage (in-memory)
 - A `TerraformRepository` and an associated `TerraformLayer` resource in the `burrito-project` namespace, pointing to the [padok-team/burrito-examples](https://github.com/padok-team/burrito-examples) repository
 
-*Before starting, check that your local Kind cluster is running and that your context is set to target this cluster*
+*Before starting, check that your local Kind cluster is running and that your context is set to target this cluster.*
 
 1. **Install cert-manager on your cluster:**
-```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/cert-manager --set installCRDs=true
-```
+
+    ```bash
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/cert-manager --set installCRDs=true
+    ```
+
 2. **Fork and clone this repository.**
 
 3. **Run the following command to build a local image of Burrito, load it into your Kind cluster, and install Burrito with development Helm values:**
-    
+
     ```bash
     make upgrade-dev-kind
     ```
 
 4. **Check that Burrito is running in the `burrito-system` namespace:**
+
     ```bash
     kubectl get pods -n burrito-system
     ```
@@ -134,7 +137,7 @@ helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/c
 
     The output should be similar to:
 
-    ```
+    ```text
     NAME                   READY   STATUS      RESTARTS   AGE
     my-layer-apply-gxjhd   0/1     Completed   0          2m36s
     ```
@@ -157,7 +160,7 @@ Check the [Makefile](https://github.com/padok-team/burrito/blob/main/Makefile) f
 
 ### Advanced Settings
 
-**Configure a GitHub Token for TENV**
+**Configure a GitHub Token for TENV:**
 
 It is strongly recommended to create a GitHub token with no specific rights to bypass the GitHub API rate limiting. Append the following configuration to your development `TerraformRepository` resources:
 

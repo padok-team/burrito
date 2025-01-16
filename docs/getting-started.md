@@ -18,6 +18,7 @@ Copy and modify the [default values](https://github.com/padok-team/burrito/blob/
 Make sure to configure a tenant by updating the `tenant` field in the `values.yaml` file. The associated namespace will be created automatically and used to deploy Burrito resources in step 3.
 
 For example, here is a default `values.yaml` file:
+
 ```yaml
 config:
   datastore:
@@ -47,14 +48,18 @@ This will create a new namespace, `burrito-system`, where Burrito services will 
 
 Create a Kubernetes `Secret` to reference the necessary credentials to clone your IaC repository (GitHub or GitLab)
 
+<!-- markdownlint-disable MD046 -->
 !!! info
     Supported authentication methods are:
+
     - Username and password
     - SSH private key
     - GitHub App
     - GitHub API token
     - GitLab API token
-    More information on how to create a secret can be found in the [Secrets](./secrets/index.md) section.
+
+    More information on how to create a secret can be found in the [Git Authentication](./operator-manual/git-authentication.md) section.
+<!-- markdownlint-enable MD046 -->
 
 ```yaml
 kind: Secret
@@ -116,4 +121,3 @@ The controller will create a runner pod in your tenant namespace to synchronize 
 
 - For detailed guides on how to use Burrito, see the [Guides](./guides/index.md) section.
 - To learn more about advanced configuration and features, see the [Operator Manual](./operator-manual/index.md) section.
-

@@ -41,14 +41,13 @@ With its curated UI, Burrito provides a way to easily navigate your Terraform st
 
 Burrito is compatible with:
 
-- Terraform.
-- Terragrunt.
-- OpenTofu (coming soon).
+- Terraform
+- Terragrunt
+- OpenTofu
 
 ## Getting Started
 
-- Follow the [getting started section](./getting-started.md) to quickly set up Burrito and start monitoring Terraform state drift.  
-- Follow the [guides](./guides/index.md) for detailed tutorials on how to use Burrito.  
-- Deep dive into the [operator manual](./operator-manual/) to set up advanced configurations and features.
-- Use the [user guide](./user-guide/) to learn how to configure Burrito resources according to your needs.
-
+- Follow the [getting started section](./getting-started.md) to quickly set up Burrito and start monitoring Terraform state drift.
+- Follow the [guides](./guides/index.md) for detailed tutorials on how to use Burrito.
+- Deep dive into the [operator manual](./operator-manual/index.md) to set up advanced configurations and features.
+- Use the [user guide](./user-guide/index.md) to learn how to configure Burrito resources according to your needs.

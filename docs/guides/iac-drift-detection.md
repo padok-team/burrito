@@ -48,7 +48,8 @@ kubectl get pods -n burrito-system
 ```
 
 Output:
-```
+
+```text
 NAME                                   READY   STATUS    RESTARTS   AGE
 burrito-controllers-6945797c5d-kjfl2   1/1     Running   0          2m00s
 burrito-datastore-94d999f54-kbg9z      1/1     Running   0          2m00s
@@ -82,7 +83,7 @@ spec:
     enabled: true
 ```
 
-Create a `TerraformLayer` resource in the `burrito-system` namespace, referencing the `TerraformRepository` you just created. For now, the `autoApply` is set to false, so the layer will only plan the Terraform code and not apply it. 
+Create a `TerraformLayer` resource in the `burrito-system` namespace, referencing the `TerraformRepository` you just created. For now, the `autoApply` is set to false, so the layer will only plan the Terraform code and not apply it.
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-layer.yaml
@@ -173,4 +174,4 @@ You have successfully set up Burrito on a local cluster and planned your Terrafo
 
 ## Next steps
 
-- Learn how to [configure a PR/MR workflow](../pr-mr-workflow.md)
+- Learn how to [configure a PR/MR workflow](../operator-manual/pr-mr-workflow.md)
