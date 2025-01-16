@@ -2,3 +2,7 @@
 # Ignore build and test binaries.
 bin/
 testbin/
+ui/node_modules/
+ui/dist/
+ui/.env
+ui/.env.template
