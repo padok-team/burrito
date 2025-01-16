@@ -147,8 +147,8 @@ Follow the instructions in the GitHub documentation for [creating a personal acc
 
 - It should be a **fine-grained token**.
 - **Permissions**: Configure the following **Repository Permissions**:
-  - **Metadata**: Select Read-only.
-  - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
+    - **Metadata**: Select Read-only.
+    - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
 - Under **Repository access**, select which repositories you want the token to access.
 
 #### Configure Burrito

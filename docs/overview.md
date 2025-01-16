@@ -41,9 +41,9 @@ With its curated UI, Burrito provides a way to easily navigate your Terraform st
 
 Burrito is compatible with:
 
-- Terraform.
-- Terragrunt.
-- OpenTofu (coming soon).
+- Terraform
+- Terragrunt
+- OpenTofu
 
 ## Getting Started
 
