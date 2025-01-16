@@ -37,6 +37,7 @@ Now let's configure the GitHub webhook. Expose the `burrito-server` kubernetes s
 Configure a webhook in your GitHub repository to point to the exposed `burrito-server` service. **Make sure to specify the `/api/webhook` path in the target url.** The webhook should be triggered on `push` and `pull_request` events. Reference your webhook secret in the secret associated to your repository, in the `webhookSecret` key.
 
 Your `TerraformRepository` resource and secret should look like this:
+
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
@@ -62,7 +63,7 @@ stringData:
     -----BEGIN RSA PRIVATE KEY-----
     my-private-key
     -----END RSA PRIVATE KEY-----
-  webhookSecret: "my-webhook-secret" 
+  webhookSecret: "my-webhook-secret"
 ```
 
 ### Experiment with the PR/MR workflow

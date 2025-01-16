@@ -6,7 +6,7 @@ The Burrito Helm chart is packaged with [Hermitcrab](https://github.com/seal-io/
 
 ## 1. Activate Hermitcrab on Burrito
 
-Hermitcrab is available to use with Burrito when using the Helm chart.  
+Hermitcrab is available to use with Burrito when using the Helm chart.
 Set the `config.burrito.hermitcrab` parameter to true in your values file to activate Hermitcrab.
 
 As the Provider Network Mirror Protocol only supports HTTPS traffic, it is required to provide Burrito runners & the Hermitcrab server with some TLS configuration. By default, the Helm chart expects a secret named `burrito-hermitcrab-tls` to contain TLS configuration: `ca.crt`, `tls.crt`, and `tls.key`.
@@ -14,7 +14,7 @@ As the Provider Network Mirror Protocol only supports HTTPS traffic, it is requi
 ### Option 1: Use Cert-Manager
 
 The Helm chart is packaged with Cert-Manager configuration to use for Burrito/Hermitcrab TLS encryption.
-Assuming that Cert-Manager is installed on your cluster, set the `hermitcrab.tls.certmanager.use` parameter to `true`. This setting adds a Cert-Manager Certificate resource to be used with Burrito.  
+Assuming that Cert-Manager is installed on your cluster, set the `hermitcrab.tls.certmanager.use` parameter to `true`. This setting adds a Cert-Manager Certificate resource to be used with Burrito.
 Provide Certificate spec with the `hermitcrab.tls.certmanager.spec` value. You **must** set the `secretName` value to the same value specified in `config.burrito.hermitcrab.certificateSecretName` (default `burrito-hermitcrab-tls`)
 
 #### Example configuration with a self-signed issuer
