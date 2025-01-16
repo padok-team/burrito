@@ -8,7 +8,7 @@
 ## Install burrito
 
 !!! info
-    This will install a mono-tenant version of burrito. See the [Helm installation method](./with-helm.md) for a [multi-tenant-architecture](../multi-tenant-architecture.md).
+    This will install a mono-tenant version of burrito. See the [Helm installation method](./with-helm.md) for a [multi-tenant-architecture](..//operator-manual/multi-tenant-architecture.md).
 
 ```bash
 kubectl create namespace burrito

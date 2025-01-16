@@ -3,8 +3,15 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+
 permissions:
   contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,9 +22,21 @@ jobs:
           python-version: 3.x
       - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
         with:
-          key: mkdocs-material-${{ github.sha }}
+          key: mkdocs-material-${{ github.ref }}
           path: .cache
           restore-keys: |
             mkdocs-material-
+
       - run: pip install mkdocs-material
-      - run: mkdocs gh-deploy --force
+
+      - name: Lint Markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: 'docs/**/*.md'
+
+      - name: Build pages
+        run: mkdocs build --strict
+
+      - name: Deploy pages
+        run: mkdocs gh-deploy --strict --force
+        if: github.ref == 'refs/heads/main'

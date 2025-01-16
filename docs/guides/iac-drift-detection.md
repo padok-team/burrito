@@ -173,4 +173,4 @@ You have successfully set up Burrito on a local cluster and planned your Terrafo
 
 ## Next steps
 
-- Learn how to [configure a PR/MR workflow](../pr-mr-workflow.md)
+- Learn how to [configure a PR/MR workflow](../operator-manual/pr-mr-workflow.md)

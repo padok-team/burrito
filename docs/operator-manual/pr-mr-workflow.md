@@ -49,6 +49,7 @@ With those 3 conditions, we defined 3 states:
 
 Follow the instructions in [Setting up a Git Webhook](./git-webhook.md) to configure a webhook in your repository.
 The webhook will be used to trigger:
+
 - Drift detection when a push event is received.
 - The PR/MR workflow when a pull request event is received.
 
@@ -61,8 +62,8 @@ You can create and register GitHub Apps in your personal GitHub account or in an
 Follow the instructions in the GitHub documentation on [Creating a GitHub App](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app). Populate the settings as follows:
 
 - **GitHub App Name**: Choose a name for your GitHub App. For example, something featuring `burrito`.
-- **Homepage URL**: Enter https://padok-team.github.io/burrito.
-- **Webhook**: Deselect Active. The app doesn't use this webhook events mechanism at the moment.
+- **Homepage URL**: Enter <https://padok-team.github.io/burrito>.
+- **Webhook**: Unselect Active. The app doesn't use this webhook events mechanism at the moment.
 - **Permissions**: Configure the following **Repository Permissions**.
   - **Metadata**: Select Read-only.
   - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
@@ -145,7 +146,7 @@ You need a personal access token to configure Burrito. You can generate a person
 Follow the instructions in the GitHub documentation for [creating a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token):
 
 - It should be a **fine-grained token**.
-- **Permissions**: Configure the following **Repository Permissions**.
+- **Permissions**: Configure the following **Repository Permissions**:
   - **Metadata**: Select Read-only.
   - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
 - Under **Repository access**, select which repositories you want the token to access.

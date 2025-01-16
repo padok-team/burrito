@@ -2,7 +2,7 @@
 
 <p align="center"><img src="../../assets/design/multi-tenant-architecture.excalidraw.png" width="1000px" /></p>
 
-With our [Helm chart](./install/with-helm.md) we provide a way to setup multi-tenancy with burrito. This is useful when working at scale, when you controls multiple Terraform projects with burrito across several teams.
+With our [Helm chart](../installation/with-helm.md) we provide a way to setup multi-tenancy with burrito. This is useful when working at scale, when you controls multiple Terraform projects with burrito across several teams.
 
 The setup is split across multiple Kubernetes namespaces:
 
@@ -15,7 +15,7 @@ Thanks to Kubernetes native RBAC system you can restrict access for your users o
 
 ### 1. Configure basic tenants
 
-In the `values.yaml` of the [Helm chart](./install/with-helm.md), add the following:
+In the `values.yaml` of the [Helm chart](../installation/with-helm.md), add the following:
 
 ```yaml
 tenants:
