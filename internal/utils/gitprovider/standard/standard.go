@@ -6,9 +6,12 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/storage/memory"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
@@ -35,6 +38,44 @@ func (s *Standard) GetChanges(repository *configv1alpha1.TerraformRepository, pr
 	return nil, fmt.Errorf("GetChanges not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
 }
 
+func (s *Standard) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	auth, err := s.GetGitAuth()
+	if err != nil {
+		return "", fmt.Errorf("failed to get git auth: %w", err)
+	}
+
+	// Create an in-memory remote
+	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{repository.Spec.Repository.Url},
+	})
+
+	// List references on the remote (equivalent to `git ls-remote <repoURL>`)
+	refs, err := remote.List(&git.ListOptions{
+		Auth: auth,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to list references: %v", err)
+	}
+
+	candidates := []string{
+		"refs/heads/" + ref,
+		"refs/tags/" + ref,
+		ref, // in case someone passes the full ref already
+	}
+
+	// Look for the ref in the remote’s references
+	for _, c := range candidates {
+		for _, r := range refs {
+			if r.Name().String() == c {
+				return r.Hash().String(), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("unable to find commit SHA for ref %q in %q", ref, repository.Spec.Repository.Url)
+}
+
 func (s *Standard) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {
 	return fmt.Errorf("Comment not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
 }
@@ -44,24 +85,18 @@ func (s *Standard) CreatePullRequest(repository *configv1alpha1.TerraformReposit
 }
 
 func (g *Standard) Clone(repository *configv1alpha1.TerraformRepository, branch string, repositoryPath string) (*git.Repository, error) {
+	auth, err := g.GetGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
 	}
-	isSSH := strings.HasPrefix(repository.Spec.Repository.Url, "git@") || strings.Contains(repository.Spec.Repository.Url, "ssh://")
 
-	if isSSH && g.Config.SSHPrivateKey != "" {
-		publicKeys, err := ssh.NewPublicKeys("git", []byte(g.Config.SSHPrivateKey), "")
-		if err != nil {
-			return nil, err
-		}
-		cloneOptions.Auth = publicKeys
-	} else if g.Config.Username != "" && g.Config.Password != "" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: g.Config.Username,
-			Password: g.Config.Password,
-		}
-	} else {
+	if auth == nil {
 		log.Info("No authentication method provided, falling back to unauthenticated clone")
 	}
 
@@ -80,4 +115,24 @@ func (m *Standard) ParseWebhookPayload(payload *nethttp.Request) (interface{}, b
 
 func (m *Standard) GetEventFromWebhookPayload(payload interface{}) (event.Event, error) {
 	return nil, fmt.Errorf("GetEventFromWebhookPayload not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
+}
+
+func (s *Standard) GetGitAuth() (transport.AuthMethod, error) {
+	repoURL := s.Config.URL
+	isSSH := strings.HasPrefix(repoURL, "git@") || strings.Contains(repoURL, "ssh://")
+
+	if isSSH && s.Config.SSHPrivateKey != "" {
+		publicKeys, err := ssh.NewPublicKeys("git", []byte(s.Config.SSHPrivateKey), "")
+		if err != nil {
+			return nil, err
+		}
+		return publicKeys, nil
+	} else if s.Config.Username != "" && s.Config.Password != "" {
+		return &http.BasicAuth{
+			Username: s.Config.Username,
+			Password: s.Config.Password,
+		}, nil
+	}
+	log.Info("no authentication method provided, falling back to unauthenticated clone")
+	return nil, nil
 }

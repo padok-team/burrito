@@ -58,8 +58,8 @@ var _ = BeforeSuite(func() {
 })
 
 var PushEventNoChanges = event.PushEvent{
-	URL:      "https://github.com/padok-team/burrito-examples",
-	Revision: "main",
+	URL:       "https://github.com/padok-team/burrito-examples",
+	Reference: "main",
 	ChangeInfo: event.ChangeInfo{
 		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
 		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
@@ -70,8 +70,8 @@ var PushEventNoChanges = event.PushEvent{
 }
 
 var PushEventLayerPathChanges = event.PushEvent{
-	URL:      "https://github.com/padok-team/burrito-examples",
-	Revision: "main",
+	URL:       "https://github.com/padok-team/burrito-examples",
+	Reference: "main",
 	ChangeInfo: event.ChangeInfo{
 		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
 		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
@@ -82,8 +82,8 @@ var PushEventLayerPathChanges = event.PushEvent{
 }
 
 var PushEventAdditionalPathChanges = event.PushEvent{
-	URL:      "https://github.com/padok-team/burrito-examples",
-	Revision: "main",
+	URL:       "https://github.com/padok-team/burrito-examples",
+	Reference: "main",
 	ChangeInfo: event.ChangeInfo{
 		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
 		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
@@ -95,8 +95,8 @@ var PushEventAdditionalPathChanges = event.PushEvent{
 }
 
 var PushEventMultiplePathChanges = event.PushEvent{
-	URL:      "https://github.com/padok-team/burrito-examples",
-	Revision: "main",
+	URL:       "https://github.com/padok-team/burrito-examples",
+	Reference: "main",
 	ChangeInfo: event.ChangeInfo{
 		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
 		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
@@ -108,57 +108,57 @@ var PushEventMultiplePathChanges = event.PushEvent{
 }
 
 var PullRequestOpenedEventNotAffected = event.PullRequestEvent{
-	URL:      "https://github.com/example/repo",
-	Revision: "feature/branch",
-	Base:     "main",
-	Action:   "opened",
-	ID:       "42",
-	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+	URL:       "https://github.com/example/repo",
+	Reference: "feature/branch",
+	Base:      "main",
+	Action:    "opened",
+	ID:        "42",
+	Commit:    "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
 var PullRequestClosedEventNotAffected = event.PullRequestEvent{
-	URL:      "https://github.com/example/repo",
-	Revision: "feature/branch",
-	Base:     "main",
-	Action:   "closed",
-	ID:       "42",
-	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+	URL:       "https://github.com/example/repo",
+	Reference: "feature/branch",
+	Base:      "main",
+	Action:    "closed",
+	ID:        "42",
+	Commit:    "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
 var PullRequestOpenedEventSingleAffected = event.PullRequestEvent{
-	URL:      "https://github.com/padok-team/burrito-examples",
-	Revision: "feature/branch",
-	Base:     "main",
-	Action:   "opened",
-	ID:       "42",
-	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+	URL:       "https://github.com/padok-team/burrito-examples",
+	Reference: "feature/branch",
+	Base:      "main",
+	Action:    "opened",
+	ID:        "42",
+	Commit:    "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
 var PullRequestClosedEventSingleAffected = event.PullRequestEvent{
-	URL:      "https://github.com/padok-team/burrito-closed-single-pr",
-	Revision: "feature/branch",
-	Base:     "main",
-	Action:   "closed",
-	ID:       "42",
-	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+	URL:       "https://github.com/padok-team/burrito-closed-single-pr",
+	Reference: "feature/branch",
+	Base:      "main",
+	Action:    "closed",
+	ID:        "42",
+	Commit:    "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
 var PullRequestOpenedEventMultipleAffected = event.PullRequestEvent{
-	URL:      "https://github.com/example/other-repo",
-	Revision: "feature/branch",
-	Base:     "main",
-	Action:   "opened",
-	ID:       "42",
-	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+	URL:       "https://github.com/example/other-repo",
+	Reference: "feature/branch",
+	Base:      "main",
+	Action:    "opened",
+	ID:        "42",
+	Commit:    "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
 var PullRequestClosedEventMultipleAffected = event.PullRequestEvent{
-	URL:      "https://github.com/padok-team/burrito-closed-multi-pr",
-	Revision: "feature/branch",
-	Base:     "main",
-	Action:   "closed",
-	ID:       "42",
-	Commit:   "5b2c5e5c6699bf2bf93138205565b85193996572",
+	URL:       "https://github.com/padok-team/burrito-closed-multi-pr",
+	Reference: "feature/branch",
+	Base:      "main",
+	Action:    "closed",
+	ID:        "42",
+	Commit:    "5b2c5e5c6699bf2bf93138205565b85193996572",
 }
 
 var _ = Describe("Webhook", func() {

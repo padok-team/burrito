@@ -55,6 +55,23 @@ func (a *Azure) Get(key string) ([]byte, error) {
 	return content, nil
 }
 
+func (a *Azure) Check(key string) ([]byte, error) {
+	resp, err := a.Client.ServiceClient().NewContainerClient(a.Config.Container).NewBlobClient(key).GetProperties(context.Background(), nil)
+	if bloberror.HasCode(err, bloberror.BlobNotFound) {
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: true,
+		}
+	}
+	if err != nil {
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: false,
+		}
+	}
+	return resp.ContentMD5, nil
+}
+
 func (a *Azure) Set(key string, value []byte, ttl int) error {
 	_, err := a.Client.UploadBuffer(context.Background(), a.Config.Container, key, value, nil)
 	if err != nil {

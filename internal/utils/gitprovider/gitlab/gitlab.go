@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/gitlab"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -133,21 +134,18 @@ func (g *Gitlab) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 }
 
 func (g *Gitlab) Clone(repository *configv1alpha1.TerraformRepository, branch string, repositoryPath string) (*git.Repository, error) {
+	auth, err := g.GetGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
 	}
 
-	if g.Config.GitLabToken != "" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Password: g.Config.GitLabToken,
-		}
-	} else if g.Config.Username != "" && g.Config.Password != "" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: g.Config.Username,
-			Password: g.Config.Password,
-		}
-	} else {
+	if auth == nil {
 		return nil, errors.New("no valid authentication method provided")
 	}
 
@@ -189,8 +187,8 @@ func (g *Gitlab) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 		e = &event.PushEvent{
-			URL:      utils.NormalizeUrl(payload.Project.WebURL),
-			Revision: event.ParseRevision(payload.Ref),
+			URL:       utils.NormalizeUrl(payload.Project.WebURL),
+			Reference: event.ParseReference(payload.Ref),
 			ChangeInfo: event.ChangeInfo{
 				ShaBefore: payload.Before,
 				ShaAfter:  payload.After,
@@ -200,17 +198,31 @@ func (g *Gitlab) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 	case wh.MergeRequestEventPayload:
 		log.Infof("parsing Gitlab merge request event payload")
 		e = &event.PullRequestEvent{
-			ID:       strconv.Itoa(int(payload.ObjectAttributes.IID)),
-			URL:      utils.NormalizeUrl(payload.Project.WebURL),
-			Revision: payload.ObjectAttributes.SourceBranch,
-			Action:   getNormalizedAction(payload.ObjectAttributes.Action),
-			Base:     payload.ObjectAttributes.TargetBranch,
-			Commit:   payload.ObjectAttributes.LastCommit.ID,
+			ID:        strconv.Itoa(int(payload.ObjectAttributes.IID)),
+			URL:       utils.NormalizeUrl(payload.Project.WebURL),
+			Reference: payload.ObjectAttributes.SourceBranch,
+			Action:    getNormalizedAction(payload.ObjectAttributes.Action),
+			Base:      payload.ObjectAttributes.TargetBranch,
+			Commit:    payload.ObjectAttributes.LastCommit.ID,
 		}
 	default:
 		return nil, errors.New("unsupported event")
 	}
 	return e, nil
+}
+
+// Required API scope: api read_api
+func (g *Gitlab) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	projectID := getGitlabNamespacedName(repository.Spec.Repository.Url)
+	b, _, err := g.Client.Branches.GetBranch(projectID, ref)
+	if err == nil {
+		return b.Commit.ID, nil
+	}
+	t, _, err := g.Client.Tags.GetTag(projectID, ref)
+	if err == nil {
+		return t.Commit.ID, nil
+	}
+	return "", fmt.Errorf("could not find revision for ref %s: %w", ref, err)
 }
 
 func getNormalizedAction(action string) string {
@@ -238,4 +250,21 @@ func inferBaseURL(repoURL string) (string, error) {
 	host := parsedURL.Host
 	host = strings.TrimPrefix(host, "www.")
 	return fmt.Sprintf("https://%s/api/v4", host), nil
+}
+
+// GetGitAuth returns the appropriate authentication method for GitLab
+func (g *Gitlab) GetGitAuth() (transport.AuthMethod, error) {
+	if g.Config.GitLabToken != "" {
+		return &http.BasicAuth{
+			Username: "oauth2",
+			Password: g.Config.GitLabToken,
+		}, nil
+	} else if g.Config.Username != "" && g.Config.Password != "" {
+		return &http.BasicAuth{
+			Username: g.Config.Username,
+			Password: g.Config.Password,
+		}, nil
+	}
+	log.Info("No authentication method provided, falling back to unauthenticated clone")
+	return nil, nil
 }

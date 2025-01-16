@@ -14,6 +14,7 @@ import (
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/github"
 	"github.com/google/go-github/v68/github"
@@ -175,33 +176,15 @@ func (g *Github) Comment(repository *configv1alpha1.TerraformRepository, pr *con
 }
 
 func (g *Github) Clone(repository *configv1alpha1.TerraformRepository, branch string, repositoryPath string) (*git.Repository, error) {
+	auth, err := g.GetGitAuth()
+	if err != nil {
+		return nil, err
+	}
+
 	cloneOptions := &git.CloneOptions{
 		ReferenceName: plumbing.NewBranchReferenceName(branch),
 		URL:           repository.Spec.Repository.Url,
-	}
-
-	if g.GitHubClientType == "app" {
-		token, err := g.itr.Token(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("error getting GitHub App token: %w", err)
-		}
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: "x-access-token",
-			Password: token,
-		}
-		cloneOptions.URL = repository.Spec.Repository.Url
-	} else if g.GitHubClientType == "token" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: "x-access-token",
-			Password: g.Config.GitHubToken,
-		}
-	} else if g.GitHubClientType == "basic" {
-		cloneOptions.Auth = &http.BasicAuth{
-			Username: g.Config.Username,
-			Password: g.Config.Password,
-		}
-	} else {
-		log.Info("No authentication method provided, falling back to unauthenticated clone")
+		Auth:          auth,
 	}
 
 	log.Infof("Cloning github repository %s on %s branch with github %s authentication", repository.Spec.Repository.Url, branch, g.GitHubClientType)
@@ -242,8 +225,8 @@ func (g *Github) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 			changedFiles = append(changedFiles, commit.Removed...)
 		}
 		e = &event.PushEvent{
-			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
-			Revision: event.ParseRevision(payload.Ref),
+			URL:       utils.NormalizeUrl(payload.Repository.HTMLURL),
+			Reference: event.ParseReference(payload.Ref),
 			ChangeInfo: event.ChangeInfo{
 				ShaBefore: payload.Before,
 				ShaAfter:  payload.After,
@@ -257,17 +240,30 @@ func (g *Github) GetEventFromWebhookPayload(p interface{}) (event.Event, error) 
 			return nil, err
 		}
 		e = &event.PullRequestEvent{
-			ID:       strconv.FormatInt(payload.PullRequest.Number, 10),
-			URL:      utils.NormalizeUrl(payload.Repository.HTMLURL),
-			Revision: payload.PullRequest.Head.Ref,
-			Action:   getNormalizedAction(payload.Action),
-			Base:     payload.PullRequest.Base.Ref,
-			Commit:   payload.PullRequest.Head.Sha,
+			ID:        strconv.FormatInt(payload.PullRequest.Number, 10),
+			URL:       utils.NormalizeUrl(payload.Repository.HTMLURL),
+			Reference: payload.PullRequest.Head.Ref,
+			Action:    getNormalizedAction(payload.Action),
+			Base:      payload.PullRequest.Base.Ref,
+			Commit:    payload.PullRequest.Head.Sha,
 		}
 	default:
 		return nil, errors.New("unsupported Event")
 	}
 	return e, nil
+}
+
+func (g *Github) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	b, _, err := g.Client.Repositories.GetBranch(context.TODO(), owner, repoName, ref, 10)
+	if err == nil {
+		return b.Commit.GetSHA(), nil
+	}
+	t, _, err := g.Client.Git.GetRef(context.TODO(), owner, repoName, fmt.Sprintf("refs/tags/%s", ref))
+	if err == nil {
+		return t.Object.GetSHA(), nil
+	}
+	return "", fmt.Errorf("could not find revision for ref %s: %w", ref, err)
 }
 
 func getNormalizedAction(action string) string {
@@ -302,5 +298,33 @@ func inferBaseURL(repoURL string) (string, GitHubSubscription, error) {
 		return fmt.Sprintf("https://%s/api/v3", host), GitHubEnterprise, nil
 	} else {
 		return "", GitHubClassic, nil
+	}
+}
+
+// GetGitAuth returns the appropriate authentication method based on the GitHub client type
+func (g *Github) GetGitAuth() (transport.AuthMethod, error) {
+	switch g.GitHubClientType {
+	case "app":
+		token, err := g.itr.Token(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("error getting GitHub App token: %w", err)
+		}
+		return &http.BasicAuth{
+			Username: "x-access-token",
+			Password: token,
+		}, nil
+	case "token":
+		return &http.BasicAuth{
+			Username: "x-access-token",
+			Password: g.Config.GitHubToken,
+		}, nil
+	case "basic":
+		return &http.BasicAuth{
+			Username: g.Config.Username,
+			Password: g.Config.Password,
+		}, nil
+	default:
+		log.Info("No authentication method provided, falling back to unauthenticated clone")
+		return nil, nil
 	}
 }

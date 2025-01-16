@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
@@ -56,6 +57,11 @@ func (m *Mock) GetChanges(repository *configv1alpha1.TerraformRepository, pr *co
 	return allChangedFiles, nil
 }
 
+func (m *Mock) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+	log.Infof("Mock provider latest revision for ref")
+	return "", nil
+}
+
 func (m *Mock) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {
 	log.Infof("Mock provider comment posted")
 	return nil
@@ -73,5 +79,10 @@ func (m *Mock) ParseWebhookPayload(payload *http.Request) (interface{}, bool) {
 
 func (m *Mock) GetEventFromWebhookPayload(payload interface{}) (event.Event, error) {
 	log.Infof("Mock provider webhook event parsed")
+	return nil, nil
+}
+
+func (m *Mock) GetGitAuth() (transport.AuthMethod, error) {
+	log.Infof("Mock provider git authentication")
 	return nil, nil
 }

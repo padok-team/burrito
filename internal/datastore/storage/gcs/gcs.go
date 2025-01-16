@@ -61,6 +61,17 @@ func (a *GCS) Set(key string, data []byte, ttl int) error {
 	return nil
 }
 
+func (a *GCS) Check(key string) ([]byte, error) {
+	ctx := context.Background()
+	bucket := a.Client.Bucket(a.Config.Bucket)
+	obj := bucket.Object(key)
+	metadata, err := obj.Attrs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return metadata.MD5, nil
+}
+
 func (a *GCS) Delete(key string) error {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)

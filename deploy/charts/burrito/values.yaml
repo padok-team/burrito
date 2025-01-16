@@ -18,6 +18,8 @@ config:
       timers:
         # -- Drift detection interval
         driftDetection: 10m
+        # -- Repository polling interval
+        repositorySync: 5m
         # -- Duration to wait before retrying on error
         onError: 10s
         # -- Duration to wait before retrying on locked layer
@@ -28,8 +30,9 @@ config:
       maxConcurrentReconciles: 1
       # -- Maximum number of retries for Terraform operations (plan, apply...)
       terraformMaxRetries: 3
-      # -- Resource types to watch for reconciliation
-      types: ["layer", "repository", "run", "pullrequest"]
+      # TODO: enable repository controller by default
+      # -- Resource types to watch for reconciliation. Note: by default repository controller is disabled as it is not yet fully usable.
+      types: ["layer", "run", "pullrequest"]
       leaderElection:
         # -- Enable/Disable leader election
         enabled: true
@@ -271,7 +274,9 @@ controllers:
     # -- Environment variables to pass to the Burrito controller container
     envFrom: []
     # -- Environment variables to pass to the Burrito controller container
-    env: []
+    env:
+      - name: SSH_KNOWN_HOSTS
+        value: /home/burrito/.ssh/known_hosts
     # -- Additional volumes
     extraVolumes: {}
     # -- Additional volume mounts
@@ -314,7 +319,7 @@ server:
       initialDelaySeconds: 5
       periodSeconds: 20
     # -- Environment variables to pass to the Burrito server container
-    env: [] 
+    env: []
     # -- Environment variables to pass to the Burrito server container
     envFrom: []
     # -- Additional volumes

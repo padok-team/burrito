@@ -24,6 +24,8 @@ type Client interface {
 	PutPlan(namespace string, layer string, run string, attempt string, format string, content []byte) error
 	GetLogs(namespace string, layer string, run string, attempt string) ([]string, error)
 	PutLogs(namespace string, layer string, run string, attempt string, content []byte) error
+	PutGitBundle(namespace, name, ref, revision string, bundle []byte) error
+	CheckGitBundle(namespace, name, ref, revision string) (bool, error)
 }
 
 type DefaultClient struct {
@@ -193,4 +195,71 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		return fmt.Errorf("could not put logs, there's an issue with the storage backend")
 	}
 	return nil
+}
+
+func (c *DefaultClient) PutGitBundle(namespace, name, ref, revision string, bundle []byte) error {
+	req, err := c.buildRequest(
+		"/api/repository/revision/bundle",
+		url.Values{
+			"namespace": {namespace},
+			"name":      {name},
+			"ref":       {ref},
+			"revision":  {revision},
+		},
+		http.MethodPut,
+		bytes.NewBuffer(bundle),
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/octet-stream")
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		message, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("could not store revision, there's an issue reading the response from datastore: %s", err)
+		}
+		return fmt.Errorf("could not store revision, there's an issue with the storage backend: %s", string(message))
+	}
+
+	return nil
+}
+
+func (c *DefaultClient) CheckGitBundle(namespace, name, ref, revision string) (bool, error) {
+	req, err := c.buildRequest(
+		"/api/repository/revision/bundle",
+		url.Values{
+			"namespace": {namespace},
+			"name":      {name},
+			"ref":       {ref},
+			"revision":  {revision},
+		},
+		http.MethodHead,
+		nil,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("could not check bundle, there's an issue with the storage backend")
+	}
+
+	return true, nil
 }

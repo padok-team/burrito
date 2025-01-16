@@ -20,7 +20,8 @@ const (
 	PlanJsonFile           string = "plan.json"
 	PrettyPlanFile         string = "pretty.plan"
 	ShortDiffFile          string = "short.diff"
-	GitBundleFileExtension string = ".tgz"
+	GitBundleFileExtension string = ".gitbundle"
+	RevisionFile           string = "latest"
 	LayersPrefix           string = "layers"
 	RepositoriesPrefix     string = "repositories"
 )
@@ -47,8 +48,8 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 	return key
 }
 
-func computeGitBundleKey(namespace string, repository string, branch string, commit string) string {
-	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, commit, GitBundleFileExtension)
+func computeGitBundleKey(namespace string, repository string, branch string, revision string) string {
+	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, revision, GitBundleFileExtension)
 }
 
 type Storage struct {
@@ -58,6 +59,7 @@ type Storage struct {
 
 type StorageBackend interface {
 	Get(key string) ([]byte, error)
+	Check(key string) ([]byte, error)
 	Set(key string, value []byte, ttl int) error
 	Delete(key string) error
 	List(prefix string) ([]string, error)
@@ -124,10 +126,19 @@ func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, 
 	return len(attempts), err
 }
 
-func (s *Storage) GetGitBundle(namespace string, repository string, branch string, commit string) ([]byte, error) {
-	return s.Backend.Get(computeGitBundleKey(namespace, repository, branch, commit))
+func (s *Storage) GetGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
+	return s.Backend.Get(computeGitBundleKey(namespace, repository, ref, commit))
 }
 
-func (s *Storage) PutGitBundle(namespace string, repository string, branch string, commit string, bundle []byte) error {
-	return s.Backend.Set(computeGitBundleKey(namespace, repository, branch, commit), bundle, 0)
+func (s *Storage) CheckGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
+	return s.Backend.Check(computeGitBundleKey(namespace, repository, ref, commit))
+}
+
+func (s *Storage) PutGitBundle(namespace string, repository string, ref string, commit string, bundle []byte) error {
+	// Store the git bundle
+	err := s.Backend.Set(computeGitBundleKey(namespace, repository, ref, commit), bundle, 0)
+	if err != nil {
+		return fmt.Errorf("failed to store git bundle: %w", err)
+	}
+	return nil
 }

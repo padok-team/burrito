@@ -46,12 +46,35 @@ type TerraformRepositoryRepository struct {
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository
 type TerraformRepositoryStatus struct {
+	State      string             `json:"state,omitempty"`
+	Branches   []BranchState      `json:"branches,omitempty"`
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+}
+
+// BranchState describes the sync state of a branch
+type BranchState struct {
+	Name           string `json:"name,omitempty"`
+	LatestRev      string `json:"latestRev,omitempty"`
+	LastSyncDate   string `json:"lastSyncDate,omitempty"`
+	LastSyncStatus string `json:"lastSyncStatus,omitempty"`
+}
+
+// GetBranchState searches for a branch with the specified name in the given slice of BranchState.
+// It returns a pointer to the BranchState if found, along with a boolean indicating success.
+// If the branch is not found, it returns nil and false.
+func GetBranchState(name string, branches []BranchState) (*BranchState, bool) {
+	for _, branch := range branches {
+		if branch.Name == name {
+			return &branch, true
+		}
+	}
+	return nil, false
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:shortName=repositories;repository;repo;tfrs;tfr;
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="URL",type=string,JSONPath=`.spec.repository.url`
 // TerraformRepository is the Schema for the terraformrepositories API
 type TerraformRepository struct {

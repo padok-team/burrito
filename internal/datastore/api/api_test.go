@@ -38,6 +38,7 @@ var _ = BeforeSuite(func() {
 	API.Storage.PutPlan("default", "test1", "test1", "0", "bin", []byte("test1"))
 	API.Storage.PutPlan("default", "test1", "test1", "0", "short", []byte("test1"))
 	API.Storage.PutPlan("default", "test1", "test1", "0", "pretty", []byte("test1"))
+	API.Storage.PutGitBundle("default", "test1", "main", "abc123", []byte("test-bundle"))
 
 	e = echo.New()
 })
@@ -181,6 +182,34 @@ var _ = Describe("Datastore API", func() {
 					err := API.GetPlanHandler(context)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+				})
+			})
+		})
+		Describe("Revisions", func() {
+			Describe("Store Revision", func() {
+				It("should return 200 OK when storing a revision", func() {
+					body := []byte(`test-bundle`)
+					context := getContext(http.MethodPut, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						"ref":       "main",
+						"revision":  "def456",
+					}, body)
+					err := API.PutGitBundleHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().Status).To(Equal(http.StatusOK))
+				})
+
+				It("should return 400 Bad Request when missing parameters", func() {
+					body := []byte(`test-bundle`)
+					context := getContext(http.MethodPut, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						// missing ref and revision
+					}, body)
+					err := API.PutGitBundleHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
 				})
 			})
 		})

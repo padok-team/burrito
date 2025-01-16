@@ -16,12 +16,12 @@ import (
 )
 
 type PullRequestEvent struct {
-	URL      string
-	Revision string
-	Base     string
-	Action   string
-	ID       string
-	Commit   string
+	URL       string
+	Reference string
+	Base      string
+	Action    string
+	ID        string
+	Commit    string
 }
 
 func (e *PullRequestEvent) Handle(c client.Client) error {
@@ -36,11 +36,20 @@ func (e *PullRequestEvent) Handle(c client.Client) error {
 		log.Infof("no affected repositories found for pull request event")
 		return nil
 	}
+
 	prs := e.generateTerraformPullRequests(affectedRepositories)
 	switch e.Action {
 	case PullRequestOpened:
 		return batchCreatePullRequests(context.TODO(), c, prs)
 	case PullRequestClosed:
+		// remove annotation from affected repositories
+		for _, repo := range affectedRepositories {
+			key := annotations.ComputeKeyForSyncBranchNow(e.Reference)
+			err := annotations.Remove(context.TODO(), c, &repo, key)
+			if err != nil {
+				log.Errorf("could not remove annotation to TerraformRepository %s", err)
+			}
+		}
 		return batchDeletePullRequests(context.TODO(), c, prs)
 	default:
 		log.Infof("action %s not supported", e.Action)
@@ -84,7 +93,7 @@ func (e *PullRequestEvent) generateTerraformPullRequests(repositories []configv1
 				},
 			},
 			Spec: configv1alpha1.TerraformPullRequestSpec{
-				Branch: e.Revision,
+				Branch: e.Reference,
 				ID:     e.ID,
 				Base:   e.Base,
 				Repository: configv1alpha1.TerraformLayerRepository{

@@ -2,6 +2,7 @@ package annotations
 
 import (
 	"context"
+	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -21,12 +22,17 @@ const (
 	LastBranchCommitDate   string = "webhook.terraform.padok.cloud/branch-commit-date"
 	LastRelevantCommit     string = "webhook.terraform.padok.cloud/relevant-commit"
 	LastRelevantCommitDate string = "webhook.terraform.padok.cloud/relevant-commit-date"
+	SyncBranchNow          string = "webhook.terraform.padok.cloud/sync-"
 
 	ForceApply              string = "notifications.terraform.padok.cloud/force-apply"
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 
 	SyncNow string = "api.terraform.padok.cloud/sync-now"
 )
+
+func ComputeKeyForSyncBranchNow(branch string) string {
+	return SyncBranchNow + strings.ReplaceAll(branch, "/", "--")
+}
 
 func Add(ctx context.Context, c client.Client, obj client.Object, annotations map[string]string) error {
 	newObj := obj.DeepCopyObject().(client.Object)

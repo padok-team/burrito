@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/webhook/event"
@@ -43,7 +44,9 @@ type Provider interface {
 	InitWebhookHandler() error
 	GetChanges(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest) ([]string, error)
 	Comment(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest, comment.Comment) error
+	GetGitAuth() (transport.AuthMethod, error)
 	Clone(*configv1alpha1.TerraformRepository, string, string) (*git.Repository, error)
+	GetLatestRevisionForRef(*configv1alpha1.TerraformRepository, string) (string, error)
 	ParseWebhookPayload(r *http.Request) (interface{}, bool)
 	GetEventFromWebhookPayload(interface{}) (event.Event, error)
 }
