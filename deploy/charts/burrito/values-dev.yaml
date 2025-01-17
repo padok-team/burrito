@@ -18,5 +18,3 @@ tenants:
   - namespace:
       create: true
       name: "burrito-project"
-    serviceAccounts:
-      - name: burrito-runner
