@@ -3,13 +3,16 @@ package s3
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
 	sdk "github.com/aws/aws-sdk-go-v2/config"
 	storage "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 // Implements Storage interface using AWS S3
@@ -41,6 +44,13 @@ func (a *S3) Get(key string) ([]byte, error) {
 
 	result, err := a.Client.GetObject(context.TODO(), input)
 	if err != nil {
+		var noKey *types.NoSuchKey
+		if errors.As(err, &noKey) {
+			return nil, &storageerrors.StorageError{
+				Err: err,
+				Nil: true,
+			}
+		}
 		return nil, err
 	}
 
@@ -62,7 +72,14 @@ func (a *S3) Check(key string) ([]byte, error) {
 
 	result, err := a.Client.HeadObject(context.TODO(), input)
 	if err != nil {
-		return nil, err
+		var noKey *types.NoSuchKey
+		if errors.As(err, &noKey) {
+			return make([]byte, 0), &storageerrors.StorageError{
+				Err: err,
+				Nil: true,
+			}
+		}
+		return make([]byte, 0), err
 	}
 
 	return []byte(*result.ChecksumSHA256), nil
@@ -91,6 +108,13 @@ func (a *S3) Delete(key string) error {
 
 	_, err := a.Client.DeleteObject(context.TODO(), input)
 	if err != nil {
+		var noKey *types.NoSuchKey
+		if errors.As(err, &noKey) {
+			return &storageerrors.StorageError{
+				Err: err,
+				Nil: true,
+			}
+		}
 		return err
 	}
 
