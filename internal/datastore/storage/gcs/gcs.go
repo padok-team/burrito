@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	"google.golang.org/api/iterator"
 )
 
@@ -33,14 +34,26 @@ func (a *GCS) Get(key string) ([]byte, error) {
 	bucket := a.Client.Bucket(a.Config.Bucket)
 	obj := bucket.Object(key)
 	reader, err := obj.NewReader(ctx)
+	if err == storage.ErrObjectNotExist {
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: true,
+		}
+	}
 	if err != nil {
-		return nil, err
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: false,
+		}
 	}
 	defer reader.Close()
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: false,
+		}
 	}
 
 	return data, nil
@@ -55,7 +68,10 @@ func (a *GCS) Set(key string, data []byte, ttl int) error {
 
 	_, err := writer.Write(data)
 	if err != nil {
-		return err
+		return &errors.StorageError{
+			Err: err,
+			Nil: false,
+		}
 	}
 
 	return nil
@@ -66,8 +82,17 @@ func (a *GCS) Check(key string) ([]byte, error) {
 	bucket := a.Client.Bucket(a.Config.Bucket)
 	obj := bucket.Object(key)
 	metadata, err := obj.Attrs(ctx)
+	if err == storage.ErrObjectNotExist {
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: true,
+		}
+	}
 	if err != nil {
-		return nil, err
+		return make([]byte, 0), &errors.StorageError{
+			Err: err,
+			Nil: false,
+		}
 	}
 	return metadata.MD5, nil
 }
@@ -77,6 +102,12 @@ func (a *GCS) Delete(key string) error {
 	bucket := a.Client.Bucket(a.Config.Bucket)
 	obj := bucket.Object(key)
 	err := obj.Delete(ctx)
+	if err == storage.ErrObjectNotExist {
+		return &errors.StorageError{
+			Err: err,
+			Nil: true,
+		}
+	}
 	if err != nil {
 		return err
 	}

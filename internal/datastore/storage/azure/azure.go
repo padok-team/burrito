@@ -84,6 +84,12 @@ func (a *Azure) Set(key string, value []byte, ttl int) error {
 
 func (a *Azure) Delete(key string) error {
 	_, err := a.Client.DeleteBlob(context.Background(), a.Config.Container, key, nil)
+	if bloberror.HasCode(err, bloberror.BlobNotFound) {
+		return &errors.StorageError{
+			Err: err,
+			Nil: true,
+		}
+	}
 	if err != nil {
 		return &errors.StorageError{
 			Err: err,
