@@ -7,6 +7,7 @@ on:
     branches:
       - main
     paths:
+      - ".github/workflows/docs.yaml"
       - "docs/**"
 
 permissions:
