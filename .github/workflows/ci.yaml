@@ -8,6 +8,8 @@ on:
     branches:
       - main
     paths:
+      - ".github/workflows/build-and-push.yaml"
+      - ".github/workflows/ci.yaml"
       - "**.go"
       - "go.mod"
       - "go.sum"
