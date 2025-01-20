@@ -15,12 +15,14 @@ Tenant Namespaces
 Datastore Authorized Service Accounts
 */}}
 {{- $datastoreAuthorizedServiceAccounts := list }}
-{{- range $tenant := .Values.tenants }}
-{{- range $sa := $tenant.serviceAccounts }}
-{{- $serviceAccount := printf "%s/%s" $tenant.namespace.name $sa.name }}
-{{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $serviceAccount }}
-{{- end }}
-{{- end }}
+  {{- range $tenant := .Values.tenants }}
+    {{- range $sa := $tenant.serviceAccounts }}
+      {{- $serviceAccount := printf "%s/%s" $tenant.namespace.name $sa.name }}
+      {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $serviceAccount }}
+    {{- end }}
+    # adding also default `burrito-runner` serviceaccount created in each tenant
+    {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts (printf "%s/burrito-runner" $tenant.namespace.name) }}
+  {{- end }}
 {{- $controller := printf "%s/%s" .Release.Namespace "burrito-controllers" }}
 # check if the service account is already in the list, to prevent adding it multiple times if the config rerenders
 {{- if not (has $controller $config.datastore.serviceAccounts) }}
@@ -30,7 +32,7 @@ Datastore Authorized Service Accounts
 {{- if not (has $server $config.datastore.serviceAccounts) }}
   {{- $datastoreAuthorizedServiceAccounts = append $datastoreAuthorizedServiceAccounts $server }}
 {{- end }}
-{{- $_ := set $config.datastore "serviceAccounts" (concat $datastoreAuthorizedServiceAccounts $config.datastore.serviceAccounts) }}
+{{- $_ := set $config.datastore "serviceAccounts" ((concat $datastoreAuthorizedServiceAccounts $config.datastore.serviceAccounts) | uniq) }}
 
 {{/*
 TLS certificates

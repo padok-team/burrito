@@ -40,6 +40,54 @@ metadata:
   name: burrito-runner
   namespace: {{ $tenant.namespace.name }}
 ---
+# Role binding for the default service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: burrito-runner
+  namespace: {{ $tenant.namespace.name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: burrito-runner
+subjects:
+- kind: ServiceAccount
+  name: burrito-runner
+  namespace: {{ $tenant.namespace.name }}
+---
+# Role and RoleBinding for burrito-server to access this tenant's secrets (webhook secret)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secret-access
+  labels:
+    {{- toYaml $metadataControllers.labels | nindent 4 }}
+  annotations:
+    {{- toYaml $metadataControllers.annotations | nindent 4 }}
+  namespace: {{ $tenant.namespace.name }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: burrito-server-secret-access
+  labels:
+    {{- toYaml $metadataControllers.labels | nindent 4 }}
+  annotations:
+    {{- toYaml $metadataControllers.annotations | nindent 4 }}
+  namespace: {{ $tenant.namespace.name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: secret-access
+subjects:
+- kind: ServiceAccount
+  name: burrito-server
+  namespace: {{ $.Release.Namespace }}
+---
 {{- range $serviceAccount := .serviceAccounts }}
 apiVersion: v1
 kind: ServiceAccount
@@ -66,34 +114,6 @@ subjects:
 - kind: ServiceAccount
   name: {{ $serviceAccount.name }}
   namespace: {{ $tenant.namespace.name }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: secret-access
-  labels:
-    app: burrito
-  namespace: {{ $tenant.namespace.name }}
-rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: burrito-server-secret-access
-  labels:
-    app: burrito
-  namespace: {{ $tenant.namespace.name }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: secret-access
-subjects:
-- kind: ServiceAccount
-  name: burrito-server
-  namespace: {{ $.Release.Namespace }}
 ---
 {{- range $additionalRoleBinding := $serviceAccount.additionalRoleBindings }}
 apiVersion: rbac.authorization.k8s.io/v1

@@ -421,7 +421,7 @@ datastore:
             kind: Issuer
 
 # -- List of tenants to create to manage Terraform resources
-tenants:
+tenants: []
 # - namespace:
 #     create: true
 #     name: "burrito-project-1"
