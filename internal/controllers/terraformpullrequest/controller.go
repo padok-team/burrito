@@ -182,7 +182,7 @@ func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv
 
 // This function initializes default providers for the controller if user has provided legacy configuration
 func (r *Reconciler) initializeDefaultProviders() error {
-	log.Warningf("deprecated GitHub/GitLab configuration found. please configure repositories with secrets instead. See https://padok-team.github.io/burrito/operator-manual/git-authentication/#repository-secret for more information.")
+	log.Warningf("deprecated GitHub/GitLab configuration found. please configure repositories with secrets instead. See https://docs.burrito.tf/operator-manual/git-authentication/#repository-secret for more information.")
 	var config = gitprovider.Config{
 		AppID:             r.Config.Controller.GithubConfig.AppId,
 		AppInstallationID: r.Config.Controller.GithubConfig.InstallationId,

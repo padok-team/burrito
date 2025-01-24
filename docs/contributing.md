@@ -187,4 +187,4 @@ It is strongly recommended to create a GitHub token with no specific rights to b
 ## Additional Resources
 
 - [Controller-runtime documentation](https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0) (Burrito heavily relies on this package)
-- [Burrito documentation](https://padok-team.github.io/burrito/)
+- [Burrito documentation](https://docs.burrito.tf/)

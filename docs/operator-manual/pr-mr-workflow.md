@@ -62,7 +62,7 @@ You can create and register GitHub Apps in your personal GitHub account or in an
 Follow the instructions in the GitHub documentation on [Creating a GitHub App](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app). Populate the settings as follows:
 
 - **GitHub App Name**: Choose a name for your GitHub App. For example, something featuring `burrito`.
-- **Homepage URL**: Enter <https://padok-team.github.io/burrito>.
+- **Homepage URL**: Enter <https://docs.burrito.tf>.
 - **Webhook**: Unselect Active. The app doesn't use this webhook events mechanism at the moment.
 - **Permissions**: Configure the following **Repository Permissions**:
     - **Metadata**: Select Read-only.

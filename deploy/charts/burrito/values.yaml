@@ -4,7 +4,7 @@
 # install: true
 
 # Burrito configuration
-## Ref: https://padok-team.github.io/burrito/operator-manual/advanced-configuration/
+## Ref: https://docs.burrito.tf/operator-manual/advanced-configuration/
 config:
   # -- Create ConfigMap with Burrito configuration
   create: true
