@@ -4790,6 +4790,24 @@ spec:
                   runs:
                     type: integer
                 type: object
+              syncWindows:
+                items:
+                  properties:
+                    duration:
+                      type: string
+                    kind:
+                      enum:
+                      - allow
+                      - deny
+                      type: string
+                    layers:
+                      items:
+                        type: string
+                      type: array
+                    schedule:
+                      type: string
+                  type: object
+                type: array
               terraform:
                 properties:
                   enabled:
