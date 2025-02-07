@@ -2,6 +2,8 @@ package runner
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
@@ -10,8 +12,6 @@ import (
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/runner/tools"
 	"github.com/padok-team/burrito/internal/utils"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
-	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	runnerutils "github.com/padok-team/burrito/internal/utils/runner"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/types"
@@ -19,16 +19,14 @@ import (
 )
 
 type Runner struct {
-	config        *config.Config
-	exec          tools.BaseExec
-	Datastore     datastore.Client
-	Client        client.Client
-	GitProvider   gitprovider.Provider
-	Layer         *configv1alpha1.TerraformLayer
-	Run           *configv1alpha1.TerraformRun
-	Repository    *configv1alpha1.TerraformRepository
-	gitRepository *git.Repository
-	workingDir    string
+	config     *config.Config
+	exec       tools.BaseExec
+	Datastore  datastore.Client
+	Client     client.Client
+	Layer      *configv1alpha1.TerraformLayer
+	Run        *configv1alpha1.TerraformRun
+	Repository *configv1alpha1.TerraformRepository
+	workingDir string
 }
 
 func New(c *config.Config) *Runner {
@@ -87,17 +85,11 @@ func (r *Runner) Init() error {
 
 	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.Layer.Spec.Path)
 
-	err = r.initGitProvider()
+	err = r.cloneGitBundle()
 	if err != nil {
-		log.Errorf("error initializing git provider: %s", err)
-	}
-	log.Info("successfully initialized git provider")
-	r.gitRepository, err = r.GitProvider.Clone(r.Repository, r.Layer.Spec.Branch, r.config.Runner.RepositoryPath)
-	if err != nil {
-		log.Errorf("error fetching repository: %s", err)
+		log.Errorf("error getting git bundle: %s", err)
 		return err
 	}
-	log.Infof("repository fetched successfully")
 
 	log.Infof("installing binaries...")
 	r.exec, err = tools.InstallBinaries(r.Layer, r.Repository, r.config.Runner.RunnerBinaryPath, r.workingDir)
@@ -165,28 +157,35 @@ func (r *Runner) GetResources() error {
 	return nil
 }
 
-func (r *Runner) initGitProvider() error {
-	config := gitprovider.Config{
-		URL:               r.Repository.Spec.Repository.Url,
-		AppID:             r.config.Runner.Repository.GithubAppId,
-		AppInstallationID: r.config.Runner.Repository.GithubAppInstallationId,
-		AppPrivateKey:     r.config.Runner.Repository.GithubAppPrivateKey,
-		GitHubToken:       r.config.Runner.Repository.GithubToken,
-		GitLabToken:       r.config.Runner.Repository.GitlabToken,
-		Username:          r.config.Runner.Repository.Username,
-		Password:          r.config.Runner.Repository.Password,
-		SSHPrivateKey:     r.config.Runner.Repository.SSHPrivateKey,
-	}
-	provider, err := gitprovider.New(config, []string{gt.Capabilities.Clone})
+func (r *Runner) cloneGitBundle() error {
+	bundle, err := r.Datastore.GetGitBundle(r.Repository.Namespace, r.Repository.Name, r.Layer.Spec.Branch, r.Run.Spec.Layer.Revision)
 	if err != nil {
-		log.Errorf("error initializing git provider: %s", err)
+		log.Errorf("error fetching git bundle from datastore: %s", err)
 		return err
 	}
-	r.GitProvider = provider
-	err = r.GitProvider.Init()
+
+	err = os.MkdirAll(r.config.Runner.RepositoryPath, 0755)
 	if err != nil {
-		log.Errorf("error initializing git provider: %s", err)
+		log.Errorf("error creating repository directory: %s", err)
+	}
+
+	bundlePath := filepath.Join(r.config.Runner.RepositoryPath, fmt.Sprintf("%s-%s.gitbundle", r.Layer.Spec.Branch, r.Run.Spec.Layer.Revision))
+	err = os.WriteFile(bundlePath, bundle, 0644)
+	if err != nil {
+		log.Errorf("error writing git bundle to disk: %s", err)
 		return err
 	}
+
+	cloneOptions := &git.CloneOptions{
+		URL: bundlePath,
+	}
+	_, err = git.PlainClone(r.config.Runner.RepositoryPath, false, cloneOptions)
+	if err != nil {
+		log.Errorf("error opening git bundle: %s", err)
+		return err
+	}
+
+	log.Infof("successfully fetched and opened git bundle from the datastore: repo=%s/%s ref=%s rev=%s", r.Repository.Namespace, r.Repository.Name, r.Layer.Spec.Branch, r.Run.Spec.Layer.Revision)
+
 	return nil
 }
