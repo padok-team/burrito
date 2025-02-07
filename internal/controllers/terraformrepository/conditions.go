@@ -45,7 +45,7 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 
-	layerBranches, err := r.retrieveLayerBranches(context.Background(), repo)
+	layers, err := r.retrieveManagedLayers(context.Background(), repo)
 	if err != nil {
 		condition.Reason = "ErrorListingLayers"
 		condition.Message = err.Error()
@@ -53,6 +53,7 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		return condition, true
 	}
 
+	layerBranches := retrieveAllLayerRefs(layers)
 	if len(layerBranches) == 0 {
 		condition.Reason = "NoBranches"
 		condition.Message = "No branches managed by this repository, no layers found"
@@ -120,7 +121,7 @@ func (r *Reconciler) HasLastSyncFailed(repo *configv1alpha1.TerraformRepository)
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 
-	layerBranches, err := r.retrieveLayerBranches(context.Background(), repo)
+	layers, err := r.retrieveManagedLayers(context.Background(), repo)
 	if err != nil {
 		condition.Reason = "ErrorListingLayers"
 		condition.Message = err.Error()
@@ -128,6 +129,7 @@ func (r *Reconciler) HasLastSyncFailed(repo *configv1alpha1.TerraformRepository)
 		return condition, true
 	}
 
+	layerBranches := retrieveAllLayerRefs(layers)
 	if len(layerBranches) == 0 {
 		condition.Reason = "NoBranches"
 		condition.Message = "No branches managed by this repository, no layers found"

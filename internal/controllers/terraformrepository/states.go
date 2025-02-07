@@ -7,6 +7,7 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	"github.com/padok-team/burrito/internal/utils/typeutils"
@@ -63,16 +64,17 @@ func (s *SyncNeeded) getHandler() Handler {
 		}
 
 		// Update the list of layer branches by querying the TerraformLayer resources
-		layerBranches, err := r.retrieveLayerBranches(ctx, repository)
+		layers, err := r.retrieveManagedLayers(ctx, repository)
 		if err != nil {
-			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Failed to list managed branches")
-			log.Errorf("failed to list managed branches: %s", err)
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Failed to list managed layers")
+			log.Errorf("failed to list managed layers: %s", err)
 			return ctrl.Result{}, branchStates
 		}
-		if len(layerBranches) == 0 {
-			log.Warningf("no managed branches found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
+		if len(layers) == 0 {
+			log.Warningf("no managed layers found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, []configv1alpha1.BranchState{}
 		}
+		layerBranches := retrieveAllLayerRefs(layers)
 
 		// add in branchStates branches that were not previously managed
 		branchStates = mergeBranchesWithBranchState(layerBranches, branchStates)
@@ -102,7 +104,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				branchStates = updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
 				continue
 			}
-			log.Infof("latest revision for repository %s/%s ref:%s is %s", repository.Namespace, repository.Name, branch.Name, latestRev)
+			log.Infof("latest revision for repository %s/%s ref %s is %s", repository.Namespace, repository.Name, branch.Name, latestRev)
 
 			isSynced, err := r.Datastore.CheckGitBundle(repository.Namespace, repository.Name, branch.Name, latestRev)
 			if err != nil {
@@ -138,6 +140,29 @@ func (s *SyncNeeded) getHandler() Handler {
 				}
 				log.Infof("stored new bundle for repository %s/%s ref:%s revision:%s", repository.Namespace, repository.Name, branch.Name, latestRev)
 				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+
+				// Add annotation to trigger a sync for all layers that depend on this branch
+				affectedLayers := retrieveLayersForRef(branch.Name, layers)
+				for _, layer := range affectedLayers {
+					ann := map[string]string{}
+					// TODO: Set LastRelevantCommit
+					ann[annotations.LastBranchCommit] = latestRev
+					// ann[annotations.LastBranchCommitDate] = date // TODO: add date
+
+					// TODO: inspect if layer files have changed when git providers will expose a function to do so
+					// if controller.LayerFilesHaveChanged(layer, e.Changes) {
+					// 	log.Infof("layer %s is affected by push event", layer.Name)
+					// 	ann[annotations.LastRelevantCommit] = e.ChangeInfo.ShaAfter
+					// 	ann[annotations.LastRelevantCommitDate] = date
+					// }
+
+					err := annotations.Add(context.TODO(), r.Client, &layer, ann)
+					if err != nil {
+						log.Errorf("could not add annotation to TerraformLayer %s/%s: %s", layer.Namespace, layer.Name, err)
+					} else {
+						log.Infof("layer %s/%s annotated with new last branch commit %s", layer.Namespace, layer.Name, latestRev)
+					}
+				}
 			}
 		}
 		if syncError != nil {
