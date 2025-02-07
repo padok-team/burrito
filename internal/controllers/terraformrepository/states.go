@@ -102,7 +102,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				branchStates = updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
 				continue
 			}
-			log.Infof("latest revision for repository %s/%s ref:%s is %s", repository.Namespace, repository.Name, branch, latestRev)
+			log.Infof("latest revision for repository %s/%s ref:%s is %s", repository.Namespace, repository.Name, branch.Name, latestRev)
 
 			isSynced, err := r.Datastore.CheckGitBundle(repository.Namespace, repository.Name, branch.Name, latestRev)
 			if err != nil {
