@@ -17,6 +17,7 @@ type OverrideRunnerSpec struct {
 	ImagePullPolicy    corev1.PullPolicy             `json:"imagePullPolicy,omitempty"`
 	Tolerations        []corev1.Toleration           `json:"tolerations,omitempty"`
 	NodeSelector       map[string]string             `json:"nodeSelector,omitempty"`
+	Affinity           *corev1.Affinity              `json:"affinity,omitempty"`
 	ServiceAccountName string                        `json:"serviceAccountName,omitempty"`
 	Resources          corev1.ResourceRequirements   `json:"resources,omitempty"`
 	Env                []corev1.EnvVar               `json:"env,omitempty"`
@@ -96,6 +97,7 @@ func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer
 func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
 	return OverrideRunnerSpec{
 		Tolerations:  overrideTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
+		Affinity:     overrideAffinity(repository.Spec.OverrideRunnerSpec.Affinity, layer.Spec.OverrideRunnerSpec.Affinity),
 		NodeSelector: mergeMaps(repository.Spec.OverrideRunnerSpec.NodeSelector, layer.Spec.OverrideRunnerSpec.NodeSelector),
 		Metadata: MetadataOverride{
 			Annotations: mergeMaps(repository.Spec.OverrideRunnerSpec.Metadata.Annotations, layer.Spec.OverrideRunnerSpec.Metadata.Annotations),
@@ -290,6 +292,13 @@ func overrideTolerations(a, b []corev1.Toleration) []corev1.Toleration {
 	}
 
 	return result
+}
+
+func overrideAffinity(repoAffinity, layerAffinity *corev1.Affinity) *corev1.Affinity {
+	if layerAffinity != nil {
+		return layerAffinity
+	}
+	return repoAffinity
 }
 
 func mergeEnvVars(a, b []corev1.EnvVar) []corev1.EnvVar {
