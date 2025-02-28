@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/utils/syncwindow"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,9 +79,15 @@ func (s *ApplyNeeded) getHandler() Handler {
 		log := log.WithContext(ctx)
 		autoApply := configv1alpha1.GetAutoApplyEnabled(repository, layer)
 		if !autoApply {
-			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
+			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
+		if syncwindow.IsSyncBlocked(repository.Spec.SyncWindows, layer.Name) {
+			log.Infof("layer %s is in a sync window, no apply action taken", layer.Name)
+			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a sync window, no apply action taken")
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
+
 		run := r.getRun(layer, repository, "apply")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
