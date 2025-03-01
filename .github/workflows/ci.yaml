@@ -45,7 +45,7 @@ jobs:
       - name: Run tests
         run: make test
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5
         with:
           use_oidc: true
 
