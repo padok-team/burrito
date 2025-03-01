@@ -261,6 +261,7 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 	overrideSpec := configv1alpha1.GetOverrideRunnerSpec(repository, layer)
 
 	defaultSpec.Tolerations = overrideSpec.Tolerations
+	defaultSpec.Affinity = overrideSpec.Affinity
 	defaultSpec.NodeSelector = overrideSpec.NodeSelector
 	defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, overrideSpec.Env...)
 	defaultSpec.Volumes = append(defaultSpec.Volumes, overrideSpec.Volumes...)
