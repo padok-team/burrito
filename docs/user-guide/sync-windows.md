@@ -46,6 +46,8 @@ Sync Windows work as follows:
 - If an allow sync window is defined for a layer, the layer is only allowed to be applied during the sync window.
 - If multiple sync windows are defined for a layer and they overlap, the deny sync window takes precedence over the allow sync window.
 
+Note that sync windows only apply to the `apply` operation. The `plan` operation is not affected by sync windows. Therefore sync windows will have no effect when `autoApply` is set to `false` at the repository or layer level.
+
 ## Global Sync Windows
 
 Default sync windows are defined in the Burrito configuration and apply to all Burrito reconciliation runs. They are useful to define sync windows that apply to all layers.
