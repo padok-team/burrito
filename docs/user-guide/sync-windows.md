@@ -1,6 +1,6 @@
 # Sync Windows
 
-Sync windows are a way to control when Burrito can run `apply` operations on Terraform layers. This is useful to prevent changes during specific timeframes, like business hours or maintenance windows. A sync window is defined by a kind (`allow` or `deny`), a schedule in cron format, a duration and a selector for layers in which wildcard are supported.
+Sync windows are a way to control when Burrito can run `apply` operations on Terraform layers. This is useful to prevent changes during specific timeframes, like business hours or maintenance windows. A sync window is defined by a kind (`allow` or `deny`), a schedule in cron format, a duration and a selector for layers in which wildcard are supported. Sync window can be defined at the repository level or at global level (in the Burrito configuration).
 
 ## Spec & Example
 
@@ -45,3 +45,28 @@ Sync Windows work as follows:
 - If a deny sync window is defined for a layer, the layer is not allowed to be applied during the sync window.
 - If an allow sync window is defined for a layer, the layer is only allowed to be applied during the sync window.
 - If multiple sync windows are defined for a layer and they overlap, the deny sync window takes precedence over the allow sync window.
+
+## Global Sync Windows
+
+Default sync windows are defined in the Burrito configuration and apply to all Burrito reconciliation runs. They are useful to define sync windows that apply to all layers.
+The default sync windows are defined in the `burrito.controller.defaultSyncWindows` field of the Burrito configuration.
+If using helm, you can define the default sync windows in the [values file](https://github.com/padok-team/burrito/blob/main/deploy/charts/burrito/values.yaml).
+
+```yaml
+config:
+  burrito:
+    controller:
+      # -- Default sync windows for layer reconciliation
+      defaultSyncWindows:
+        - kind: allow
+          schedule: "0 8 * * *"
+          duration: "12h"
+          layers:
+            - "layer1"
+            - "layer2"
+        - kind: deny
+          schedule: "30 1 * * *"
+          duration: "30m"
+          layers:
+            - "layer*"
+```

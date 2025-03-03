@@ -16,10 +16,17 @@ import (
 //   - If we are in an allow window, sync is not blocked (unless we are also in a deny window).
 //   - If we are not in an allow window, sync is blocked.
 
-func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) bool {
+type SyncBlockReason string
+
+const (
+	BlockReasonInsideDenyWindow   SyncBlockReason = "inside-deny-window"
+	BlockReasonOutsideAllowWindow SyncBlockReason = "outside-allow-window"
+)
+
+func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) (bool, SyncBlockReason) {
 	// If there are no sync windows at all, sync is not blocked.
 	if len(syncWindows) == 0 {
-		return false
+		return false, ""
 	}
 
 	now := time.Now()
@@ -41,7 +48,7 @@ func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) bo
 			switch window.Kind {
 			case configv1alpha1.SyncWindowKindDeny:
 				// If we're in any deny window, block immediately.
-				return true
+				return true, BlockReasonInsideDenyWindow
 			case configv1alpha1.SyncWindowKindAllow:
 				// Mark that we're currently in an active allow window.
 				allowWindowActive = true
@@ -53,12 +60,15 @@ func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) bo
 	//    - If currently in an allow window, sync is allowed.
 	//    - Otherwise, it is blocked.
 	if hasAllow {
-		return !allowWindowActive
+		if allowWindowActive {
+			return false, ""
+		}
+		return true, BlockReasonOutsideAllowWindow
 	}
 
 	// If we have no allow windows at all, then all we have is deny windows.
 	// Since we're here, it means we're not in any deny window, so sync is not blocked.
-	return false
+	return false, ""
 }
 
 func isWindowActive(window configv1alpha1.SyncWindow, now time.Time) bool {

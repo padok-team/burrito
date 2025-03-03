@@ -82,9 +82,16 @@ func (s *ApplyNeeded) getHandler() Handler {
 			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
-		if syncwindow.IsSyncBlocked(repository.Spec.SyncWindows, layer.Name) {
-			log.Infof("layer %s is in a sync window, no apply action taken", layer.Name)
-			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a sync window, no apply action taken")
+		defaultSyncWindows := r.Config.Controller.DefaultSyncWindows
+		syncBlocked, reason := syncwindow.IsSyncBlocked(append(repository.Spec.SyncWindows, defaultSyncWindows...), layer.Name)
+		if syncBlocked {
+			if reason == syncwindow.BlockReasonInsideDenyWindow {
+				log.Infof("layer %s is in a deny window, no apply action taken", layer.Name)
+				r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a deny window, no apply action taken")
+			} else if reason == syncwindow.BlockReasonOutsideAllowWindow {
+				log.Infof("layer %s is outside an allow window, no apply action taken", layer.Name)
+				r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is outside an allow window, no apply action taken")
+			}
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
 

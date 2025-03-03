@@ -29,7 +29,9 @@ var _ = Describe("SyncWindow", func() {
 		Context("With no sync windows", func() {
 			It("Should not block sync", func() {
 				windows := []configv1alpha1.SyncWindow{}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeFalse())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeFalse())
+				Expect(reason).To(BeEmpty())
 			})
 		})
 
@@ -43,7 +45,9 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"test-*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeTrue())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeTrue())
+				Expect(reason).To(Equal(syncwindow.BlockReasonInsideDenyWindow))
 			})
 
 			It("Should not block sync when layer doesn't match pattern", func() {
@@ -55,7 +59,9 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"prod-*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeFalse())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeFalse())
+				Expect(reason).To(BeEmpty())
 			})
 		})
 
@@ -69,7 +75,9 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeFalse())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeFalse())
+				Expect(reason).To(BeEmpty())
 			})
 
 			It("Should block sync outside allow window", func() {
@@ -81,7 +89,9 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeTrue())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeTrue())
+				Expect(reason).To(Equal(syncwindow.BlockReasonOutsideAllowWindow))
 			})
 		})
 
@@ -101,7 +111,9 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"test-*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeTrue())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeTrue())
+				Expect(reason).To(Equal(syncwindow.BlockReasonInsideDenyWindow))
 			})
 
 			It("Should allow sync when in allow window and not in deny window", func() {
@@ -119,7 +131,9 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"test-*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeFalse())
+				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeFalse())
+				Expect(reason).To(BeEmpty())
 			})
 		})
 
@@ -133,8 +147,10 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"test-layer"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeTrue())
-				Expect(syncwindow.IsSyncBlocked(windows, "other-layer")).To(BeFalse())
+				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeTrue())
+				blocked, _ = syncwindow.IsSyncBlocked(windows, "other-layer")
+				Expect(blocked).To(BeFalse())
 			})
 
 			It("Should match wildcard patterns", func() {
@@ -146,9 +162,12 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"test-*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeTrue())
-				Expect(syncwindow.IsSyncBlocked(windows, "test-other")).To(BeTrue())
-				Expect(syncwindow.IsSyncBlocked(windows, "prod-layer")).To(BeFalse())
+				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeTrue())
+				blocked, _ = syncwindow.IsSyncBlocked(windows, "test-other")
+				Expect(blocked).To(BeTrue())
+				blocked, _ = syncwindow.IsSyncBlocked(windows, "prod-layer")
+				Expect(blocked).To(BeFalse())
 			})
 
 			It("Should match all layers with *", func() {
@@ -160,9 +179,12 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeTrue())
-				Expect(syncwindow.IsSyncBlocked(windows, "prod-layer")).To(BeTrue())
-				Expect(syncwindow.IsSyncBlocked(windows, "any-layer")).To(BeTrue())
+				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeTrue())
+				blocked, _ = syncwindow.IsSyncBlocked(windows, "prod-layer")
+				Expect(blocked).To(BeTrue())
+				blocked, _ = syncwindow.IsSyncBlocked(windows, "any-layer")
+				Expect(blocked).To(BeTrue())
 			})
 		})
 
@@ -176,7 +198,8 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeFalse())
+				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeFalse())
 			})
 
 			It("Should handle invalid duration formats", func() {
@@ -188,7 +211,8 @@ var _ = Describe("SyncWindow", func() {
 						Layers:   []string{"*"},
 					},
 				}
-				Expect(syncwindow.IsSyncBlocked(windows, "test-layer")).To(BeFalse())
+				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				Expect(blocked).To(BeFalse())
 			})
 		})
 	})
