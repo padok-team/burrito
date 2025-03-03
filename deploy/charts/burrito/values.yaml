@@ -26,6 +26,8 @@ config:
         waitAction: 1m
         # -- Duration to wait before retrying on failure (increases exponentially with the amount of failed retries)
         failureGracePeriod: 30
+      # -- Default sync windows for layer reconciliation
+      defaultSyncWindows: []
       # -- Maximum number of concurrent reconciles for the controller, increse this value if you have a lot of resources to reconcile
       maxConcurrentReconciles: 1
       # -- Maximum number of retries for Terraform operations (plan, apply...)

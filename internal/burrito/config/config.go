@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -63,19 +64,20 @@ type WebhookGitlabConfig struct {
 }
 
 type ControllerConfig struct {
-	MainNamespace           string               `mapstructure:"mainNamespace"`
-	Namespaces              []string             `mapstructure:"namespaces"`
-	Timers                  ControllerTimers     `mapstructure:"timers"`
-	TerraformMaxRetries     int                  `mapstructure:"terraformMaxRetries"`
-	Types                   []string             `mapstructure:"types"`
-	LeaderElection          LeaderElectionConfig `mapstructure:"leaderElection"`
-	MetricsBindAddress      string               `mapstructure:"metricsBindAddress"`
-	HealthProbeBindAddress  string               `mapstructure:"healthProbeBindAddress"`
-	KubernetesWebhookPort   int                  `mapstructure:"kubernetesWebhookPort"`
-	GithubConfig            GithubConfig         `mapstructure:"githubConfig"`
-	GitlabConfig            GitlabConfig         `mapstructure:"gitlabConfig"`
-	RunParallelism          int                  `mapstructure:"runParallelism"`
-	MaxConcurrentReconciles int                  `mapstructure:"maxConcurrentReconciles"`
+	MainNamespace           string                      `mapstructure:"mainNamespace"`
+	Namespaces              []string                    `mapstructure:"namespaces"`
+	Timers                  ControllerTimers            `mapstructure:"timers"`
+	DefaultSyncWindows      []configv1alpha1.SyncWindow `mapstructure:"defaultSyncWindows"`
+	TerraformMaxRetries     int                         `mapstructure:"terraformMaxRetries"`
+	Types                   []string                    `mapstructure:"types"`
+	LeaderElection          LeaderElectionConfig        `mapstructure:"leaderElection"`
+	MetricsBindAddress      string                      `mapstructure:"metricsBindAddress"`
+	HealthProbeBindAddress  string                      `mapstructure:"healthProbeBindAddress"`
+	KubernetesWebhookPort   int                         `mapstructure:"kubernetesWebhookPort"`
+	GithubConfig            GithubConfig                `mapstructure:"githubConfig"`
+	GitlabConfig            GitlabConfig                `mapstructure:"gitlabConfig"`
+	RunParallelism          int                         `mapstructure:"runParallelism"`
+	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 }
 
 type GithubConfig struct {
