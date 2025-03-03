@@ -1,0 +1,84 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: sync-window-repo-deny
+  namespace: default
+spec:
+  repository:
+    url: git@github.com:padok-team/burrito-examples.git
+  terraform:
+    enabled: true
+  syncWindows:
+    - kind: "deny"
+      schedule: "* * * * *" # Every minute
+      duration: "1h"
+      layers: ["sync-window-case-deny-*"]
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: sync-window-case-deny-1
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-run: run-succeeded/0
+    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+spec:
+  branch: main
+  path: sync-window-case-one/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: sync-window-repo-deny
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-succeeded
+    namespace: default 
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: sync-window-repo-allow
+  namespace: default
+spec:
+  repository:
+    url: git@github.com:padok-team/burrito-examples.git
+  terraform:
+    enabled: true
+  syncWindows:
+    - kind: "allow"
+      schedule: "0 30 2 *" # 30 feb = never
+      duration: "1m"
+      layers: ["sync-window-case-allow-*"]
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: sync-window-case-allow-1
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-run: run-succeeded/0
+    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+spec:
+  branch: main
+  path: sync-window-case-one/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: sync-window-repo-allow
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-succeeded
+    namespace: default 
+
