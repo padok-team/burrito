@@ -37,7 +37,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should block sync when in deny window", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *", // Every minute
 						Duration: "1h",
 						Layers:   []string{"test-*"},
@@ -49,7 +49,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should not block sync when layer doesn't match pattern", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"prod-*"},
@@ -63,7 +63,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should allow sync during allow window", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "allow",
+						Kind:     configv1alpha1.SyncWindowKindAllow,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
@@ -75,7 +75,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should block sync outside allow window", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "allow",
+						Kind:     configv1alpha1.SyncWindowKindAllow,
 						Schedule: "0 0 31 2 *", // Never occurs (Feb 31)
 						Duration: "1h",
 						Layers:   []string{"*"},
@@ -89,13 +89,13 @@ var _ = Describe("SyncWindow", func() {
 			It("Should block sync when in deny window, even if in allow window", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "allow",
+						Kind:     configv1alpha1.SyncWindowKindAllow,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
 					},
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"test-*"},
@@ -107,13 +107,13 @@ var _ = Describe("SyncWindow", func() {
 			It("Should allow sync when in allow window and not in deny window", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "allow",
+						Kind:     configv1alpha1.SyncWindowKindAllow,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
 					},
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "0 0 31 2 *", // Never occurs
 						Duration: "1h",
 						Layers:   []string{"test-*"},
@@ -127,7 +127,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should match exact layer names", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"test-layer"},
@@ -140,7 +140,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should match wildcard patterns", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"test-*"},
@@ -154,7 +154,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should match all layers with *", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
@@ -170,7 +170,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should handle invalid schedule formats", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "invalid-cron",
 						Duration: "1h",
 						Layers:   []string{"*"},
@@ -182,7 +182,7 @@ var _ = Describe("SyncWindow", func() {
 			It("Should handle invalid duration formats", func() {
 				windows := []configv1alpha1.SyncWindow{
 					{
-						Kind:     "deny",
+						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "invalid-duration",
 						Layers:   []string{"*"},

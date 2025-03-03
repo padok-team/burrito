@@ -53,11 +53,18 @@ type TerraformRepositoryStatus struct {
 
 type SyncWindow struct {
 	// +kubebuilder:validation:Enum=allow;deny
-	Kind     string   `json:"kind,omitempty"`
-	Schedule string   `json:"schedule,omitempty"`
-	Duration string   `json:"duration,omitempty"`
-	Layers   []string `json:"layers,omitempty"`
+	Kind     SyncWindowKind `json:"kind,omitempty"`
+	Schedule string         `json:"schedule,omitempty"`
+	Duration string         `json:"duration,omitempty"`
+	Layers   []string       `json:"layers,omitempty"`
 }
+
+type SyncWindowKind string
+
+const (
+	SyncWindowKindAllow SyncWindowKind = "allow"
+	SyncWindowKindDeny  SyncWindowKind = "deny"
+)
 
 // BranchState describes the sync state of a branch
 type BranchState struct {

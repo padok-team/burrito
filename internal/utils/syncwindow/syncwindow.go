@@ -33,16 +33,16 @@ func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) bo
 		}
 
 		// Track if there's at least one "allow" window defined
-		if window.Kind == "allow" {
+		if window.Kind == configv1alpha1.SyncWindowKindAllow {
 			hasAllow = true
 		}
 
 		if isWindowActive(window, now) {
 			switch window.Kind {
-			case "deny":
+			case configv1alpha1.SyncWindowKindDeny:
 				// If we're in any deny window, block immediately.
 				return true
-			case "allow":
+			case configv1alpha1.SyncWindowKindAllow:
 				// Mark that we're currently in an active allow window.
 				allowWindowActive = true
 			}
