@@ -14,6 +14,7 @@ Available overrides are:
 
 |         Fields         |
 | :--------------------: |
+|       `Affinity`       |
 |   `ImagePullSecrets`   |
 |        `Image`         |
 |     `Tolerations`      |
