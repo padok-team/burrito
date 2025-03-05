@@ -370,6 +370,37 @@ var _ = Describe("TerraformPullRequest controller", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(layers)).To(Equal(2))
 				})
+				It("should have created temp layers with the same values as the original layers, except for autoApply and Branch", func() {
+					layers, err := controller.GetLinkedLayers(k8sClient, pr)
+					Expect(err).NotTo(HaveOccurred())
+					layer1 := &configv1alpha1.TerraformLayer{}
+					err = k8sClient.Get(context.Background(), types.NamespacedName{
+						Name:      "layer-nominal-case-1",
+						Namespace: "default",
+					}, layer1)
+					Expect(err).NotTo(HaveOccurred())
+					// Set the branch and autoApply to the same value as the original layer for comparison
+					// These are the two only fields that should be different
+					layer1.Spec.Branch = "<branch>"
+					layers[0].Spec.Branch = "<branch>"
+					layer1.Spec.RemediationStrategy.AutoApply = &[]bool{false}[0]
+					layers[0].Spec.RemediationStrategy.AutoApply = &[]bool{false}[0]
+					Expect(layers[0].Spec).To(Equal(layer1.Spec))
+
+					layer2 := &configv1alpha1.TerraformLayer{}
+					err = k8sClient.Get(context.Background(), types.NamespacedName{
+						Name:      "layer-nominal-case-2",
+						Namespace: "default",
+					}, layer2)
+					Expect(err).NotTo(HaveOccurred())
+					// Set the branch and autoApply to the same value as the original layer for comparison
+					// These are the two only fields that should be different
+					layer2.Spec.Branch = "<branch>"
+					layers[1].Spec.Branch = "<branch>"
+					layer2.Spec.RemediationStrategy.AutoApply = &[]bool{false}[0]
+					layers[1].Spec.RemediationStrategy.AutoApply = &[]bool{false}[0]
+					Expect(layers[1].Spec).To(Equal(layer2.Spec))
+				})
 			})
 			Describe("When a TerraformPullRequest has all its layers planned", Ordered, func() {
 				BeforeAll(func() {
