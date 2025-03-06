@@ -17,7 +17,7 @@ jobs:
       matrix:
         platform:
           - name: linux/amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - name: linux/arm64
             runner: ubuntu-24.04-arm
     steps:
@@ -90,7 +90,7 @@ jobs:
           retention-days: 1
 
   merge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build
     steps:
