@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
@@ -63,6 +64,14 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				OnError:            1 * time.Minute,
 				WaitAction:         1 * time.Minute,
 				FailureGracePeriod: 15 * time.Second,
+			},
+			DefaultSyncWindows: []configv1alpha1.SyncWindow{
+				{
+					Kind:     configv1alpha1.SyncWindowKindDeny,
+					Schedule: "0 0 * * *",
+					Duration: "1h",
+					Layers:   []string{"layer1", "layer2"},
+				},
 			},
 			TerraformMaxRetries:     5,
 			MaxConcurrentReconciles: 1,
@@ -203,6 +212,14 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 				OnError:            30 * time.Second,
 				WaitAction:         30 * time.Second,
 				FailureGracePeriod: 1 * time.Minute,
+			},
+			DefaultSyncWindows: []configv1alpha1.SyncWindow{
+				{
+					Kind:     configv1alpha1.SyncWindowKindDeny,
+					Schedule: "0 0 * * *",
+					Duration: "1h",
+					Layers:   []string{"layer1", "layer2"},
+				},
 			},
 			MaxConcurrentReconciles: 3,
 			TerraformMaxRetries:     32,
