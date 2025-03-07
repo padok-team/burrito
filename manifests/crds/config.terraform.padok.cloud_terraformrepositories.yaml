@@ -53,6 +53,8 @@ spec:
           spec:
             description: TerraformRepositorySpec defines the desired state of TerraformRepository
             properties:
+              maxConcurrentRuns:
+                type: integer
               opentofu:
                 properties:
                   enabled:
