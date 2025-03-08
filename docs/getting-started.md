@@ -21,9 +21,10 @@ For example, here is a default `values.yaml` file:
 
 ```yaml
 config:
-  datastore:
-    storage:
-      mock: true
+  burrito:
+    datastore:
+      storage:
+        mock: true
 
 tenants:
   - namespace:
