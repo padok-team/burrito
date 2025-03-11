@@ -23,11 +23,13 @@ config:
         # -- Duration to wait before retrying on error
         onError: 10s
         # -- Duration to wait before retrying on locked layer
-        waitAction: 1m
+        waitAction: 10s
         # -- Duration to wait before retrying on failure (increases exponentially with the amount of failed retries)
         failureGracePeriod: 30
       # -- Maximum number of concurrent reconciles for the controller, increse this value if you have a lot of resources to reconcile
       maxConcurrentReconciles: 1
+      # -- Maximum number of concurrent runners pods. 0 means no limit
+      MaxConcurrentRunnerPods: 0
       # -- Maximum number of retries for Terraform operations (plan, apply...)
       terraformMaxRetries: 3
       # TODO: enable repository controller by default
