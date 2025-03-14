@@ -96,7 +96,7 @@ func (s *CredentialStore) updateCredentials() error {
 	return nil
 }
 
-func (s *CredentialStore) GetCredentials(ctx context.Context, c client.Client, repository *configv1alpha1.TerraformRepository) (*Credential, error) {
+func (s *CredentialStore) GetCredentials(ctx context.Context, repository *configv1alpha1.TerraformRepository) (*Credential, error) {
 	if time.Since(s.lastUpdate) < s.TTL {
 		err := s.updateCredentials()
 		if err != nil {
@@ -110,13 +110,15 @@ func (s *CredentialStore) GetCredentials(ctx context.Context, c client.Client, r
 	}
 	var sharedCredential *SharedCredential
 	for _, tmp := range s.sharedCredentials {
-		isAllowed := sharedCredential.IsAllowed(repository)
-		matches := sharedCredential.Matches(repository)
+		isAllowed := tmp.IsAllowed(repository)
+		matches := tmp.Matches(repository)
 		if isAllowed && matches {
 			if sharedCredential != nil {
-				if len(tmp.Credential.URL) > len(sharedCredential.Credential.URL) {
+				if len(sharedCredential.Credential.URL) < len(tmp.Credential.URL) {
 					sharedCredential = tmp
 				}
+			} else {
+				sharedCredential = tmp
 			}
 		}
 	}
@@ -178,7 +180,11 @@ func NewSharedCredentialsFromSecret(secret corev1.Secret) (*SharedCredential, er
 	if err != nil {
 		return nil, err
 	}
-	allowedTenants := strings.Split(secret.Annotations[annotations.AllowedTenants], ",")
+	allowedTenants := []string{}
+	value, ok := secret.Annotations[annotations.AllowedTenants]
+	if ok {
+		allowedTenants = strings.Split(value, ",")
+	}
 	return &SharedCredential{
 		Credential:     *credentials,
 		AllowedTenants: allowedTenants,
@@ -202,7 +208,12 @@ func (t *SharedCredential) Matches(repository *configv1alpha1.TerraformRepositor
 }
 
 func parseRepositorySecret(secret corev1.Secret) (*Credential, error) {
-	raw, err := json.Marshal(secret.Data)
+	unencoded := make(map[string]string)
+	for key, value := range secret.Data {
+		unencoded[key] = string(value)
+	}
+
+	raw, err := json.Marshal(unencoded)
 	if err != nil {
 		return nil, err
 	}

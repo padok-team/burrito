@@ -14,6 +14,7 @@ func TestNormalizeURL(t *testing.T) {
 		"https://github.com/padok-team/burrito",
 		"http://github.com/padok-team/burrito.git",
 		"http://github.com/padok-team/burrito",
+		"https://github.com/padok-team/",
 	}
 	expected := "https://github.com/padok-team/burrito"
 	for _, u := range urlTypes {
