@@ -21,7 +21,7 @@ func (t *OpenTofu) TenvName() string {
 
 func (t *OpenTofu) Init(workingDir string) error {
 	t.WorkingDir = workingDir
-	cmd := exec.Command(t.ExecPath, "init", "-upgrade")
+	cmd := exec.Command(t.ExecPath, "init", "-no-color", "-upgrade")
 	c.Verbose(cmd)
 	cmd.Dir = workingDir
 	if err := cmd.Run(); err != nil {
@@ -31,7 +31,7 @@ func (t *OpenTofu) Init(workingDir string) error {
 }
 
 func (t *OpenTofu) Plan(planArtifactPath string) error {
-	cmd := exec.Command(t.ExecPath, "plan", "-out", planArtifactPath)
+	cmd := exec.Command(t.ExecPath, "plan", "-no-color", "-out", planArtifactPath)
 	c.Verbose(cmd)
 	cmd.Dir = t.WorkingDir
 	if err := cmd.Run(); err != nil {
@@ -43,9 +43,9 @@ func (t *OpenTofu) Plan(planArtifactPath string) error {
 func (t *OpenTofu) Apply(planArtifactPath string) error {
 	var cmd *exec.Cmd
 	if planArtifactPath != "" {
-		cmd = exec.Command(t.ExecPath, "apply", "-auto-approve", planArtifactPath)
+		cmd = exec.Command(t.ExecPath, "apply", "-no-color", "-auto-approve", planArtifactPath)
 	} else {
-		cmd = exec.Command(t.ExecPath, "apply", "-auto-approve")
+		cmd = exec.Command(t.ExecPath, "apply", "-no-color", "-auto-approve")
 	}
 	c.Verbose(cmd)
 	cmd.Dir = t.WorkingDir
@@ -59,9 +59,9 @@ func (t *OpenTofu) Show(planArtifactPath, mode string) ([]byte, error) {
 	var cmd *exec.Cmd
 	switch mode {
 	case "json":
-		cmd = exec.Command(t.ExecPath, "show", "-json", planArtifactPath)
+		cmd = exec.Command(t.ExecPath, "show", "-no-color", "-json", planArtifactPath)
 	case "pretty":
-		cmd = exec.Command(t.ExecPath, "show", planArtifactPath)
+		cmd = exec.Command(t.ExecPath, "show", "-no-color", planArtifactPath)
 	default:
 		return nil, errors.New("invalid mode")
 	}
