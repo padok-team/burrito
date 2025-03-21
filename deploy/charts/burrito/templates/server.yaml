@@ -123,7 +123,7 @@ metadata:
   annotations:
     {{- toYaml .metadata.annotations | nindent 4 }}
 spec:
-  type: {{ .type }}
+  type: {{ .service.type }}
   ports:
     {{- toYaml .service.ports | nindent 4 }}
   selector:
