@@ -54,6 +54,7 @@ type TerraformRepositoryStatus struct {
 type SyncWindow struct {
 	// +kubebuilder:validation:Enum=allow;deny
 	Kind     SyncWindowKind `json:"kind,omitempty"`
+	Actions  []string       `json:"actions,omitempty"`
 	Schedule string         `json:"schedule,omitempty"`
 	Duration string         `json:"duration,omitempty"`
 	Layers   []string       `json:"layers,omitempty"`

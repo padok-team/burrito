@@ -29,7 +29,7 @@ var _ = Describe("SyncWindow", func() {
 		Context("With no sync windows", func() {
 			It("Should not block sync", func() {
 				windows := []configv1alpha1.SyncWindow{}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeFalse())
 				Expect(reason).To(BeEmpty())
 			})
@@ -43,9 +43,10 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *", // Every minute
 						Duration: "1h",
 						Layers:   []string{"test-*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeTrue())
 				Expect(reason).To(Equal(syncwindow.BlockReasonInsideDenyWindow))
 			})
@@ -57,9 +58,10 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"prod-*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeFalse())
 				Expect(reason).To(BeEmpty())
 			})
@@ -73,9 +75,10 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeFalse())
 				Expect(reason).To(BeEmpty())
 			})
@@ -87,9 +90,10 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "0 0 31 2 *", // Never occurs (Feb 31)
 						Duration: "1h",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeTrue())
 				Expect(reason).To(Equal(syncwindow.BlockReasonOutsideAllowWindow))
 			})
@@ -103,15 +107,17 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 					{
 						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"test-*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeTrue())
 				Expect(reason).To(Equal(syncwindow.BlockReasonInsideDenyWindow))
 			})
@@ -123,15 +129,17 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 					{
 						Kind:     configv1alpha1.SyncWindowKindDeny,
 						Schedule: "0 0 31 2 *", // Never occurs
 						Duration: "1h",
 						Layers:   []string{"test-*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, reason := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, reason := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeFalse())
 				Expect(reason).To(BeEmpty())
 			})
@@ -145,11 +153,12 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"test-layer"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, _ := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeTrue())
-				blocked, _ = syncwindow.IsSyncBlocked(windows, "other-layer")
+				blocked, _ = syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "other-layer")
 				Expect(blocked).To(BeFalse())
 			})
 
@@ -160,13 +169,14 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"test-*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, _ := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeTrue())
-				blocked, _ = syncwindow.IsSyncBlocked(windows, "test-other")
+				blocked, _ = syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-other")
 				Expect(blocked).To(BeTrue())
-				blocked, _ = syncwindow.IsSyncBlocked(windows, "prod-layer")
+				blocked, _ = syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "prod-layer")
 				Expect(blocked).To(BeFalse())
 			})
 
@@ -177,13 +187,14 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, _ := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeTrue())
-				blocked, _ = syncwindow.IsSyncBlocked(windows, "prod-layer")
+				blocked, _ = syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "prod-layer")
 				Expect(blocked).To(BeTrue())
-				blocked, _ = syncwindow.IsSyncBlocked(windows, "any-layer")
+				blocked, _ = syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "any-layer")
 				Expect(blocked).To(BeTrue())
 			})
 		})
@@ -196,9 +207,10 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "invalid-cron",
 						Duration: "1h",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, _ := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeFalse())
 			})
 
@@ -209,9 +221,10 @@ var _ = Describe("SyncWindow", func() {
 						Schedule: "* * * * *",
 						Duration: "invalid-duration",
 						Layers:   []string{"*"},
+						Actions:  []string{string(syncwindow.PlanAction)},
 					},
 				}
-				blocked, _ := syncwindow.IsSyncBlocked(windows, "test-layer")
+				blocked, _ := syncwindow.IsSyncBlocked(windows, syncwindow.PlanAction, "test-layer")
 				Expect(blocked).To(BeFalse())
 			})
 		})

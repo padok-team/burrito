@@ -1,16 +1,25 @@
 # Sync Windows
 
-Sync windows are a way to control when Burrito can run `apply` operations on Terraform layers. This is useful to prevent changes during specific timeframes, like business hours or maintenance windows. A sync window is defined by a kind (`allow` or `deny`), a schedule in cron format, a duration and a selector for layers in which wildcard are supported. Sync window can be defined at the repository level or at global level (in the Burrito configuration).
+Sync windows are a way to control when Burrito can run `apply` operations on Terraform layers. This is useful to prevent changes during specific timeframes, like business hours or maintenance windows. A sync window is defined by a kind (`allow` or `deny`), a schedule in cron format, a duration and a selector for layers in which wildcard are supported. Sync window can be defined at the repository level or at global level (in the Burrito configuration). The sync window can be applied to `plan`, `apply` or both actions.
+
+## Use Cases
+
+- Blocking all Burrito operations outside of business hours to reduce cloud costs.
+- Preventing Burrito to apply unwanted changes outside of business hours, while keeping drift detection enabled.
+- Allowing only `apply` operations during specific maintenance windows to ensure that changes are applied at a specific time.
 
 ## Spec & Example
 
-| Field                    | Type   | Description                                                               |
-| ------------------------ | ------ | ------------------------------------------------------------------------- |
-| `syncWindows`            | Array  | The list of sync windows.                                                 |
-| `syncWindows[].kind`     | String | The kind of the sync window, either `allow` or `deny`.                    |
-| `syncWindows[].schedule` | String | The schedule of the sync window in cron format.                           |
-| `syncWindows[].duration` | String | The duration of the sync window.                                          |
-| `syncWindows[].layers`   | Array  | The list of layers to which the sync window applies (supports wildcards). |
+| Field                    | Type   | Description                                                                                         |
+| ------------------------ | ------ | --------------------------------------------------------------------------------------------------- |
+| `syncWindows`            | Array  | The list of sync windows.                                                                           |
+| `syncWindows[].kind`     | String | The kind of the sync window, either `allow` or `deny`.                                              |
+| `syncWindows[].schedule` | String | The schedule of the sync window in cron format.                                                     |
+| `syncWindows[].duration` | String | The duration of the sync window.                                                                    |
+| `syncWindows[].layers`   | Array  | The list of layers to which the sync window applies (supports wildcards).                           |
+| `syncWindows[].actions`  | Array  | List of actions that are affected by the sync window. `["plan"]`, `["apply"]` or `["plan","apply"]` |
+
+The following example shows how to define sync windows in a Terraform repository, it is purely to demonstrate the syntax and is not representative of a real-world use case.
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -30,11 +39,16 @@ spec:
         layers:
           - "layer1"
           - "layer2"
+        actions:
+          - "plan"
+          - "apply"
     - kind: deny
         schedule: "30 1 * * *"
         duration: "30m"
         layers:
           - "layer*"
+        actions:
+          - "apply"
 ```
 
 ## Behavior
@@ -46,7 +60,7 @@ Sync Windows work as follows:
 - If an allow sync window is defined for a layer, the layer is only allowed to be applied during the sync window.
 - If multiple sync windows are defined for a layer and they overlap, the deny sync window takes precedence over the allow sync window.
 
-Note that sync windows only apply to the `apply` operation. The `plan` operation is not affected by sync windows. Therefore sync windows will have no effect when `autoApply` is set to `false` at the repository or layer level.
+The sync window will apply only for the actions defined in the `actions` field. If the `actions` field is not defined, the sync window will not apply to any action.
 
 ## Global Sync Windows
 
@@ -66,9 +80,14 @@ config:
           layers:
             - "layer1"
             - "layer2"
+          actions:
+            - "plan"
+            - "apply"
         - kind: deny
           schedule: "30 1 * * *"
           duration: "30m"
           layers:
             - "layer*"
+          actions:
+            - "apply"
 ```

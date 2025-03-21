@@ -4793,6 +4793,10 @@ spec:
               syncWindows:
                 items:
                   properties:
+                    actions:
+                      items:
+                        type: string
+                      type: array
                     duration:
                       type: string
                     kind:

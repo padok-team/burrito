@@ -27,6 +27,7 @@ controller:
       schedule: "0 0 * * *"
       duration: "1h"
       layers: ["layer1", "layer2"]
+      actions: ["plan", "apply"]
   terraformMaxRetries: 5
   maxConcurrentReconciles: 1
   types: ["layer", "repository", "run", "pullrequest"]

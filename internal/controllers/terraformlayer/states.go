@@ -60,6 +60,10 @@ type PlanNeeded struct{}
 func (s *PlanNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
+		// Check for sync windows that would block the apply action
+		if isActionBlocked(r, layer, repository, syncwindow.PlanAction) {
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
 		run := r.getRun(layer, repository, "plan")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
@@ -82,19 +86,10 @@ func (s *ApplyNeeded) getHandler() Handler {
 			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
-		defaultSyncWindows := r.Config.Controller.DefaultSyncWindows
-		syncBlocked, reason := syncwindow.IsSyncBlocked(append(repository.Spec.SyncWindows, defaultSyncWindows...), layer.Name)
-		if syncBlocked {
-			if reason == syncwindow.BlockReasonInsideDenyWindow {
-				log.Infof("layer %s is in a deny window, no apply action taken", layer.Name)
-				r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a deny window, no apply action taken")
-			} else if reason == syncwindow.BlockReasonOutsideAllowWindow {
-				log.Infof("layer %s is outside an allow window, no apply action taken", layer.Name)
-				r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is outside an allow window, no apply action taken")
-			}
+		// Check for sync windows that would block the apply action
+		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
-
 		run := r.getRun(layer, repository, "apply")
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
@@ -110,4 +105,20 @@ func (s *ApplyNeeded) getHandler() Handler {
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), ".")
 	return t[len(t)-1]
+}
+
+func isActionBlocked(r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action syncwindow.Action) bool {
+	defaultSyncWindows := r.Config.Controller.DefaultSyncWindows
+	syncBlocked, reason := syncwindow.IsSyncBlocked(append(repository.Spec.SyncWindows, defaultSyncWindows...), action, layer.Name)
+	if syncBlocked {
+		if reason == syncwindow.BlockReasonInsideDenyWindow {
+			log.Infof("layer %s is in a deny window, no %s action taken", layer.Name, string(action))
+			r.Recorder.Eventf(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a deny window, no %s action taken", string(action))
+		} else if reason == syncwindow.BlockReasonOutsideAllowWindow {
+			log.Infof("layer %s is outside an allow window, no %s action taken", layer.Name, string(action))
+			r.Recorder.Eventf(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is outside an allow window, no %s action taken", string(action))
+		}
+		return true
+	}
+	return false
 }

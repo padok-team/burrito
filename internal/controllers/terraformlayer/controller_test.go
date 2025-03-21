@@ -574,7 +574,7 @@ var _ = Describe("Layer", func() {
 		})
 	})
 	Describe("Sync Window Cases", func() {
-		Describe("When a TerraformLayer is in a deny window", Ordered, func() {
+		Describe("When a TerraformLayer is in a deny window for apply action", Ordered, func() {
 			var layer *configv1alpha1.TerraformLayer
 			var reconcileError error
 			var err error
@@ -583,7 +583,7 @@ var _ = Describe("Layer", func() {
 
 			BeforeAll(func() {
 				name = types.NamespacedName{
-					Name:      "sync-window-case-deny-1",
+					Name:      "sync-window-case-deny-apply-1",
 					Namespace: "default",
 				}
 				result, layer, reconcileError, err = getResult(name, reconciler)
@@ -611,7 +611,7 @@ var _ = Describe("Layer", func() {
 				Expect(len(runs.Items)).To(Equal(0))
 			})
 		})
-		Describe("When a TerraformLayer is outside the allow window", Ordered, func() {
+		Describe("When a TerraformLayer is outside the allow window for apply action", Ordered, func() {
 			var layer *configv1alpha1.TerraformLayer
 			var reconcileError error
 			var err error
@@ -620,7 +620,7 @@ var _ = Describe("Layer", func() {
 
 			BeforeAll(func() {
 				name = types.NamespacedName{
-					Name:      "sync-window-case-allow-1",
+					Name:      "sync-window-case-allow-apply-1",
 					Namespace: "default",
 				}
 				result, layer, reconcileError, err = getResult(name, reconciler)
@@ -648,7 +648,81 @@ var _ = Describe("Layer", func() {
 				Expect(len(runs.Items)).To(Equal(0))
 			})
 		})
-		Describe("When there is a default deny sync window in the controller config", Ordered, func() {
+		Describe("When a TerraformLayer is in a deny window for plan action", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "sync-window-case-deny-plan-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When a TerraformLayer is outside the allow window for plan action", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "sync-window-case-allow-plan-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When there is a deny sync window on apply action in the default controller config", Ordered, func() {
 			var defaultWindowConfig *config.Config
 			var layer *configv1alpha1.TerraformLayer
 			var reconcileError error
@@ -664,6 +738,7 @@ var _ = Describe("Layer", func() {
 						Schedule: "* * * * *",
 						Duration: "1h",
 						Layers:   []string{"sync-window-case-default-1"},
+						Actions:  []string{"apply"},
 					},
 				}
 
@@ -692,6 +767,56 @@ var _ = Describe("Layer", func() {
 			})
 
 			It("should not have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When there is a deny sync window on plan action in the controller config", Ordered, func() {
+			var defaultWindowConfig *config.Config
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				defaultWindowConfig = config.TestConfig()
+				defaultWindowConfig.Controller.DefaultSyncWindows = []configv1alpha1.SyncWindow{
+					{
+						Kind:     "deny",
+						Schedule: "* * * * *",
+						Duration: "1h",
+						Layers:   []string{"sync-window-case-default-2"},
+						Actions:  []string{"plan"},
+					},
+				}
+
+				defaultWindowReconciler := getReconcilerWithConfig(defaultWindowConfig)
+
+				name = types.NamespacedName{
+					Name:      "sync-window-case-default-2",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, defaultWindowReconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an plan TerraformRun", func() {
 				runs, err := getLinkedRuns(k8sClient, layer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(runs.Items)).To(Equal(0))

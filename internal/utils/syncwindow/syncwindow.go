@@ -2,6 +2,7 @@ package syncwindow
 
 import (
 	"path/filepath"
+	"slices"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -23,7 +24,14 @@ const (
 	BlockReasonOutsideAllowWindow SyncBlockReason = "outside-allow-window"
 )
 
-func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) (bool, SyncBlockReason) {
+type Action string
+
+const (
+	PlanAction  Action = "plan"
+	ApplyAction Action = "apply"
+)
+
+func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, action Action, layerName string) (bool, SyncBlockReason) {
 	// If there are no sync windows at all, sync is not blocked.
 	if len(syncWindows) == 0 {
 		return false, ""
@@ -35,6 +43,11 @@ func IsSyncBlocked(syncWindows []configv1alpha1.SyncWindow, layerName string) (b
 	var allowWindowActive bool
 
 	for _, window := range syncWindows {
+		// Skip if the window doesn't apply to the action
+		if !slices.Contains(window.Actions, string(action)) {
+			continue
+		}
+
 		if !isLayerInSyncWindow(window, layerName) {
 			continue
 		}
