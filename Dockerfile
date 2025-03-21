@@ -17,7 +17,7 @@ ENV VITE_API_BASE_URL=/api
 RUN yarn build
 
 # Build the manager binary
-FROM docker.io/library/golang:1.23.7@sha256:1acb493b9f9dfdfe705042ce09e8ded908ce4fb342405ecf3ca61ce7f3b168c7 AS builder
+FROM docker.io/library/golang:1.24.1@sha256:52ff1b35ff8de185bf9fd26c70077190cd0bed1e9f16a2d498ce907e5c421268 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
