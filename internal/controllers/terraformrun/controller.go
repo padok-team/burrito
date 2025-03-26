@@ -19,6 +19,7 @@ package terraformrun
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
@@ -105,6 +106,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not get linked repository")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
+
+	bundleOk, err := r.Datastore.CheckGitBundle(layer.Spec.Repository.Namespace, layer.Spec.Repository.Name, layer.Spec.Branch, run.Spec.Layer.Revision)
+	if err != nil {
+		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not check bundle in datastore")
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+	}
+	if !bundleOk {
+		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Bundle for revision %s not found in datastore", run.Spec.Layer.Revision))
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+	}
+
 	state, conditions := r.GetState(ctx, run, layer, repo)
 	result, runInfo := state.getHandler()(ctx, r, run, layer, repo)
 	if runInfo.NewPod {

@@ -51,3 +51,7 @@ func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle 
 func (c *MockClient) CheckGitBundle(namespace, name, ref, revision string) (bool, error) {
 	return false, nil
 }
+
+func (c *MockClient) GetGitBundle(namespace, name, ref, revision string) ([]byte, error) {
+	return nil, nil
+}
