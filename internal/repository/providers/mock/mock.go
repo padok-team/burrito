@@ -1,33 +1,19 @@
 package mock
 
 import (
+	"go/types"
 	"net/http"
-	"slices"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
 )
 
 type Mock struct {
 	Config types.Config
-}
-
-func IsAvailable(config types.Config, capabilities []string) bool {
-	allCapabilities := []string{types.Capabilities.Clone, types.Capabilities.Comment, types.Capabilities.Changes, types.Capabilities.Webhook}
-	if !config.EnableMock {
-		return false
-	}
-	for _, c := range capabilities {
-		if !slices.Contains(allCapabilities, c) {
-			return false
-		}
-	}
-	return true
 }
 
 func (m *Mock) Init() error {
