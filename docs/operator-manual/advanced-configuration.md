@@ -1,5 +1,8 @@
 # Advanced configuration
 
+Here are some important configuration options that can be set to customize Burrito's behavior.
+They can be set in the Helm chart [values](https://github.com/padok-team/burrito/blob/main/deploy/charts/burrito/values.yaml) or as environment variables.
+
 ## Controllers' configuration
 
 |              Environment variable              |                                 Description                                 |              Default               |
@@ -16,6 +19,8 @@
 |  `BURRITO_CONTROLLER_HEALTHPROBEBINDADDRESS`   |     address to bind the health probe server embedded in the controllers     |              `:8081`               |
 |    `BURRITO_CONTROLLER_METRICSBINDADDRESS`     |       address to bind the metrics server embedded in the controllers        |              `:8080`               |
 |   `BURRITO_CONTROLLER_KUBERNETESWEBHOOKPORT`   |   port used by the validating webhook server embedded in the controllers    |               `9443`               |
+|   `BURRITO_CONTROLLER_MAXCONCURRENTRECONCILES` |    number of parallel resource reconciliation performed by the contoller    |                `0`                 |
+|   `BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS` | maximum number for pods that run in parallel to perform plan/apply (0=inf)  |                `0`                 |
 
 ## Server's configuration
 

@@ -24,6 +24,7 @@ controller:
     failureGracePeriod: 15s
   terraformMaxRetries: 5
   maxConcurrentReconciles: 1
+  maxConcurrentRunnerPods: 0
   types: ["layer", "repository", "run", "pullrequest"]
   leaderElection:
     enabled: true
