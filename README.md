@@ -55,7 +55,8 @@ Former maintainers:
 
 ### Blogs and Presentations
 
-1. [Our burrito is a TACoS](https://cloud.theodo.com/en/blog/burrito-tacos)
+1. [Our burrito is a TACoS](https://cloud.theodo.com/en/blog/burrito-tacos) (2023)
+2. [What challenges did we solve with Burrito?](https://cloud.theodo.com/en/blog/what-challenges-did-we-solve-with-burrito) (2025)
 
 ## License
 
