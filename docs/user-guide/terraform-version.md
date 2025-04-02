@@ -42,7 +42,7 @@ spec:
 
 ## Use OpenTofu instead of Terraform
 
-To leverage OpenTofu sinply use the `opentofu` block in place of the `terraform` block described above:
+To leverage OpenTofu simply use the `opentofu` block in place of the `terraform` block described above:
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
