@@ -42,4 +42,20 @@ spec:
 
 ## Use OpenTofu instead of Terraform
 
-(coming soon)
+To leverage OpenTofu simply use the `opentofu` block in place of the `terraform` block described above:
+
+```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: random-pets-opentofu
+spec:
+  opentofu:
+    version: "~> 1.9.0"
+    enabled: true
+  path: "internal/e2e/testdata/terraform/random-pets"
+  branch: "main"
+  repository:
+    name: burrito
+    namespace: burrito
+```
