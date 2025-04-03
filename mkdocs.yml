@@ -41,6 +41,7 @@ nav:
   - user-guide/terraform-version.md
   - user-guide/private-modules.md
   - user-guide/additionnal-trigger-path.md
+  - user-guide/sync-windows.md
 - Contributing: contributing.md
 # - Reference:
 #   - reference/index.md

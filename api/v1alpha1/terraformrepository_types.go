@@ -37,8 +37,8 @@ type TerraformRepositorySpec struct {
 	RemediationStrategy RemediationStrategy           `json:"remediationStrategy,omitempty"`
 	OverrideRunnerSpec  OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
 	RunHistoryPolicy    RunHistoryPolicy              `json:"runHistoryPolicy,omitempty"`
+	SyncWindows         []SyncWindow                  `json:"syncWindows,omitempty"`
 }
-
 type TerraformRepositoryRepository struct {
 	Url        string `json:"url,omitempty"`
 	SecretName string `json:"secretName,omitempty"`
@@ -50,6 +50,22 @@ type TerraformRepositoryStatus struct {
 	Branches   []BranchState      `json:"branches,omitempty"`
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
+
+type SyncWindow struct {
+	// +kubebuilder:validation:Enum=allow;deny
+	Kind     SyncWindowKind `json:"kind,omitempty"`
+	Actions  []string       `json:"actions,omitempty"`
+	Schedule string         `json:"schedule,omitempty"`
+	Duration string         `json:"duration,omitempty"`
+	Layers   []string       `json:"layers,omitempty"`
+}
+
+type SyncWindowKind string
+
+const (
+	SyncWindowKindAllow SyncWindowKind = "allow"
+	SyncWindowKindDeny  SyncWindowKind = "deny"
+)
 
 // BranchState describes the sync state of a branch
 type BranchState struct {

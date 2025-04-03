@@ -91,8 +91,21 @@ var _ = BeforeSuite(func() {
 	Expect(k8sClient).NotTo(BeNil())
 })
 
-func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.TerraformLayer, error, error) {
-	result, reconcileError := reconciler.Reconcile(context.TODO(), reconcile.Request{
+func getReconcilerWithConfig(config *config.Config) *controller.Reconciler {
+	return &controller.Reconciler{
+		Client: k8sClient,
+		Clock:  &MockClock{},
+		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
+			Component: "burrito",
+		}),
+		Scheme:    scheme.Scheme,
+		Config:    config,
+		Datastore: datastore.NewMockClient(),
+	}
+}
+
+func getResult(name types.NamespacedName, r *controller.Reconciler) (reconcile.Result, *configv1alpha1.TerraformLayer, error, error) {
+	result, reconcileError := r.Reconcile(context.TODO(), reconcile.Request{
 		NamespacedName: name,
 	})
 	layer := &configv1alpha1.TerraformLayer{}
@@ -133,7 +146,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-1",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -160,7 +173,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-2",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -187,7 +200,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-3",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -213,7 +226,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-4",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -242,7 +255,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-5",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -271,7 +284,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-6",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -298,7 +311,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-7",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -319,7 +332,7 @@ var _ = Describe("Layer", func() {
 					Name:      "nominal-case-8",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -347,7 +360,7 @@ var _ = Describe("Layer", func() {
 				Name:      "error-case-1",
 				Namespace: "default",
 			}
-			result, layer, reconcileError, err = getResult(name)
+			result, layer, reconcileError, err = getResult(name, reconciler)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -368,7 +381,7 @@ var _ = Describe("Layer", func() {
 				Name:      "error-case-3",
 				Namespace: "default",
 			}
-			result, layer, reconcileError, err = getResult(name)
+			result, layer, reconcileError, err = getResult(name, reconciler)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -399,7 +412,7 @@ var _ = Describe("Layer", func() {
 				Name:      "error-case-4",
 				Namespace: "default",
 			}
-			result, layer, reconcileError, err = getResult(name)
+			result, layer, reconcileError, err = getResult(name, reconciler)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -420,7 +433,7 @@ var _ = Describe("Layer", func() {
 				Name:      "error-case-5",
 				Namespace: "default",
 			}
-			result, layer, reconcileError, err = getResult(name)
+			result, layer, reconcileError, err = getResult(name, reconciler)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -448,7 +461,7 @@ var _ = Describe("Layer", func() {
 					Name:      "merge-case-1",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -477,7 +490,7 @@ var _ = Describe("Layer", func() {
 					Name:      "webhook-issue-case-1",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should still exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -506,7 +519,7 @@ var _ = Describe("Layer", func() {
 					Name:      "non-existent-layer",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should not exists", func() {
 				Expect(err).To(HaveOccurred())
@@ -525,7 +538,7 @@ var _ = Describe("Layer", func() {
 					Name:      "non-existent-repository",
 					Namespace: "default",
 				}
-				result, layer, reconcileError, err = getResult(name)
+				result, layer, reconcileError, err = getResult(name, reconciler)
 			})
 			It("should exists", func() {
 				Expect(err).NotTo(HaveOccurred())
@@ -545,7 +558,7 @@ var _ = Describe("Layer", func() {
 				Name:      "cleanup-case-1",
 				Namespace: "cleanup",
 			}
-			result, layer, reconcileError, err = getResult(name)
+			result, layer, reconcileError, err = getResult(name, reconciler)
 		})
 		It("should still exists", func() {
 			Expect(err).NotTo(HaveOccurred())
@@ -558,6 +571,256 @@ var _ = Describe("Layer", func() {
 			err := k8sClient.List(context.TODO(), runs, client.InNamespace("cleanup"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(runs.Items)).To(Equal(5))
+		})
+	})
+	Describe("Sync Window Cases", func() {
+		Describe("When a TerraformLayer is in a deny window for apply action", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "sync-window-case-deny-apply-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in ApplyNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When a TerraformLayer is outside the allow window for apply action", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "sync-window-case-allow-apply-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in ApplyNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When a TerraformLayer is in a deny window for plan action", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "sync-window-case-deny-plan-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When a TerraformLayer is outside the allow window for plan action", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "sync-window-case-allow-plan-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When there is a deny sync window on apply action in the default controller config", Ordered, func() {
+			var defaultWindowConfig *config.Config
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				defaultWindowConfig = config.TestConfig()
+				defaultWindowConfig.Controller.DefaultSyncWindows = []configv1alpha1.SyncWindow{
+					{
+						Kind:     "deny",
+						Schedule: "* * * * *",
+						Duration: "1h",
+						Layers:   []string{"sync-window-case-default-1"},
+						Actions:  []string{"apply"},
+					},
+				}
+
+				defaultWindowReconciler := getReconcilerWithConfig(defaultWindowConfig)
+
+				name = types.NamespacedName{
+					Name:      "sync-window-case-default-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, defaultWindowReconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in ApplyNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When there is a deny sync window on plan action in the controller config", Ordered, func() {
+			var defaultWindowConfig *config.Config
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				defaultWindowConfig = config.TestConfig()
+				defaultWindowConfig.Controller.DefaultSyncWindows = []configv1alpha1.SyncWindow{
+					{
+						Kind:     "deny",
+						Schedule: "* * * * *",
+						Duration: "1h",
+						Layers:   []string{"sync-window-case-default-2"},
+						Actions:  []string{"plan"},
+					},
+				}
+
+				defaultWindowReconciler := getReconcilerWithConfig(defaultWindowConfig)
+
+				name = types.NamespacedName{
+					Name:      "sync-window-case-default-2",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, defaultWindowReconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should stay in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
 		})
 	})
 })
