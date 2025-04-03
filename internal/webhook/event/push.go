@@ -51,6 +51,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 	}
 
+	// TODO: Remove this loop once the repo controller implements the same behavior
 	for _, layer := range e.getAffectedLayers(layers.Items, affectedRepositories) {
 		ann := map[string]string{}
 		log.Printf("evaluating TerraformLayer %s for revision %s", layer.Name, e.Reference)
@@ -74,6 +75,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 	}
 
+	// TODO: Remove this loop once the repo controller implements the same behavior
 	for _, pr := range e.getAffectedPullRequests(prs.Items, affectedRepositories) {
 		ann := map[string]string{}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter

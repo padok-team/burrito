@@ -91,7 +91,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	result, branchStates := state.getHandler()(ctx, r, repository)
 	repository.Status.Branches = branchStates
 	if err := r.Status().Update(ctx, repository); err != nil {
-		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
+		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update repository status")
 		log.Errorf("failed to update repository status: %s", err)
 	}
 	log.Infof("finished reconciliation cycle for repository %s/%s", repository.Namespace, repository.Name)

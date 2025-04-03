@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,7 +60,14 @@ type PlanNeeded struct{}
 func (s *PlanNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
-		run := r.getRun(layer, repository, "plan")
+		// TODO: use relevant commit instead of last commit when repo controller will set it
+		revision, ok := layer.Annotations[annotations.LastBranchCommit]
+		if !ok {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last branch commit annotation, Plan run not created")
+			log.Errorf("layer %s has no last branch commit annotation, run not created", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		run := r.getRun(layer, revision, PlanAction)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Plan action")
@@ -81,7 +89,14 @@ func (s *ApplyNeeded) getHandler() Handler {
 			log.Infof("layer %s is in dry mode, no action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
-		run := r.getRun(layer, repository, "apply")
+		// TODO: use relevant commit instead of last commit when repo controller will set it
+		revision, ok := layer.Annotations[annotations.LastBranchCommit]
+		if !ok {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last branch commit annotation, Apply run not created")
+			log.Errorf("layer %s has no last branch commit annotation, run not created", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		run := r.getRun(layer, revision, ApplyAction)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action")
