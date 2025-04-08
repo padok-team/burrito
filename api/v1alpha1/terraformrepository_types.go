@@ -37,7 +37,7 @@ type TerraformRepositorySpec struct {
 	RemediationStrategy     RemediationStrategy           `json:"remediationStrategy,omitempty"`
 	OverrideRunnerSpec      OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
 	RunHistoryPolicy        RunHistoryPolicy              `json:"runHistoryPolicy,omitempty"`
-	MaxConcurrentRunnerPods int                           `json:"maxConcurrentRuns,omitempty"`
+	MaxConcurrentRunnerPods int                           `json:"maxConcurrentRunnerPods,omitempty"`
 	SyncWindows             []SyncWindow                  `json:"syncWindows,omitempty"`
 }
 type TerraformRepositoryRepository struct {
