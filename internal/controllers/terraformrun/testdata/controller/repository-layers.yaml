@@ -77,3 +77,60 @@ spec:
   terragrunt:
     enabled: true
     version: 0.45.4
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: parallel-case-1
+  namespace: default
+spec:
+  branch: main
+  path: parallel-case-one/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: parallel-case-2
+  namespace: default
+spec:
+  branch: main
+  path: parallel-case-two/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: parallel-case-3
+  namespace: default
+spec:
+  branch: main
+  path: parallel-case-three/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
