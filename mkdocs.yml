@@ -34,6 +34,7 @@ nav:
   - operator-manual/multi-tenant-architecture.md
   - operator-manual/datastore.md
   - operator-manual/provider-caching.md
+  - operator-manual/runner-scheduling.md
 - User Guide:
   - user-guide/index.md
   - user-guide/override-runner.md

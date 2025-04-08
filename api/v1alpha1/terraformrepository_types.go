@@ -30,14 +30,15 @@ type TerraformRepositorySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Repository          TerraformRepositoryRepository `json:"repository,omitempty"`
-	TerraformConfig     TerraformConfig               `json:"terraform,omitempty"`
-	TerragruntConfig    TerragruntConfig              `json:"terragrunt,omitempty"`
-	OpenTofuConfig      OpenTofuConfig                `json:"opentofu,omitempty"`
-	RemediationStrategy RemediationStrategy           `json:"remediationStrategy,omitempty"`
-	OverrideRunnerSpec  OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
-	RunHistoryPolicy    RunHistoryPolicy              `json:"runHistoryPolicy,omitempty"`
-	SyncWindows         []SyncWindow                  `json:"syncWindows,omitempty"`
+	Repository              TerraformRepositoryRepository `json:"repository,omitempty"`
+	TerraformConfig         TerraformConfig               `json:"terraform,omitempty"`
+	TerragruntConfig        TerragruntConfig              `json:"terragrunt,omitempty"`
+	OpenTofuConfig          OpenTofuConfig                `json:"opentofu,omitempty"`
+	RemediationStrategy     RemediationStrategy           `json:"remediationStrategy,omitempty"`
+	OverrideRunnerSpec      OverrideRunnerSpec            `json:"overrideRunnerSpec,omitempty"`
+	RunHistoryPolicy        RunHistoryPolicy              `json:"runHistoryPolicy,omitempty"`
+	MaxConcurrentRunnerPods int                           `json:"maxConcurrentRunnerPods,omitempty"`
+	SyncWindows             []SyncWindow                  `json:"syncWindows,omitempty"`
 }
 type TerraformRepositoryRepository struct {
 	Url        string `json:"url,omitempty"`

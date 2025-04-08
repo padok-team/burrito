@@ -11,7 +11,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type RunInfo struct {
@@ -79,6 +82,15 @@ func (s *Initial) getHandler() Handler {
 			log.Errorf("could not set lock on run %s for layer %s, requeuing resource: %s", run.Name, layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
 		}
+		maxConcurrentPodsReached, err := isMaxConcurrentRunnerPodsReached(ctx, r, repo)
+		if err != nil {
+			r.Recorder.Eventf(run, corev1.EventTypeWarning, "Run", "Could not check max concurrent pods: %s", err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, RunInfo{}
+		}
+		if maxConcurrentPodsReached {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Run", "Max concurrent pods reached. Requeuing resource...")
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, RunInfo{}
+		}
 		pod := r.getPod(run, layer, repo)
 		err = r.Client.Create(ctx, &pod)
 		if err != nil {
@@ -133,8 +145,18 @@ func (s *Retrying) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (ctrl.Result, RunInfo) {
 		log := log.WithContext(ctx)
 		runInfo := getRunInfo(run)
+		maxConcurrentPodsReached, err := isMaxConcurrentRunnerPodsReached(ctx, r, repo)
+		if err != nil {
+			r.Recorder.Eventf(run, corev1.EventTypeWarning, "Run", "Could not check max concurrent pods: %s", err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, runInfo
+		}
+		if maxConcurrentPodsReached {
+			r.Recorder.Event(run, corev1.EventTypeWarning, "Run", "Max concurrent pods reached. Requeuing resource...")
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, runInfo
+		}
+
 		pod := r.getPod(run, layer, repo)
-		err := r.Client.Create(ctx, &pod)
+		err = r.Client.Create(ctx, &pod)
 		if err != nil {
 			r.Recorder.Event(run, corev1.EventTypeWarning, "Run", "Could not create retry pod for run")
 			log.Errorf("failed to create retry pod for run %s: %s", run.Name, err)
@@ -187,4 +209,37 @@ func (s *Failed) getHandler() Handler {
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), ".")
 	return t[len(t)-1]
+}
+
+func isMaxConcurrentRunnerPodsReached(ctx context.Context, r *Reconciler, repo *configv1alpha1.TerraformRepository) (bool, error) {
+	// If a global parameter is set, use it, otherwise use the repository parameter
+	maxConcurrentRunnerPods := r.Config.Controller.MaxConcurrentRunnerPods
+	if repo.Spec.MaxConcurrentRunnerPods > 0 {
+		maxConcurrentRunnerPods = repo.Spec.MaxConcurrentRunnerPods
+	}
+	if maxConcurrentRunnerPods > 0 {
+		// count all running burrito pods to avoid exceeding the maximum number of concurrent runs
+		runningPods := &corev1.PodList{}
+		labelSelector := labels.NewSelector()
+		requirement, err := labels.NewRequirement("burrito/component", selection.Equals, []string{"runner"})
+		if err != nil {
+			log.Errorf("could not list running pods: %s", err)
+			return false, err
+		}
+		labelSelector = labelSelector.Add(*requirement)
+		err = r.Client.List(
+			ctx,
+			runningPods,
+			client.MatchingLabelsSelector{Selector: labelSelector},
+		)
+		if err != nil {
+			log.Errorf("could not list running pods: %s", err)
+			return false, err
+		}
+		if len(runningPods.Items) >= maxConcurrentRunnerPods {
+			log.Infof("max concurrent pods reached, requeuing resource")
+			return true, nil
+		}
+	}
+	return false, nil
 }

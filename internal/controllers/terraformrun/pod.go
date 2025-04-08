@@ -25,6 +25,7 @@ const (
 
 func getDefaultLabels(run *configv1alpha1.TerraformRun) map[string]string {
 	return map[string]string{
+		"burrito/component":  "runner",
 		"burrito/managed-by": run.Name,
 		"burrito/action":     string(run.Spec.Action),
 	}

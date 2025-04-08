@@ -33,6 +33,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconciler *controller.Reconciler
+var reconcilerMaxConcurrentPods *controller.Reconciler
 
 const testTime = "Sun May  8 11:21:53 UTC 2023"
 
@@ -81,12 +82,37 @@ var _ = BeforeSuite(func() {
 			Component: "burrito",
 		}),
 	}
+
+	// Create the controller with a max parallelism of 2
+	configMaxConcurrent := config.TestConfig()
+	configMaxConcurrent.Controller.MaxConcurrentRunnerPods = 2
+	reconcilerMaxConcurrentPods = &controller.Reconciler{
+		Client:       k8sClient,
+		Scheme:       scheme.Scheme,
+		Config:       configMaxConcurrent,
+		Clock:        &MockClock{},
+		Datastore:    datastore.NewMockClient(),
+		K8SLogClient: logClient,
+		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
+			Component: "burrito",
+		}),
+	}
+
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 })
 
 func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.TerraformRun, error, error) {
 	result, reconcileError := reconciler.Reconcile(context.TODO(), reconcile.Request{
+		NamespacedName: name,
+	})
+	run := &configv1alpha1.TerraformRun{}
+	err := k8sClient.Get(context.TODO(), name, run)
+	return result, run, reconcileError, err
+}
+
+func getResultCustomConfig(name types.NamespacedName, r *controller.Reconciler) (reconcile.Result, *configv1alpha1.TerraformRun, error, error) {
+	result, reconcileError := r.Reconcile(context.TODO(), reconcile.Request{
 		NamespacedName: name,
 	})
 	run := &configv1alpha1.TerraformRun{}
@@ -479,6 +505,95 @@ var _ = Describe("Run", func() {
 			})
 		})
 	})
+	Describe("Parallel case", func() {
+		var run1, run2, run3 *configv1alpha1.TerraformRun
+		var reconcileError1, reconcileError2, reconcileError3 error
+		var err1, err2, err3 error
+		Describe("When 3 layers are running with a maxConcurrentRunnerPods configuration set to 2", Ordered, func() {
+			BeforeAll(func() {
+				removeRunnerPods()
+
+				name1 := types.NamespacedName{
+					Name:      "parallel-case-1",
+					Namespace: "default",
+				}
+				_, run1, reconcileError1, err1 = getResultCustomConfig(name1, reconcilerMaxConcurrentPods)
+
+				name2 := types.NamespacedName{
+					Name:      "parallel-case-2",
+					Namespace: "default",
+				}
+				_, run2, reconcileError2, err2 = getResultCustomConfig(name2, reconcilerMaxConcurrentPods)
+
+				name3 := types.NamespacedName{
+					Name:      "parallel-case-3",
+					Namespace: "default",
+				}
+				_, run3, reconcileError3, err3 = getResultCustomConfig(name3, reconcilerMaxConcurrentPods)
+			})
+			It("should still exists", func() {
+				Expect(err1).NotTo(HaveOccurred())
+				Expect(err2).NotTo(HaveOccurred())
+				Expect(err3).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError1).NotTo(HaveOccurred())
+				Expect(reconcileError2).NotTo(HaveOccurred())
+				Expect(reconcileError3).NotTo(HaveOccurred())
+			})
+			It("should not have created only 2 runner pods", func() {
+				pods1, err1 := reconciler.GetLinkedPods(run1)
+				Expect(err1).NotTo(HaveOccurred())
+				pods2, err2 := reconciler.GetLinkedPods(run2)
+				Expect(err2).NotTo(HaveOccurred())
+				pods3, err3 := reconciler.GetLinkedPods(run3)
+				Expect(err3).NotTo(HaveOccurred())
+				Expect(len(pods1.Items) + len(pods2.Items) + len(pods3.Items)).To(Equal(2))
+			})
+		})
+		Describe("When 3 layers are running without a maxConcurrentRunnerPods configuration", Ordered, func() {
+			BeforeAll(func() {
+				removeRunnerPods()
+
+				name1 := types.NamespacedName{
+					Name:      "parallel-case-1",
+					Namespace: "default",
+				}
+				_, run1, reconcileError1, err1 = getResult(name1)
+
+				name2 := types.NamespacedName{
+					Name:      "parallel-case-2",
+					Namespace: "default",
+				}
+				_, run2, reconcileError2, err2 = getResult(name2)
+
+				name3 := types.NamespacedName{
+					Name:      "parallel-case-3",
+					Namespace: "default",
+				}
+				_, run3, reconcileError3, err3 = getResult(name3)
+			})
+			It("should still exists", func() {
+				Expect(err1).NotTo(HaveOccurred())
+				Expect(err2).NotTo(HaveOccurred())
+				Expect(err3).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError1).NotTo(HaveOccurred())
+				Expect(reconcileError2).NotTo(HaveOccurred())
+				Expect(reconcileError3).NotTo(HaveOccurred())
+			})
+			It("should not have created all 3 runner pods", func() {
+				pods1, err1 := reconciler.GetLinkedPods(run1)
+				Expect(err1).NotTo(HaveOccurred())
+				pods2, err2 := reconciler.GetLinkedPods(run2)
+				Expect(err2).NotTo(HaveOccurred())
+				pods3, err3 := reconciler.GetLinkedPods(run3)
+				Expect(err3).NotTo(HaveOccurred())
+				Expect(len(pods1.Items) + len(pods2.Items) + len(pods3.Items)).To(Equal(3))
+			})
+		})
+	})
 })
 
 var _ = AfterSuite(func() {
@@ -529,6 +644,28 @@ func TestGetMaxRetries(t *testing.T) {
 
 func intPtr(i int) *int {
 	return &i
+}
+
+func removeRunnerPods() {
+	// make sure that there are no runner pods
+	pods := &corev1.PodList{}
+	err := k8sClient.List(context.TODO(), pods, client.MatchingLabels{
+		"burrito/component": "runner",
+	})
+	Expect(err).NotTo(HaveOccurred())
+	for _, pod := range pods.Items {
+		err := k8sClient.Delete(context.TODO(), &pod)
+		Expect(err).NotTo(HaveOccurred())
+	}
+	// wait for the pods to be deleted
+	Eventually(func() int {
+		pods := &corev1.PodList{}
+		err := k8sClient.List(context.TODO(), pods, client.MatchingLabels{
+			"burrito/component": "runner",
+		})
+		Expect(err).NotTo(HaveOccurred())
+		return len(pods.Items)
+	}, 10*time.Second, 1*time.Second).Should(Equal(0))
 }
 
 func TestGetRunExponentialBackOffTime(t *testing.T) {

@@ -78,6 +78,7 @@ type ControllerConfig struct {
 	GitlabConfig            GitlabConfig                `mapstructure:"gitlabConfig"`
 	RunParallelism          int                         `mapstructure:"runParallelism"`
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
+	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
 }
 
 type GithubConfig struct {
@@ -231,6 +232,7 @@ func TestConfig() *Config {
 		Controller: ControllerConfig{
 			TerraformMaxRetries:     5,
 			MaxConcurrentReconciles: 1,
+			MaxConcurrentRunnerPods: 0,
 			Timers: ControllerTimers{
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,
