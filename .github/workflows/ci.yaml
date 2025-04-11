@@ -35,7 +35,7 @@ jobs:
           path: ./bin/
           key: binaries
       - name: Setup Golang
-        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
         with:
           go-version: "${{ env.GO_VERSION }}"
       - name: Install envtest
@@ -56,7 +56,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Golang
-        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
         with:
           go-version: "${{ env.GO_VERSION }}"
       - name: Generate manifests
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5
+      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
         with:
           go-version: "${{ env.GO_VERSION }}"
           cache: false
