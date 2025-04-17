@@ -218,25 +218,38 @@ func isMaxConcurrentRunnerPodsReached(ctx context.Context, r *Reconciler, repo *
 		maxConcurrentRunnerPods = repo.Spec.MaxConcurrentRunnerPods
 	}
 	if maxConcurrentRunnerPods > 0 {
-		// count all running burrito pods to avoid exceeding the maximum number of concurrent runs
-		runningPods := &corev1.PodList{}
+		// count all running and pending burrito pods to avoid exceeding the maximum number of concurrent runs
 		labelSelector := labels.NewSelector()
 		requirement, err := labels.NewRequirement("burrito/component", selection.Equals, []string{"runner"})
 		if err != nil {
-			log.Errorf("could not list running pods: %s", err)
+			log.Errorf("could not list runner pods: %s", err)
 			return false, err
 		}
 		labelSelector = labelSelector.Add(*requirement)
-		err = r.Client.List(
-			ctx,
-			runningPods,
+
+		runningPods := &corev1.PodList{}
+		pendingPods := &corev1.PodList{}
+
+		err = r.Client.List(ctx, runningPods,
 			client.MatchingLabelsSelector{Selector: labelSelector},
+			client.MatchingFields{"status.phase": "Running"},
 		)
 		if err != nil {
 			log.Errorf("could not list running pods: %s", err)
 			return false, err
 		}
-		if len(runningPods.Items) >= maxConcurrentRunnerPods {
+
+		err = r.Client.List(ctx, pendingPods,
+			client.MatchingLabelsSelector{Selector: labelSelector},
+			client.MatchingFields{"status.phase": "Pending"},
+		)
+		if err != nil {
+			log.Errorf("could not list pending pods: %s", err)
+			return false, err
+		}
+
+		totalPods := len(runningPods.Items) + len(pendingPods.Items)
+		if totalPods >= maxConcurrentRunnerPods {
 			log.Infof("max concurrent pods reached, requeuing resource")
 			return true, nil
 		}
