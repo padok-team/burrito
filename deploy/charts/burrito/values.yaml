@@ -31,7 +31,7 @@ config:
       # -- Maximum number of concurrent reconciles for the controller, increse this value if you have a lot of resources to reconcile
       maxConcurrentReconciles: 1
       # -- Maximum number of concurrent runners pods. 0 means no limit
-      MaxConcurrentRunnerPods: 0
+      maxConcurrentRunnerPods: 0
       # -- Maximum number of retries for Terraform operations (plan, apply...)
       terraformMaxRetries: 3
       # TODO: enable repository controller by default
