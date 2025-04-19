@@ -44,7 +44,7 @@ func NewCredentialStore(client client.Client, ttl time.Duration) *CredentialStor
 }
 
 func (s *CredentialStore) GetAllCredentials() ([]*SharedCredential, []*RepositoryCredential) {
-	if time.Since(s.lastUpdate) < s.TTL {
+	if time.Since(s.lastUpdate) >= s.TTL {
 		err := s.updateCredentials()
 		if err != nil {
 			log.Errorf("Failed to update credentials: %v", err)
@@ -56,6 +56,7 @@ func (s *CredentialStore) GetAllCredentials() ([]*SharedCredential, []*Repositor
 func (s *CredentialStore) updateCredentials() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	// Skip if the last update was less than the TTL
 	if time.Since(s.lastUpdate) < s.TTL {
 		return nil
 	}
@@ -97,7 +98,7 @@ func (s *CredentialStore) updateCredentials() error {
 }
 
 func (s *CredentialStore) GetCredentials(ctx context.Context, repository *configv1alpha1.TerraformRepository) (*Credential, error) {
-	if time.Since(s.lastUpdate) < s.TTL {
+	if time.Since(s.lastUpdate) >= s.TTL {
 		err := s.updateCredentials()
 		if err != nil {
 			log.Errorf("Failed to update credentials: %v", err)
