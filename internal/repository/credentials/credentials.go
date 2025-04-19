@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -60,6 +60,7 @@ func (s *CredentialStore) updateCredentials() error {
 	if time.Since(s.lastUpdate) < s.TTL {
 		return nil
 	}
+
 	sharedSecrets := &corev1.SecretList{}
 	err := s.List(context.Background(), sharedSecrets, client.MatchingFields{"type": SharedCredentialsType})
 	if err != nil {
@@ -75,6 +76,7 @@ func (s *CredentialStore) updateCredentials() error {
 		}
 		sharedCredentials = append(sharedCredentials, tmp)
 	}
+
 	repositorySecrets := &corev1.SecretList{}
 	err = s.List(context.Background(), repositorySecrets, client.MatchingFields{"type": CredentialsType})
 	if err != nil {
@@ -90,6 +92,7 @@ func (s *CredentialStore) updateCredentials() error {
 		}
 		repositoryCredentials = append(repositoryCredentials, tmp)
 	}
+
 	s.repositoryCredentials = repositoryCredentials
 	s.sharedCredentials = sharedCredentials
 	s.lastUpdate = time.Now()
@@ -97,6 +100,8 @@ func (s *CredentialStore) updateCredentials() error {
 	return nil
 }
 
+// Returns the credentials for a given repository. If a specific repository credential is found, it will be returned.
+// If not, the most specific shared credential that matches the repository will be returned.
 func (s *CredentialStore) GetCredentials(ctx context.Context, repository *configv1alpha1.TerraformRepository) (*Credential, error) {
 	if time.Since(s.lastUpdate) >= s.TTL {
 		err := s.updateCredentials()
@@ -115,6 +120,7 @@ func (s *CredentialStore) GetCredentials(ctx context.Context, repository *config
 		matches := tmp.Matches(repository)
 		if isAllowed && matches {
 			if sharedCredential != nil {
+				// Check if the current shared credential (`tmp`) is more specific than the previous one (`sharedCredential`)
 				if len(sharedCredential.Credential.URL) < len(tmp.Credential.URL) {
 					sharedCredential = tmp
 				}
@@ -196,12 +202,7 @@ func (t *SharedCredential) IsAllowed(repository *configv1alpha1.TerraformReposit
 	if len(t.AllowedTenants) == 0 {
 		return true
 	}
-	for _, allowedTenant := range t.AllowedTenants {
-		if allowedTenant == repository.Namespace {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(t.AllowedTenants, repository.Namespace)
 }
 
 func (t *SharedCredential) Matches(repository *configv1alpha1.TerraformRepository) bool {
