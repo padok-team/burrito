@@ -265,6 +265,7 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 	defaultSpec.Affinity = overrideSpec.Affinity
 	defaultSpec.NodeSelector = overrideSpec.NodeSelector
 	defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, overrideSpec.Env...)
+	defaultSpec.InitContainers = overrideSpec.InitContainers
 	defaultSpec.Volumes = append(defaultSpec.Volumes, overrideSpec.Volumes...)
 	defaultSpec.Containers[0].VolumeMounts = append(defaultSpec.Containers[0].VolumeMounts, overrideSpec.VolumeMounts...)
 	defaultSpec.Containers[0].Resources = overrideSpec.Resources

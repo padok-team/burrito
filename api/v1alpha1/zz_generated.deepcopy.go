@@ -181,6 +181,11 @@ func (in *OverrideRunnerSpec) DeepCopyInto(out *OverrideRunnerSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.Env != nil {
 		in, out := &in.Env, &out.Env
@@ -211,6 +216,13 @@ func (in *OverrideRunnerSpec) DeepCopyInto(out *OverrideRunnerSpec) {
 		}
 	}
 	in.Metadata.DeepCopyInto(&out.Metadata)
+	if in.InitContainers != nil {
+		in, out := &in.InitContainers, &out.InitContainers
+		*out = make([]v1.Container, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.ExtraInitArgs != nil {
 		in, out := &in.ExtraInitArgs, &out.ExtraInitArgs
 		*out = make(ExtraArgs, len(*in))
