@@ -17,6 +17,7 @@ Available overrides are:
 |       `Affinity`       |
 |   `ImagePullSecrets`   |
 |        `Image`         |
+|    `InitContainers`    |
 |     `Tolerations`      |
 |     `NodeSelector`     |
 |  `ServiceAccountName`  |

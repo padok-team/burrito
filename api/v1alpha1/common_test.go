@@ -2243,3 +2243,217 @@ func TestGetHistoryPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestMergeInitContainers(t *testing.T) {
+	tt := []struct {
+		name            string
+		repoContainers  []corev1.Container
+		layerContainers []corev1.Container
+		expected        []corev1.Container
+	}{
+		{
+			"EmptyContainers",
+			[]corev1.Container{},
+			[]corev1.Container{},
+			[]corev1.Container{},
+		},
+		{
+			"OnlyRepositoryContainers",
+			[]corev1.Container{
+				{
+					Name:    "repo-container",
+					Image:   "repo-image:latest",
+					Command: []string{"echo", "from-repo"},
+				},
+			},
+			[]corev1.Container{},
+			[]corev1.Container{
+				{
+					Name:    "repo-container",
+					Image:   "repo-image:latest",
+					Command: []string{"echo", "from-repo"},
+				},
+			},
+		},
+		{
+			"OnlyLayerContainers",
+			[]corev1.Container{},
+			[]corev1.Container{
+				{
+					Name:    "layer-container",
+					Image:   "layer-image:latest",
+					Command: []string{"echo", "from-layer"},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "layer-container",
+					Image:   "layer-image:latest",
+					Command: []string{"echo", "from-layer"},
+				},
+			},
+		},
+		{
+			"MergeDistinctContainers",
+			[]corev1.Container{
+				{
+					Name:    "repo-container",
+					Image:   "repo-image:latest",
+					Command: []string{"echo", "from-repo"},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "layer-container",
+					Image:   "layer-image:latest",
+					Command: []string{"echo", "from-layer"},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "repo-container",
+					Image:   "repo-image:latest",
+					Command: []string{"echo", "from-repo"},
+				},
+				{
+					Name:    "layer-container",
+					Image:   "layer-image:latest",
+					Command: []string{"echo", "from-layer"},
+				},
+			},
+		},
+		{
+			"OverrideRepositoryContainerWithLayer",
+			[]corev1.Container{
+				{
+					Name:    "common-container",
+					Image:   "repo-image:latest",
+					Command: []string{"echo", "from-repo"},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "common-container",
+					Image:   "layer-image:latest",
+					Command: []string{"echo", "from-layer"},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "common-container",
+					Image:   "layer-image:latest",
+					Command: []string{"echo", "from-layer"},
+				},
+			},
+		},
+		{
+			"ComplexMergeWithOverrideAndDistinct",
+			[]corev1.Container{
+				{
+					Name:    "repo-only",
+					Image:   "repo-image:1.0",
+					Command: []string{"echo", "repo-only"},
+				},
+				{
+					Name:    "common-container",
+					Image:   "repo-image:2.0",
+					Command: []string{"echo", "from-repo"},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "REPO_VAR",
+							Value: "repo_value",
+						},
+					},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "layer-only",
+					Image:   "layer-image:1.0",
+					Command: []string{"echo", "layer-only"},
+				},
+				{
+					Name:    "common-container",
+					Image:   "layer-image:2.0",
+					Command: []string{"echo", "from-layer"},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "LAYER_VAR",
+							Value: "layer_value",
+						},
+					},
+				},
+			},
+			[]corev1.Container{
+				{
+					Name:    "repo-only",
+					Image:   "repo-image:1.0",
+					Command: []string{"echo", "repo-only"},
+				},
+				{
+					Name:    "common-container",
+					Image:   "layer-image:2.0",
+					Command: []string{"echo", "from-layer"},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "LAYER_VAR",
+							Value: "layer_value",
+						},
+					},
+				},
+				{
+					Name:    "layer-only",
+					Image:   "layer-image:1.0",
+					Command: []string{"echo", "layer-only"},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.MergeInitContainers(tc.repoContainers, tc.layerContainers)
+
+			// Check if the result has the expected number of containers
+			if len(result) != len(tc.expected) {
+				t.Errorf("expected %d containers but got %d", len(tc.expected), len(result))
+				return
+			}
+
+			// Create a map of expected containers by name for easier lookup
+			expectedMap := make(map[string]corev1.Container)
+			for _, c := range tc.expected {
+				expectedMap[c.Name] = c
+			}
+
+			// Check each result container against the expected one
+			for _, resultContainer := range result {
+				expectedContainer, exists := expectedMap[resultContainer.Name]
+				if !exists {
+					t.Errorf("unexpected container in result: %s", resultContainer.Name)
+					continue
+				}
+
+				// Check important fields
+				if resultContainer.Image != expectedContainer.Image {
+					t.Errorf("container %s: expected image %s but got %s",
+						resultContainer.Name, expectedContainer.Image, resultContainer.Image)
+				}
+
+				// Compare commands
+				if !reflect.DeepEqual(resultContainer.Command, expectedContainer.Command) {
+					t.Errorf("container %s: commands don't match: expected %v but got %v",
+						resultContainer.Name, expectedContainer.Command, resultContainer.Command)
+				}
+
+				// Compare environment variables if present
+				if len(expectedContainer.Env) > 0 || len(resultContainer.Env) > 0 {
+					if !reflect.DeepEqual(resultContainer.Env, expectedContainer.Env) {
+						t.Errorf("container %s: environment variables don't match: expected %v but got %v",
+							resultContainer.Name, expectedContainer.Env, resultContainer.Env)
+					}
+				}
+			}
+		})
+	}
+}

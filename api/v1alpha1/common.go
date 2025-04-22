@@ -25,6 +25,7 @@ type OverrideRunnerSpec struct {
 	Volumes            []corev1.Volume               `json:"volumes,omitempty"`
 	VolumeMounts       []corev1.VolumeMount          `json:"volumeMounts,omitempty"`
 	Metadata           MetadataOverride              `json:"metadata,omitempty"`
+	InitContainers     []corev1.Container            `json:"initContainers,omitempty"`
 	ExtraInitArgs      ExtraArgs                     `json:"extraInitArgs,omitempty"`
 	ExtraPlanArgs      ExtraArgs                     `json:"extraPlanArgs,omitempty"`
 	ExtraApplyArgs     ExtraArgs                     `json:"extraApplyArgs,omitempty"`
@@ -112,6 +113,7 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 		ImagePullPolicy:    chooseImagePullPolicy(repository.Spec.OverrideRunnerSpec.ImagePullPolicy, layer.Spec.OverrideRunnerSpec.ImagePullPolicy),
 		ServiceAccountName: chooseString(repository.Spec.OverrideRunnerSpec.ServiceAccountName, layer.Spec.OverrideRunnerSpec.ServiceAccountName),
 		ImagePullSecrets:   mergeImagePullSecrets(repository.Spec.OverrideRunnerSpec.ImagePullSecrets, layer.Spec.OverrideRunnerSpec.ImagePullSecrets),
+		InitContainers:     MergeInitContainers(repository.Spec.OverrideRunnerSpec.InitContainers, layer.Spec.OverrideRunnerSpec.InitContainers),
 		ExtraInitArgs:      overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraInitArgs, layer.Spec.OverrideRunnerSpec.ExtraInitArgs),
 		ExtraPlanArgs:      overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraPlanArgs, layer.Spec.OverrideRunnerSpec.ExtraPlanArgs),
 		ExtraApplyArgs:     overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraApplyArgs, layer.Spec.OverrideRunnerSpec.ExtraApplyArgs),
@@ -329,5 +331,22 @@ func overrideExtraArgs(a, b ExtraArgs) ExtraArgs {
 		result = a
 	}
 
+	return result
+}
+
+func MergeInitContainers(a, b []corev1.Container) []corev1.Container {
+	result := []corev1.Container{}
+	tempMap := map[string]corev1.Container{}
+
+	for _, elt := range a {
+		tempMap[elt.Name] = elt
+	}
+	for _, elt := range b {
+		tempMap[elt.Name] = elt
+	}
+
+	for _, v := range tempMap {
+		result = append(result, v)
+	}
 	return result
 }
