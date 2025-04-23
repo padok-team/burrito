@@ -212,44 +212,36 @@ func getStateString(state State) string {
 }
 
 func isMaxConcurrentRunnerPodsReached(ctx context.Context, r *Reconciler, repo *configv1alpha1.TerraformRepository) (bool, error) {
-	// If a global parameter is set, use it, otherwise use the repository parameter
 	maxConcurrentRunnerPods := r.Config.Controller.MaxConcurrentRunnerPods
 	if repo.Spec.MaxConcurrentRunnerPods > 0 {
 		maxConcurrentRunnerPods = repo.Spec.MaxConcurrentRunnerPods
 	}
 	if maxConcurrentRunnerPods > 0 {
-		// count all running and pending burrito pods to avoid exceeding the maximum number of concurrent runs
 		labelSelector := labels.NewSelector()
 		requirement, err := labels.NewRequirement("burrito/component", selection.Equals, []string{"runner"})
 		if err != nil {
-			log.Errorf("could not list runner pods: %s", err)
+			log.Errorf("could not create label requirement for runner pods list: %s", err)
 			return false, err
 		}
 		labelSelector = labelSelector.Add(*requirement)
 
-		runningPods := &corev1.PodList{}
-		pendingPods := &corev1.PodList{}
-
-		err = r.Client.List(ctx, runningPods,
-			client.MatchingLabelsSelector{Selector: labelSelector},
-			client.MatchingFields{"status.phase": "Running"},
-		)
+		allPods := &corev1.PodList{}
+		err = r.Client.List(ctx, allPods, &client.ListOptions{
+			LabelSelector: labelSelector,
+		})
 		if err != nil {
-			log.Errorf("could not list running pods: %s", err)
+			log.Errorf("could not list runner pods: %s", err)
 			return false, err
 		}
 
-		err = r.Client.List(ctx, pendingPods,
-			client.MatchingLabelsSelector{Selector: labelSelector},
-			client.MatchingFields{"status.phase": "Pending"},
-		)
-		if err != nil {
-			log.Errorf("could not list pending pods: %s", err)
-			return false, err
+		activeCount := 0
+		for _, pod := range allPods.Items {
+			if pod.Status.Phase == corev1.PodRunning || pod.Status.Phase == corev1.PodPending {
+				activeCount++
+			}
 		}
 
-		totalPods := len(runningPods.Items) + len(pendingPods.Items)
-		if totalPods >= maxConcurrentRunnerPods {
+		if activeCount >= maxConcurrentRunnerPods {
 			log.Infof("max concurrent pods reached, requeuing resource")
 			return true, nil
 		}
