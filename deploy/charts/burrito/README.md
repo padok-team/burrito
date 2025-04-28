@@ -77,6 +77,7 @@ A Helm chart for handling a complete burrito deployment
 | global.service | object | `{"enabled":true}` | Global service configuration |
 | global.service.enabled | bool | `true` | Enable/Disable service creation for Burrito components |
 | global.serviceAccount.metadata | object | `{"annotations":{},"labels":{}}` | Global metadata configuration for service accounts used by Burrito components |
+| global.sshKnownHosts | string | See values.yml | List of known SSH keys |
 | hermitcrab.deployment.affinity | object | `{}` | Hermitcrab affinity |
 | hermitcrab.deployment.env | list | `[{"name":"SERVER_TLS_CERT_FILE","value":"/etc/hermitcrab/tls/tls.crt"},{"name":"SERVER_TLS_PRIVATE_KEY_FILE","value":"/etc/hermitcrab/tls/tls.key"}]` | Hermitcrab environment variables |
 | hermitcrab.deployment.env[0].value | string | `"/etc/hermitcrab/tls/tls.crt"` | Path to the Hermitcrab TLS certificate |

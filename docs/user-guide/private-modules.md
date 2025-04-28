@@ -98,7 +98,7 @@ stringSata:
 ```
 
 !!! info
-    You can update the Kubernetes ConfigmMap `burrito-ssh-known-hosts` to add others known hosts.
+    You can update the Kubernetes ConfigmMap `burrito-ssh-known-hosts` to add others known hosts. See [Manage SSH known hosts](./ssh-known-hosts.md).
 
 ### 2. Mount this Secret in your runner spec
 
