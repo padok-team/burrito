@@ -42,6 +42,7 @@ nav:
   - user-guide/terraform-version.md
   - user-guide/private-modules.md
   - user-guide/additionnal-trigger-path.md
+  - user-guide/ssh-known-hosts.md
   - user-guide/sync-windows.md
 - Contributing: contributing.md
 # - Reference:
