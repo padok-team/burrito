@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/bradleyfalzon/ghinstallation/v2 v2.15.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/google/go-github/v68 v68.0.0
+	github.com/google/go-github/v69 v69.2.0
 	github.com/gruntwork-io/go-commons v0.17.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.23.0
