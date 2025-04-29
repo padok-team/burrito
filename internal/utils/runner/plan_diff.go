@@ -21,6 +21,10 @@ func GetDiff(plan *tfjson.Plan) (bool, string) {
 		if res.Change.Actions.Update() {
 			update++
 		}
+		if res.Change.Actions.Replace() {
+			create++
+			delete++
+		}
 	}
 	diff := false
 	if create+delete+update > 0 {
