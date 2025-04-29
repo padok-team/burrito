@@ -37,3 +37,42 @@ The Datastore relies on TokenReview and mounted volumes for authorization. We re
 ## Object expiration
 
 For now the datastore doesn't delete any object it puts into the storage backend. This is a feature that will be implemented in the future.
+
+## Private S3 endpoint
+
+You can use a private endpoint for S3, like Ceph or Minio. To do so, you'll need to create a secret:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s3-secrets
+  namespace: <datastoreNamespace>
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: xxx
+  AWS_SECRET_ACCESS_KEY: xxx
+  AWS_ENDPOINT_URL_S3: https://s3.domain.com
+  AWS_REGION: yourRegion
+```
+
+where `<datastoreNamespace>` is the namespace on which datastore is installed (`burrito-system` by default)
+
+In your Helm chart values, you'll also need to tell datastore to use this secret as environment variables:
+
+```yaml
+config:
+  burrito:
+    datastore:
+      storage:
+        mock: false
+        s3:
+          bucket: <bucketName>
+          usePathStyle: true
+
+datastore:
+  deployment:
+    envFrom:
+      - secretRef:
+          name: s3-secrets
+```
