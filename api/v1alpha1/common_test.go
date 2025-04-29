@@ -1995,6 +1995,84 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"SecurityContextOnlyInRepository",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: &[]bool{true}[0],
+							RunAsUser:    &[]int64{1000}[0],
+							RunAsGroup:   &[]int64{1000}[0],
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: &[]bool{true}[0],
+					RunAsUser:    &[]int64{1000}[0],
+					RunAsGroup:   &[]int64{1000}[0],
+				},
+			},
+		},
+		{
+			"SecurityContextOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: &[]bool{true}[0],
+							RunAsUser:    &[]int64{2000}[0],
+							RunAsGroup:   &[]int64{2000}[0],
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: &[]bool{true}[0],
+					RunAsUser:    &[]int64{2000}[0],
+					RunAsGroup:   &[]int64{2000}[0],
+				},
+			},
+		},
+		{
+			"SecurityContextInBoth",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: &[]bool{true}[0],
+							RunAsUser:    &[]int64{1000}[0],
+							RunAsGroup:   &[]int64{1000}[0],
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						SecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: &[]bool{true}[0],
+							RunAsUser:    &[]int64{2000}[0],
+							RunAsGroup:   &[]int64{2000}[0],
+							FSGroup:      &[]int64{3000}[0],
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				SecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: &[]bool{true}[0],
+					RunAsUser:    &[]int64{2000}[0],
+					RunAsGroup:   &[]int64{2000}[0],
+					FSGroup:      &[]int64{3000}[0],
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -2010,7 +2088,7 @@ func TestOverrideRunnerSpec(t *testing.T) {
 					t.Errorf("different tolerations key: got %s expected %s", result.Tolerations[i].Key, tol.Key)
 				}
 				if tol.Value != result.Tolerations[i].Value {
-					t.Errorf("different tolerations value: got %s expected %s", result.Tolerations[i].Value, tol.Value)
+					t.Errorf("differenttolerations value: got %s expected %s", result.Tolerations[i].Value, tol.Value)
 				}
 				if tol.Effect != result.Tolerations[i].Effect {
 					t.Errorf("different tolerations effect: got %s expected %s", result.Tolerations[i].Effect, tol.Effect)
@@ -2168,6 +2246,31 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			// Check Affinity
 			if !reflect.DeepEqual(result.Affinity, tc.expectedSpec.Affinity) {
 				t.Errorf("different affinity: got %v expected %v", result.Affinity, tc.expectedSpec.Affinity)
+			}
+
+			// Check SecurityContext
+			if (result.SecurityContext == nil && tc.expectedSpec.SecurityContext != nil) ||
+				(result.SecurityContext != nil && tc.expectedSpec.SecurityContext == nil) {
+				t.Errorf("SecurityContext mismatch: one is nil and the other is not")
+			} else if result.SecurityContext != nil && tc.expectedSpec.SecurityContext != nil {
+				// Check the most common SecurityContext fields
+				if *result.SecurityContext.RunAsNonRoot != *tc.expectedSpec.SecurityContext.RunAsNonRoot {
+					t.Errorf("different RunAsNonRoot: got %v expected %v", *result.SecurityContext.RunAsNonRoot, *tc.expectedSpec.SecurityContext.RunAsNonRoot)
+				}
+				if *result.SecurityContext.RunAsUser != *tc.expectedSpec.SecurityContext.RunAsUser {
+					t.Errorf("different RunAsUser: got %v expected %v", *result.SecurityContext.RunAsUser, *tc.expectedSpec.SecurityContext.RunAsUser)
+				}
+				if *result.SecurityContext.RunAsGroup != *tc.expectedSpec.SecurityContext.RunAsGroup {
+					t.Errorf("different RunAsGroup: got %v expected %v", *result.SecurityContext.RunAsGroup, *tc.expectedSpec.SecurityContext.RunAsGroup)
+				}
+				// Check FSGroup if it exists in the expected security context
+				if tc.expectedSpec.SecurityContext.FSGroup != nil {
+					if result.SecurityContext.FSGroup == nil {
+						t.Errorf("FSGroup is missing in result but exists in expected")
+					} else if *result.SecurityContext.FSGroup != *tc.expectedSpec.SecurityContext.FSGroup {
+						t.Errorf("different FSGroup: got %v expected %v", *result.SecurityContext.FSGroup, *tc.expectedSpec.SecurityContext.FSGroup)
+					}
+				}
 			}
 		})
 	}

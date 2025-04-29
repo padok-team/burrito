@@ -20,6 +20,7 @@ type OverrideRunnerSpec struct {
 	Affinity           *corev1.Affinity              `json:"affinity,omitempty"`
 	ServiceAccountName string                        `json:"serviceAccountName,omitempty"`
 	Resources          corev1.ResourceRequirements   `json:"resources,omitempty"`
+	SecurityContext    *corev1.PodSecurityContext    `json:"securityContext,omitempty"`
 	Env                []corev1.EnvVar               `json:"env,omitempty"`
 	EnvFrom            []corev1.EnvFromSource        `json:"envFrom,omitempty"`
 	Volumes            []corev1.Volume               `json:"volumes,omitempty"`
@@ -97,9 +98,10 @@ func GetTerragruntVersion(repository *TerraformRepository, layer *TerraformLayer
 
 func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLayer) OverrideRunnerSpec {
 	return OverrideRunnerSpec{
-		Tolerations:  overrideTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
-		Affinity:     overrideAffinity(repository.Spec.OverrideRunnerSpec.Affinity, layer.Spec.OverrideRunnerSpec.Affinity),
-		NodeSelector: mergeMaps(repository.Spec.OverrideRunnerSpec.NodeSelector, layer.Spec.OverrideRunnerSpec.NodeSelector),
+		Tolerations:     overrideTolerations(repository.Spec.OverrideRunnerSpec.Tolerations, layer.Spec.OverrideRunnerSpec.Tolerations),
+		Affinity:        overrideAffinity(repository.Spec.OverrideRunnerSpec.Affinity, layer.Spec.OverrideRunnerSpec.Affinity),
+		SecurityContext: overrideSecurityContext(repository.Spec.OverrideRunnerSpec.SecurityContext, layer.Spec.OverrideRunnerSpec.SecurityContext),
+		NodeSelector:    mergeMaps(repository.Spec.OverrideRunnerSpec.NodeSelector, layer.Spec.OverrideRunnerSpec.NodeSelector),
 		Metadata: MetadataOverride{
 			Annotations: mergeMaps(repository.Spec.OverrideRunnerSpec.Metadata.Annotations, layer.Spec.OverrideRunnerSpec.Metadata.Annotations),
 			Labels:      mergeMaps(repository.Spec.OverrideRunnerSpec.Metadata.Labels, layer.Spec.OverrideRunnerSpec.Metadata.Labels),
@@ -349,4 +351,11 @@ func MergeInitContainers(a, b []corev1.Container) []corev1.Container {
 		result = append(result, v)
 	}
 	return result
+}
+
+func overrideSecurityContext(repoSecurityContext, layerSecurityContext *corev1.PodSecurityContext) *corev1.PodSecurityContext {
+	if layerSecurityContext != nil {
+		return layerSecurityContext
+	}
+	return repoSecurityContext
 }
