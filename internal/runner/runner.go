@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
-	"github.com/go-git/go-git/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
@@ -26,6 +26,7 @@ type Runner struct {
 	Layer      *configv1alpha1.TerraformLayer
 	Run        *configv1alpha1.TerraformRun
 	Repository *configv1alpha1.TerraformRepository
+	repoDir    string
 	workingDir string
 }
 
@@ -83,7 +84,8 @@ func (r *Runner) Init() error {
 		return err
 	}
 
-	r.workingDir = filepath.Join(r.config.Runner.RepositoryPath, r.Layer.Spec.Path)
+	r.repoDir = filepath.Join(r.config.Runner.RepositoryPath, "content")
+	r.workingDir = filepath.Join(r.repoDir, r.Layer.Spec.Path)
 
 	err = r.cloneGitBundle()
 	if err != nil {
@@ -176,12 +178,10 @@ func (r *Runner) cloneGitBundle() error {
 		return err
 	}
 
-	cloneOptions := &git.CloneOptions{
-		URL: bundlePath,
-	}
-	_, err = git.PlainClone(r.config.Runner.RepositoryPath, false, cloneOptions)
+	cmd := exec.Command("git", "clone", bundlePath, r.repoDir, "--branch", r.Layer.Spec.Branch)
+	err = cmd.Run()
 	if err != nil {
-		log.Errorf("error opening git bundle: %s", err)
+		log.Errorf("error cloning repository: %s", err)
 		return err
 	}
 
