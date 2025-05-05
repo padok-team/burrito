@@ -46,10 +46,12 @@ spec:
           imagePullPolicy: {{ .deployment.image.pullPolicy }}
           ports:
             {{- toYaml .deployment.ports | nindent 12 }}
+          {{- if eq .deployment.mode "Release" }}
           livenessProbe:
             {{- toYaml .deployment.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .deployment.readinessProbe | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .deployment.resources | nindent 12 }}
           env:

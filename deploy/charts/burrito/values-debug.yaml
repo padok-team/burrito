@@ -1,0 +1,32 @@
+config:
+  burrito:
+    runner:
+      image:
+        repository: burrito
+        tag: DEV_TAG
+        pullPolicy: Never
+    datastore:
+      storage:
+        mock: true
+global:
+  deployment:
+    image:
+      repository: burrito
+      tag: DEV_TAG
+      pullPolicy: Never
+tenants:
+  - namespace:
+      create: true
+      name: "burrito-project"
+
+# controllers:
+#   deployment:
+#     mode: Debug
+#     command: ["/usr/local/bin/dlv"]
+#     args: ["--listen=0.0.0.0:2345", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "controllers", "start"]
+
+# datastore:
+#   deployment:
+#     mode: Debug
+#     command: ["/usr/local/bin/dlv"]
+#     args: ["--listen=0.0.0.0:2347", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "datastore", "start"]

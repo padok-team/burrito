@@ -109,17 +109,35 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 NEW_VERSION := $(shell date +%s)
 
+# Common function for helm upgrades
+define upgrade-helm-common
+	helm upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/$(1) -n burrito-system --create-namespace burrito-system deploy/charts/burrito
+endef
+
+# Common function for kind upgrades
+define upgrade-kind-common
+	docker buildx build --tag burrito:$(NEW_VERSION) --build-arg VERSION=${NEW_VERSION} $(2) .
+	kind load docker-image burrito:$(NEW_VERSION)
+	yq e '.global.deployment.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/$(1)
+	yq e '.config.burrito.runner.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/$(1)
+	$(call upgrade-helm-common,$(1))
+endef
+
 .PHONY: upgrade-dev-kind
 upgrade-dev-kind:
-	docker buildx build --tag burrito:$(NEW_VERSION) --build-arg VERSION=${NEW_VERSION} .
-	kind load docker-image burrito:$(NEW_VERSION)
-	yq e '.global.deployment.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/values-dev.yaml
-	yq e '.config.burrito.runner.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/values-dev.yaml
-	helm upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/values-dev.yaml -n burrito-system --create-namespace burrito-system deploy/charts/burrito
+	$(call upgrade-kind-common,values-dev.yaml,--build-arg BUILD_MODE=Release)
+
+.PHONY: upgrade-debug-kind
+upgrade-debug-kind:
+	$(call upgrade-kind-common,values-debug.yaml,--build-arg BUILD_MODE=Debug)
 
 .PHONY: upgrade-dev-helm
 upgrade-dev-helm:
-	helm upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/values-dev.yaml -n burrito-system --create-namespace burrito-system deploy/charts/burrito
+	$(call upgrade-helm-common,values-dev.yaml)
+
+.PHONY: upgrade-debug-helm
+upgrade-debug-helm:
+	$(call upgrade-helm-common,values-debug.yaml)
 
 ##@ Build
 
