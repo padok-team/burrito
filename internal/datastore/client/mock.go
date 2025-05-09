@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+const (
+	TestRevision = "TEST_REVISION"
+)
+
 type MockClient struct {
 	// Store latest revisions in memory for testing
 	revisions map[string]string
@@ -49,6 +53,16 @@ func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle 
 }
 
 func (c *MockClient) CheckGitBundle(namespace, name, ref, revision string) (bool, error) {
+	if revision == TestRevision {
+		return true, nil
+	}
+
+	revKey := fmt.Sprintf("%s/%s/%s", namespace, name, ref)
+	if rev, ok := c.revisions[revKey]; ok {
+		if rev == revision {
+			return true, nil
+		}
+	}
 	return false, nil
 }
 
