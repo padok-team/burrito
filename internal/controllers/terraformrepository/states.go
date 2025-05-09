@@ -86,7 +86,7 @@ func (s *SyncNeeded) getHandler() Handler {
 			if lastSync, err := time.Parse(time.UnixDate, branch.LastSyncDate); err == nil {
 				syncNow, err := isSyncNowRequested(repository, branch.Name, lastSync)
 				if err != nil {
-					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to parse sync now annotation for ref %s", branch.Name))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to parse sync now annotation for ref %s: %s", branch.Name, err))
 					continue
 				}
 				nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
@@ -98,7 +98,7 @@ func (s *SyncNeeded) getHandler() Handler {
 
 			latestRev, err := r.getRemoteRevision(repository, branch.Name)
 			if err != nil {
-				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s", branch.Name))
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to get remote revision for ref %s: %s", branch.Name, err)
 				syncError = err
 				branchStates = updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
@@ -108,7 +108,7 @@ func (s *SyncNeeded) getHandler() Handler {
 
 			isSynced, err := r.Datastore.CheckGitBundle(repository.Namespace, repository.Name, branch.Name, latestRev)
 			if err != nil {
-				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to check stored revision for ref %s", branch.Name))
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to check stored revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to check stored revision for ref %s: %s", branch.Name, err)
 				syncError = err
 				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
@@ -123,7 +123,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
 				bundle, err := r.getRevisionBundle(repository, branch.Name, latestRev)
 				if err != nil {
-					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s", branch.Name))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to get revision bundle for ref %s: %s", branch.Name, err)
 					syncError = err
 					branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
@@ -132,7 +132,7 @@ func (s *SyncNeeded) getHandler() Handler {
 
 				err = r.Datastore.PutGitBundle(repository.Namespace, repository.Name, branch.Name, latestRev, bundle)
 				if err != nil {
-					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s", branch.Name))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to store revision for ref %s: %s", branch.Name, err)
 					syncError = err
 					branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
