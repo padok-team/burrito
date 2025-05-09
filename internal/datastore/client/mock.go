@@ -2,11 +2,21 @@ package client
 
 import (
 	"fmt"
+	"os"
+
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 const (
-	TestRevision = "TEST_REVISION"
+	TestRepoNamespace = "default"
+	TestRepoName      = "burrito"
+	TestRef           = "main"
+	TestRevision      = "TEST_REVISION"
 )
+
+func isBundleTestValues(namespace, name, ref, revision string) bool {
+	return namespace == TestRepoNamespace && name == TestRepoName && ref == TestRef && revision == TestRevision
+}
 
 type MockClient struct {
 	// Store latest revisions in memory for testing
@@ -43,6 +53,11 @@ func (c *MockClient) GetAttempts(namespace string, layer string, run string) (in
 }
 
 func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle []byte) error {
+	// Not used in tests yet
+	if isBundleTestValues(namespace, name, ref, revision) {
+		return nil
+	}
+
 	revKey := fmt.Sprintf("%s/%s/%s", namespace, name, ref)
 	c.revisions[revKey] = revision
 
@@ -53,7 +68,8 @@ func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle 
 }
 
 func (c *MockClient) CheckGitBundle(namespace, name, ref, revision string) (bool, error) {
-	if revision == TestRevision {
+	// Used by TerraformRun Controller tests
+	if isBundleTestValues(namespace, name, ref, revision) {
 		return true, nil
 	}
 
@@ -67,5 +83,22 @@ func (c *MockClient) CheckGitBundle(namespace, name, ref, revision string) (bool
 }
 
 func (c *MockClient) GetGitBundle(namespace, name, ref, revision string) ([]byte, error) {
-	return nil, nil
+	// Used by Runner tests
+	if isBundleTestValues(namespace, name, ref, revision) {
+		bundle, err := os.ReadFile("testdata/burrito-examples.bundle")
+		if err != nil {
+			return nil, err
+		}
+		return bundle, nil
+	}
+
+	bundleKey := fmt.Sprintf("%s/%s/%s/%s", namespace, name, ref, revision)
+	if bundle, ok := c.bundles[bundleKey]; ok {
+		return bundle, nil
+	}
+
+	return nil, &storageerrors.StorageError{
+		Err: fmt.Errorf("bundle not found"),
+		Nil: true,
+	}
 }

@@ -259,6 +259,7 @@ var _ = Describe("Runner Tests", func() {
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
+				runnerInstance.Datastore = datastore.NewMockClient()
 				err = runnerInstance.GetResources()
 			})
 			AfterAll(func() {
@@ -288,6 +289,7 @@ var _ = Describe("Runner Tests", func() {
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
+				runnerInstance.Datastore = datastore.NewMockClient()
 				err = runnerInstance.Init()
 			})
 			AfterAll(func() {
@@ -316,6 +318,7 @@ var _ = Describe("Runner Tests", func() {
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
+				runnerInstance.Datastore = datastore.NewMockClient()
 				err = runnerInstance.Init()
 			})
 			AfterAll(func() {
@@ -331,7 +334,7 @@ var _ = Describe("Runner Tests", func() {
 		})
 	})
 	Describe("Error Cases", Ordered, func() {
-		Describe("When repository fails to fetch", Ordered, func() {
+		Describe("When repository bundle does not exist", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
 				conf = generateTestConfig()
