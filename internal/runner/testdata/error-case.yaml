@@ -33,6 +33,7 @@ spec:
   layer:
     name: error-case-1
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -60,6 +61,7 @@ spec:
   layer:
     name: error-case-2
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -85,5 +87,6 @@ metadata:
 spec:
   action: plan
   layer:
-    name: error-case-2
+    name: error-case-3
     namespace: default
+    revision: TEST_REVISION
