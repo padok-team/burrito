@@ -131,6 +131,10 @@ hermitcrab:
             # -- The default issuer name is "burrito-ca-issuer", packaged with the chart
             name: burrito-ca-issuer
             kind: Issuer
+  # -- Hermitcrab service configuration
+  service:
+    # -- Hermitcrab service annotations
+    annotations: {}
   deployment:
     # -- Hermitcrab replicas
     replicas: 1
