@@ -72,10 +72,6 @@ type Reconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the TerraformRun object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
@@ -99,21 +95,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	layer, err := r.getLinkedLayer(run)
 	if err != nil {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not get linked layer")
+		log.Errorf("could not get linked layer for run %s/%s: %s", run.Namespace, run.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	repo, err := r.getLinkedRepo(run, layer)
 	if err != nil {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not get linked repository")
+		log.Errorf("could not get linked repo for run %s/%s: %s", run.Namespace, run.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 
 	bundleOk, err := r.Datastore.CheckGitBundle(layer.Spec.Repository.Namespace, layer.Spec.Repository.Name, layer.Spec.Branch, run.Spec.Layer.Revision)
 	if err != nil {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not check bundle in datastore")
+		log.Errorf("could not check bundle in datastore run %s/%s rev %s: %s", run.Namespace, run.Name, run.Spec.Layer.Revision, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if !bundleOk {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Bundle for revision %s not found in datastore", run.Spec.Layer.Revision))
+		log.Errorf("bundle for revision %s not found in datastore: %s", run.Spec.Layer.Revision, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 	}
 
