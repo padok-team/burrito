@@ -40,6 +40,9 @@ func (e *PushEvent) Handle(c client.Client) error {
 		log.Errorf("could not list TerraformPullRequests: %s", err)
 		return err
 	}
+
+	// Push events annotates the affected repositories with the commit sha to
+	// trigger a sync of the repository
 	affectedRepositories := e.getAffectedRepositories(repositories.Items)
 	for _, repo := range affectedRepositories {
 		ann := map[string]string{}
