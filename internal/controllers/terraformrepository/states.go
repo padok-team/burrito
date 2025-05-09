@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -118,6 +119,7 @@ func (s *SyncNeeded) getHandler() Handler {
 			if isSynced {
 				log.Infof("repository %s/%s is in sync with remote for ref %s: rev %s", repository.Namespace, repository.Name, branch.Name, latestRev)
 				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+				syncError = addMissingLastBranchesAnnotations(r.Client, retrieveLayersForRef(branch.Name, layers), latestRev)
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
@@ -198,6 +200,21 @@ func updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, s
 		}
 	}
 	return branchStates
+}
+
+func addMissingLastBranchesAnnotations(c client.Client, layers []configv1alpha1.TerraformLayer, latestRev string) error {
+	var err error
+	for _, layer := range layers {
+		ann := map[string]string{}
+		ann[annotations.LastBranchCommit] = latestRev
+		err = annotations.Add(context.TODO(), c, &layer, ann)
+		if err != nil {
+			log.Errorf("could not add annotation to TerraformLayer %s/%s: %s", layer.Namespace, layer.Name, err)
+		} else {
+			log.Infof("layer %s/%s annotated with new last branch commit %s", layer.Namespace, layer.Name, latestRev)
+		}
+	}
+	return err
 }
 
 func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv1alpha1.TerraformRepository) (gitprovider.Provider, error) {
