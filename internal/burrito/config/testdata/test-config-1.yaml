@@ -7,10 +7,6 @@ runner:
     repository: test-repository
     tag: test-tag
     pullPolicy: Always
-  repository:
-    sshPrivateKey: "private-key"
-    username: "test"
-    password: "password"
   sshKnownHostsConfigMapName: burrito-ssh-known-hosts
 
 controller:
@@ -38,19 +34,6 @@ controller:
   metricsBindAddress: ":8080"
   healthProbeBindAddress: ":8081"
   kubernetesWebhookPort: 9443
-  githubConfig:
-    appId: 123456
-    installationId: 12345678
-    privateKey: "private-key"
-    apiToken: "github-token"
-  gitlabConfig:
-    apiToken: "gitlab-token"
-    url: "https://gitlab.example.com"
 
 server:
   addr: ":9090"
-  webhook:
-    github:
-      secret: "github-secret"
-    gitlab:
-      secret: "gitlab-secret"

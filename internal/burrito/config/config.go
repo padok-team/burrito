@@ -50,19 +50,6 @@ type AzureConfig struct {
 	Container      string `mapstructure:"container"`
 }
 
-type WebhookConfig struct {
-	Github WebhookGithubConfig `mapstructure:"github"`
-	Gitlab WebhookGitlabConfig `mapstructure:"gitlab"`
-}
-
-type WebhookGithubConfig struct {
-	Secret string `mapstructure:"secret"`
-}
-
-type WebhookGitlabConfig struct {
-	Secret string `mapstructure:"secret"`
-}
-
 type ControllerConfig struct {
 	MainNamespace           string                      `mapstructure:"mainNamespace"`
 	Namespaces              []string                    `mapstructure:"namespaces"`
@@ -74,23 +61,9 @@ type ControllerConfig struct {
 	MetricsBindAddress      string                      `mapstructure:"metricsBindAddress"`
 	HealthProbeBindAddress  string                      `mapstructure:"healthProbeBindAddress"`
 	KubernetesWebhookPort   int                         `mapstructure:"kubernetesWebhookPort"`
-	GithubConfig            GithubConfig                `mapstructure:"githubConfig"`
-	GitlabConfig            GitlabConfig                `mapstructure:"gitlabConfig"`
 	RunParallelism          int                         `mapstructure:"runParallelism"`
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
-}
-
-type GithubConfig struct {
-	AppId          int64  `mapstructure:"appId"`
-	InstallationId int64  `mapstructure:"installationId"`
-	PrivateKey     string `mapstructure:"privateKey"`
-	APIToken       string `mapstructure:"apiToken"`
-}
-
-type GitlabConfig struct {
-	APIToken string `mapstructure:"apiToken"`
-	URL      string `mapstructure:"url"`
 }
 
 type LeaderElectionConfig struct {
@@ -106,28 +79,16 @@ type ControllerTimers struct {
 	RepositorySync     time.Duration `mapstructure:"repositorySync"`
 }
 
-type RepositoryConfig struct {
-	SSHPrivateKey           string `mapstructure:"sshPrivateKey"`
-	Username                string `mapstructure:"username"`
-	Password                string `mapstructure:"password"`
-	GithubAppId             int64  `mapstructure:"githubAppId"`
-	GithubAppInstallationId int64  `mapstructure:"githubAppInstallationId"`
-	GithubAppPrivateKey     string `mapstructure:"githubAppPrivateKey"`
-	GithubToken             string `mapstructure:"githubToken"`
-	GitlabToken             string `mapstructure:"gitlabToken"`
-}
-
 type RunnerConfig struct {
-	Action                     string           `mapstructure:"action"`
-	Layer                      Layer            `mapstructure:"layer"`
-	Run                        string           `mapstructure:"run"`
-	Repository                 RepositoryConfig `mapstructure:"repository"`
-	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
-	Image                      ImageConfig      `mapstructure:"image"`
-	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`
-	RepositoryPath             string           `mapstructure:"repositoryPath"`
-	Args                       []string         `mapstructure:"args"`
-	Command                    []string         `mapstructure:"command"`
+	Action                     string      `mapstructure:"action"`
+	Layer                      Layer       `mapstructure:"layer"`
+	Run                        string      `mapstructure:"run"`
+	SSHKnownHostsConfigMapName string      `mapstructure:"sshKnownHostsConfigMapName"`
+	Image                      ImageConfig `mapstructure:"image"`
+	RunnerBinaryPath           string      `mapstructure:"runnerBinaryPath"`
+	RepositoryPath             string      `mapstructure:"repositoryPath"`
+	Args                       []string    `mapstructure:"args"`
+	Command                    []string    `mapstructure:"command"`
 }
 
 type ImageConfig struct {
@@ -148,8 +109,7 @@ type HermitcrabConfig struct {
 }
 
 type ServerConfig struct {
-	Addr    string        `mapstructure:"addr"`
-	Webhook WebhookConfig `mapstructure:"webhook"`
+	Addr string `mapstructure:"addr"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {
