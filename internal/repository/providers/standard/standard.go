@@ -23,7 +23,7 @@ func (s *Standard) GetAPIProvider() (types.APIProvider, error) {
 	return nil, fmt.Errorf("API is not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
 }
 
-func (s *Standard) GetRepositoryProvider() (types.GitProvider, error) {
+func (s *Standard) GetGitProvider() (types.GitProvider, error) {
 	repositoryProvider := &GitProvider{
 		URL: s.Config.URL,
 	}

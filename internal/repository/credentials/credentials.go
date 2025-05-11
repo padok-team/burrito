@@ -71,7 +71,7 @@ func (s *CredentialStore) updateCredentials() error {
 	for _, secret := range sharedSecrets.Items {
 		tmp, err := NewSharedCredentialsFromSecret(secret)
 		if err != nil {
-			log.New().Warnf("Failed to parse shared credentials from secret %s/%s", secret.Namespace, secret.Name)
+			log.Warnf("failed to parse shared credentials from secret %s/%s: %s", secret.Namespace, secret.Name, err)
 			continue
 		}
 		sharedCredentials = append(sharedCredentials, tmp)
@@ -87,7 +87,7 @@ func (s *CredentialStore) updateCredentials() error {
 	for _, secret := range repositorySecrets.Items {
 		tmp, err := NewRepositoryCredentialsFromSecret(secret)
 		if err != nil {
-			log.New().Warnf("Failed to parse repository credentials from secret %s/%s", secret.Namespace, secret.Name)
+			log.Warnf("failed to parse repository credentials from secret %s/%s: %s", secret.Namespace, secret.Name, err)
 			continue
 		}
 		repositoryCredentials = append(repositoryCredentials, tmp)
@@ -102,16 +102,16 @@ func (s *CredentialStore) updateCredentials() error {
 
 // Returns the credentials for a given repository. If a specific repository credential is found, it will be returned.
 // If not, the most specific shared credential that matches the repository will be returned.
-func (s *CredentialStore) GetCredentials(ctx context.Context, repository *configv1alpha1.TerraformRepository) (*Credential, error) {
+func (s *CredentialStore) GetCredentials(repository *configv1alpha1.TerraformRepository) (*Credential, error) {
 	if time.Since(s.lastUpdate) >= s.TTL {
 		err := s.updateCredentials()
 		if err != nil {
-			log.Errorf("Failed to update credentials: %v", err)
+			log.Errorf("failed to update credentials: %v", err)
 		}
 	}
 	for _, repositoryCredentials := range s.repositoryCredentials {
 		if repositoryCredentials.Matches(repository) {
-			return &repositoryCredentials.Credentials, nil
+			return &repositoryCredentials.Credential, nil
 		}
 	}
 	var sharedCredential *SharedCredential
@@ -156,34 +156,32 @@ type Credential struct {
 	GitLabToken string `json:"gitlabToken,omitempty"`
 	// Repository URL
 	URL string `json:"url,omitempty"`
-	// Mock provider
-	EnableMock bool `json:"enableMock,omitempty"`
 	// Secret for webhook handling
 	WebhookSecret string `json:"webhookSecret,omitempty"`
 }
 
 type RepositoryCredential struct {
-	Namespace   string
-	Credentials Credential
+	Namespace  string
+	Credential Credential
 }
 
 func (c *RepositoryCredential) Matches(repository *configv1alpha1.TerraformRepository) bool {
-	return url.NormalizeUrl(c.Credentials.URL) == url.NormalizeUrl(repository.Spec.Repository.Url) && c.Namespace == repository.Namespace
+	return url.NormalizeUrl(c.Credential.URL) == url.NormalizeUrl(repository.Spec.Repository.Url) && c.Namespace == repository.Namespace
 }
 
 func NewRepositoryCredentialsFromSecret(secret corev1.Secret) (*RepositoryCredential, error) {
-	credentials, err := parseRepositorySecret(secret)
+	credential, err := parseRepositorySecret(secret)
 	if err != nil {
 		return nil, err
 	}
 	return &RepositoryCredential{
-		Namespace:   secret.Namespace,
-		Credentials: *credentials,
+		Namespace:  secret.Namespace,
+		Credential: *credential,
 	}, nil
 }
 
 func NewSharedCredentialsFromSecret(secret corev1.Secret) (*SharedCredential, error) {
-	credentials, err := parseRepositorySecret(secret)
+	credential, err := parseRepositorySecret(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +191,7 @@ func NewSharedCredentialsFromSecret(secret corev1.Secret) (*SharedCredential, er
 		allowedTenants = strings.Split(value, ",")
 	}
 	return &SharedCredential{
-		Credential:     *credentials,
+		Credential:     *credential,
 		AllowedTenants: allowedTenants,
 	}, nil
 }
