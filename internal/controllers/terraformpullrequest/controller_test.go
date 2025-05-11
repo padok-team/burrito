@@ -42,8 +42,8 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 	utils "github.com/padok-team/burrito/internal/testing"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -104,17 +104,11 @@ var _ = BeforeSuite(func() {
 	err = initStatus(k8sClient, statuses)
 	Expect(err).NotTo(HaveOccurred())
 	reconciler = &controller.Reconciler{
-		Client:    k8sClient,
-		Config:    config.TestConfig(),
-		Scheme:    scheme.Scheme,
-		Datastore: datastore.NewMockClient(),
-		Providers: map[string]gitprovider.Provider{
-			"mock": func() gitprovider.Provider {
-				provider, err := gitprovider.NewWithName(gitprovider.Config{EnableMock: true}, "mock")
-				Expect(err).NotTo(HaveOccurred())
-				return provider
-			}(),
-		},
+		Client:      k8sClient,
+		Config:      config.TestConfig(),
+		Scheme:      scheme.Scheme,
+		Datastore:   datastore.NewMockClient(),
+		Credentials: credentials.NewCredentialStore(k8sClient, 5*time.Second),
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
