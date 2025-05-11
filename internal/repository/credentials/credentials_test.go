@@ -67,7 +67,7 @@ var _ = Describe("Credentials", func() {
 				Name:      "repository-secret-present",
 				Namespace: "default",
 			}, repository)
-			credentials, err := credentialStore.GetCredentials(context.TODO(), repository)
+			credentials, err := credentialStore.GetCredentials(repository)
 			fmt.Println(credentials.URL)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(credentials.Username).To(Equal("username-present"))
@@ -82,7 +82,7 @@ var _ = Describe("Credentials", func() {
 					Name:      "repository-secret-not-present",
 					Namespace: "default",
 				}, repository)
-				credentials, err := credentialStore.GetCredentials(context.TODO(), repository)
+				credentials, err := credentialStore.GetCredentials(repository)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(credentials.Username).To(Equal("username-shared"))
 				Expect(credentials.Password).To(Equal("password-shared"))
@@ -95,7 +95,7 @@ var _ = Describe("Credentials", func() {
 					Name:      "no-secret-present",
 					Namespace: "default",
 				}, repository)
-				_, err := credentialStore.GetCredentials(context.TODO(), repository)
+				_, err := credentialStore.GetCredentials(repository)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -106,7 +106,7 @@ var _ = Describe("Credentials", func() {
 					Name:      "not-allowed-secret",
 					Namespace: "default",
 				}, repository)
-				_, err := credentialStore.GetCredentials(context.TODO(), repository)
+				_, err := credentialStore.GetCredentials(repository)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -117,7 +117,7 @@ var _ = Describe("Credentials", func() {
 					Name:      "two-shared-secret-match",
 					Namespace: "default",
 				}, repository)
-				credentials, err := credentialStore.GetCredentials(context.TODO(), repository)
+				credentials, err := credentialStore.GetCredentials(repository)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(credentials.Username).To(Equal("username-match-1"))
 				Expect(credentials.Password).To(Equal("password-match-1"))
