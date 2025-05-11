@@ -50,11 +50,6 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				Tag:        "test-tag",
 				PullPolicy: "Always",
 			},
-			Repository: config.RepositoryConfig{
-				SSHPrivateKey: "private-key",
-				Username:      "test",
-				Password:      "password",
-			},
 			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
 		},
 		Controller: config.ControllerConfig{
@@ -85,27 +80,9 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			MetricsBindAddress:     ":8080",
 			HealthProbeBindAddress: ":8081",
 			KubernetesWebhookPort:  9443,
-			GithubConfig: config.GithubConfig{
-				AppId:          123456,
-				InstallationId: 12345678,
-				PrivateKey:     "private-key",
-				APIToken:       "github-token",
-			},
-			GitlabConfig: config.GitlabConfig{
-				APIToken: "gitlab-token",
-				URL:      "https://gitlab.example.com",
-			},
 		},
 		Server: config.ServerConfig{
 			Addr: ":9090",
-			Webhook: config.WebhookConfig{
-				Github: config.WebhookGithubConfig{
-					Secret: "github-secret",
-				},
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: "gitlab-secret",
-				},
-			},
 		},
 	}
 
@@ -143,9 +120,6 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_RUNNER_ACTION", "plan", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_LAYER_NAME", "other-layer", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_LAYER_NAMESPACE", "other-namespace", &envVarList)
-	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_USERNAME", "other-username", &envVarList)
-	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_PASSWORD", "other-password", &envVarList)
-	setEnvVar(t, "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY", "other-private-key", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_IMAGE_REPOSITORY", "other-repository", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_IMAGE_TAG", "other-tag", &envVarList)
 	setEnvVar(t, "BURRITO_RUNNER_IMAGE_PULLPOLICY", "Always", &envVarList)
@@ -160,16 +134,8 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS", "10", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TERRAFORMMAXRETRIES", "32", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_LEADERELECTION_ID", "other-leader-id", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APPID", "123456", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID", "12345678", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_PRIVATEKEY", "private-key", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN", "pr-github-token", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITLABCONFIG_APITOKEN", "mr-gitlab-token", &envVarList)
-	setEnvVar(t, "BURRITO_CONTROLLER_GITLABCONFIG_URL", "https://gitlab.com", &envVarList)
 	// Server
 	setEnvVar(t, "BURRITO_SERVER_ADDR", ":8090", &envVarList)
-	setEnvVar(t, "BURRITO_SERVER_WEBHOOK_GITHUB_SECRET", "other-github-secret", &envVarList)
-	setEnvVar(t, "BURRITO_SERVER_WEBHOOK_GITLAB_SECRET", "other-gitlab-secret", &envVarList)
 
 	// Create a test config instance
 	cfg := &config.Config{}
@@ -201,11 +167,6 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 				Tag:        "other-tag",
 				PullPolicy: "Always",
 			},
-			Repository: config.RepositoryConfig{
-				SSHPrivateKey: "other-private-key",
-				Username:      "other-username",
-				Password:      "other-password",
-			},
 			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
 		},
 		Controller: config.ControllerConfig{
@@ -236,27 +197,9 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			MetricsBindAddress:     ":8080",
 			HealthProbeBindAddress: ":8081",
 			KubernetesWebhookPort:  9443,
-			GithubConfig: config.GithubConfig{
-				AppId:          123456,
-				InstallationId: 12345678,
-				PrivateKey:     "private-key",
-				APIToken:       "pr-github-token",
-			},
-			GitlabConfig: config.GitlabConfig{
-				APIToken: "mr-gitlab-token",
-				URL:      "https://gitlab.com",
-			},
 		},
 		Server: config.ServerConfig{
 			Addr: ":8090",
-			Webhook: config.WebhookConfig{
-				Github: config.WebhookGithubConfig{
-					Secret: "other-github-secret",
-				},
-				Gitlab: config.WebhookGitlabConfig{
-					Secret: "other-gitlab-secret",
-				},
-			},
 		},
 	}
 
