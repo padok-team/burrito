@@ -1,19 +1,17 @@
 package webhook
 
 import (
-	"context"
 	"fmt"
 	"html"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
-	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
+	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -24,57 +22,24 @@ type Handler interface {
 
 type Webhook struct {
 	client.Client
-	Config    *config.Config
-	Providers map[string][]gitprovider.Provider
+	Config      *config.Config
+	credentials *credentials.CredentialStore
 }
 
-func New(c *config.Config) *Webhook {
+func New(config *config.Config, client client.Client) *Webhook {
 	return &Webhook{
-		Config:    c,
-		Providers: make(map[string][]gitprovider.Provider),
+		Client: client,
+		Config: config,
+		// TODO: get TTL value from config
+		credentials: credentials.NewCredentialStore(client, 5*time.Second),
 	}
-}
-
-func (w *Webhook) Init() error {
-	repositories := &configv1alpha1.TerraformRepositoryList{}
-	err := w.Client.List(context.Background(), repositories)
-	if err != nil {
-		return fmt.Errorf("failed to list TerraformRepository objects: %w", err)
-	}
-	err = w.initializeDefaultProvider()
-	if err != nil {
-		return fmt.Errorf("Some legacy webhook configuration was found but default providers could not be initialized: %w", err)
-	}
-	for _, r := range repositories.Items {
-		if _, ok := w.Providers[fmt.Sprintf("%s/%s", r.Namespace, r.Name)]; !ok {
-			provider, err := w.initializeProviders(r)
-			if err != nil {
-				log.Errorf("could not initialize provider for repository %s/%s: %s", r.Namespace, r.Name, err)
-			}
-			if provider != nil {
-				w.Providers[fmt.Sprintf("%s/%s", r.Namespace, r.Name)] = provider
-				log.Infof("initialized webhook handlers for repository %s/%s", r.Namespace, r.Name)
-			}
-		}
-	}
-	return nil
 }
 
 func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
 	return func(c echo.Context) error {
 		log.Infof("webhook event received...")
 		r := c.Request()
-		var err error
-		var event event.Event
-		for _, ps := range w.Providers {
-			for _, p := range ps {
-				parsed, ok := p.ParseWebhookPayload(r)
-				if ok {
-					event, err = p.GetEventFromWebhookPayload(parsed)
-					break
-				}
-			}
-		}
+		event, err := w.tryGetEventFromPayload(r)
 		if err != nil {
 			log.Errorf("webhook processing failed: %s", err)
 			status := http.StatusBadRequest
@@ -96,79 +61,43 @@ func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
 	}
 }
 
-func (w *Webhook) initializeProviders(r configv1alpha1.TerraformRepository) ([]gitprovider.Provider, error) {
-	if r.Spec.Repository.SecretName == "" {
-		log.Debugf("Tried to initialize default providers, but no webhook secret configured for repository %s/%s", r.Namespace, r.Name)
-		return nil, nil
-	}
-	secret := &corev1.Secret{}
-	err := w.Client.Get(context.Background(), types.NamespacedName{
-		Namespace: r.Namespace,
-		Name:      r.Spec.Repository.SecretName,
-	}, secret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get webhook secret for repository %s/%s: %w", r.Namespace, r.Spec.Repository.SecretName, err)
-	}
-	value, ok := secret.Data["webhookSecret"]
-	if !ok {
-		return nil, fmt.Errorf("webhook secret not found in secret %s/%s", r.Namespace, r.Spec.Repository.SecretName)
-	}
-	webhookSecret := string(value)
+// Iterate over all webhook secrets we have to decode the payload
+func (w *Webhook) tryGetEventFromPayload(r *http.Request) (event.Event, error) {
+	allShared, allRepository := w.credentials.GetAllCredentials()
 
-	availableProviders, err := gitprovider.ListAvailable(gitprovider.Config{WebhookSecret: webhookSecret}, []string{"webhook"})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list available providers: %w", err)
-	}
-
-	providers := make([]gitprovider.Provider, 0)
-	for _, availableProvider := range availableProviders {
-		provider, err := gitprovider.NewWithName(gitprovider.Config{WebhookSecret: webhookSecret}, availableProvider)
+	for _, i := range allShared {
+		cred := i.Credential
+		provider, err := repo.GetProviderFromCredentials(cred)
 		if err != nil {
-			log.Errorf("failed to create provider %s: %s", availableProvider, err)
 			continue
 		}
-		err = provider.InitWebhookHandler()
+		whProvider, err := provider.GetWebhookProvider()
 		if err != nil {
-			log.Errorf("failed to initialize provider %s: %s", availableProvider, err)
+			log.Errorf("failed to get webhook provider: %s", err)
 			continue
 		}
-		providers = append(providers, provider)
-	}
-
-	for _, p := range providers {
-		err := p.InitWebhookHandler()
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize provider: %w", err)
+		parsed, ok := whProvider.ParseWebhookPayload(r)
+		if ok {
+			return whProvider.GetEventFromWebhookPayload(parsed)
 		}
 	}
 
-	return providers, nil
-}
+	for _, i := range allRepository {
+		cred := i.Credential
+		provider, err := repo.GetProviderFromCredentials(cred)
+		if err != nil {
+			continue
+		}
+		whProvider, err := provider.GetWebhookProvider()
+		if err != nil {
+			log.Errorf("failed to get webhook provider: %s", err)
+			continue
+		}
+		parsed, ok := whProvider.ParseWebhookPayload(r)
+		if ok {
+			return whProvider.GetEventFromWebhookPayload(parsed)
+		}
+	}
 
-func (w *Webhook) initializeDefaultProvider() error {
-	if w.Providers["githubDefault"] != nil && w.Config.Server.Webhook.Github.Secret != "" {
-		provider, err := gitprovider.NewWithName(gitprovider.Config{WebhookSecret: w.Config.Server.Webhook.Github.Secret}, "github")
-		if err != nil {
-			return fmt.Errorf("failed to create default provider: %w", err)
-		}
-		err = provider.InitWebhookHandler()
-		if err != nil {
-			return fmt.Errorf("failed to initialize default provider: %w", err)
-		}
-		w.Providers["githubDefault"] = []gitprovider.Provider{provider}
-		log.Info("initialized default GitHub webhook handler")
-	}
-	if w.Providers["gitlabDefault"] != nil && w.Config.Server.Webhook.Gitlab.Secret != "" {
-		provider, err := gitprovider.NewWithName(gitprovider.Config{WebhookSecret: w.Config.Server.Webhook.Gitlab.Secret}, "gitlab")
-		if err != nil {
-			return fmt.Errorf("failed to create default provider: %w", err)
-		}
-		err = provider.InitWebhookHandler()
-		if err != nil {
-			return fmt.Errorf("failed to initialize default provider: %w", err)
-		}
-		w.Providers["gitlabDefault"] = []gitprovider.Provider{provider}
-		log.Info("initialized default GitLab webhook handler")
-	}
-	return nil
+	return nil, nil
 }
