@@ -188,3 +188,161 @@ It is strongly recommended to create a GitHub token with no specific rights to b
 
 - [Controller-runtime documentation](https://pkg.go.dev/sigs.k8s.io/controller-runtime) (Burrito heavily relies on this package)
 - [Burrito documentation](https://docs.burrito.tf/)
+
+## Debugging Burrito
+
+To debug Burrito efficiently in Kubernetes, you can use [Delve](https://github.com/go-delve/delve), optionally with [Visual Studio Code](https://code.visualstudio.com/) (recommended). We have set a few things to help you getting started.
+
+You'll need to follow instructions in [Getting Started: Set Up a Local Development Environment (kind)](#getting-started-set-up-a-local-development-environment-kind) to get a local Kubernetes development instance.
+
+### Enable debugging
+
+First, being by installing dlv: `go install github.com/go-delve/delve/cmd/dlv@latest`
+
+We'll rely on `deploy/charts/burrito/values-debug.yaml` to deploy the configuration to start the debugging session.
+
+By default, the `controller` (that includes the runner) and `datastore` are commented in the Helm values. Indeed, starting the application with dlv server will hang until you connect with the dlv client so it has to be enabled only when you need it.
+
+```yaml
+# controllers:
+#   deployment:
+#     mode: Debug
+#     command: ["/usr/local/bin/dlv"]
+#     args: ["--listen=0.0.0.0:2345", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "controllers", "start"]
+
+# datastore:
+#   deployment:
+#     mode: Debug
+#     command: ["/usr/local/bin/dlv"]
+#     args: ["--listen=0.0.0.0:2347", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "datastore", "start"]
+
+# server:
+#   deployment:
+#     mode: Debug
+#     command: ["/usr/local/bin/dlv"]
+#     args: ["--listen=0.0.0.0:2348", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "server", "start"]
+```
+
+By default, we'll start the application with the usual command. If you want to debug the controller or the runner, uncomment the required block. This will open a port on the pod on which you'll connect from your computer.
+
+`mode: Debug` is removing liveness and readiness probes: they won't be able to start as dlv will await for you to start the debugging session.
+
+### Deploy/refresh commands
+
+You'll need to deploy the debug container images and config. This is the same command if you need to refresh your deployment.
+
+To build a new local debug image of Burrito, push it into your local Kind cluster, and update the Helm release with the new image tag, run the following:
+
+```bash
+make upgrade-debug-kind
+```
+
+To refresh the Helm chart with debug values, run:
+
+```bash
+make upgrade-debug-helm
+```
+
+Check the [Makefile](https://github.com/padok-team/burrito/blob/main/Makefile) for more details about these commands.
+
+### Connect from your computer to the debug session
+
+The debugging port won't be exposed by default so you'll need to port-forward it.
+
+- For the controller:
+
+```bash
+kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-controllers.*Running/{print $1}') -n burrito-system 2345:2345
+```
+
+- For the runner:
+
+```bash
+kubectl port-forward -n burrito-project <layerName> 2346:2345
+```
+
+It will listen on the same port than the controller so we're exposing it on port 2346 on your computer so you can debug the controller and the runner if needed.
+
+- For the datastore:
+
+```bash
+kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-datastore.*Running/{print $1}') -n burrito-system 2347:2347
+```
+
+- For the server:
+
+```bash
+kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-server.*Running/{print $1}') -n burrito-system 2348:2348
+```
+
+### Start debugging
+
+#### With vscode
+
+!!! note
+    You can get more information about Vscode+Go debugging [here](https://github.com/golang/vscode-go/blob/master/docs/debugging.md)
+
+If you want to use Vscode to debug the app, you'll need to get the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.go) and create a `.vscode/launch.json`:
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to Controller",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 2345,
+            "host": "127.0.0.1",
+            "apiVersion": 2
+        },
+        {
+            "name": "Attach to Runner",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 2346,
+            "host": "127.0.0.1",
+            "apiVersion": 2
+        },
+        {
+            "name": "Attach to Datastore",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 2347,
+            "host": "127.0.0.1",
+            "apiVersion": 2
+        },
+        {
+            "name": "Attach to Server",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 2348,
+            "host": "127.0.0.1",
+            "apiVersion": 2
+        }
+    ]
+}
+```
+
+!!! question "New to debugging on Vscode?"
+    For a vscode debug introduction, you can check [Debug code with Visual Studio Code](https://code.visualstudio.com/docs/debugtest/debugging).
+
+Browse your code to set breakpoints by clicking on the left side of your line.
+
+![Vscode breakpoint](assets/demo/vscode-breakpoint.png)
+
+Open the `Run and Debug` pane, select your debugging configuration and hit `F5` to connect to the remove `dlv`.
+
+![Vscode debug configuration](assets/demo/vscode-debug.png)
+
+Once your line is reached, vscode will show you the variables, current stack, etc
+
+![Vscode debug variables](assets/demo/vscode-debug-variables.png)
+
+#### With `dlv`
+
+If you prefer to debug on cli, you can connect with `dlv connect 127.0.0.1:<debuggingPort>` where `<debuggingPort>` is 2345, 2346, 2347 or 2348, depending on what you're debugging.
