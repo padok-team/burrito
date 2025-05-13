@@ -215,6 +215,12 @@ By default, the `controller` (that includes the runner) and `datastore` are comm
 #     mode: Debug
 #     command: ["/usr/local/bin/dlv"]
 #     args: ["--listen=0.0.0.0:2347", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "datastore", "start"]
+
+# server:
+#   deployment:
+#     mode: Debug
+#     command: ["/usr/local/bin/dlv"]
+#     args: ["--listen=0.0.0.0:2348", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "server", "start"]
 ```
 
 By default, we'll start the application with the usual command. If you want to debug the controller or the runner, uncomment the required block. This will open a port on the pod on which you'll connect from your computer.
@@ -263,6 +269,12 @@ It will listen on the same port than the controller so we're exposing it on port
 kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-datastore.*Running/{print $1}') -n burrito-system 2347:2347
 ```
 
+- For the server:
+
+```bash
+kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-server.*Running/{print $1}') -n burrito-system 2348:2348
+```
+
 ### Start debugging
 
 #### With vscode
@@ -302,6 +314,15 @@ If you want to use Vscode to debug the app, you'll need to get the [Go extension
             "port": 2347,
             "host": "127.0.0.1",
             "apiVersion": 2
+        },
+        {
+            "name": "Attach to Server",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "port": 2348,
+            "host": "127.0.0.1",
+            "apiVersion": 2
         }
     ]
 }
@@ -324,4 +345,4 @@ Once your line is reached, vscode will show you the variables, current stack, et
 
 #### With `dlv`
 
-If you prefer to debug on cli, you can connect with `dlv connect 127.0.0.1:<debuggingPort>` where `<debuggingPort>` is 2345, 2346, 2347 depending on what you're debugging.
+If you prefer to debug on cli, you can connect with `dlv connect 127.0.0.1:<debuggingPort>` where `<debuggingPort>` is 2345, 2346, 2347 or 2348, depending on what you're debugging.
