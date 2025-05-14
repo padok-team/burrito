@@ -12,7 +12,7 @@ func BuildServerCmd(app *burrito.App) *cobra.Command {
 		Short: "cmd to use burrito's server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// If we reach this point, it means no subcommand was matched
-			cmdUtils.UnsupportedCommand("server", args)
+			cmdUtils.UnsupportedCommand(cmd, args)
 			return cmd.Help()
 		},
 	}

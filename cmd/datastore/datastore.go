@@ -15,7 +15,7 @@ func BuildDatastoreCmd(app *burrito.App) *cobra.Command {
 		Short: "cmd to use burrito's datastore",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// If we reach this point, it means no subcommand was matched
-			cmdUtils.UnsupportedCommand("datastore", args)
+			cmdUtils.UnsupportedCommand(cmd, args)
 			return cmd.Help()
 		},
 	}

@@ -15,7 +15,7 @@ func BuildControllersCmd(app *burrito.App) *cobra.Command {
 		Short: "cmd to use burrito's controllers",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// If we reach this point, it means no subcommand was matched
-			cmdUtils.UnsupportedCommand("controllers", args)
+			cmdUtils.UnsupportedCommand(cmd, args)
 			return cmd.Help()
 		},
 	}
