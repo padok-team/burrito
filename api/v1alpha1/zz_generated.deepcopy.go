@@ -223,6 +223,16 @@ func (in *OverrideRunnerSpec) DeepCopyInto(out *OverrideRunnerSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Command != nil {
+		in, out := &in.Command, &out.Command
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.Args != nil {
+		in, out := &in.Args, &out.Args
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ExtraInitArgs != nil {
 		in, out := &in.ExtraInitArgs, &out.ExtraInitArgs
 		*out = make(ExtraArgs, len(*in))

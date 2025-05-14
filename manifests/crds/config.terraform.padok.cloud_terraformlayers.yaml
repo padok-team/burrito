@@ -998,6 +998,14 @@ spec:
                             x-kubernetes-list-type: atomic
                         type: object
                     type: object
+                  args:
+                    items:
+                      type: string
+                    type: array
+                  command:
+                    items:
+                      type: string
+                    type: array
                   env:
                     items:
                       description: EnvVar represents an environment variable present

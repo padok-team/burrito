@@ -5,6 +5,8 @@ config:
         repository: burrito
         tag: DEV_TAG
         pullPolicy: Never
+      # command: ["/usr/local/bin/dlv"]
+      # args: ["--listen=0.0.0.0:2346", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "runner", "start"]
     datastore:
       storage:
         mock: true
