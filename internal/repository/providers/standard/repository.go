@@ -59,15 +59,40 @@ func (p *GitProvider) GetLatestRevisionForRef(repository *configv1alpha1.Terrafo
 }
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
+	// Clone repository if it doesn't exist
 	if p.gitRepository == nil {
 		if err := p.clone(); err != nil {
 			return nil, err
 		}
 	}
+
 	reference, err := p.gitRepository.Reference(plumbing.NewBranchReferenceName(ref), true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get HEAD: %w", err)
+		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", ref, p.URL, err)
 	}
+
+	// Pull latest changes
+	worktree, err := p.gitRepository.Worktree()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get worktree for repository %s: %w", p.URL, err)
+	}
+
+	pullOpts := &git.PullOptions{
+		Auth:          p.AuthMethod,
+		ReferenceName: reference.Name(),
+	}
+
+	log.Infof("pulling latest changes for repo %s", p.URL)
+	err = worktree.Pull(pullOpts)
+	if err != nil {
+		if err == git.NoErrAlreadyUpToDate {
+			log.Info("repository is already up-to-date")
+		} else {
+			return nil, fmt.Errorf("failed to pull latest changes: %w", err)
+		}
+	}
+
+	// Create git bundle
 	commit := reference.Hash().String()
 	bundleDest := filepath.Join(p.repositoryPath, fmt.Sprintf("%s.gitbundle", commit))
 	bundle, err := createGitBundle(p.repositoryPath, bundleDest, commit)
