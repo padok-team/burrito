@@ -16,7 +16,7 @@ func GetGitProviderFromRepository(store *credentials.CredentialStore, repo *conf
 	creds, err := store.GetCredentials(repo)
 	// If no credentials, it may be a standard public repository
 	if err != nil {
-		return getStandardGitNoAuth(repo.Spec.Repository.Url), err
+		return getStandardGitNoAuth(repo.Spec.Repository.Url), nil
 	}
 	provider, err := GetProviderFromCredentials(*creds)
 	if err != nil {
