@@ -38,6 +38,7 @@ type Artifact struct {
 type TerraformRunLayer struct {
 	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
+	Revision  string `json:"revision,omitempty"`
 }
 
 // TerraformRunStatus defines the observed state of TerraformRun
