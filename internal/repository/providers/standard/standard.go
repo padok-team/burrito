@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/padok-team/burrito/internal/repository/types"
 )
@@ -23,11 +24,11 @@ func (s *Standard) GetAPIProvider() (types.APIProvider, error) {
 	return nil, fmt.Errorf("API is not supported for standard git provider. Provide a specific credentials for providers such as GitHub or GitLab")
 }
 
-func (s *Standard) GetGitProvider() (types.GitProvider, error) {
+func (s *Standard) GetGitProvider(repository *configv1alpha1.TerraformRepository) (types.GitProvider, error) {
+	repoURL := repository.Spec.Repository.Url
 	repositoryProvider := &GitProvider{
-		URL: s.Config.URL,
+		RepoURL: repoURL,
 	}
-	repoURL := s.Config.URL
 	if repoURL == "" {
 		return nil, errors.New("repository URL is required")
 	}

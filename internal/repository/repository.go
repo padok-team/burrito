@@ -23,7 +23,7 @@ func GetGitProviderFromRepository(store *credentials.CredentialStore, repo *conf
 		return nil, err
 	}
 
-	return provider.GetGitProvider()
+	return provider.GetGitProvider(repo)
 }
 
 func GetAPIProviderFromRepository(store *credentials.CredentialStore, repo *configv1alpha1.TerraformRepository) (types.APIProvider, error) {
@@ -56,6 +56,6 @@ func GetProviderFromCredentials(RepositoryCredentials credentials.Credential) (t
 
 func getStandardGitNoAuth(URL string) types.GitProvider {
 	return &standard.GitProvider{
-		URL: URL,
+		RepoURL: URL,
 	}
 }

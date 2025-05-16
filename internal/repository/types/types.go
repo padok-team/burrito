@@ -12,12 +12,12 @@ import (
 type Provider interface {
 	GetWebhookProvider() (WebhookProvider, error)
 	GetAPIProvider() (APIProvider, error)
-	GetGitProvider() (GitProvider, error)
+	GetGitProvider(repository *configv1alpha1.TerraformRepository) (GitProvider, error)
 }
 
 type GitProvider interface {
-	GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error)
-	Bundle(commit string) ([]byte, error)
+	GetLatestRevisionForRef(ref string) (string, error)
+	Bundle(ref string) ([]byte, error)
 	GetChanges(previousCommit, currentCommit string) []string
 }
 

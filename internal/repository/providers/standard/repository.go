@@ -13,23 +13,22 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/storage/memory"
-	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
 )
 
 type GitProvider struct {
 	transport.AuthMethod
-	URL            string
+	RepoURL        string
 	gitRepository  *git.Repository
 	workingDir     string
 	repositoryPath string
 }
 
-func (p *GitProvider) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	// Create an in-memory remote
 	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
 		Name: "origin",
-		URLs: []string{repository.Spec.Repository.Url},
+		URLs: []string{p.RepoURL},
 	})
 
 	// List references on the remote (equivalent to `git ls-remote <repoURL>`)
@@ -55,7 +54,7 @@ func (p *GitProvider) GetLatestRevisionForRef(repository *configv1alpha1.Terrafo
 		}
 	}
 
-	return "", fmt.Errorf("unable to find commit SHA for ref %q in %q", ref, repository.Spec.Repository.Url)
+	return "", fmt.Errorf("unable to find commit SHA for ref %q in %q", ref, p.RepoURL)
 }
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
@@ -68,13 +67,13 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 
 	reference, err := p.gitRepository.Reference(plumbing.NewBranchReferenceName(ref), true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", ref, p.URL, err)
+		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", ref, p.RepoURL, err)
 	}
 
 	// Pull latest changes
 	worktree, err := p.gitRepository.Worktree()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get worktree for repository %s: %w", p.URL, err)
+		return nil, fmt.Errorf("failed to get worktree for repository %s: %w", p.RepoURL, err)
 	}
 
 	pullOpts := &git.PullOptions{
@@ -82,7 +81,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 		ReferenceName: reference.Name(),
 	}
 
-	log.Infof("pulling latest changes for repo %s", p.URL)
+	log.Infof("pulling latest changes for repo %s", p.RepoURL)
 	err = worktree.Pull(pullOpts)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
@@ -95,7 +94,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 	// Create git bundle
 	commit := reference.Hash().String()
 	bundleDest := filepath.Join(p.repositoryPath, fmt.Sprintf("%s.gitbundle", commit))
-	bundle, err := createGitBundle(p.repositoryPath, bundleDest, commit)
+	bundle, err := createGitBundle(p.repositoryPath, bundleDest, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +103,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 
 func (p *GitProvider) clone() error {
 	cloneOptions := &git.CloneOptions{
-		URL:  p.URL,
+		URL:  p.RepoURL,
 		Auth: p.AuthMethod,
 	}
 	workingDir, err := os.MkdirTemp("", "burrito-repo-*")
@@ -113,7 +112,7 @@ func (p *GitProvider) clone() error {
 	}
 	p.workingDir = workingDir
 	p.repositoryPath = filepath.Join(p.workingDir, "repository")
-	log.Infof("cloning repository %s to %s", p.URL, p.repositoryPath)
+	log.Infof("cloning repository %s to %s", p.RepoURL, p.repositoryPath)
 	p.gitRepository, err = git.PlainClone(p.repositoryPath, false, cloneOptions)
 	if err != nil {
 		return err
