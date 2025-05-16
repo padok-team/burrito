@@ -18,6 +18,9 @@ func UnsupportedCommand(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "Error: unknown %s subcommand: %s\n", cmd.Use, args[0])
 	}
 	fmt.Fprintf(os.Stderr, "Run 'burrito %s --help' for usage\n", cmd.Use)
-	cmd.Help()
+	if err := cmd.Help(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error displaying help: %v\n", err)
+		os.Exit(1)
+	}
 	os.Exit(2)
 }
