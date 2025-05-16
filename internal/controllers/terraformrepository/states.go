@@ -49,12 +49,17 @@ func (s *SyncNeeded) getHandler() Handler {
 		log := log.WithContext(ctx)
 		branchStates := repository.Status.Branches
 		gitProvider, err := repo.GetGitProviderFromRepository(r.Credentials, repository)
+		if err != nil {
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get git provider: %s", err))
+			log.Errorf("failed to get git provider for repo %s/%s: %s", repository.Namespace, repository.Name, err)
+			return ctrl.Result{}, branchStates
+		}
 
 		// Update the list of layer branches by querying the TerraformLayer resources
 		layers, err := r.retrieveManagedLayers(ctx, repository)
 		if err != nil {
-			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Failed to list managed layers")
-			log.Errorf("failed to list managed layers: %s", err)
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to list managed layers: %s", err))
+			log.Errorf("failed to list managed layers by repo %s/%s: %s", repository.Namespace, repository.Name, err)
 			return ctrl.Result{}, branchStates
 		}
 		if len(layers) == 0 {

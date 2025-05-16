@@ -51,6 +51,7 @@ var _ = BeforeSuite(func() {
 
 	//+kubebuilder:scaffold:scheme
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 	utils.LoadResources(k8sClient, "testdata")
 	credentialStore = credentials.NewCredentialStore(
@@ -63,10 +64,11 @@ var _ = Describe("Credentials", func() {
 	Describe("Repository secret is present", Ordered, func() {
 		It("should return repository secret", func() {
 			repository := &configv1alpha1.TerraformRepository{}
-			k8sClient.Get(context.TODO(), types.NamespacedName{
+			err := k8sClient.Get(context.TODO(), types.NamespacedName{
 				Name:      "repository-secret-present",
 				Namespace: "default",
 			}, repository)
+			Expect(err).NotTo(HaveOccurred())
 			credentials, err := credentialStore.GetCredentials(repository)
 			fmt.Println(credentials.URL)
 			Expect(err).NotTo(HaveOccurred())
@@ -78,10 +80,11 @@ var _ = Describe("Credentials", func() {
 		Describe("Shared secret is present", Ordered, func() {
 			It("should return shared secret", func() {
 				repository := &configv1alpha1.TerraformRepository{}
-				k8sClient.Get(context.TODO(), types.NamespacedName{
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
 					Name:      "repository-secret-not-present",
 					Namespace: "default",
 				}, repository)
+				Expect(err).NotTo(HaveOccurred())
 				credentials, err := credentialStore.GetCredentials(repository)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(credentials.Username).To(Equal("username-shared"))
@@ -91,11 +94,12 @@ var _ = Describe("Credentials", func() {
 		Describe("Shared secret is not present", Ordered, func() {
 			It("should return error", func() {
 				repository := &configv1alpha1.TerraformRepository{}
-				k8sClient.Get(context.TODO(), types.NamespacedName{
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
 					Name:      "no-secret-present",
 					Namespace: "default",
 				}, repository)
-				_, err := credentialStore.GetCredentials(repository)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = credentialStore.GetCredentials(repository)
 				Expect(err).To(HaveOccurred())
 			})
 		})
