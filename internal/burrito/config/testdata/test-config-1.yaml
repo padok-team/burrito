@@ -18,6 +18,7 @@ controller:
     onError: 1m
     waitAction: 1m
     failureGracePeriod: 15s
+    credentialsTTL: 1h
   defaultSyncWindows:
     - kind: "deny"
       schedule: "0 0 * * *"

@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"os"
-	"time"
 
 	logClient "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -101,8 +100,7 @@ func (c *Controllers) Exec() {
 		log.Fatalf("unable to start manager: %s", err)
 	}
 	datastoreClient := datastore.NewDefaultClient(c.config.Datastore)
-	// TODO: get TTL value from config
-	credentialStore := credentials.NewCredentialStore(mgr.GetClient(), time.Second*5)
+	credentialStore := credentials.NewCredentialStore(mgr.GetClient(), c.config.Controller.Timers.CredentialsTTL)
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())

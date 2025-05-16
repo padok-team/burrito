@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -28,10 +27,9 @@ type Webhook struct {
 
 func New(config *config.Config, client client.Client) *Webhook {
 	return &Webhook{
-		Client: client,
-		Config: config,
-		// TODO: get TTL value from config
-		credentials: credentials.NewCredentialStore(client, 5*time.Second),
+		Client:      client,
+		Config:      config,
+		credentials: credentials.NewCredentialStore(client, config.Controller.Timers.CredentialsTTL),
 	}
 }
 
