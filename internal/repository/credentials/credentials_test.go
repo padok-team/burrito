@@ -106,21 +106,23 @@ var _ = Describe("Credentials", func() {
 		Describe("Shared secret is present but not allowed", Ordered, func() {
 			It("should return error", func() {
 				repository := &configv1alpha1.TerraformRepository{}
-				k8sClient.Get(context.TODO(), types.NamespacedName{
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
 					Name:      "not-allowed-secret",
 					Namespace: "default",
 				}, repository)
-				_, err := credentialStore.GetCredentials(repository)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = credentialStore.GetCredentials(repository)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 		Describe("Two shared secrets are present", Ordered, func() {
 			It("should return the one with the longest URL", func() {
 				repository := &configv1alpha1.TerraformRepository{}
-				k8sClient.Get(context.TODO(), types.NamespacedName{
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
 					Name:      "two-shared-secret-match",
 					Namespace: "default",
 				}, repository)
+				Expect(err).NotTo(HaveOccurred())
 				credentials, err := credentialStore.GetCredentials(repository)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(credentials.Username).To(Equal("username-match-1"))
