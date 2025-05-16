@@ -16,7 +16,7 @@ Available overrides are:
 |:----------------------:|
 |       `Affinity`       |
 |         `Args`         |
-|       `Command `       |
+|       `Command`       |
 |   `ImagePullSecrets`   |
 |        `Image`         |
 |    `InitContainers`    |
