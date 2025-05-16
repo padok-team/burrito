@@ -108,7 +108,7 @@ var _ = BeforeSuite(func() {
 		Config:      config.TestConfig(),
 		Scheme:      scheme.Scheme,
 		Datastore:   datastore.NewMockClient(),
-		Credentials: credentials.NewCredentialStore(k8sClient, 5*time.Second),
+		Credentials: credentials.NewCredentialStore(k8sClient, config.TestConfig().Controller.Timers.CredentialsTTL),
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),

@@ -59,6 +59,7 @@ func TestConfig_FromYamlFile(t *testing.T) {
 				OnError:            1 * time.Minute,
 				WaitAction:         1 * time.Minute,
 				FailureGracePeriod: 15 * time.Second,
+				CredentialsTTL:     1 * time.Hour,
 			},
 			DefaultSyncWindows: []configv1alpha1.SyncWindow{
 				{
@@ -130,6 +131,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_ONERROR", "30s", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_WAITACTION", "30s", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_FAILUREGRACEPERIOD", "1m", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_TIMERS_CREDENTIALSTTL", "2h", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_MAXCONCURRENTRECONCILES", "3", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS", "10", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TERRAFORMMAXRETRIES", "32", &envVarList)
@@ -176,6 +178,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 				OnError:            30 * time.Second,
 				WaitAction:         30 * time.Second,
 				FailureGracePeriod: 1 * time.Minute,
+				CredentialsTTL:     2 * time.Hour,
 			},
 			DefaultSyncWindows: []configv1alpha1.SyncWindow{
 				{
