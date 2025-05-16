@@ -36,10 +36,6 @@ func NewCredentialStore(client client.Client, ttl time.Duration) *CredentialStor
 		Client: client,
 		TTL:    ttl,
 	}
-	err := credentialStore.updateCredentials()
-	if err != nil {
-		log.Errorf("Failed to update credentials: %v", err)
-	}
 	return credentialStore
 }
 

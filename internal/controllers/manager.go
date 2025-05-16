@@ -17,8 +17,10 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"os"
 
+	corev1 "k8s.io/api/core/v1"
 	logClient "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -28,6 +30,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -107,6 +110,14 @@ func (c *Controllers) Exec() {
 	}
 	clientset, err := logClient.NewForConfig(config)
 	if err != nil {
+		panic(err.Error())
+	}
+
+	// Setup field indexer for Secret type (used for credentials)
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &corev1.Secret{}, "type", func(rawObj client.Object) []string {
+		secret := rawObj.(*corev1.Secret)
+		return []string{string(secret.Type)}
+	}); err != nil {
 		panic(err.Error())
 	}
 
