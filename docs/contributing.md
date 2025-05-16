@@ -201,9 +201,15 @@ First, being by installing dlv: `go install github.com/go-delve/delve/cmd/dlv@la
 
 We'll rely on `deploy/charts/burrito/values-debug.yaml` to deploy the configuration to start the debugging session.
 
-By default, the `controller` (that includes the runner) and `datastore` are commented in the Helm values. Indeed, starting the application with dlv server will hang until you connect with the dlv client so it has to be enabled only when you need it.
+By default, the different component debug configs are commented in the Helm values. Indeed, starting the application with dlv server will hang until you connect with the dlv client so it has to be enabled only when you need it.
 
 ```yaml
+# config:
+#   burrito:
+#     runner:
+#       command: ["/usr/local/bin/dlv"]
+#       args: ["--listen=0.0.0.0:2346", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "runner", "start"]
+
 # controllers:
 #   deployment:
 #     mode: Debug
@@ -222,6 +228,12 @@ By default, the `controller` (that includes the runner) and `datastore` are comm
 #     command: ["/usr/local/bin/dlv"]
 #     args: ["--listen=0.0.0.0:2348", "--headless=true", "--accept-multiclient", "--api-version=2", "--log", "exec", "/usr/local/bin/burrito", "server", "start"]
 ```
+
+!!! note
+    The runner command+args override isn't under `runner.deployment` as other components as it's not a k8s deployment
+
+!!! tip
+    You can also launch burrito with the debug build and override command+args in `overrideRunnerSpec` in a specific layer you'd like to debug.
 
 By default, we'll start the application with the usual command. If you want to debug the controller or the runner, uncomment the required block. This will open a port on the pod on which you'll connect from your computer.
 
@@ -258,7 +270,7 @@ kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-contro
 - For the runner:
 
 ```bash
-kubectl port-forward -n burrito-project <layerName> 2346:2345
+kubectl port-forward -n burrito-project <layerName> 2346:2346
 ```
 
 It will listen on the same port than the controller so we're exposing it on port 2346 on your computer so you can debug the controller and the runner if needed.

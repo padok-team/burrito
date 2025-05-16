@@ -126,6 +126,8 @@ type RunnerConfig struct {
 	Image                      ImageConfig      `mapstructure:"image"`
 	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`
 	RepositoryPath             string           `mapstructure:"repositoryPath"`
+	Args                       []string         `mapstructure:"args"`
+	Command                    []string         `mapstructure:"command"`
 }
 
 type ImageConfig struct {

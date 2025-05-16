@@ -26,6 +26,8 @@ type OverrideRunnerSpec struct {
 	VolumeMounts       []corev1.VolumeMount          `json:"volumeMounts,omitempty"`
 	Metadata           MetadataOverride              `json:"metadata,omitempty"`
 	InitContainers     []corev1.Container            `json:"initContainers,omitempty"`
+	Command            []string                      `json:"command,omitempty"`
+	Args               []string                      `json:"args,omitempty"`
 	ExtraInitArgs      ExtraArgs                     `json:"extraInitArgs,omitempty"`
 	ExtraPlanArgs      ExtraArgs                     `json:"extraPlanArgs,omitempty"`
 	ExtraApplyArgs     ExtraArgs                     `json:"extraApplyArgs,omitempty"`
@@ -114,6 +116,8 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 		ServiceAccountName: chooseString(repository.Spec.OverrideRunnerSpec.ServiceAccountName, layer.Spec.OverrideRunnerSpec.ServiceAccountName),
 		ImagePullSecrets:   mergeImagePullSecrets(repository.Spec.OverrideRunnerSpec.ImagePullSecrets, layer.Spec.OverrideRunnerSpec.ImagePullSecrets),
 		InitContainers:     MergeInitContainers(repository.Spec.OverrideRunnerSpec.InitContainers, layer.Spec.OverrideRunnerSpec.InitContainers),
+		Command:            ChooseSlice(repository.Spec.OverrideRunnerSpec.Command, layer.Spec.OverrideRunnerSpec.Command),
+		Args:               ChooseSlice(repository.Spec.OverrideRunnerSpec.Args, layer.Spec.OverrideRunnerSpec.Args),
 		ExtraInitArgs:      overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraInitArgs, layer.Spec.OverrideRunnerSpec.ExtraInitArgs),
 		ExtraPlanArgs:      overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraPlanArgs, layer.Spec.OverrideRunnerSpec.ExtraPlanArgs),
 		ExtraApplyArgs:     overrideExtraArgs(repository.Spec.OverrideRunnerSpec.ExtraApplyArgs, layer.Spec.OverrideRunnerSpec.ExtraApplyArgs),
@@ -170,6 +174,13 @@ func chooseInt(a, b *int, d int) *int {
 		return a
 	}
 	return &d
+}
+
+func ChooseSlice(a, b []string) []string {
+	if len(b) > 0 {
+		return b
+	}
+	return a
 }
 
 func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObjectReference {

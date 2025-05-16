@@ -263,6 +263,8 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 
 	defaultSpec.Tolerations = overrideSpec.Tolerations
 	defaultSpec.Affinity = overrideSpec.Affinity
+	defaultSpec.Containers[0].Args = configv1alpha1.ChooseSlice(defaultSpec.Containers[0].Args, overrideSpec.Args)
+	defaultSpec.Containers[0].Command = configv1alpha1.ChooseSlice(defaultSpec.Containers[0].Command, overrideSpec.Command)
 	defaultSpec.NodeSelector = overrideSpec.NodeSelector
 	defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, overrideSpec.Env...)
 	defaultSpec.InitContainers = overrideSpec.InitContainers
@@ -369,7 +371,8 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 				Name:            "runner",
 				Image:           fmt.Sprintf("%s:%s", config.Runner.Image.Repository, config.Runner.Image.Tag),
 				ImagePullPolicy: corev1.PullPolicy(config.Runner.Image.PullPolicy),
-				Args:            []string{"runner", "start"},
+				Args:            config.Runner.Args,
+				Command:         config.Runner.Command,
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						MountPath: "/home/burrito/.ssh/known_hosts",
