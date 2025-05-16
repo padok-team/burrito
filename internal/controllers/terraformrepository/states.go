@@ -88,7 +88,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				}
 			}
 
-			latestRev, err := r.getRemoteRevision(repository, gitProvider, branch.Name)
+			latestRev, err := gitProvider.GetLatestRevisionForRef(branch.Name)
 			if err != nil {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to get remote revision for ref %s: %s", branch.Name, err)
@@ -114,7 +114,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
-				bundle, err := r.getRevisionBundle(gitProvider, branch.Name)
+				bundle, err := gitProvider.Bundle(branch.Name)
 				if err != nil {
 					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to get revision bundle for ref %s: %s", branch.Name, err)

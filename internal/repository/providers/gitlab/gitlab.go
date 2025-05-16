@@ -8,6 +8,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/gitlab"
+	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/padok-team/burrito/internal/repository/providers/standard"
 	"github.com/padok-team/burrito/internal/repository/types"
@@ -42,13 +43,13 @@ func (g *Gitlab) GetAPIProvider() (types.APIProvider, error) {
 	}, nil
 }
 
-func (g *Gitlab) GetGitProvider() (types.GitProvider, error) {
+func (g *Gitlab) GetGitProvider(repository *configv1alpha1.TerraformRepository) (types.GitProvider, error) {
 	auth, err := buildGitCredentials(g.Config)
 	if err != nil {
 		return nil, err
 	}
 	return &standard.GitProvider{
-		URL:        g.Config.URL,
+		RepoURL:    repository.Spec.Repository.Url,
 		AuthMethod: auth,
 	}, nil
 }

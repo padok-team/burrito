@@ -20,7 +20,7 @@ func (m *Mock) GetAPIProvider() (types.APIProvider, error) {
 	return &APIProvider{}, nil
 }
 
-func (m *Mock) GetGitProvider() (types.GitProvider, error) {
+func (m *Mock) GetGitProvider(repository *configv1alpha1.TerraformRepository) (types.GitProvider, error) {
 	return &GitProvider{}, nil
 }
 
@@ -36,7 +36,7 @@ func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string 
 	return []string{}
 }
 
-func (p *GitProvider) GetLatestRevisionForRef(repository *configv1alpha1.TerraformRepository, ref string) (string, error) {
+func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	log.Infof("Mock provider latest revision for ref")
 	return "", nil
 }
