@@ -86,6 +86,11 @@ config:
         repository: ghcr.io/padok-team/burrito
         tag: "" # By default use Chart's appVersion
         pullPolicy: Always
+      
+      # -- Command to run in the Burrito runner container
+      command: ["burrito"]
+      # -- Arguments to pass to the Burrito runner container
+      args: ["runner", "start"]
 
 hermitcrab:
   # -- Enable/Disable Hermitcrab (terraform provider cache in cluster)
@@ -131,6 +136,10 @@ hermitcrab:
             # -- The default issuer name is "burrito-ca-issuer", packaged with the chart
             name: burrito-ca-issuer
             kind: Issuer
+  # -- Hermitcrab service configuration
+  service:
+    # -- Hermitcrab service annotations
+    annotations: {}
   deployment:
     # -- Hermitcrab replicas
     replicas: 1

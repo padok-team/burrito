@@ -2457,3 +2457,58 @@ func TestMergeInitContainers(t *testing.T) {
 		})
 	}
 }
+
+func TestChooseSlice(t *testing.T) {
+	tt := []struct {
+		name     string
+		sliceA   []string
+		sliceB   []string
+		expected []string
+	}{
+		{
+			"EmptySlices",
+			[]string{},
+			[]string{},
+			[]string{},
+		},
+		{
+			"OnlySliceA",
+			[]string{"value1", "value2"},
+			[]string{},
+			[]string{"value1", "value2"},
+		},
+		{
+			"OnlySliceB",
+			[]string{},
+			[]string{"value3", "value4"},
+			[]string{"value3", "value4"},
+		},
+		{
+			"BothSlicesWithValues_ShouldPreferB",
+			[]string{"value1", "value2"},
+			[]string{"value3", "value4"},
+			[]string{"value3", "value4"},
+		},
+		{
+			"SliceAWithValues_SliceBEmpty",
+			[]string{"value1", "value2"},
+			[]string{},
+			[]string{"value1", "value2"},
+		},
+		{
+			"SliceAEmpty_SliceBWithValues",
+			[]string{},
+			[]string{"value3", "value4"},
+			[]string{"value3", "value4"},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.ChooseSlice(tc.sliceA, tc.sliceB)
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("expected slice %v but got %v", tc.expected, result)
+			}
+		})
+	}
+}
