@@ -31,7 +31,7 @@ spec:
 
 The repository's path of my `TerraformLayer` is set to `terragrunt/random-pets/test`. But I want to trigger the layer plan / apply when a change occurs on my module which is in the `modules/random-pets` directory of my repository.
 
-To do so, I just have to add the `config.terraform.padok.cloud/additionnal-trigger-paths` annotation to my `TerraformLayer` as follow:
+To do so, I just have to add the `config.terraform.padok.cloud/additionnal-trigger-paths` annotation to my `TerraformLayer` as below. Note you can set several paths separated with a comma.
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
