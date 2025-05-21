@@ -11,6 +11,7 @@ import (
 	storage "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/smithy-go"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
@@ -72,14 +73,24 @@ func (a *S3) Check(key string) ([]byte, error) {
 
 	result, err := a.Client.HeadObject(context.TODO(), input)
 	if err != nil {
-		var noKey *types.NoSuchKey
-		if errors.As(err, &noKey) {
-			return make([]byte, 0), &storageerrors.StorageError{
-				Err: err,
-				Nil: true,
+		var apiError smithy.APIError
+		if errors.As(err, &apiError) {
+			switch apiError.(type) {
+			case *types.NotFound:
+				return make([]byte, 0), &storageerrors.StorageError{
+					Err: err,
+					Nil: true,
+				}
+			default:
+				break
 			}
 		}
 		return make([]byte, 0), err
+	}
+
+	// S3 returns a checksum only if the object was uploaded with one
+	if result.ChecksumSHA256 == nil {
+		return make([]byte, 0), nil
 	}
 
 	return []byte(*result.ChecksumSHA256), nil
@@ -87,11 +98,11 @@ func (a *S3) Check(key string) ([]byte, error) {
 
 func (a *S3) Set(key string, data []byte, ttl int) error {
 	input := &storage.PutObjectInput{
-		Bucket: &a.Config.Bucket,
-		Key:    &key,
-		Body:   bytes.NewReader(data),
+		Bucket:            &a.Config.Bucket,
+		Key:               &key,
+		Body:              bytes.NewReader(data),
+		ChecksumAlgorithm: types.ChecksumAlgorithmSha256,
 	}
-
 	_, err := a.Client.PutObject(context.TODO(), input)
 	if err != nil {
 		return err
