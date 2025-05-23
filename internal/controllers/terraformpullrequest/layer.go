@@ -13,6 +13,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	repo "github.com/padok-team/burrito/internal/repository"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,11 +23,13 @@ func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepos
 	if err != nil {
 		return nil, err
 	}
-	provider, err := GetProviderForPullRequest(pr, r)
+
+	provider, err := repo.GetAPIProviderFromRepository(r.Credentials, repository)
 	if err != nil {
-		r.Recorder.Event(pr, corev1.EventTypeWarning, "Provider error", "Could not find provider (gitlab, github...) for pull request")
+		r.Recorder.Event(pr, corev1.EventTypeWarning, "Provider error", "Failed to get API provider for get changes from pull request")
 		return nil, err
 	}
+
 	changes, err := provider.GetChanges(repository, pr)
 	if err != nil {
 		return nil, err
