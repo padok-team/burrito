@@ -8,6 +8,7 @@ spec:
   layer:
     name: unknown-layer
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -20,6 +21,7 @@ spec:
   repository:
     name: unknown-repo
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -31,6 +33,7 @@ spec:
   layer:
     name: unknown-repo-layer-1
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -42,3 +45,16 @@ spec:
   layer:
     name: error-case-1
     namespace: default
+    revision: TEST_REVISION
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-4
+  namespace: default
+spec:
+  action: apply
+  layer:
+    name: nominal-case-1
+    namespace: default
+    revision: UNKNOWN_REVISION
