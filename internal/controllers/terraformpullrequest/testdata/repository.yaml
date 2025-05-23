@@ -10,7 +10,6 @@ spec:
     imagePullSecrets:
       - name: ghcr-creds
   repository:
-    secretName: burrito-repo
     url: git@github.com:padok-team/burrito-examples.git
   terraform:
     enabled: true
@@ -20,9 +19,10 @@ kind: Secret
 metadata:
   name: burrito-repo
   namespace: default
-type: Opaque
+type: credentials.burrito.tf/repository
 stringData:
-  enableMock: "true"
+  provider: mock
+  url: git@github.com:padok-team/burrito-examples.git
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
@@ -36,17 +36,6 @@ spec:
     imagePullSecrets:
       - name: ghcr-creds
   repository:
-    secretName: burrito-repo-no-provider
-    url: git@github.com:padok-team/burrito-examples.git
+    url: git@github.com:padok-team/burrito-examples-no-git-provider.git
   terraform:
     enabled: true
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: burrito-repo-no-provider
-  namespace: default
-type: Opaque
-stringData:
-  username: user
-  password: password

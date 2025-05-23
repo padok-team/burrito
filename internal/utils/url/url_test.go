@@ -6,7 +6,7 @@ import (
 	"github.com/padok-team/burrito/internal/utils/url"
 )
 
-func TestNormalizeURL(t *testing.T) {
+func TestNormalizeURLFullRepos(t *testing.T) {
 	urlTypes := []string{
 		"git@github.com:padok-team/burrito.git",
 		"git@github.com:padok-team/burrito",
@@ -16,6 +16,21 @@ func TestNormalizeURL(t *testing.T) {
 		"http://github.com/padok-team/burrito",
 	}
 	expected := "https://github.com/padok-team/burrito"
+	for _, u := range urlTypes {
+		normalized := url.NormalizeUrl(u)
+		if normalized != expected {
+			t.Errorf("Passed: %s, Expected %s, got %s", u, expected, normalized)
+		}
+	}
+}
+
+func TestNormalizeURLPrefixes(t *testing.T) {
+	urlTypes := []string{
+		"git@github.com:padok-team",
+		"https://github.com/padok-team",
+		"http://github.com/padok-team",
+	}
+	expected := "https://github.com/padok-team"
 	for _, u := range urlTypes {
 		normalized := url.NormalizeUrl(u)
 		if normalized != expected {

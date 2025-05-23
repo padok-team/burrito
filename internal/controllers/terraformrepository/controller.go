@@ -37,17 +37,17 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 )
 
 // RepositoryReconciler reconciles a TerraformRepository object
 type Reconciler struct {
 	client.Client
-	Scheme    *runtime.Scheme
-	Recorder  record.EventRecorder
-	Config    *config.Config
-	Providers map[string]gitprovider.Provider
-	Datastore datastore.Client
+	Scheme      *runtime.Scheme
+	Recorder    record.EventRecorder
+	Config      *config.Config
+	Credentials *credentials.CredentialStore
+	Datastore   datastore.Client
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -96,7 +96,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Providers = make(map[string]gitprovider.Provider)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
