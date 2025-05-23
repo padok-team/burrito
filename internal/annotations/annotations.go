@@ -27,7 +27,8 @@ const (
 	ForceApply              string = "notifications.terraform.padok.cloud/force-apply"
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 
-	SyncNow string = "api.terraform.padok.cloud/sync-now"
+	SyncNow        string = "api.terraform.padok.cloud/sync-now"
+	AllowedTenants string = "credentials.terraform.padok.cloud/allowed-tenants"
 )
 
 func ComputeKeyForSyncBranchNow(branch string) string {
