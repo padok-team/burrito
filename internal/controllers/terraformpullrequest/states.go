@@ -7,6 +7,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	repo "github.com/padok-team/burrito/internal/repository"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -110,9 +111,10 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 	}
 
-	provider, err := GetProviderForPullRequest(pr, r)
+	provider, err := repo.GetAPIProviderFromRepository(r.Credentials, repository)
 	if err != nil {
-		log.Infof("failed to get pull request provider. Requeuing")
+		r.Recorder.Event(pr, corev1.EventTypeWarning, "Provider error", "Failed to get API provider for commenting pull request")
+		log.Errorf("failed to get API provider for commenting pull request %s: %s", pr.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 	}
 
@@ -120,7 +122,7 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 	err = provider.Comment(repository, pr, comment)
 	if err != nil {
 		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Failed to comment pull request")
-		log.Errorf("an error occurred while commenting pull request: %s", err)
+		log.Errorf("failed to comment pull request: %s", err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 	}
 	r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Commented pull request")
