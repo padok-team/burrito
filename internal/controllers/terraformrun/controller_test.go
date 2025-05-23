@@ -338,6 +338,24 @@ var _ = Describe("Run", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
 			})
 		})
+		Describe("When a TerraformRun is associated to an unknown revision", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-4",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
 		Describe("When a TerraformRun has errored once and still in grace period", Ordered, func() {
 			BeforeAll(func() {
 				name = types.NamespacedName{

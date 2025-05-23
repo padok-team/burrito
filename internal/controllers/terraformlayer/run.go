@@ -26,7 +26,7 @@ func GetDefaultLabels(layer *configv1alpha1.TerraformLayer) map[string]string {
 	}
 }
 
-func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action Action) configv1alpha1.TerraformRun {
+func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, revision string, action Action) configv1alpha1.TerraformRun {
 	artifact := configv1alpha1.Artifact{}
 	if action == ApplyAction {
 		run := strings.Split(layer.Annotations[annotations.LastPlanRun], "/")
@@ -52,6 +52,7 @@ func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, repository *co
 			Layer: configv1alpha1.TerraformRunLayer{
 				Name:      layer.Name,
 				Namespace: layer.Namespace,
+				Revision:  revision,
 			},
 			Artifact: artifact,
 		},

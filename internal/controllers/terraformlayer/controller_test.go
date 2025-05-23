@@ -504,7 +504,7 @@ var _ = Describe("Layer", func() {
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 			})
-			It("should have created a plan TerraformRun", func() {
+			It("should have created a apply TerraformRun", func() {
 				runs, err := getLinkedRuns(k8sClient, layer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(runs.Items)).To(Equal(1))
@@ -529,6 +529,27 @@ var _ = Describe("Layer", func() {
 			})
 			It("should not set RequeueAfter", func() {
 				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
+			})
+		})
+		Describe("When a TerraformLayer has not been annotated by Repository Controller", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-6",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
 			})
 		})
 		Describe("When a TerraformLayer does not have a TerraformRepository", Ordered, func() {

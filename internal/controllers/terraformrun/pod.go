@@ -116,7 +116,7 @@ func mountCA(podSpec *corev1.PodSpec, caSecretName, caName string) {
 }
 
 func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.Pod {
-	defaultSpec := defaultPodSpec(r.Config, layer, repository, run)
+	defaultSpec := defaultPodSpec(r.Config, layer, run)
 
 	if r.Config.Hermitcrab.Enabled {
 		err := r.ensureCertificateAuthoritySecret(layer.Namespace, r.Config.Hermitcrab.CertificateSecretName)
@@ -333,7 +333,7 @@ func mergeMaps(a, b map[string]string) map[string]string {
 	return result
 }
 
-func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, run *configv1alpha1.TerraformRun) corev1.PodSpec {
+func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) corev1.PodSpec {
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{
