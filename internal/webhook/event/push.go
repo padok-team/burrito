@@ -40,6 +40,9 @@ func (e *PushEvent) Handle(c client.Client) error {
 		log.Errorf("could not list TerraformPullRequests: %s", err)
 		return err
 	}
+
+	// Push events annotates the affected repositories with the commit sha to
+	// trigger a sync of the repository
 	affectedRepositories := e.getAffectedRepositories(repositories.Items)
 	for _, repo := range affectedRepositories {
 		ann := map[string]string{}
@@ -51,6 +54,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 	}
 
+	// TODO: Remove this loop once the repo controller implements the same behavior
 	for _, layer := range e.getAffectedLayers(layers.Items, affectedRepositories) {
 		ann := map[string]string{}
 		log.Printf("evaluating TerraformLayer %s for revision %s", layer.Name, e.Reference)
@@ -74,6 +78,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 	}
 
+	// TODO: Remove this loop once the repo controller implements the same behavior
 	for _, pr := range e.getAffectedPullRequests(prs.Items, affectedRepositories) {
 		ann := map[string]string{}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
