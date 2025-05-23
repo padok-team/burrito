@@ -6,7 +6,6 @@ import (
 	"embed"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -64,7 +63,6 @@ func New(c *config.Config) *Server {
 
 	return &Server{
 		config:       c,
-		Webhook:      webhook.New(c),
 		API:          api.New(c),
 		staticAssets: http.FS(content),
 		sessionStore: sessionStore,
@@ -95,12 +93,6 @@ func (s *Server) Exec() {
 	}
 	s.client = *client
 	s.API.Client = s.client
-	s.Webhook.Client = s.client
-	log.Info("initializing webhook handlers...")
-	err = s.Webhook.Init()
-	if err != nil {
-		log.Fatalf("error initializing webhook handler: %s", err)
-	}
 
 	// Initialize authentication handlers based on configuration
 	var authHandlers a.AuthHandlers
@@ -191,37 +183,12 @@ func (s *Server) Exec() {
 		return c.Redirect(http.StatusTemporaryRedirect, "/layers")
 	})
 
-	// start a goroutine to refresh webhook handlers every minute
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go s.refreshWebhookHandlers(ctx)
-
 	e.Logger.Fatal(e.Start(s.config.Server.Addr))
 	log.Infof("burrito server started on addr %s", s.config.Server.Addr)
 }
 
 func handleHealthz(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
-}
-
-func (s *Server) refreshWebhookHandlers(ctx context.Context) {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			log.Debug("refreshing webhook handlers...")
-			err := s.Webhook.Init()
-			if err != nil {
-				log.Errorf("error refreshing webhook handlers: %s", err)
-			} else {
-				log.Debug("webhook handlers refreshed successfully")
-			}
-		case <-ctx.Done():
-			log.Info("stopping refresh of webhook handlers")
-			return
-		}
-	}
 }
 
 func (s *Server) authMiddleware() echo.MiddlewareFunc {
