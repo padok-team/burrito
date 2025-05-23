@@ -41,8 +41,7 @@ type TerraformRepositorySpec struct {
 	SyncWindows             []SyncWindow                  `json:"syncWindows,omitempty"`
 }
 type TerraformRepositoryRepository struct {
-	Url        string `json:"url,omitempty"`
-	SecretName string `json:"secretName,omitempty"`
+	Url string `json:"url,omitempty"`
 }
 
 // TerraformRepositoryStatus defines the observed state of TerraformRepository

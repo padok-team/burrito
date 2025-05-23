@@ -8,13 +8,10 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
-	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
-	"github.com/padok-team/burrito/internal/utils/typeutils"
+	repo "github.com/padok-team/burrito/internal/repository"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -51,24 +48,18 @@ func (s *SyncNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository) (ctrl.Result, []configv1alpha1.BranchState) {
 		log := log.WithContext(ctx)
 		branchStates := repository.Status.Branches
-		// Initialize git providers for the repository if needed
-		if _, ok := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]; !ok {
-			provider, err := r.initializeProvider(ctx, repository)
-			if err != nil {
-				log.Errorf("could not initialize provider for repository %s: %s", repository.Name, err)
-				return ctrl.Result{}, branchStates
-			}
-			if provider != nil {
-				log.Infof("initialized git provider for repository %s/%s", repository.Namespace, repository.Name)
-				r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)] = provider
-			}
+		gitProvider, err := repo.GetGitProviderFromRepository(r.Credentials, repository)
+		if err != nil {
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get git provider: %s", err))
+			log.Errorf("failed to get git provider for repo %s/%s: %s", repository.Namespace, repository.Name, err)
+			return ctrl.Result{}, branchStates
 		}
 
 		// Update the list of layer branches by querying the TerraformLayer resources
 		layers, err := r.retrieveManagedLayers(ctx, repository)
 		if err != nil {
-			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Failed to list managed layers")
-			log.Errorf("failed to list managed layers: %s", err)
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to list managed layers: %s", err))
+			log.Errorf("failed to list managed layers by repo %s/%s: %s", repository.Namespace, repository.Name, err)
 			return ctrl.Result{}, branchStates
 		}
 		if len(layers) == 0 {
@@ -97,7 +88,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				}
 			}
 
-			latestRev, err := r.getRemoteRevision(repository, branch.Name)
+			latestRev, err := gitProvider.GetLatestRevisionForRef(branch.Name)
 			if err != nil {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to get remote revision for ref %s: %s", branch.Name, err)
@@ -123,7 +114,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
-				bundle, err := r.getRevisionBundle(repository, branch.Name, latestRev)
+				bundle, err := gitProvider.Bundle(branch.Name)
 				if err != nil {
 					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to get revision bundle for ref %s: %s", branch.Name, err)
@@ -215,60 +206,4 @@ func addMissingLastBranchesAnnotations(c client.Client, layers []configv1alpha1.
 		}
 	}
 	return err
-}
-
-func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv1alpha1.TerraformRepository) (gitprovider.Provider, error) {
-	if repository.Spec.Repository.Url == "" {
-		return nil, fmt.Errorf("no repository URL found in TerraformRepository.spec.repository.url for repository %s. Skipping provider initialization", repository.Name)
-	}
-	var config gitprovider.Config
-
-	if repository.Spec.Repository.SecretName != "" {
-		secret := &corev1.Secret{}
-		err := r.Client.Get(ctx, types.NamespacedName{
-			Name:      repository.Spec.Repository.SecretName,
-			Namespace: repository.Namespace,
-		}, secret)
-		if err != nil {
-			log.Errorf("failed to get credentials secret for repository %s: %s", repository.Name, err)
-			config = gitprovider.Config{
-				URL: repository.Spec.Repository.Url,
-			}
-		} else {
-			config = gitprovider.Config{
-				URL:        repository.Spec.Repository.Url,
-				EnableMock: secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
-				// GitHub App Auth
-				AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
-				AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
-				AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
-				// Token Auth
-				GitHubToken: string(secret.Data["githubToken"]),
-				GitLabToken: string(secret.Data["gitlabToken"]),
-				// Basic Auth
-				Username: string(secret.Data["username"]),
-				Password: string(secret.Data["password"]),
-				// SSH Auth
-				SSHPrivateKey: string(secret.Data["sshPrivateKey"]),
-			}
-		}
-	} else {
-		log.Infof("no secret configured for repository %s/%s, using empty config", repository.Namespace, repository.Name)
-		config = gitprovider.Config{
-			URL: repository.Spec.Repository.Url,
-		}
-	}
-
-	provider, err := gitprovider.New(config, []string{gt.Capabilities.Clone})
-	if err != nil {
-		log.Errorf("failed to create provider for repository %s: %s", repository.Name, err)
-		return nil, err
-	}
-
-	err = provider.Init()
-	if err != nil {
-		log.Errorf("failed to initialize provider for repository %s: %s", repository.Name, err)
-		return nil, err
-	}
-	return provider, nil
 }

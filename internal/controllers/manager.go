@@ -17,8 +17,10 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"os"
 
+	corev1 "k8s.io/api/core/v1"
 	logClient "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -28,6 +30,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -38,6 +41,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	"github.com/padok-team/burrito/internal/controllers/terraformrun"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
@@ -99,12 +103,21 @@ func (c *Controllers) Exec() {
 		log.Fatalf("unable to start manager: %s", err)
 	}
 	datastoreClient := datastore.NewDefaultClient(c.config.Datastore)
+	credentialStore := credentials.NewCredentialStore(mgr.GetClient(), c.config.Controller.Timers.CredentialsTTL)
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
 	}
 	clientset, err := logClient.NewForConfig(config)
 	if err != nil {
+		panic(err.Error())
+	}
+
+	// Setup field indexer for Secret type (used for credentials)
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &corev1.Secret{}, "type", func(rawObj client.Object) []string {
+		secret := rawObj.(*corev1.Secret)
+		return []string{string(secret.Type)}
+	}); err != nil {
 		panic(err.Error())
 	}
 
@@ -125,11 +138,12 @@ func (c *Controllers) Exec() {
 			log.Infof("layer controller started successfully")
 		case "repository":
 			if err = (&terraformrepository.Reconciler{
-				Client:    mgr.GetClient(),
-				Scheme:    mgr.GetScheme(),
-				Recorder:  mgr.GetEventRecorderFor("Burrito"),
-				Config:    c.config,
-				Datastore: datastoreClient,
+				Client:      mgr.GetClient(),
+				Scheme:      mgr.GetScheme(),
+				Recorder:    mgr.GetEventRecorderFor("Burrito"),
+				Config:      c.config,
+				Datastore:   datastoreClient,
+				Credentials: credentialStore,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create repository controller: %s", err)
 			}
@@ -148,11 +162,12 @@ func (c *Controllers) Exec() {
 			log.Infof("run controller started successfully")
 		case "pullrequest":
 			if err = (&terraformpullrequest.Reconciler{
-				Client:    mgr.GetClient(),
-				Scheme:    mgr.GetScheme(),
-				Recorder:  mgr.GetEventRecorderFor("Burrito"),
-				Config:    c.config,
-				Datastore: datastoreClient,
+				Client:      mgr.GetClient(),
+				Scheme:      mgr.GetScheme(),
+				Recorder:    mgr.GetEventRecorderFor("Burrito"),
+				Config:      c.config,
+				Datastore:   datastoreClient,
+				Credentials: credentialStore,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create pullrequest controller: %s", err)
 			}
