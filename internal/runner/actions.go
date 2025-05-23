@@ -24,8 +24,6 @@ const PlanArtifact string = "/tmp/plan.out"
 // be initialized.
 func (r *Runner) ExecAction() error {
 	ann := map[string]string{}
-	ref, _ := r.gitRepository.Head()
-	commit := ref.Hash().String()
 
 	switch r.config.Runner.Action {
 	case "plan":
@@ -36,7 +34,7 @@ func (r *Runner) ExecAction() error {
 		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
 		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.Run.Name, strconv.Itoa(r.Run.Status.Retries))
 		ann[annotations.LastPlanSum] = sum
-		ann[annotations.LastPlanCommit] = commit
+		ann[annotations.LastPlanCommit] = r.Run.Spec.Layer.Revision
 
 	case "apply":
 		sum, err := r.execApply()
@@ -45,7 +43,7 @@ func (r *Runner) ExecAction() error {
 		}
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
 		ann[annotations.LastApplySum] = sum
-		ann[annotations.LastApplyCommit] = commit
+		ann[annotations.LastApplyCommit] = r.Run.Spec.Layer.Revision
 	default:
 		return errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
 	}

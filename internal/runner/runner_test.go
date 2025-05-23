@@ -15,7 +15,6 @@ import (
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/runner"
 	utils "github.com/padok-team/burrito/internal/testing"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -98,10 +97,6 @@ func executeRunner(r *runner.Runner) error {
 	r.Datastore = datastore.NewMockClient()
 	r.Client = k8sClient
 	var err error
-	r.GitProvider, err = gitprovider.NewWithName(gitprovider.Config{}, "standard")
-	if err != nil {
-		return err
-	}
 	err = r.Init()
 	if err != nil {
 		return err
@@ -264,6 +259,7 @@ var _ = Describe("Runner Tests", func() {
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
+				runnerInstance.Datastore = datastore.NewMockClient()
 				err = runnerInstance.GetResources()
 			})
 			AfterAll(func() {
@@ -293,6 +289,7 @@ var _ = Describe("Runner Tests", func() {
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
+				runnerInstance.Datastore = datastore.NewMockClient()
 				err = runnerInstance.Init()
 			})
 			AfterAll(func() {
@@ -321,6 +318,7 @@ var _ = Describe("Runner Tests", func() {
 
 				runnerInstance = runner.New(conf)
 				runnerInstance.Client = k8sClient
+				runnerInstance.Datastore = datastore.NewMockClient()
 				err = runnerInstance.Init()
 			})
 			AfterAll(func() {
@@ -336,7 +334,7 @@ var _ = Describe("Runner Tests", func() {
 		})
 	})
 	Describe("Error Cases", Ordered, func() {
-		Describe("When repository fails to fetch", Ordered, func() {
+		Describe("When repository bundle does not exist", Ordered, func() {
 			var conf *config.Config
 			BeforeAll(func() {
 				conf = generateTestConfig()
