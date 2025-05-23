@@ -9727,6 +9727,8 @@ spec:
                     type: string
                   namespace:
                     type: string
+                  revision:
+                    type: string
                 type: object
             type: object
           status:

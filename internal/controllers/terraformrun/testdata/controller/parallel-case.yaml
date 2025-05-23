@@ -8,6 +8,7 @@ spec:
   layer:
     name: parallel-case-1
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -19,6 +20,7 @@ spec:
   layer:
     name: parallel-case-2
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -30,3 +32,4 @@ spec:
   layer:
     name: parallel-case-3
     namespace: default
+    revision: TEST_REVISION
