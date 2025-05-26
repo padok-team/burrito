@@ -5,12 +5,12 @@ import { ThemeContext } from '@/contexts/ThemeContext';
 
 import Input from '@/components/core/Input';
 import Button from '@/components/core/Button';
-import SocialButton from '@/components/buttons/SocialButton';
 
 import Burrito from '@/assets/illustrations/Burrito';
 import EyeSlashIcon from '@/assets/icons/EyeSlashIcon';
 import CoverLight from '@/assets/covers/cover-light.png';
 import CoverDark from '@/assets/covers/cover-dark.png';
+import SSOButton from '@/components/buttons/SSOButton';
 
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -84,15 +84,9 @@ const Login: React.FC = () => {
               <hr className="w-full" />
             </div>
             <div className="flex flex-col items-center justify-center gap-4 w-full">
-              <SocialButton
-                className="w-full"
-                variant="github"
-                onClick={() => navigate('/')}
-              />
-              <SocialButton
-                className="w-full"
-                variant="gitlab"
-                onClick={() => navigate('/')}
+              <SSOButton
+              className="w-full"
+              onClick={() => (document.location.href = '/auth/login')}
               />
             </div>
           </div>
