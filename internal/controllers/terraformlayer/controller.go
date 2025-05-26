@@ -19,7 +19,6 @@ package terraformlayer
 import (
 	"context"
 	e "errors"
-	"strconv"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -120,19 +119,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	state, conditions := r.GetState(ctx, layer)
 	lastResult := []byte("Layer has never been planned")
 	if layer.Status.LastRun.Name != "" {
-		// Get attempt from TerraformRun if available
-		attempt := ""
-		run := &configv1alpha1.TerraformRun{}
-		err := r.Client.Get(ctx, types.NamespacedName{
-			Namespace: layer.Namespace,
-			Name:      layer.Status.LastRun.Name,
-		}, run)
-
-		if err == nil && run.Status.Retries > 0 {
-			attempt = strconv.Itoa(run.Status.Retries)
-		}
-
-		lastResult, err = r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, attempt, "short")
+		lastResult, err = r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
 		if err != nil {
 			log.Errorf("failed to get plan for layer %s: %s", layer.Name, err)
 			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
