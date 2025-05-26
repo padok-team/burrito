@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -122,14 +122,24 @@ func (s *Storage) PutPlan(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetAttempts(namespace string, layer string, run string) ([]string, error) {
+	attempts := []string{}
 	key := fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
-	attempts, err := s.Backend.List(key)
+	paths, err := s.Backend.List(key)
+
+	for _, path := range paths {
+		// Remove the key prefix to get just the attempt number (and filename on Azure)
+		// Example: /layers/ns/layer/run/0/ becomes 0,
+		attemptStr := strings.TrimPrefix(path, key+"/")
+		// Azure returns the full path, so we need to split by "/"
+		attemptId := strings.Split(attemptStr, "/")[0]
+		if !slices.Contains(attempts, attemptId) {
+			attempts = append(attempts, attemptId)
+		}
+	}
 
 	if err != nil || len(attempts) == 0 {
 		return nil, err
 	}
-
-	sort.Strings(attempts) // Sort attempts to ensure we get the latest one
 
 	return attempts, nil
 }
@@ -141,10 +151,7 @@ func (s *Storage) GetLatestAttempt(namespace string, layer string, run string) (
 		return "-1", err
 	}
 
-	// get last attempt from the sorted list
-	// attempts are like: /layers/ns/layer/run/0/, /layers/ns/layer/run/1/, etc.
-	parts := strings.Split(attempts[len(attempts)-1], "/")
-	lastAttemptStr := parts[len(parts)-2]
+	lastAttemptStr := attempts[len(attempts)-1]
 
 	return lastAttemptStr, nil
 }
