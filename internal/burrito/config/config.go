@@ -155,6 +155,14 @@ type HermitcrabConfig struct {
 type ServerConfig struct {
 	Addr    string        `mapstructure:"addr"`
 	Webhook WebhookConfig `mapstructure:"webhook"`
+	OIDC    OIDCConfig    `mapstructure:"oidc"`
+}
+
+type OIDCConfig struct {
+	IssuerURL    string `mapstructure:"issuerUrl"`
+	ClientID     string `mapstructure:"clientId"`
+	ClientSecret string `mapstructure:"clientSecret"`
+	RedirectURL  string `mapstructure:"redirectUrl"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {
