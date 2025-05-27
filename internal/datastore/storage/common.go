@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -122,26 +123,34 @@ func (s *Storage) PutPlan(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetAttempts(namespace string, layer string, run string) ([]string, error) {
-	attempts := []string{}
+	attempts := []int{}
 	key := fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
 	paths, err := s.Backend.List(key)
 
 	for _, path := range paths {
-		// Remove the key prefix to get just the attempt number (and filename on Azure)
+		// Remove the key prefix to get just the attempt number
 		// Example: /layers/ns/layer/run/0/ becomes 0,
 		attemptStr := strings.TrimPrefix(path, key+"/")
-		// Azure returns the full path, so we need to split by "/"
-		attemptId := strings.Split(attemptStr, "/")[0]
-		if !slices.Contains(attempts, attemptId) {
-			attempts = append(attempts, attemptId)
-		}
+
+		// In case the backend returns full paths, we need to split by "/"
+		attemptId, _ := strconv.Atoi(strings.Split(attemptStr, "/")[0])
+		attempts = append(attempts, attemptId)
 	}
 
 	if err != nil || len(attempts) == 0 {
 		return nil, err
 	}
 
-	return attempts, nil
+	// We use a int slice to easily sort, deduplicate and convert to string later
+	slices.Sort(attempts)
+	slices.Compact(attempts)
+
+	attemptsStr := make([]string, len(attempts))
+	for i, a := range attempts {
+		attemptsStr[i] = strconv.Itoa(a)
+	}
+
+	return attemptsStr, nil
 }
 
 func (s *Storage) GetLatestAttempt(namespace string, layer string, run string) (string, error) {
