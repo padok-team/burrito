@@ -202,9 +202,19 @@ func (s *Server) handleLogin(c echo.Context) error {
 
 	sess, err := session.Get(cookieName, c)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get session")
+		// Clear session cookie if session is invalid
+		http.SetCookie(c.Response(), &http.Cookie{
+			Name:     cookieName,
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			Secure:   c.Request().TLS != nil,
+			SameSite: http.SameSiteLaxMode,
+		})
 	}
 
+	// State is stored in session for verification in callback handler
 	sess.Values["oauth_state"] = state
 	if err := sess.Save(c.Request(), c.Response()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save session")
