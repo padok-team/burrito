@@ -130,7 +130,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
                 `flex
                 flex-col
                 rounded-lg
-                outline-none
+                outline-hidden
                 p-2`,
                 styles[variant]
               )}
@@ -139,7 +139,7 @@ const StatesDropdown: React.FC<StatesDropdownProps> = ({
               <span className="font-semibold px-2">States</span>
               <hr
                 className={`
-                  h-[1px]
+                  h-px
                   w-auto
                   -mx-2
                   my-2

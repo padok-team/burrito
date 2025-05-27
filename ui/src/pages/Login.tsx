@@ -126,7 +126,7 @@ const Login: React.FC = () => {
           flex
           flex-col
           overflow-hidden
-          w-[calc(100%_-_500px)]
+          w-[calc(100%-500px)]
           pt-20
           px-16
           gap-6
