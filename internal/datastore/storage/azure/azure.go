@@ -22,15 +22,22 @@ type Azure struct {
 }
 
 // New creates a new Azure Blob Storage client
-func New(config config.AzureConfig) *Azure {
-	credential, err := identity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		panic(err)
+// If client is nil, a new one will be created using the provided config
+// This function can also be used for testing with Azurite by providing a pre-configured client
+func New(config config.AzureConfig, client *storage.Client) *Azure {
+	// If no client is provided, create one
+	if client == nil {
+		credential, err := identity.NewDefaultAzureCredential(nil)
+		if err != nil {
+			panic(err)
+		}
+		newClient, err := storage.NewClient("https://"+config.StorageAccount+".blob.core.windows.net", credential, nil)
+		if err != nil {
+			panic(err)
+		}
+		client = newClient
 	}
-	client, err := storage.NewClient("https://"+config.StorageAccount+".blob.core.windows.net", credential, nil)
-	if err != nil {
-		panic(err)
-	}
+
 	return &Azure{
 		Client: client,
 		Config: config,
@@ -38,20 +45,40 @@ func New(config config.AzureConfig) *Azure {
 }
 
 func (a *Azure) Get(key string) ([]byte, error) {
-	content := make([]byte, 0)
-	_, err := a.Client.DownloadBuffer(context.Background(), a.Config.Container, key, content, &blob.DownloadBufferOptions{})
+	// First, check if the blob exists and get its size
+	blobClient := a.Client.ServiceClient().NewContainerClient(a.Config.Container).NewBlobClient(key)
+	props, err := blobClient.GetProperties(context.Background(), nil)
+
+	// Handle case where blob doesn't exist
 	if bloberror.HasCode(err, bloberror.BlobNotFound) {
 		return nil, &errors.StorageError{
 			Err: err,
 			Nil: true,
 		}
 	}
+
+	// Handle other errors
 	if err != nil {
 		return nil, &errors.StorageError{
 			Err: err,
 			Nil: false,
 		}
 	}
+
+	// Get content length and prepare buffer with appropriate size
+	contentLength := int(*props.ContentLength)
+	content := make([]byte, contentLength)
+
+	// Download the blob into the pre-allocated buffer
+	_, err = a.Client.DownloadBuffer(context.Background(), a.Config.Container, key, content, &blob.DownloadBufferOptions{})
+
+	if err != nil {
+		return nil, &errors.StorageError{
+			Err: err,
+			Nil: false,
+		}
+	}
+
 	return content, nil
 }
 

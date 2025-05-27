@@ -68,7 +68,7 @@ type StorageBackend interface {
 func New(config config.Config) Storage {
 	switch {
 	case config.Datastore.Storage.Azure.Container != "":
-		return Storage{Backend: azure.New(config.Datastore.Storage.Azure)}
+		return Storage{Backend: azure.New(config.Datastore.Storage.Azure, nil)}
 	case config.Datastore.Storage.GCS.Bucket != "":
 		return Storage{Backend: gcs.New(config.Datastore.Storage.GCS)}
 	case config.Datastore.Storage.S3.Bucket != "":

@@ -1,0 +1,56 @@
+services:
+  burritotest-minio:
+    image: minio/minio:RELEASE.2025-05-24T17-08-30Z
+    command:
+      - server
+      - --address=0.0.0.0:9000
+      - --console-address=0.0.0.0:46209
+      - /data
+    hostname: minio
+    ports:
+      - "9000:9000"
+      - "46209:46209"
+    environment:
+      MINIO_ROOT_USER: burritoadmin
+      MINIO_ROOT_PASSWORD: burritoadmin
+    volumes:
+      - /data # ephemeral storage for testing
+    healthcheck: # allows the tests to wait for MinIO to be ready
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  burritotest-azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.34.0
+    hostname: azurite
+    command:
+      - azurite
+      - --disableTelemetry
+      - --blobHost=0.0.0.0
+      - --blobPort=10000
+      - --inMemoryPersistence
+      - --extentMemoryLimit=20
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    healthcheck:
+      test: ["CMD", "nc", "-nz", "-w2", "127.0.0.1", "10000"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - ./scripts:/scripts
+
+  # burritotest-localstack:
+  #   image: localstack/localstack:4.4.0
+  #   hostname: localstack
+  #   ports:
+  #     - "4566:4566"
+  #   environment:
+  #     - SERVICES=s3
+  #     - AWS_DEFAULT_REGION=eu-west-3
+  #     - DEBUG=1
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
