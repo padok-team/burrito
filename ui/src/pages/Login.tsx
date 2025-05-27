@@ -1,7 +1,9 @@
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
+import { getAuthStatus } from '@/clients/auth/client';
 
 import Input from '@/components/core/Input';
 import Button from '@/components/core/Button';
@@ -15,6 +17,20 @@ import SSOButton from '@/components/buttons/SSOButton';
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
+
+  // Check if user is already authenticated
+  const { data: isAuthenticated, isSuccess } = useQuery({
+    queryKey: ['auth'],
+    queryFn: getAuthStatus,
+    retry: false, 
+    refetchOnWindowFocus: false
+  });
+
+  // Redirect to /layers if already authenticated
+  if (isSuccess && isAuthenticated) {
+    navigate('/layers', { replace: true });
+    return null;
+  }
   return (
     <div className="flex h-screen">
       <div

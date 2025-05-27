@@ -122,6 +122,14 @@ func (s *Server) Exec() {
 	auth.GET("/login", s.handleLogin)
 	auth.GET("/callback", s.handleCallback)
 	auth.POST("/logout", s.handleLogout)
+	// Check if user is authenticated, used to redirect /login to / if already logged in
+	auth.GET("/", func(c echo.Context) error {
+		sess, err := session.Get(cookieName, c)
+		if err != nil || sess.Values["user_id"] == nil {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+		return c.NoContent(http.StatusOK)
+	})
 
 	api := e.Group("/api")
 	api.Use(middleware.Logger())

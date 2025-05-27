@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-import ThemeToggle from '@/components/misc/ThemeToggle';
+import SettingsToggle from '@/components/misc/SettingsToggle';
 
 import Sombrero from '@/assets/illustrations/Sombrero';
 
@@ -82,7 +82,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
         BR
       </div>
       {open && (
-        <ThemeToggle
+        <SettingsToggle
           className="absolute left-12 w-max z-10"
           variant={variant}
         />
