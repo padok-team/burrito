@@ -137,7 +137,7 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
                 `flex
                 flex-col
                 rounded-lg
-                outline-none
+                outline-hidden
                 p-2
                 z-20`,
                 styles[variant]
@@ -147,7 +147,7 @@ const AttemptsDropdown: React.FC<AttemptsDropdownProps> = ({
               <span className="font-semibold px-2">Attempts</span>
               <hr
                 className={`
-                  h-[1px]
+                  h-px
                   w-auto
                   -mx-2
                   my-2

@@ -124,7 +124,7 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
                 `flex
                 flex-col
                 rounded-lg
-                outline-none
+                outline-hidden
                 p-2`,
                 styles[variant]
               )}
@@ -134,7 +134,7 @@ const PaginationDropdown: React.FC<PaginationDropdownProps> = ({
                 {options.map(({ value, label }) => (
                   <button
                     key={value}
-                    className="outline-none"
+                    className="outline-hidden"
                     onClick={() => {
                       setSelectedPagination(value);
                       setIsOpen(false);

@@ -7,7 +7,7 @@ import TrafficCone from '@/components/temp/TrafficCone';
 const Pulls: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   return (
-    <div className="flex flex-grow items-center justify-center p-8">
+    <div className="flex grow items-center justify-center p-8">
       <div className="flex items-center gap-8">
         <TrafficCone height={80} width={80} />
         <span
