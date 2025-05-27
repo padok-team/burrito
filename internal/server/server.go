@@ -4,12 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"embed"
-	"encoding/base64"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -17,10 +15,10 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/server/api"
-	"github.com/padok-team/burrito/internal/server/auth"
+	a "github.com/padok-team/burrito/internal/server/auth"
+	"github.com/padok-team/burrito/internal/server/auth/oauth"
 	"github.com/padok-team/burrito/internal/webhook"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -43,7 +41,6 @@ type Server struct {
 	client       client.Client
 	sessionStore sessions.Store
 	sessionKey   []byte
-	authConfig   *auth.AuthConfig
 }
 
 func New(c *config.Config) *Server {
@@ -91,8 +88,7 @@ func (s *Server) Exec() {
 		log.Fatalf("error initializing webhook handler: %s", err)
 	}
 
-	s.authConfig = &auth.AuthConfig{}
-	err = s.authConfig.InitOIDC(s.config)
+	oAuth, err := oauth.New(s.config, cookieName)
 	if err != nil {
 		log.Fatalf("error initializing OIDC: %s", err)
 	}
@@ -119,9 +115,11 @@ func (s *Server) Exec() {
 
 	// Auth routes (no authentication required)
 	auth := e.Group("/auth")
-	auth.GET("/login", s.handleLogin)
-	auth.GET("/callback", s.handleCallback)
-	auth.POST("/logout", s.handleLogout)
+	auth.GET("/login", oAuth.HandleLogin)
+	auth.GET("/callback", oAuth.HandleCallback)
+	auth.POST("/logout", func(c echo.Context) error {
+		return a.HandleLogout(c, cookieName)
+	})
 	// Check if user is authenticated, used to redirect /login to / if already logged in
 	auth.GET("/", func(c echo.Context) error {
 		sess, err := session.Get(cookieName, c)
@@ -199,117 +197,13 @@ func (s *Server) authMiddleware() echo.MiddlewareFunc {
 
 			// Store user info in context for use in handlers
 			c.Set("user_id", userID)
+			if email, ok := sess.Values["email"].(string); ok {
+				c.Set("user_email", email)
+			}
+			if name, ok := sess.Values["name"].(string); ok {
+				c.Set("user_name", name)
+			}
 			return next(c)
 		}
 	}
-}
-
-func (s *Server) handleLogin(c echo.Context) error {
-	// Generate state parameter for CSRF protection
-	state := generateRandomString(32)
-
-	sess, err := session.Get(cookieName, c)
-	if err != nil {
-		// Clear session cookie if session is invalid
-		http.SetCookie(c.Response(), &http.Cookie{
-			Name:     cookieName,
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-			Secure:   c.Request().TLS != nil,
-			SameSite: http.SameSiteLaxMode,
-		})
-	}
-
-	// State is stored in session for verification in callback handler
-	sess.Values["oauth_state"] = state
-	if err := sess.Save(c.Request(), c.Response()); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save session")
-	}
-
-	authURL := s.authConfig.OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	return c.Redirect(http.StatusTemporaryRedirect, authURL)
-}
-
-func (s *Server) handleCallback(c echo.Context) error {
-	sess, err := session.Get(cookieName, c)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get session")
-	}
-
-	// Verify state parameter
-	state := c.QueryParam("state")
-	expectedState, ok := sess.Values["oauth_state"]
-	if !ok || state != expectedState {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid state parameter")
-	}
-
-	// Exchange code for token
-	code := c.QueryParam("code")
-	token, err := s.authConfig.OAuth2Config.Exchange(context.Background(), code)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to exchange code for token")
-	}
-
-	// Extract ID token
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		return echo.NewHTTPError(http.StatusInternalServerError, "No id_token in token response")
-	}
-
-	// Verify ID token
-	verifier := s.authConfig.OidcProvider.Verifier(&oidc.Config{ClientID: s.authConfig.OAuth2Config.ClientID})
-	idToken, err := verifier.Verify(context.Background(), rawIDToken)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to verify ID token")
-	}
-
-	// Extract claims
-	var claims struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
-		Name  string `json:"name"`
-	}
-	if err := idToken.Claims(&claims); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
-	}
-
-	// Store user info in session
-	sess.Values["user_id"] = claims.Sub
-	sess.Values["email"] = claims.Email
-	sess.Values["name"] = claims.Name
-	delete(sess.Values, "oauth_state") // Clean up state
-
-	if err := sess.Save(c.Request(), c.Response()); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save session")
-	}
-
-	// Redirect to layers page
-	return c.Redirect(http.StatusTemporaryRedirect, "/layers")
-}
-
-func (s *Server) handleLogout(c echo.Context) error {
-	sess, err := session.Get(cookieName, c)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get session")
-	}
-
-	// Clear session
-	sess.Values = make(map[interface{}]interface{})
-	sess.Options.MaxAge = -1
-
-	if err := sess.Save(c.Request(), c.Response()); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save session")
-	}
-
-	return c.Redirect(http.StatusTemporaryRedirect, "/login")
-}
-
-func generateRandomString(length int) string {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		log.Fatalf("failed to generate random string: %v", err)
-	}
-	return base64.URLEncoding.EncodeToString(bytes)[:length]
 }
