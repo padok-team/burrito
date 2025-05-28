@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	identity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
@@ -17,8 +18,9 @@ import (
 
 type Azure struct {
 	// Azure Blob Storage client
-	Client *storage.Client
-	Config config.AzureConfig
+	Client          *storage.Client
+	Config          config.AzureConfig
+	ContainerClient *container.Client
 }
 
 // New creates a new Azure Blob Storage client
@@ -38,9 +40,12 @@ func New(config config.AzureConfig, client *storage.Client) *Azure {
 		client = newClient
 	}
 
+	containerClient := client.ServiceClient().NewContainerClient(config.Container)
+
 	return &Azure{
-		Client: client,
-		Config: config,
+		Client:          client,
+		Config:          config,
+		ContainerClient: containerClient,
 	}
 }
 
@@ -127,20 +132,41 @@ func (a *Azure) Delete(key string) error {
 
 func (a *Azure) List(prefix string) ([]string, error) {
 	keys := []string{}
-	marker := ""
-	pager := a.Client.NewListBlobsFlatPager(a.Config.Container, &container.ListBlobsFlatOptions{
+
+	pager := a.ContainerClient.NewListBlobsHierarchyPager("/", &container.ListBlobsHierarchyOptions{
 		Prefix: &prefix,
-		Marker: &marker,
 	})
+
+	// Variable to track if any items were found
+	foundItems := false
+
 	for pager.More() {
 		resp, err := pager.NextPage(context.TODO())
 		if err != nil {
 			return nil, err
 		}
 
+		// If we have blob items or prefixes, mark that we found items
+		if len(resp.Segment.BlobItems) > 0 || len(resp.Segment.BlobPrefixes) > 0 {
+			foundItems = true
+		}
+
 		for _, blob := range resp.Segment.BlobItems {
 			keys = append(keys, *blob.Name)
 		}
+
+		for _, prefix := range resp.Segment.BlobPrefixes {
+			keys = append(keys, *prefix.Name)
+		}
 	}
+
+	// If no items were found, return a StorageError with Nil=true
+	if !foundItems {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix not found: %s", prefix),
+			Nil: true,
+		}
+	}
+
 	return keys, nil
 }
