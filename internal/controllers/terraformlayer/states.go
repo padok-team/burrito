@@ -65,11 +65,10 @@ func (s *PlanNeeded) getHandler() Handler {
 		if isActionBlocked(r, layer, repository, syncwindow.PlanAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
-		// TODO: use relevant commit instead of last commit when repo controller will set it
-		revision, ok := layer.Annotations[annotations.LastBranchCommit]
+		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
 		if !ok {
-			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last branch commit annotation, Plan run not created")
-			log.Errorf("layer %s has no last branch commit annotation, run not created", layer.Name)
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Plan run not created")
+			log.Errorf("layer %s has no last relevant commit annotation, run not created", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		run := r.getRun(layer, revision, PlanAction)
@@ -98,11 +97,10 @@ func (s *ApplyNeeded) getHandler() Handler {
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
-		// TODO: use relevant commit instead of last commit when repo controller will set it
-		revision, ok := layer.Annotations[annotations.LastBranchCommit]
+		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
 		if !ok {
-			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last branch commit annotation, Apply run not created")
-			log.Errorf("layer %s has no last branch commit annotation, run not created", layer.Name)
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Apply run not created")
+			log.Errorf("layer %s has no last relevant commit annotation, run not created", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		run := r.getRun(layer, revision, ApplyAction)
