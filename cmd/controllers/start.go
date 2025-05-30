@@ -31,7 +31,7 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 	defaultCredentialsTTL, _ := time.ParseDuration("2m")
 
 	cmd.Flags().StringSliceVar(&app.Config.Controller.Namespaces, "namespaces", []string{"burrito-system"}, "list of namespaces to watch")
-	cmd.Flags().StringArrayVar(&app.Config.Controller.Types, "types", []string{"layer", "run", "pullrequest"}, "list of controllers to start")
+	cmd.Flags().StringArrayVar(&app.Config.Controller.Types, "types", []string{"layer", "repository", "run", "pullrequest"}, "list of controllers to start")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.DriftDetection, "drift-detection-period", defaultDriftDetectionTimer, "period between two plans. Must end with s, m or h.")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.RepositorySync, "repository-sync-period", defaultRepositorySyncTimer, "period between two repository sync. Must end with s, m or h.")
 	cmd.Flags().DurationVar(&app.Config.Controller.Timers.CredentialsTTL, "credentials-ttl", defaultCredentialsTTL, "default TTL for git providers credentials in controller's memory. Must end with s, m or h.")
