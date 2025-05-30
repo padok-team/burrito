@@ -25,7 +25,7 @@ config:
         # -- Duration to wait before retrying on locked layer
         waitAction: 10s
         # -- Duration to wait before retrying on failure (increases exponentially with the amount of failed retries)
-        failureGracePeriod: 30
+        failureGracePeriod: 15s
       # -- Default sync windows for layer reconciliation
       defaultSyncWindows: []
       # -- Maximum number of concurrent reconciles for the controller, increse this value if you have a lot of resources to reconcile
@@ -34,9 +34,8 @@ config:
       maxConcurrentRunnerPods: 0
       # -- Maximum number of retries for Terraform operations (plan, apply...)
       terraformMaxRetries: 3
-      # TODO: enable repository controller by default
-      # -- Resource types to watch for reconciliation. Note: by default repository controller is disabled as it is not yet fully usable.
-      types: ["layer", "run", "pullrequest"]
+      # -- Resource types to watch for reconciliation.
+      types: ["layer", "repository", "run", "pullrequest"]
       leaderElection:
         # -- Enable/Disable leader election
         enabled: true
@@ -86,7 +85,7 @@ config:
         repository: ghcr.io/padok-team/burrito
         tag: "" # By default use Chart's appVersion
         pullPolicy: Always
-      
+
       # -- Command to run in the Burrito runner container
       command: ["burrito"]
       # -- Arguments to pass to the Burrito runner container
