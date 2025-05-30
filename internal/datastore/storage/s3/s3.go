@@ -98,10 +98,9 @@ func (a *S3) Check(key string) ([]byte, error) {
 
 func (a *S3) Set(key string, data []byte, ttl int) error {
 	input := &storage.PutObjectInput{
-		Bucket:            &a.Config.Bucket,
-		Key:               &key,
-		Body:              bytes.NewReader(data),
-		ChecksumAlgorithm: types.ChecksumAlgorithmSha256,
+		Bucket: &a.Config.Bucket,
+		Key:    &key,
+		Body:   bytes.NewReader(data),
 	}
 	_, err := a.Client.PutObject(context.TODO(), input)
 	if err != nil {
