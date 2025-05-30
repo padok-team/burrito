@@ -4,7 +4,7 @@ metadata:
   name: nominal-case-1
   namespace: default
   annotations:
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-one/
@@ -30,7 +30,7 @@ metadata:
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
     runner.terraform.padok.cloud/plan-run: run-succeeded/0
     runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-two/
@@ -60,7 +60,7 @@ metadata:
     runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
     runner.terraform.padok.cloud/plan-run: run-succeeded/0
     runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-three/
@@ -95,7 +95,7 @@ metadata:
     runner.terraform.padok.cloud/apply-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/apply-date: Sun May  8 11:21:53 UTC 2023
     runner.terraform.padok.cloud/apply-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-four/
@@ -117,7 +117,7 @@ metadata:
   name: nominal-case-5
   namespace: default
   annotations:
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: shared-path/
@@ -139,7 +139,7 @@ metadata:
   name: nominal-case-5-shared-path
   namespace: default
   annotations:
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: shared-path/
@@ -178,7 +178,7 @@ metadata:
     runner.terraform.padok.cloud/apply-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
     runner.terraform.padok.cloud/apply-date: Sun May  8 10:21:53 UTC 2023
     runner.terraform.padok.cloud/apply-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-six/
@@ -202,7 +202,7 @@ metadata:
   name: nominal-case-7
   namespace: default
   annotations:
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-seven/
@@ -229,7 +229,7 @@ metadata:
     app.kubernetes.io/instance: in-cluster-burrito
   annotations:
     api.terraform.padok.cloud/sync-now: "true"
-    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
   name: nominal-case-8
   namespace: default
 spec:
