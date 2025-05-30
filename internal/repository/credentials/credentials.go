@@ -67,7 +67,7 @@ func (s *CredentialStore) updateCredentials() error {
 	for _, secret := range sharedSecrets.Items {
 		tmp, err := NewSharedCredentialsFromSecret(secret)
 		if err != nil {
-			log.Warnf("failed to parse shared credentials from secret %s/%s: %s", secret.Namespace, secret.Name, err)
+			log.Errorf("failed to parse shared credentials from secret %s/%s: %s", secret.Namespace, secret.Name, err)
 			continue
 		}
 		sharedCredentials = append(sharedCredentials, tmp)
@@ -83,7 +83,7 @@ func (s *CredentialStore) updateCredentials() error {
 	for _, secret := range repositorySecrets.Items {
 		tmp, err := NewRepositoryCredentialsFromSecret(secret)
 		if err != nil {
-			log.Warnf("failed to parse repository credentials from secret %s/%s: %s", secret.Namespace, secret.Name, err)
+			log.Errorf("failed to parse repository credentials from secret %s/%s: %s", secret.Namespace, secret.Name, err)
 			continue
 		}
 		repositoryCredentials = append(repositoryCredentials, tmp)
@@ -144,9 +144,9 @@ type Credential struct {
 	// SSH auth
 	SSHPrivateKey string `json:"sshPrivateKey,omitempty"`
 	// GitHub App auth
-	AppID             int64  `json:"appID,omitempty"`
-	AppInstallationID int64  `json:"appInstallationID,omitempty"`
-	AppPrivateKey     string `json:"appPrivateKey,omitempty"`
+	GitHubAppID             string `json:"githubAppID,omitempty"`
+	GitHubAppInstallationID string `json:"githubAppInstallationID,omitempty"`
+	GitHubAppPrivateKey     string `json:"githubAppPrivateKey,omitempty"`
 	// Token auth
 	GitHubToken string `json:"githubToken,omitempty"`
 	GitLabToken string `json:"gitlabToken,omitempty"`
