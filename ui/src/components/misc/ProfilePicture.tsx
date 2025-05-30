@@ -50,7 +50,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
         className={`
           absolute
           z-10
-          -rotate-[15deg]
+          -rotate-15
           -left-[5px]
           -top-[23px]
           pointer-events-none

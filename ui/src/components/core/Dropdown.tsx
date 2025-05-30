@@ -58,9 +58,9 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           cursor-pointer
           outline-primary-600
           outline-offset-0
-          hover:outline
+          hover:outline-solid
           hover:outline-1
-          focus:outline
+          focus:outline-solid
           focus:outline-2
           ${styles.base[variant]}`,
           className,

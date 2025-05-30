@@ -113,11 +113,11 @@ const Input: React.FC<InputProps> = ({
             text-base
             outline-primary-600
             outline-offset-0
-            hover:outline
+            hover:outline-solid
             hover:outline-1
-            focus:outline
+            focus:outline-solid
             focus:outline-2
-            active:outline
+            active:outline-solid
             active:outline-2
             ${styles.base[variant]}`,
             leftIcon && 'pl-12',

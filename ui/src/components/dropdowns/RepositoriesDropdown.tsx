@@ -138,7 +138,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
                 `flex
                 flex-col
                 rounded-lg
-                outline-none
+                outline-hidden
                 p-2`,
                 styles[variant]
               )}
@@ -147,7 +147,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
               <span className="font-semibold px-2">Repositories</span>
               <hr
                 className={`
-                  h-[1px]
+                  h-px
                   w-auto
                   -mx-2
                   my-2
@@ -166,7 +166,7 @@ const RepositoriesDropdown: React.FC<RepositoriesDropdownProps> = ({
               />
               <hr
                 className={`
-                  h-[1px]
+                  h-px
                   w-auto
                   -mx-2
                   my-2

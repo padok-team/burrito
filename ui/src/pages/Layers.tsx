@@ -390,7 +390,7 @@ const Layers: React.FC = () => {
         `}
       >
         {view === 'grid' ? (
-          <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,calc(100%/3)))] p-6 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,calc(100%/3)))] p-6 gap-6">
             {layersQuery.isLoading ? (
               Array.from({ length: 100 }).map((_, index) => (
                 <CardLoader key={index} variant={theme} />

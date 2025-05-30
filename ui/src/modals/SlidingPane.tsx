@@ -63,7 +63,7 @@ const SlidingPane: React.FC<SlidingPaneProps> = ({
           {/* Close Button */}
           <button
             aria-label="Close"
-            className={`absolute top-4 right-8 text-2xl focus:outline-none ${
+            className={`absolute top-4 right-8 text-2xl focus:outline-hidden ${
               variant === 'light' ? 'text-gray-600' : 'text-nuances-50'
             }`}
             onClick={onClose}

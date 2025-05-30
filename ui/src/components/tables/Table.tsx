@@ -82,15 +82,15 @@ const Table: React.FC<TableProps> = ({
                 gap-4
                 items-center
                 justify-end
-                h-[calc(100%_+_25px)]
+                h-[calc(100%+25px)]
                 min-w-full
                 w-full
                 pr-4
                 ${result.row.original.isRunning && 'rounded-xl'}
                 ${
                   variant === 'light'
-                    ? 'bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]'
-                    : 'bg-[linear-gradient(270deg,_#252525_58.7%,_rgba(37,_37,_37,_0.00)_100%)]'
+                    ? 'bg-[linear-gradient(270deg,#FFF_58.7%,rgba(255,255,255,0.00)_100%)]'
+                    : 'bg-[linear-gradient(270deg,#252525_58.7%,rgba(37,37,37,0.00)_100%)]'
                 }
               `}
             >
@@ -122,7 +122,7 @@ const Table: React.FC<TableProps> = ({
                 flex
                 items-center
                 justify-end
-                h-[calc(100%_+_25px)]
+                h-[calc(100%+25px)]
                 min-w-full
                 w-full
                 rounded-xl
@@ -130,8 +130,8 @@ const Table: React.FC<TableProps> = ({
                 pointer-events-none
                 ${
                   variant === 'light'
-                    ? 'bg-[linear-gradient(270deg,_#FFF_58.7%,_rgba(255,_255,_255,_0.00)_100%)]'
-                    : 'bg-[linear-gradient(270deg,_#000_58.7%,_rgba(0,_0,_0,_0.00)_100%)]'
+                    ? 'bg-[linear-gradient(270deg,#FFF_58.7%,rgba(255,255,255,0.00)_100%)]'
+                    : 'bg-[linear-gradient(270deg,#000_58.7%,rgba(0,0,0,0.00)_100%)]'
                 }
               `}
             >
@@ -200,7 +200,7 @@ const Table: React.FC<TableProps> = ({
 
   return (
     <div>
-      <table className={twMerge(`w-full border-collapse h-[1px]`, className)}>
+      <table className={twMerge(`w-full border-collapse h-px`, className)}>
         {/* HACK: 1px height actually ignored but required to make cell div full size */}
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -229,7 +229,7 @@ const Table: React.FC<TableProps> = ({
                         absolute
                         right-0
                         bottom-0
-                        w-[calc(100%_-_25px)]
+                        w-[calc(100%-25px)]
                         ${styles.separator[variant]}
                       `}
                     />
@@ -239,7 +239,7 @@ const Table: React.FC<TableProps> = ({
                         absolute
                         left-0
                         bottom-0
-                        w-[calc(100%_-_25px)]
+                        w-[calc(100%-25px)]
                         ${styles.separator[variant]}
                       `}
                     />
@@ -287,7 +287,7 @@ const Table: React.FC<TableProps> = ({
                             absolute
                             right-0
                             bottom-0
-                            w-[calc(100%_-_25px)]
+                            w-[calc(100%-25px)]
                             ${styles.separator[variant]}
                           `}
                         />
@@ -297,7 +297,7 @@ const Table: React.FC<TableProps> = ({
                             absolute
                             left-0
                             bottom-0
-                            w-[calc(100%_-_25px)]
+                            w-[calc(100%-25px)]
                             ${styles.separator[variant]}
                           `}
                         />
@@ -364,7 +364,7 @@ const Table: React.FC<TableProps> = ({
                             absolute
                             right-0
                             bottom-0
-                            w-[calc(100%_-_25px)]
+                            w-[calc(100%-25px)]
                             ${styles.separator[variant]}
                           `}
                         />
@@ -374,7 +374,7 @@ const Table: React.FC<TableProps> = ({
                             absolute
                             left-0
                             bottom-0
-                            w-[calc(100%_-_25px)]
+                            w-[calc(100%-25px)]
                             ${styles.separator[variant]}
                           `}
                         />
