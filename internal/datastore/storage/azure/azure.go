@@ -57,7 +57,7 @@ func (a *Azure) Get(key string) ([]byte, error) {
 	// Handle case where blob doesn't exist
 	if bloberror.HasCode(err, bloberror.BlobNotFound) {
 		return nil, &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
@@ -65,7 +65,7 @@ func (a *Azure) Get(key string) ([]byte, error) {
 	// Handle other errors
 	if err != nil {
 		return nil, &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error getting object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -91,13 +91,13 @@ func (a *Azure) Check(key string) ([]byte, error) {
 	resp, err := a.Client.ServiceClient().NewContainerClient(a.Config.Container).NewBlobClient(key).GetProperties(context.Background(), nil)
 	if bloberror.HasCode(err, bloberror.BlobNotFound) {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error checking object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -108,7 +108,8 @@ func (a *Azure) Set(key string, value []byte, ttl int) error {
 	_, err := a.Client.UploadBuffer(context.Background(), a.Config.Container, key, value, nil)
 	if err != nil {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error setting object %s: %w", key, err),
+			Nil: false,
 		}
 	}
 	return nil
@@ -118,13 +119,14 @@ func (a *Azure) Delete(key string) error {
 	_, err := a.Client.DeleteBlob(context.Background(), a.Config.Container, key, nil)
 	if bloberror.HasCode(err, bloberror.BlobNotFound) {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error deleting object %s: %w", key, err),
+			Nil: false,
 		}
 	}
 	return nil
@@ -143,7 +145,10 @@ func (a *Azure) List(prefix string) ([]string, error) {
 	for pager.More() {
 		resp, err := pager.NextPage(context.TODO())
 		if err != nil {
-			return nil, err
+			return nil, &errors.StorageError{
+				Err: fmt.Errorf("error listing objects with prefix %s: %w", prefix, err),
+				Nil: false,
+			}
 		}
 
 		// If we have blob items or prefixes, mark that we found items
@@ -163,7 +168,7 @@ func (a *Azure) List(prefix string) ([]string, error) {
 	// If no items were found, return a StorageError with Nil=true
 	if !foundItems {
 		return nil, &errors.StorageError{
-			Err: fmt.Errorf("prefix not found: %s", prefix),
+			Err: fmt.Errorf("prefix %s not found", prefix),
 			Nil: true,
 		}
 	}

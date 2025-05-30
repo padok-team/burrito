@@ -21,7 +21,7 @@ func (s *Mock) Get(key string) ([]byte, error) {
 	val, ok := s.data[key]
 	if !ok {
 		return nil, &errors.StorageError{
-			Err: fmt.Errorf("%s", "Not found"),
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
@@ -37,7 +37,7 @@ func (s *Mock) Check(key string) ([]byte, error) {
 	val, ok := s.data[key]
 	if !ok {
 		return nil, &errors.StorageError{
-			Err: fmt.Errorf("%s", "Not found"),
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
@@ -45,19 +45,43 @@ func (s *Mock) Check(key string) ([]byte, error) {
 }
 
 func (s *Mock) Delete(key string) error {
+	_, ok := s.data[key]
+	if !ok {
+		return &errors.StorageError{
+			Err: fmt.Errorf("%s not found", key),
+			Nil: true,
+		}
+	}
 	delete(s.data, key)
 	return nil
 }
 
 func (a *Mock) List(prefix string) ([]string, error) {
 	keySet := map[string]bool{}
+	found := false
+
 	for k := range a.data {
 		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
-		pathIndexs := strings.Split(k, "/")
-		keySet[pathIndexs[len(pathIndexs)-2]] = true
+		found = true
+
+		// Extract the folder part from the path that's one level deeper than the prefix
+		parts := strings.Split(strings.TrimPrefix(k, prefix), "/")
+		if len(parts) > 0 {
+			folderPath := prefix + parts[0] + "/"
+			keySet[folderPath] = true
+		}
 	}
+
+	// Return an error if no keys match the prefix
+	if !found {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix %s not found", prefix),
+			Nil: true,
+		}
+	}
+
 	return mapKeys(keySet), nil
 }
 

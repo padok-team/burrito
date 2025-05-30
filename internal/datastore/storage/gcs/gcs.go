@@ -2,6 +2,7 @@ package gcs
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"cloud.google.com/go/storage"
@@ -36,13 +37,13 @@ func (a *GCS) Get(key string) ([]byte, error) {
 	reader, err := obj.NewReader(ctx)
 	if err == storage.ErrObjectNotExist {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error getting object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -69,7 +70,7 @@ func (a *GCS) Set(key string, data []byte, ttl int) error {
 	_, err := writer.Write(data)
 	if err != nil {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error setting object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -84,13 +85,13 @@ func (a *GCS) Check(key string) ([]byte, error) {
 	metadata, err := obj.Attrs(ctx)
 	if err == storage.ErrObjectNotExist {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error checking object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -104,12 +105,12 @@ func (a *GCS) Delete(key string) error {
 	err := obj.Delete(ctx)
 	if err == storage.ErrObjectNotExist {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting object %s: %w", key, err)
 	}
 
 	return nil
@@ -124,15 +125,28 @@ func (a *GCS) List(prefix string) ([]string, error) {
 	})
 
 	var objects []string
+	foundItems := false
+
 	for {
 		objAttrs, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error listing objects with prefix %s: %w", prefix, err)
 		}
-		objects = append(objects, objAttrs.Prefix)
+		if objAttrs.Prefix != "" {
+			objects = append(objects, objAttrs.Prefix)
+			foundItems = true
+		}
+	}
+
+	// If no items were found, return a StorageError with Nil=true
+	if !foundItems {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix %s not found", prefix),
+			Nil: true,
+		}
 	}
 
 	return objects, nil
