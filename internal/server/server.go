@@ -40,7 +40,6 @@ type Server struct {
 	staticAssets http.FileSystem
 	client       client.Client
 	sessionStore sessions.Store
-	sessionKey   []byte
 }
 
 func New(c *config.Config) *Server {
@@ -50,12 +49,23 @@ func New(c *config.Config) *Server {
 		log.Fatalf("failed to generate session key: %v", err)
 	}
 
+	sessionStore := sessions.NewCookieStore(sessionKey)
+	// Set session options
+	sessionStore.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   c.Server.Session.MaxAge,
+		Secure:   c.Server.Session.Secure,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	sessionStore.MaxAge(c.Server.Session.MaxAge)
+
 	return &Server{
 		config:       c,
 		Webhook:      webhook.New(c),
 		API:          api.New(c),
 		staticAssets: http.FS(content),
-		sessionStore: sessions.NewCookieStore(sessionKey),
+		sessionStore: sessionStore,
 	}
 }
 
@@ -88,10 +98,17 @@ func (s *Server) Exec() {
 		log.Fatalf("error initializing webhook handler: %s", err)
 	}
 
-	oAuth, err := oauth.New(s.config, cookieName)
-	if err != nil {
-		log.Fatalf("error initializing OIDC: %s", err)
+	var authHandlers a.AuthHandlers
+	if s.config.Server.OIDC.Enabled {
+		log.Infof("OIDC authentication enabled, issuer: %s", s.config.Server.OIDC.IssuerURL)
+		authHandlers, err = oauth.New(s.config, cookieName)
+		if err != nil {
+			log.Fatalf("error initializing OIDC: %s", err)
+		}
+	} else {
+		log.Info("OIDC authentication is disabled, using cookie-based authentication")
 	}
+
 	// Initialize Echo server
 	log.Infof("starting burrito server...")
 	e := echo.New()
@@ -115,8 +132,8 @@ func (s *Server) Exec() {
 
 	// Auth routes (no authentication required)
 	auth := e.Group("/auth")
-	auth.GET("/login", oAuth.HandleLogin)
-	auth.GET("/callback", oAuth.HandleCallback)
+	auth.GET("/login", authHandlers.HandleLogin)
+	auth.GET("/callback", authHandlers.HandleCallback)
 	auth.POST("/logout", func(c echo.Context) error {
 		return a.HandleLogout(c, cookieName)
 	})
@@ -132,8 +149,8 @@ func (s *Server) Exec() {
 	api := e.Group("/api")
 	api.Use(middleware.Logger())
 	e.GET("/healthz", handleHealthz)
-	api.Use(s.authMiddleware())
 	api.POST("/webhook", s.Webhook.GetHttpHandler())
+	api.Use(s.authMiddleware())
 	api.GET("/layers", s.API.LayersHandler)
 	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
 	api.GET("/repositories", s.API.RepositoriesHandler)
