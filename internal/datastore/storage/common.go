@@ -2,7 +2,9 @@ package storage
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -85,15 +87,15 @@ func (s *Storage) GetLogs(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]byte, error) {
-	attempts, err := s.GetAttempts(namespace, layer, run)
+	latestAttempt, err := s.GetLatestAttempt(namespace, layer, run)
 	if err != nil {
 		return nil, err
 	}
-	if attempts == 0 {
+	if latestAttempt == "-1" {
 		return nil, &errors.StorageError{Nil: true}
 	}
-	attempt := strconv.Itoa(attempts - 1)
-	return s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
+
+	return s.Backend.Get(computeLogsKey(namespace, layer, run, latestAttempt))
 }
 
 func (s *Storage) PutLogs(namespace string, layer string, run string, attempt string, logs []byte) error {
@@ -105,25 +107,62 @@ func (s *Storage) GetPlan(namespace string, layer string, run string, attempt st
 }
 
 func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
-	attempts, err := s.GetAttempts(namespace, layer, run)
+	latestAttempt, err := s.GetLatestAttempt(namespace, layer, run)
 	if err != nil {
 		return nil, err
 	}
-	if attempts == 0 {
+	if latestAttempt == "-1" {
 		return nil, &errors.StorageError{Nil: true}
 	}
-	attempt := strconv.Itoa(attempts - 1)
-	return s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
+
+	return s.Backend.Get(computePlanKey(namespace, layer, run, latestAttempt, format))
 }
 
 func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, format string, plan []byte) error {
 	return s.Backend.Set(computePlanKey(namespace, layer, run, attempt, format), plan, 0)
 }
 
-func (s *Storage) GetAttempts(namespace string, layer string, run string) (int, error) {
+func (s *Storage) GetAttempts(namespace string, layer string, run string) ([]string, error) {
+	attempts := []int{}
 	key := fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, run)
-	attempts, err := s.Backend.List(key)
-	return len(attempts), err
+	paths, err := s.Backend.List(key)
+
+	for _, path := range paths {
+		// Remove the key prefix to get just the attempt number
+		// Example: /layers/ns/layer/run/0/ becomes 0,
+		attemptStr := strings.TrimPrefix(path, key+"/")
+
+		// In case the backend returns full paths, we need to split by "/"
+		attemptId, _ := strconv.Atoi(strings.Split(attemptStr, "/")[0])
+		attempts = append(attempts, attemptId)
+	}
+
+	if err != nil || len(attempts) == 0 {
+		return nil, err
+	}
+
+	// We use a int slice to easily sort, deduplicate and convert to string later
+	slices.Sort(attempts)
+	slices.Compact(attempts)
+
+	attemptsStr := make([]string, len(attempts))
+	for i, a := range attempts {
+		attemptsStr[i] = strconv.Itoa(a)
+	}
+
+	return attemptsStr, nil
+}
+
+func (s *Storage) GetLatestAttempt(namespace string, layer string, run string) (string, error) {
+	attempts, err := s.GetAttempts(namespace, layer, run)
+
+	if err != nil || len(attempts) == 0 {
+		return "-1", err
+	}
+
+	lastAttemptStr := attempts[len(attempts)-1]
+
+	return lastAttemptStr, nil
 }
 
 func (s *Storage) GetGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
