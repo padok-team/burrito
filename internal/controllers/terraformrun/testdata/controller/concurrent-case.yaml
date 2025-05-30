@@ -8,6 +8,7 @@ spec:
   layer:
     name: concurrent-case-1
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -19,3 +20,4 @@ spec:
   layer:
     name: concurrent-case-1
     namespace: default
+    revision: TEST_REVISION

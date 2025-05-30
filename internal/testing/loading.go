@@ -20,6 +20,7 @@ import (
 )
 
 type Resources struct {
+	Namespaces   []*corev1.Namespace
 	Repositories []*configv1alpha1.TerraformRepository
 	Layers       []*configv1alpha1.TerraformLayer
 	Runs         []*configv1alpha1.TerraformRun
@@ -53,6 +54,13 @@ func LoadResources(client client.Client, path string) {
 	resources, err := parseResources(path)
 	if err != nil {
 		panic(err)
+	}
+	for _, r := range resources.Namespaces {
+		deepCopy := r.DeepCopy()
+		err := client.Create(context.TODO(), deepCopy)
+		if err != nil {
+			panic(err)
+		}
 	}
 	for _, r := range resources.Layers {
 		deepCopy := r.DeepCopy()
@@ -156,6 +164,10 @@ func parseResources(path string) (*Resources, error) {
 			continue
 		}
 		switch genericResource.Kind {
+		case "Namespace":
+			ns := &corev1.Namespace{}
+			err = yaml.Unmarshal([]byte(doc), &ns)
+			resources.Namespaces = append(resources.Namespaces, ns)
 		case "TerraformRepository":
 			repo := &configv1alpha1.TerraformRepository{}
 			err = yaml.Unmarshal([]byte(doc), &repo)
