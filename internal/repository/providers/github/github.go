@@ -18,6 +18,7 @@ import (
 	"github.com/padok-team/burrito/internal/repository/providers/standard"
 
 	"github.com/padok-team/burrito/internal/repository/types"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
@@ -73,7 +74,9 @@ const (
 func detectClientType(config credentials.Credential) string {
 	clientType := ""
 	// GitHub App authentication first
-	if config.AppID != 0 && config.AppInstallationID != 0 && config.AppPrivateKey != "" {
+	appID := typeutils.ParseSecretInt64(config.GitHubAppID)
+	installationID := typeutils.ParseSecretInt64(config.GitHubAppInstallationID)
+	if appID != 0 && installationID != 0 && config.GitHubAppPrivateKey != "" {
 		clientType = "app"
 	} else if config.GitHubToken != "" {
 		// Try GitHub Token authentication
@@ -98,9 +101,9 @@ func buildGithubClient(config credentials.Credential, clientType string) (*githu
 	case "app":
 		itr, err := ghinstallation.New(
 			nethttp.DefaultTransport,
-			config.AppID,
-			config.AppInstallationID,
-			[]byte(config.AppPrivateKey),
+			typeutils.ParseSecretInt64(config.GitHubAppID),
+			typeutils.ParseSecretInt64(config.GitHubAppInstallationID),
+			[]byte(config.GitHubAppPrivateKey),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating GitHub App client: %w", err)
@@ -119,7 +122,7 @@ func buildGithubClient(config credentials.Credential, clientType string) (*githu
 			)})
 		httpClient = oauth2.NewClient(context.Background(), ts)
 	default:
-		return nil, fmt.Errorf("unsupported GitHub client type: %s", clientType)
+		return nil, fmt.Errorf("unsupported GitHub client type: %s, secret may be malformed, check controller errors", clientType)
 	}
 	if subscription == GitHubEnterprise {
 		client, err = github.NewClient(httpClient).WithEnterpriseURLs(apiUrl, apiUrl)
