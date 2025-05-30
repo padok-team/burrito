@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/server/utils"
 	"golang.org/x/oauth2"
 )
 
@@ -49,16 +50,8 @@ func (o *OAuth) HandleLogin(c echo.Context) error {
 
 	sess, err := session.Get(o.SessionCookie, c)
 	if err != nil {
-		// Clear session cookie if session is invalid
-		http.SetCookie(c.Response(), &http.Cookie{
-			Name:     o.SessionCookie,
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-			Secure:   c.Request().TLS != nil,
-			SameSite: http.SameSiteLaxMode,
-		})
+		// Clear session cookie if session is invalid to prevent stale sessions
+		utils.RemoveSessionCookie(c, o.SessionCookie)
 	}
 
 	// State is stored in session for verification in callback handler
