@@ -10,6 +10,7 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	layerCtrl "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/types"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -111,7 +112,7 @@ func (s *SyncNeeded) getHandler() Handler {
 			if isSynced {
 				log.Infof("repository %s/%s is in sync with remote for ref %s: rev %s", repository.Namespace, repository.Name, branch.Name, latestRev)
 				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
-				syncError = addMissingLastBranchesAnnotations(r.Client, retrieveLayersForRef(branch.Name, layers), latestRev)
+				syncError = annotateLayers(r.Client, gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
@@ -136,36 +137,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
 
 				// Add annotation to trigger a sync for all layers that depend on this branch
-				affectedLayers := retrieveLayersForRef(branch.Name, layers)
-				date := time.Now().Format(time.UnixDate)
-				for _, layer := range affectedLayers {
-					ann := map[string]string{}
-
-					// We always set the last branch commit to the latest revision
-					ann[annotations.LastBranchCommit] = latestRev
-					ann[annotations.LastBranchCommitDate] = date
-
-					if currentLastRelevant, ok := layer.Annotations[annotations.LastRelevantCommit]; !ok {
-						// If the layer does not have a last relevant commit, we set it to the last branch commit
-						ann[annotations.LastRelevantCommit] = latestRev
-						ann[annotations.LastRelevantCommitDate] = date
-					} else {
-						// We compare the current last relevant commit with the latest revision
-						changes := gitProvider.GetChanges(currentLastRelevant, latestRev)
-						if layerCtrl.LayerFilesHaveChanged(layer, changes) {
-							log.Infof("layer %s/%s is affected by new revision %s", layer.Namespace, layer.Name, latestRev)
-							ann[annotations.LastRelevantCommit] = latestRev
-							ann[annotations.LastRelevantCommitDate] = date
-						}
-					}
-
-					err := annotations.Add(context.TODO(), r.Client, &layer, ann)
-					if err != nil {
-						log.Errorf("could not add annotation to TerraformLayer %s/%s: %s", layer.Namespace, layer.Name, err)
-					} else {
-						log.Infof("layer %s/%s annotated with new revision %s", layer.Namespace, layer.Name, latestRev)
-					}
-				}
+				syncError = annotateLayers(r.Client, gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
 			}
 		}
 		if syncError != nil {
@@ -203,16 +175,37 @@ func updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, s
 	return branchStates
 }
 
-func addMissingLastBranchesAnnotations(c client.Client, layers []configv1alpha1.TerraformLayer, latestRev string) error {
+func annotateLayers(c client.Client, gitProvider types.GitProvider, layers []configv1alpha1.TerraformLayer, latestRev string) error {
 	var err error
+	date := time.Now().Format(time.UnixDate)
 	for _, layer := range layers {
 		ann := map[string]string{}
-		ann[annotations.LastBranchCommit] = latestRev
+
+		// If the layer already has the latest branch commit == latestRev, we skip it
+		if currentLastBranch, ok := layer.Annotations[annotations.LastBranchCommit]; !ok || currentLastBranch != latestRev {
+			ann[annotations.LastBranchCommit] = latestRev
+			ann[annotations.LastBranchCommitDate] = date
+		}
+
+		// If the layer does not have a last relevant commit, we set it to the last branch commit
+		if currentLastRelevant, ok := layer.Annotations[annotations.LastRelevantCommit]; !ok {
+			ann[annotations.LastRelevantCommit] = latestRev
+			ann[annotations.LastRelevantCommitDate] = date
+		} else {
+			// We compare the current last relevant commit with the latest revision
+			changes := gitProvider.GetChanges(currentLastRelevant, latestRev)
+			if layerCtrl.LayerFilesHaveChanged(layer, changes) {
+				log.Infof("layer %s/%s is affected by new revision %s", layer.Namespace, layer.Name, latestRev)
+				ann[annotations.LastRelevantCommit] = latestRev
+				ann[annotations.LastRelevantCommitDate] = date
+			}
+		}
+
 		err = annotations.Add(context.TODO(), c, &layer, ann)
 		if err != nil {
 			log.Errorf("could not add annotation to TerraformLayer %s/%s: %s", layer.Namespace, layer.Name, err)
 		} else {
-			log.Infof("layer %s/%s annotated with new last branch commit %s", layer.Namespace, layer.Name, latestRev)
+			log.Infof("layer %s/%s annotated with new revision %s", layer.Namespace, layer.Name, latestRev)
 		}
 	}
 	return err
