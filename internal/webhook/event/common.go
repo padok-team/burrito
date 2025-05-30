@@ -24,15 +24,6 @@ func ParseReference(ref string) string {
 	return refParts[len(refParts)-1]
 }
 
-func isLayerLinkedToAnyRepositories(repositories []configv1alpha1.TerraformRepository, layer configv1alpha1.TerraformLayer) bool {
-	for _, r := range repositories {
-		if r.Name == layer.Spec.Repository.Name && r.Namespace == layer.Spec.Repository.Namespace {
-			return true
-		}
-	}
-	return false
-}
-
 func isPRLinkedToAnyRepositories(pr configv1alpha1.TerraformPullRequest, repos []configv1alpha1.TerraformRepository) bool {
 	for _, r := range repos {
 		if r.Name == pr.Spec.Repository.Name && r.Namespace == pr.Spec.Repository.Namespace {
