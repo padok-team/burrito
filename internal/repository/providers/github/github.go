@@ -105,6 +105,9 @@ func buildGithubClient(config credentials.Credential, clientType string) (*githu
 		if err != nil {
 			return nil, fmt.Errorf("error creating GitHub App client: %w", err)
 		}
+		if subscription == GitHubEnterprise {
+			itr.BaseURL = apiUrl
+		}
 		httpClient = &nethttp.Client{Transport: itr}
 	case "token":
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: config.GitHubToken})
