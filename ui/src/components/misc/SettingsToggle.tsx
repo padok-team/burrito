@@ -5,13 +5,14 @@ import { ThemeContext } from '@/contexts/ThemeContext';
 
 import Box from '@/components/core/Box';
 import Toggle from '@/components/core/Toggle';
+import Button from '@/components/core/Button';
 
-export interface ThemeToggleProps {
+export interface SettingsToggleProps {
   className?: string;
   variant?: 'light' | 'dark';
 }
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({
+const SettingsToggle: React.FC<SettingsToggleProps> = ({
   className,
   variant = 'light'
 }) => {
@@ -19,7 +20,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
   return (
     <Box
       variant={variant}
-      className={twMerge('items-center justify-center p-4 gap-4', className)}
+      className={twMerge('flex flex-col justify-center p-4 gap-4 bottom-0', className)}
     >
       <Toggle
         className={`
@@ -31,8 +32,18 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
         onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         label={`${variant === 'dark' ? 'Disable' : 'Enable'} Dark Mode`}
       />
+      <Button
+        theme={theme}
+        variant={'secondary'}
+        onClick={async () => {
+          await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+          window.location.href = '/login';
+        }}
+      >
+        Logout
+      </Button>
     </Box>
   );
 };
 
-export default ThemeToggle;
+export default SettingsToggle;

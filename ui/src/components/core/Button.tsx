@@ -13,6 +13,7 @@ export interface ButtonProps {
   isLoading?: boolean;
   disabled?: boolean;
   label?: string;
+  type?: 'button' | 'submit' | 'reset';
   onClick?: () => void;
 }
 
@@ -26,6 +27,7 @@ const Button: React.FC<ButtonProps> = ({
   isLoading,
   disabled,
   label,
+  type = 'button',
   onClick
 }) => {
   const styles = {
@@ -150,6 +152,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type={type}
       className={twMerge(
         `relative
         px-4

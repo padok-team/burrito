@@ -147,9 +147,24 @@ type HermitcrabConfig struct {
 	URL                   string `mapstructure:"url"`
 }
 
+type SessionConfig struct {
+	MaxAge int  `mapstructure:"maxAge"`
+	Secure bool `mapstructure:"secure"`
+}
+
 type ServerConfig struct {
 	Addr    string        `mapstructure:"addr"`
 	Webhook WebhookConfig `mapstructure:"webhook"`
+	OIDC    OIDCConfig    `mapstructure:"oidc"`
+	Session SessionConfig `mapstructure:"session"`
+}
+
+type OIDCConfig struct {
+	Enabled      bool   `mapstructure:"enabled"`
+	IssuerURL    string `mapstructure:"issuerUrl"`
+	ClientID     string `mapstructure:"clientId"`
+	ClientSecret string `mapstructure:"clientSecret"`
+	RedirectURL  string `mapstructure:"redirectUrl"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {
