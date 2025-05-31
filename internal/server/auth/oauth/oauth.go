@@ -17,9 +17,10 @@ import (
 )
 
 type OAuth struct {
-	OidcProvider  *oidc.Provider
-	OAuth2Config  *oauth2.Config
-	SessionCookie string
+	OidcProvider    *oidc.Provider
+	OAuth2Config    *oauth2.Config
+	SessionCookie   string
+	LoginHTTPMethod string
 }
 
 func New(c *config.Config, sessionCookie string) (*OAuth, error) {
@@ -40,6 +41,7 @@ func New(c *config.Config, sessionCookie string) (*OAuth, error) {
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}
 	oauth.SessionCookie = sessionCookie
+	oauth.LoginHTTPMethod = http.MethodGet
 
 	return oauth, nil
 }
@@ -62,6 +64,10 @@ func (o *OAuth) HandleLogin(c echo.Context) error {
 
 	authURL := o.OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+func (o *OAuth) GetLoginHTTPMethod() string {
+	return o.LoginHTTPMethod
 }
 
 func (o *OAuth) HandleCallback(c echo.Context) error {
