@@ -143,6 +143,14 @@ func (s *Server) Exec() {
 	auth.POST("/logout", func(c echo.Context) error {
 		return a.HandleLogout(c, cookieName)
 	})
+	// Return the supported auth type: basic or oauth
+	auth.GET("/type", func(c echo.Context) error {
+		authType := "basic"
+		if s.config.Server.OIDC.Enabled {
+			authType = "oauth"
+		}
+		return c.JSON(http.StatusOK, map[string]string{"type": authType})
+	})
 	// Check if user is authenticated, used to redirect /login to / if already logged in
 	auth.GET("/", func(c echo.Context) error {
 		sess, err := session.Get(cookieName, c)
