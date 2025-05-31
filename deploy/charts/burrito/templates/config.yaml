@@ -3,6 +3,13 @@
 {{- $config := .Values.config.burrito }}
 
 {{/*
+Main namespace
+*/}}
+
+{{- $_ := set $config.controller "mainNamespace" .Release.Namespace }}
+
+
+{{/*
 Tenant Namespaces
 */}}
 {{- $tenantNamespaces := list }}
