@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
-import { basicAuth, getAuthStatus } from '@/clients/auth/client';
+import { basicAuth, getAuthStatus, getAuthType } from '@/clients/auth/client';
 
 import Input from '@/components/core/Input';
 import Button from '@/components/core/Button';
@@ -17,7 +17,15 @@ import SSOButton from '@/components/buttons/SSOButton';
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
-  
+  // Fetch supported auth method from server
+  const { data: authType, isLoading: isAuthTypeLoading, isError: isAuthTypeError } = useQuery({
+    queryKey: ['authType'],
+    queryFn: getAuthType,
+    retry: false,
+    refetchOnWindowFocus: false
+  });
+  const isBasicAuth = authType === 'basic';
+
   // Form state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +49,10 @@ const Login: React.FC = () => {
       setError(error.message);
     },
   });
+
+  // show loading or error state while fetching auth type
+  if (isAuthTypeLoading) return <div>Loading...</div>;
+  if (isAuthTypeError) return <div>Error loading auth method</div>;
 
   // Redirect to /layers if already authenticated
   if (isSuccess && isAuthenticated) {
@@ -84,84 +96,47 @@ const Login: React.FC = () => {
             </span>
           </div>
           <div className="flex flex-col items-center justify-center gap-8 w-full">
-            <form onSubmit={handleLogin} className="flex flex-col items-center justify-center gap-8 w-full">
-              <Input
-                variant={theme}
-                placeholder="Your username"
-                label="Username"
-                type="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <Input
-                variant={theme}
-                placeholder="Your password"
-                label="Password"
-                rightIcon={<EyeSlashIcon />}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              {error && (
-                <div className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}>
-                  {error}
-                </div>
-              )}
-              <Button
-                className="w-full"
-                variant={theme === 'light' ? 'primary' : 'secondary'}
-                type="submit"
-                disabled={loginMutation.isPending}
-              >
-                {loginMutation.isPending ? 'Logging in...' : 'Login'}
-              </Button>
-              <div
-                className={`
-                  flex
-                  flex-row
-                  items-center
-                  w-full
-                  gap-4
-                  ${
-                    theme === 'light'
-                      ? 'text-nuances-black border-nuances-black'
-                      : 'text-nuances-white border-nuances-white'
-                  }
-                `}
-              >
-                <hr className="w-full" />
-                <span>OR</span>
-                <hr className="w-full" />
-              </div>
+            {isBasicAuth ? (
+              <form onSubmit={handleLogin} className="flex flex-col items-center justify-center gap-8 w-full">
+                <Input
+                  variant={theme}
+                  placeholder="Your username"
+                  label="Username"
+                  type="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <Input
+                  variant={theme}
+                  placeholder="Your password"
+                  label="Password"
+                  rightIcon={<EyeSlashIcon />}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {error && (
+                  <div className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}>
+                    {error}
+                  </div>
+                )}
+                <Button
+                  className="w-full"
+                  variant={theme === 'light' ? 'primary' : 'secondary'}
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? 'Logging in...' : 'Login'}
+                </Button>
+              </form>
+            ) : (
               <div className="flex flex-col items-center justify-center gap-4 w-full">
                 <SSOButton
-                className="w-full"
-                onClick={() => (document.location.href = '/auth/login')}
+                  className="w-full"
+                  onClick={() => (document.location.href = '/auth/login')}
                 />
               </div>
-            </form>
-          </div>
-          <div
-            className={`
-              flex
-              flex-row
-              items-center
-              justify-center
-              gap-1
-              w-full
-              p-6
-              rounded-lg
-              ${
-                theme === 'light'
-                  ? 'bg-primary-400 text-nuances-black'
-                  : 'bg-nuances-400 text-nuances-50'
-              }
-            `}
-          >
-            <span className="text-base font-normal">
-              Don't have an account ?
-            </span>
-            <span className="text-base font-semibold">Sign up</span>
+            )}
           </div>
         </div>
       </div>
