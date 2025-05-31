@@ -25,3 +25,16 @@ export const basicAuth =  async (formData: { username: string; password: string 
   
   return null;
 }
+
+/**
+ * Fetches the supported authentication method from the server.
+ * Expects JSON response: { type: 'basic' | 'oauth' }
+ */
+export async function getAuthType(): Promise<'basic' | 'oauth'> {
+  const res = await fetch('/auth/type', { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch auth type: ${res.status}`);
+  }
+  const data = await res.json() as { type: string };
+  return (data.type?.toLowerCase() === 'oauth' ? 'oauth' : 'basic');
+}
