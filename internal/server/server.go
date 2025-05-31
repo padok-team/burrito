@@ -16,6 +16,7 @@ import (
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/server/api"
 	a "github.com/padok-team/burrito/internal/server/auth"
+	"github.com/padok-team/burrito/internal/server/auth/basic"
 	"github.com/padok-team/burrito/internal/server/auth/oauth"
 	"github.com/padok-team/burrito/internal/webhook"
 	log "github.com/sirupsen/logrus"
@@ -83,6 +84,7 @@ func initClient() (*client.Client, error) {
 }
 
 func (s *Server) Exec() {
+	bgctx := context.Background()
 	datastore := datastore.NewDefaultClient(s.config.Datastore)
 	s.API.Datastore = datastore
 	client, err := initClient()
@@ -106,7 +108,11 @@ func (s *Server) Exec() {
 			log.Fatalf("error initializing OIDC: %s", err)
 		}
 	} else {
-		log.Info("OIDC authentication is disabled, using cookie-based authentication")
+		log.Info("OIDC authentication is disabled, using basic authentication with default secret")
+		authHandlers, err = basic.New(s.config, bgctx, *client, cookieName)
+		if err != nil {
+			log.Fatalf("error initializing basic auth: %s", err)
+		}
 	}
 
 	// Initialize Echo server
@@ -132,7 +138,7 @@ func (s *Server) Exec() {
 
 	// Auth routes (no authentication required)
 	auth := e.Group("/auth")
-	auth.GET("/login", authHandlers.HandleLogin)
+	auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
 	auth.GET("/callback", authHandlers.HandleCallback)
 	auth.POST("/logout", func(c echo.Context) error {
 		return a.HandleLogout(c, cookieName)

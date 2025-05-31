@@ -11,6 +11,7 @@ import (
 type AuthHandlers interface {
 	HandleLogin(c echo.Context) error
 	HandleCallback(c echo.Context) error
+	GetLoginHTTPMethod() string
 }
 
 func HandleLogout(c echo.Context, sessionCookie string) error {
