@@ -100,6 +100,67 @@ func isGCSBucketPresent(err error) bool {
 		strings.Contains(errMsg, "409")
 }
 
+func setupS3Bucket(backendType string) {
+	os.Setenv("AWS_ACCESS_KEY_ID", "burritoadmin")
+	os.Setenv("AWS_SECRET_ACCESS_KEY", "burritoadmin")
+	os.Setenv("AWS_REGION", "eu-west-3")
+
+	// Use the "new" function from the s3backend
+	s3Config := config.S3Config{
+		Bucket:       "test-bucket",
+		UsePathStyle: true,
+	}
+	s3Backend = s3.New(s3Config)
+
+	// Create bucket if it doesn't exist
+	ctx := context.Background()
+	region := os.Getenv("AWS_REGION")
+	createBucketInput := &awss3.CreateBucketInput{
+		Bucket: aws.String(s3Config.Bucket),
+		// Set public-read-write ACL for the bucket
+		ACL: types.BucketCannedACLPublicReadWrite,
+		// Set the region for the bucket
+		CreateBucketConfiguration: &types.CreateBucketConfiguration{
+			LocationConstraint: types.BucketLocationConstraint(region),
+		},
+	}
+	_, err := s3Backend.Client.CreateBucket(ctx, createBucketInput)
+
+	// Add full access ACL for burritoadmin
+	bucketCreatedOrExists := err == nil || isS3BucketPresent(err)
+	if bucketCreatedOrExists {
+		// Set bucket policy for full access
+		bucketPolicy := `{
+				"Version": "2012-10-17",
+				"Statement": [
+					{
+						"Effect": "Allow",
+						"Principal": {"AWS": "*"},
+						"Action": "s3:*",
+						"Resource": [
+							"arn:aws:s3:::test-bucket",
+							"arn:aws:s3:::test-bucket/*"
+						]
+					}
+				]
+			}`
+
+		putPolicyInput := &awss3.PutBucketPolicyInput{
+			Bucket: aws.String(s3Config.Bucket),
+			Policy: aws.String(bucketPolicy),
+		}
+
+		_, policyErr := s3Backend.Client.PutBucketPolicy(ctx, putPolicyInput)
+		if policyErr != nil {
+			fmt.Printf("%s - Warning: Failed to set bucket policy: %v\n", backendType, policyErr)
+		}
+
+		backends[backendType] = s3Backend
+	} else {
+		fmt.Printf("%s - Failed to create S3 bucket: %v\n", backendType, err)
+	}
+}
+
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
@@ -128,63 +189,13 @@ var _ = BeforeSuite(func() {
 	}
 
 	if os.Getenv("SKIP_MINIO_TESTS") == "" {
-		os.Setenv("AWS_ACCESS_KEY_ID", "burritoadmin")
-		os.Setenv("AWS_SECRET_ACCESS_KEY", "burritoadmin")
 		os.Setenv("AWS_ENDPOINT_URL_S3", "http://localhost:9000")
-		os.Setenv("AWS_REGION", "us-east-1")
+		setupS3Bucket("minio")
+	}
 
-		// Use the "new" function from the s3backend
-		s3Config := config.S3Config{
-			Bucket:       "test-bucket",
-			UsePathStyle: true,
-		}
-		s3Backend = s3.New(s3Config)
-
-		// Create bucket if it doesn't exist
-		ctx := context.Background()
-		createBucketInput := &awss3.CreateBucketInput{
-			Bucket: aws.String(s3Config.Bucket),
-			// Set public-read-write ACL for the bucket
-			ACL: types.BucketCannedACLPublicReadWrite,
-		}
-		_, err := s3Backend.Client.CreateBucket(ctx, createBucketInput)
-
-		// Add full access ACL for burritoadmin
-		bucketCreatedOrExists := err == nil || isS3BucketPresent(err)
-		if bucketCreatedOrExists {
-			// Set bucket policy for full access
-			bucketPolicy := `{
-				"Version": "2012-10-17",
-				"Statement": [
-					{
-						"Effect": "Allow",
-						"Principal": {"AWS": "*"},
-						"Action": "s3:*",
-						"Resource": [
-							"arn:aws:s3:::test-bucket",
-							"arn:aws:s3:::test-bucket/*"
-						]
-					}
-				]
-			}`
-
-			putPolicyInput := &awss3.PutBucketPolicyInput{
-				Bucket: aws.String(s3Config.Bucket),
-				Policy: aws.String(bucketPolicy),
-			}
-
-			_, policyErr := s3Backend.Client.PutBucketPolicy(ctx, putPolicyInput)
-			if policyErr != nil {
-				fmt.Printf("Warning: Failed to set bucket policy: %v\n", policyErr)
-			} else {
-				fmt.Printf("Full access ACL set for burritoadmin on bucket %s\n", s3Config.Bucket)
-			}
-
-			fmt.Printf("S3 backend created!\n")
-			backends["minio"] = s3Backend
-		} else {
-			fmt.Printf("Failed to create S3 bucket: %v\n", err)
-		}
+	if os.Getenv("SKIP_AWS_TESTS") == "" {
+		os.Setenv("AWS_ENDPOINT_URL_S3", "http://localhost:4566")
+		setupS3Bucket("aws")
 	}
 
 	if os.Getenv("SKIP_GCS_TESTS") == "" {
@@ -195,21 +206,17 @@ var _ = BeforeSuite(func() {
 		})
 
 		ctx := context.Background()
-		fmt.Printf("Attempting to create GCS bucket: %s\n", testBucketName)
 		err := gcsBackend.Client.Bucket(testBucketName).Create(ctx, "projectID", nil)
 		bucketCreatedOrExists := false
 
 		if err != nil {
-			fmt.Printf("GCS bucket creation response: %v\n", err)
 			errMsg := err.Error()
 			if isGCSBucketPresent(err) || strings.Contains(errMsg, "409") {
-				fmt.Printf("GCS bucket %s already exists, will use it\n", testBucketName)
 				bucketCreatedOrExists = true
 			} else {
 				fmt.Printf("Failed to create GCS bucket %s: %v\n", testBucketName, err)
 			}
 		} else {
-			fmt.Printf("Successfully created GCS bucket %s\n", testBucketName)
 			bucketCreatedOrExists = true
 		}
 
@@ -220,7 +227,6 @@ var _ = BeforeSuite(func() {
 			if err != nil {
 				fmt.Printf("Error verifying bucket exists: %v\n", err)
 			} else {
-				fmt.Printf("Verified GCS bucket exists: %s\n", testBucketName)
 				backends["gcs"] = gcsBackend
 			}
 		}
@@ -287,6 +293,7 @@ var _ = Describe("Storage Backends", func() {
 		},
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
+		Entry("S3 backend - AWS", "aws"),
 		Entry("S3 backend - Minio", "minio"),
 		Entry("GCS backend", "gcs"),
 	)
@@ -318,6 +325,7 @@ var _ = Describe("Storage Backends", func() {
 		},
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
+		Entry("S3 backend - AWS", "aws"),
 		Entry("S3 backend - Minio", "minio"),
 		Entry("GCS backend", "gcs"),
 	)
@@ -345,6 +353,7 @@ var _ = Describe("Storage Backends", func() {
 		},
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
+		Entry("S3 backend - AWS", "aws"),
 		Entry("S3 backend - Minio", "minio"),
 		Entry("GCS backend", "gcs"),
 	)
@@ -385,6 +394,7 @@ var _ = Describe("Storage Backends", func() {
 		},
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
+		Entry("S3 backend - AWS", "aws"),
 		Entry("S3 backend - Minio", "minio"),
 		Entry("GCS backend", "gcs"),
 	)
@@ -418,6 +428,7 @@ var _ = Describe("Storage Backends", func() {
 		},
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
+		Entry("S3 backend - AWS", "aws"),
 		Entry("S3 backend - Minio", "minio"),
 		Entry("GCS backend", "gcs"),
 	)

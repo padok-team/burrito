@@ -60,14 +60,23 @@ services:
       timeout: 3s
       retries: 5
 
-  # burritotest-localstack:
-  #   image: localstack/localstack:4.4.0
-  #   hostname: localstack
-  #   ports:
-  #     - "4566:4566"
-  #   environment:
-  #     - SERVICES=s3
-  #     - AWS_DEFAULT_REGION=eu-west-3
-  #     - DEBUG=1
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
+  burritotest-aws:
+    image: localstack/localstack:4.4.0
+    hostname: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - EDGE_PORT=4566
+      - AWS_DEFAULT_REGION=eu-west-3
+      - AWS_ACCESS_KEY_ID=burritoadmin
+      - AWS_SECRET_ACCESS_KEY=burritoadmin
+      - DEBUG=1
+    healthcheck:
+      test: "bash -c 'AWS_ACCESS_KEY_ID=burritoadmin AWS_SECRET_ACCESS_KEY=burritoadmin aws --endpoint-url=http://localhost:4566 s3 ls'"
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
