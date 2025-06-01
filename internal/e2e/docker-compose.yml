@@ -43,6 +43,23 @@ services:
     volumes:
       - ./scripts:/scripts
 
+  burritotest-gcs:
+    image: fsouza/fake-gcs-server:1.52.2
+    hostname: gcs    
+    command:
+      - -backend=memory
+      - -host=0.0.0.0
+      - -port-http=8000
+      - -scheme=both
+    ports:
+      - "8000:8000"
+      - "4443:4443"
+    healthcheck: # allows the tests to wait for GCS to be ready
+      test: ["CMD", "wget", "http://localhost:8000/_internal/healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   # burritotest-localstack:
   #   image: localstack/localstack:4.4.0
   #   hostname: localstack

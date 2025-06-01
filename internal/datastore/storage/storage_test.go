@@ -29,6 +29,7 @@ import (
 const (
 	storageAccountName = "devstoreaccount1"
 	containerName      = "test-container"
+	testBucketName     = "test-bucket"
 )
 
 var (
@@ -85,6 +86,17 @@ func isS3BucketPresent(err error) bool {
 	errMsg := err.Error()
 	return strings.Contains(errMsg, "BucketAlreadyExists") ||
 		strings.Contains(errMsg, "BucketAlreadyOwnedByYou") ||
+		strings.Contains(errMsg, "409")
+}
+
+func isGCSBucketPresent(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "Try another name. Bucket names must be globally unique") ||
+		strings.Contains(errMsg, "Conflict") ||
 		strings.Contains(errMsg, "409")
 }
 
@@ -175,6 +187,45 @@ var _ = BeforeSuite(func() {
 		}
 	}
 
+	if os.Getenv("SKIP_GCS_TESTS") == "" {
+
+		os.Setenv("STORAGE_EMULATOR_HOST", "http://localhost:8000")
+		gcsBackend = gcs.New(config.GCSConfig{
+			Bucket: testBucketName,
+		})
+
+		ctx := context.Background()
+		fmt.Printf("Attempting to create GCS bucket: %s\n", testBucketName)
+		err := gcsBackend.Client.Bucket(testBucketName).Create(ctx, "projectID", nil)
+		bucketCreatedOrExists := false
+
+		if err != nil {
+			fmt.Printf("GCS bucket creation response: %v\n", err)
+			errMsg := err.Error()
+			if isGCSBucketPresent(err) || strings.Contains(errMsg, "409") {
+				fmt.Printf("GCS bucket %s already exists, will use it\n", testBucketName)
+				bucketCreatedOrExists = true
+			} else {
+				fmt.Printf("Failed to create GCS bucket %s: %v\n", testBucketName, err)
+			}
+		} else {
+			fmt.Printf("Successfully created GCS bucket %s\n", testBucketName)
+			bucketCreatedOrExists = true
+		}
+
+		if bucketCreatedOrExists {
+			// Verify the bucket exists
+			bkt := gcsBackend.Client.Bucket(testBucketName)
+			_, err := bkt.Attrs(ctx)
+			if err != nil {
+				fmt.Printf("Error verifying bucket exists: %v\n", err)
+			} else {
+				fmt.Printf("Verified GCS bucket exists: %s\n", testBucketName)
+				backends["gcs"] = gcsBackend
+			}
+		}
+	}
+
 	// Setup test data for each backend
 	for name, backend := range backends {
 		for filePath, content := range expectedLayerTestFiles {
@@ -191,15 +242,11 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	// // Clean up test data
-	// for _, backend := range backends {
-	// 	for filePath := range expectedLayerTestFiles {
-	// 		_ = backend.Delete(filePath)
-	// 	}
-	// }
-
-	// Note: We're intentionally not deleting the S3 bucket itself,
-	// as other tests might be running simultaneously and this could cause conflicts.
-	// In a real CI environment, you might want a custom cleanup step after all tests.
+	for _, backend := range backends {
+		for filePath := range expectedLayerTestFiles {
+			_ = backend.Delete(filePath)
+		}
+	}
 })
 
 var _ = Describe("Storage Backends", func() {
@@ -241,6 +288,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - Minio", "minio"),
+		Entry("GCS backend", "gcs"),
 	)
 
 	DescribeTable("Get Operation",
@@ -271,6 +319,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - Minio", "minio"),
+		Entry("GCS backend", "gcs"),
 	)
 
 	DescribeTable("Set Operation",
@@ -297,6 +346,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - Minio", "minio"),
+		Entry("GCS backend", "gcs"),
 	)
 
 	DescribeTable("Delete Operation",
@@ -336,6 +386,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - Minio", "minio"),
+		Entry("GCS backend", "gcs"),
 	)
 
 	DescribeTable("Check Operation",
@@ -368,5 +419,6 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - Minio", "minio"),
+		Entry("GCS backend", "gcs"),
 	)
 })
