@@ -165,11 +165,16 @@ type ServerConfig struct {
 }
 
 type OIDCConfig struct {
-	Enabled      bool   `mapstructure:"enabled"`
-	IssuerURL    string `mapstructure:"issuerUrl"`
-	ClientID     string `mapstructure:"clientId"`
-	ClientSecret string `mapstructure:"clientSecret"`
-	RedirectURL  string `mapstructure:"redirectUrl"`
+	Enabled      bool         `mapstructure:"enabled"`
+	IssuerURL    string       `mapstructure:"issuerUrl"`
+	ClientID     string       `mapstructure:"clientId"`
+	ClientSecret SecretConfig `mapstructure:"clientSecret"`
+	RedirectURL  string       `mapstructure:"redirectUrl"`
+}
+
+type SecretConfig struct {
+	SecretName string `mapstructure:"secretName"`
+	SecretKey  string `mapstructure:"secretKey"`
 }
 
 func (c *Config) Load(flags *pflag.FlagSet) error {

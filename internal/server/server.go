@@ -103,7 +103,7 @@ func (s *Server) Exec() {
 	var authHandlers a.AuthHandlers
 	if s.config.Server.OIDC.Enabled {
 		log.Infof("OIDC authentication enabled, issuer: %s", s.config.Server.OIDC.IssuerURL)
-		authHandlers, err = oauth.New(s.config, cookieName)
+		authHandlers, err = oauth.New(s.config, bgctx, *client, cookieName)
 		if err != nil {
 			log.Fatalf("error initializing OIDC: %s", err)
 		}

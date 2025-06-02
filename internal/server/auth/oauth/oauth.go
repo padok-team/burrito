@@ -14,6 +14,9 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/server/utils"
 	"golang.org/x/oauth2"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type OAuth struct {
@@ -23,7 +26,7 @@ type OAuth struct {
 	LoginHTTPMethod string
 }
 
-func New(c *config.Config, sessionCookie string) (*OAuth, error) {
+func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie string) (*OAuth, error) {
 	oauth := &OAuth{}
 
 	// Initialize OIDC provider and OAuth2 config
@@ -32,10 +35,25 @@ func New(c *config.Config, sessionCookie string) (*OAuth, error) {
 		return nil, fmt.Errorf("failed to create OIDC provider: %w", err)
 	}
 
+	// Fetch client secret
+	secret := &corev1.Secret{}
+	err = cl.Get(ctx, types.NamespacedName{
+		Name:      c.Server.OIDC.ClientSecret.SecretName,
+		Namespace: c.Controller.MainNamespace,
+	}, secret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get OIDC client secret: %w", err)
+	}
+
+	clientSecret, ok := secret.Data[c.Server.OIDC.ClientSecret.SecretKey]
+	if !ok {
+		return nil, fmt.Errorf("client secret key %s not found in secret %s", c.Server.OIDC.ClientSecret.SecretKey, c.Server.OIDC.ClientSecret.SecretName)
+	}
+
 	oauth.OidcProvider = provider
 	oauth.OAuth2Config = &oauth2.Config{
 		ClientID:     c.Server.OIDC.ClientID,
-		ClientSecret: c.Server.OIDC.ClientSecret,
+		ClientSecret: string(clientSecret),
 		RedirectURL:  c.Server.OIDC.RedirectURL,
 		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},

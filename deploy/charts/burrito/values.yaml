@@ -80,7 +80,11 @@ config:
         # -- OIDC client ID
         clientId: ""
         # -- OIDC client secret
-        clientSecret: ""
+        clientSecret:
+          # -- Secret name that contains the OIDC client secret
+          secretName: "burrito-oidc-secret"
+          # -- Secret key that contains the OIDC client secret
+          secretKey: "clientSecret"
         # -- OIDC Redirect URL, should be the Burrito server URL with /auth/callback appended (ex: https://burrito.example.com/auth/callback)
         redirectUrl: ""
       session:
