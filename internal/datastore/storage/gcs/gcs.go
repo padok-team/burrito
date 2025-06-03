@@ -2,11 +2,14 @@ package gcs
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 	"google.golang.org/api/iterator"
 )
 
@@ -19,7 +22,7 @@ type GCS struct {
 
 // New creates a new Google Cloud Storage client
 func New(config config.GCSConfig) *GCS {
-	client, err := storage.NewClient(context.Background())
+	client, err := storage.NewClient(context.Background(), storage.WithJSONReads())
 	if err != nil {
 		panic(err)
 	}
@@ -32,17 +35,18 @@ func New(config config.GCSConfig) *GCS {
 func (a *GCS) Get(key string) ([]byte, error) {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
-	obj := bucket.Object(key)
+	storageKey := strings.TrimPrefix(key, "/")
+	obj := bucket.Object(storageKey)
 	reader, err := obj.NewReader(ctx)
 	if err == storage.ErrObjectNotExist {
-		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error reading object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -62,14 +66,15 @@ func (a *GCS) Get(key string) ([]byte, error) {
 func (a *GCS) Set(key string, data []byte, ttl int) error {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
-	obj := bucket.Object(key)
+	storageKey := strings.TrimPrefix(key, "/")
+	obj := bucket.Object(storageKey)
 	writer := obj.NewWriter(ctx)
 	defer writer.Close()
 
 	_, err := writer.Write(data)
 	if err != nil {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error setting object %s: %w", storageKey, err),
 			Nil: false,
 		}
 	}
@@ -80,17 +85,18 @@ func (a *GCS) Set(key string, data []byte, ttl int) error {
 func (a *GCS) Check(key string) ([]byte, error) {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
-	obj := bucket.Object(key)
+	storageKey := strings.TrimPrefix(key, "/")
+	obj := bucket.Object(storageKey)
 	metadata, err := obj.Attrs(ctx)
 	if err == storage.ErrObjectNotExist {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
 		return make([]byte, 0), &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("error checking object %s: %w", key, err),
 			Nil: false,
 		}
 	}
@@ -100,16 +106,20 @@ func (a *GCS) Check(key string) ([]byte, error) {
 func (a *GCS) Delete(key string) error {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
-	obj := bucket.Object(key)
+	storageKey := strings.TrimPrefix(key, "/")
+	obj := bucket.Object(storageKey)
 	err := obj.Delete(ctx)
 	if err == storage.ErrObjectNotExist {
 		return &errors.StorageError{
-			Err: err,
+			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
-		return err
+		return &errors.StorageError{
+			Err: fmt.Errorf("error deleting object %s: %w", key, err),
+			Nil: false,
+		}
 	}
 
 	return nil
@@ -118,21 +128,41 @@ func (a *GCS) Delete(key string) error {
 func (a *GCS) List(prefix string) ([]string, error) {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
+	listPrefix := typeutils.SanitizePrefix(prefix)
+
 	it := bucket.Objects(ctx, &storage.Query{
-		Prefix:    prefix,
+		Prefix:    listPrefix,
 		Delimiter: "/",
 	})
 
 	var objects []string
+	foundItems := false
+
 	for {
 		objAttrs, err := it.Next()
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error listing objects with prefix %s: %w", listPrefix, err)
 		}
-		objects = append(objects, objAttrs.Prefix)
+		if objAttrs.Prefix != "" {
+			objects = append(objects, "/"+strings.TrimSuffix(objAttrs.Prefix, "/"))
+			foundItems = true
+		}
+
+		if objAttrs.Name != "" {
+			objects = append(objects, "/"+objAttrs.Name)
+			foundItems = true
+		}
+	}
+
+	// If no items were found, return a StorageError with Nil=true
+	if !foundItems {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix %s not found", prefix),
+			Nil: true,
+		}
 	}
 
 	return objects, nil

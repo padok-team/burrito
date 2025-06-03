@@ -42,6 +42,8 @@ jobs:
         run: make envtest
       - name: Setup envtest
         run: ./bin/setup-envtest use
+      - name: Set up Docker Buildx for docker compose
+        uses: docker/setup-buildx-action@v3
       - name: Run tests
         run: make test
       - name: Upload coverage reports to Codecov
