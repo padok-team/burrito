@@ -19,6 +19,7 @@ func New() *Mock {
 }
 
 func (s *Mock) Get(key string) ([]byte, error) {
+	key = sanitizePrefix(key)
 	val, ok := s.data[key]
 	if !ok {
 		return nil, &errors.StorageError{
@@ -30,11 +31,13 @@ func (s *Mock) Get(key string) ([]byte, error) {
 }
 
 func (s *Mock) Set(key string, value []byte, ttl int) error {
+	key = sanitizePrefix(key)
 	s.data[key] = value
 	return nil
 }
 
 func (s *Mock) Check(key string) ([]byte, error) {
+	key = sanitizePrefix(key)
 	val, ok := s.data[key]
 	if !ok {
 		return nil, &errors.StorageError{
@@ -46,6 +49,7 @@ func (s *Mock) Check(key string) ([]byte, error) {
 }
 
 func (s *Mock) Delete(key string) error {
+	key = sanitizePrefix(key)
 	_, ok := s.data[key]
 	if !ok {
 		return &errors.StorageError{
@@ -93,4 +97,11 @@ func mapKeys(m map[string]bool) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+func sanitizePrefix(prefix string) string {
+	if !strings.HasPrefix(prefix, "/") {
+		prefix = "/" + prefix
+	}
+	return prefix
 }
