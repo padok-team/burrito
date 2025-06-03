@@ -81,4 +81,5 @@ jobs:
           args: --timeout=5m
 
   build-and-push:
+    needs: [unit-tests, check-codegen, lint-go]
     uses: ./.github/workflows/build-and-push.yaml
