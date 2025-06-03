@@ -370,7 +370,7 @@ var _ = Describe("Storage Backends", func() {
 			}
 
 			dynamicTestKey := fmt.Sprintf("dynamic-test-key-%s-%s", backendName, strings.Replace(GinkgoT().Name(), " ", "-", -1))
-			defer backend.Delete(dynamicTestKey)
+			defer backend.Delete(dynamicTestKey) //nolint:errcheck
 
 			testValue := []byte("Dynamic test data")
 
