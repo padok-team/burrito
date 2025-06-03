@@ -53,7 +53,18 @@ Former maintainers:
 - [@spoukke](https://x.com/spoukke)
 - [@LonguetAlan](https://x.com/LonguetAlan)
 
-### Blogs and Presentations
+### Presentations & Blog posts
+
+<div align="center">
+<a href="http://www.youtube.com/watch?v=DSuSCgPQlso"
+   title="Burrito est un TACoS : une alternative open-source à Terraform Cloud">
+  <img src="http://img.youtube.com/vi/DSuSCgPQlso/0.jpg"
+       alt="Burrito French Presentation & Demo" />
+</a>
+  <br/>
+  Presentation & Live Demo @ Devoxx France 2025 (French, English auto-translation available)
+</div>
+<br/>
 
 1. [Our burrito is a TACoS](https://cloud.theodo.com/en/blog/burrito-tacos) (2023)
 2. [What challenges did we solve with Burrito?](https://cloud.theodo.com/en/blog/what-challenges-did-we-solve-with-burrito) (2025)

@@ -84,6 +84,9 @@ func (g *Github) Init() error {
 		if err != nil {
 			return fmt.Errorf("error creating GitHub App client: %w", err)
 		}
+		if subscription == GitHubEnterprise {
+			itr.BaseURL = apiUrl
+		}
 		g.GitHubClientType = "app"
 		httpClient = &nethttp.Client{Transport: itr}
 		g.itr = itr
