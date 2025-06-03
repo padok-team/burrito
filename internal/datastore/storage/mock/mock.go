@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 )
 
 type Mock struct {
@@ -57,19 +58,20 @@ func (s *Mock) Delete(key string) error {
 }
 
 func (a *Mock) List(prefix string) ([]string, error) {
+	listPrefix := fmt.Sprintf("/%s", typeutils.SanitizePrefix(prefix))
 	keySet := map[string]bool{}
 	found := false
 
 	for k := range a.data {
-		if !strings.HasPrefix(k, prefix) {
+		if !strings.HasPrefix(k, listPrefix) {
 			continue
 		}
 		found = true
 
 		// Extract the folder part from the path that's one level deeper than the prefix
-		parts := strings.Split(strings.TrimPrefix(k, prefix), "/")
+		parts := strings.Split(strings.TrimPrefix(k, listPrefix), "/")
 		if len(parts) > 0 {
-			folderPath := prefix + parts[0] + "/"
+			folderPath := listPrefix + parts[0]
 			keySet[folderPath] = true
 		}
 	}
@@ -77,7 +79,7 @@ func (a *Mock) List(prefix string) ([]string, error) {
 	// Return an error if no keys match the prefix
 	if !found {
 		return nil, &errors.StorageError{
-			Err: fmt.Errorf("prefix %s not found", prefix),
+			Err: fmt.Errorf("prefix %s not found", listPrefix),
 			Nil: true,
 		}
 	}

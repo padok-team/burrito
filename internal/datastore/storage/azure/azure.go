@@ -3,11 +3,13 @@ package azure
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	identity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	container "github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/bloberror"
@@ -134,9 +136,10 @@ func (a *Azure) Delete(key string) error {
 
 func (a *Azure) List(prefix string) ([]string, error) {
 	keys := []string{}
+	listPrefix := fmt.Sprintf("/%s", typeutils.SanitizePrefix(prefix))
 
 	pager := a.ContainerClient.NewListBlobsHierarchyPager("/", &container.ListBlobsHierarchyOptions{
-		Prefix: &prefix,
+		Prefix: &listPrefix,
 	})
 
 	// Variable to track if any items were found
@@ -161,7 +164,7 @@ func (a *Azure) List(prefix string) ([]string, error) {
 		}
 
 		for _, prefix := range resp.Segment.BlobPrefixes {
-			keys = append(keys, *prefix.Name)
+			keys = append(keys, strings.TrimSuffix(*prefix.Name, "/"))
 		}
 	}
 

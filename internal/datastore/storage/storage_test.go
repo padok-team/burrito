@@ -265,14 +265,46 @@ var _ = Describe("Storage Backends", func() {
 			}
 
 			By("should list content (non-recursive) in a layer run directory")
-			keys, err := backend.List("/layers/ns/layer/run/")
+			keys, err := backend.List("/layers/ns/layer/run")
 			Expect(err).NotTo(HaveOccurred())
 
 			// Expect 2 folders in run/
 			Expect(keys).To(HaveLen(2))
 			expectedFolders := []string{
-				"/layers/ns/layer/run/0/",
-				"/layers/ns/layer/run/1/",
+				"/layers/ns/layer/run/0",
+				"/layers/ns/layer/run/1",
+			}
+
+			for _, expectedFolder := range expectedFolders {
+				Expect(keys).To(ContainElement(expectedFolder))
+			}
+
+			By("should list content (non-recursive) in a layer run/ directory")
+			keys, err = backend.List("/layers/ns/layer/run/")
+			Expect(err).NotTo(HaveOccurred())
+
+			// Expect 2 folders in run/
+			Expect(keys).To(HaveLen(2))
+			expectedFolders = []string{
+				"/layers/ns/layer/run/0",
+				"/layers/ns/layer/run/1",
+			}
+
+			for _, expectedFolder := range expectedFolders {
+				Expect(keys).To(ContainElement(expectedFolder))
+			}
+
+			By("should list content (non-recursive) in a layer attempt directory")
+			keys, err = backend.List("/layers/ns/layer/run/1/")
+			fmt.Printf("Keys in run/1/: %v\n", keys)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Expect 3 items in run/1/
+			Expect(keys).To(HaveLen(3))
+			expectedFolders = []string{
+				"/layers/ns/layer/run/1/plan.bin",
+				"/layers/ns/layer/run/1/run.log",
+				"/layers/ns/layer/run/1/short.diff",
 			}
 
 			for _, expectedFolder := range expectedFolders {

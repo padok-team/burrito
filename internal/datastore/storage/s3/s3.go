@@ -15,6 +15,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	"github.com/padok-team/burrito/internal/utils/typeutils"
 )
 
 // Implements Storage interface using AWS S3
@@ -167,12 +168,11 @@ func (a *S3) Delete(key string) error {
 }
 
 func (a *S3) List(prefix string) ([]string, error) {
-	trimmedPrefix := strings.TrimPrefix(prefix, "/")
-	trimmedPrefix = strings.TrimSuffix(trimmedPrefix, "/")
+	listPrefix := typeutils.SanitizePrefix(prefix)
 
 	input := &storage.ListObjectsV2Input{
 		Bucket:    &a.Config.Bucket,
-		Prefix:    aws.String(fmt.Sprintf("%s/", trimmedPrefix)),
+		Prefix:    aws.String(listPrefix),
 		Delimiter: aws.String("/"),
 	}
 	result, err := a.Client.ListObjectsV2(context.TODO(), input)
@@ -189,10 +189,16 @@ func (a *S3) List(prefix string) ([]string, error) {
 		}
 	}
 
-	keys := make([]string, len(result.CommonPrefixes))
-	for i, obj := range result.CommonPrefixes {
-		// Re-add leading slash to maintain consistent interface with other backends
-		keys[i] = "/" + *obj.Prefix
+	var keys []string
+
+	// Add directories
+	for _, obj := range result.CommonPrefixes {
+		keys = append(keys, "/"+strings.TrimSuffix(*obj.Prefix, "/"))
+	}
+
+	// Add files
+	for _, obj := range result.Contents {
+		keys = append(keys, "/"+*obj.Key)
 	}
 
 	return keys, nil
