@@ -37,17 +37,17 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 )
 
 // RepositoryReconciler reconciles a TerraformRepository object
 type Reconciler struct {
 	client.Client
-	Scheme    *runtime.Scheme
-	Recorder  record.EventRecorder
-	Config    *config.Config
-	Providers map[string]gitprovider.Provider
-	Datastore datastore.Client
+	Scheme      *runtime.Scheme
+	Recorder    record.EventRecorder
+	Config      *config.Config
+	Credentials *credentials.CredentialStore
+	Datastore   datastore.Client
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -56,10 +56,6 @@ type Reconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the TerraformRepository object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
@@ -91,7 +87,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	result, branchStates := state.getHandler()(ctx, r, repository)
 	repository.Status.Branches = branchStates
 	if err := r.Status().Update(ctx, repository); err != nil {
-		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
+		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update repository status")
 		log.Errorf("failed to update repository status: %s", err)
 	}
 	log.Infof("finished reconciliation cycle for repository %s/%s", repository.Namespace, repository.Name)
@@ -100,7 +96,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Providers = make(map[string]gitprovider.Provider)
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).
