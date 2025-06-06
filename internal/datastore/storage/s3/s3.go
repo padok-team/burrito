@@ -15,7 +15,7 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
-	"github.com/padok-team/burrito/internal/utils/typeutils"
+	"github.com/padok-team/burrito/internal/datastore/storage/utils"
 )
 
 // Implements Storage interface using AWS S3
@@ -168,7 +168,7 @@ func (a *S3) Delete(key string) error {
 }
 
 func (a *S3) List(prefix string) ([]string, error) {
-	listPrefix := typeutils.SanitizePrefix(prefix)
+	listPrefix := utils.SanitizePrefix(prefix)
 
 	input := &storage.ListObjectsV2Input{
 		Bucket:    &a.Config.Bucket,

@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
-	"github.com/padok-team/burrito/internal/utils/typeutils"
+	"github.com/padok-team/burrito/internal/datastore/storage/utils"
 	"google.golang.org/api/iterator"
 )
 
@@ -128,7 +128,7 @@ func (a *GCS) Delete(key string) error {
 func (a *GCS) List(prefix string) ([]string, error) {
 	ctx := context.Background()
 	bucket := a.Client.Bucket(a.Config.Bucket)
-	listPrefix := typeutils.SanitizePrefix(prefix)
+	listPrefix := utils.SanitizePrefix(prefix)
 
 	it := bucket.Objects(ctx, &storage.Query{
 		Prefix:    listPrefix,

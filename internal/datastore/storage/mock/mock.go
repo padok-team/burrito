@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
-	"github.com/padok-team/burrito/internal/utils/typeutils"
+	"github.com/padok-team/burrito/internal/datastore/storage/utils"
 )
 
 type Mock struct {
@@ -19,7 +19,8 @@ func New() *Mock {
 }
 
 func (s *Mock) Get(key string) ([]byte, error) {
-	key = sanitizePrefix(key)
+	key = "/" + utils.SanitizePrefix(key)
+	key = strings.TrimSuffix(key, "/")
 	val, ok := s.data[key]
 	if !ok {
 		return nil, &errors.StorageError{
@@ -31,13 +32,15 @@ func (s *Mock) Get(key string) ([]byte, error) {
 }
 
 func (s *Mock) Set(key string, value []byte, ttl int) error {
-	key = sanitizePrefix(key)
+	key = "/" + utils.SanitizePrefix(key)
+	key = strings.TrimSuffix(key, "/")
 	s.data[key] = value
 	return nil
 }
 
 func (s *Mock) Check(key string) ([]byte, error) {
-	key = sanitizePrefix(key)
+	key = "/" + utils.SanitizePrefix(key)
+	key = strings.TrimSuffix(key, "/")
 	val, ok := s.data[key]
 	if !ok {
 		return nil, &errors.StorageError{
@@ -49,7 +52,8 @@ func (s *Mock) Check(key string) ([]byte, error) {
 }
 
 func (s *Mock) Delete(key string) error {
-	key = sanitizePrefix(key)
+	key = "/" + utils.SanitizePrefix(key)
+	key = strings.TrimSuffix(key, "/")
 	_, ok := s.data[key]
 	if !ok {
 		return &errors.StorageError{
@@ -62,7 +66,7 @@ func (s *Mock) Delete(key string) error {
 }
 
 func (a *Mock) List(prefix string) ([]string, error) {
-	listPrefix := fmt.Sprintf("/%s", typeutils.SanitizePrefix(prefix))
+	listPrefix := fmt.Sprintf("/%s", utils.SanitizePrefix(prefix))
 	keySet := map[string]bool{}
 	found := false
 
@@ -97,11 +101,4 @@ func mapKeys(m map[string]bool) []string {
 		keys = append(keys, k)
 	}
 	return keys
-}
-
-func sanitizePrefix(prefix string) string {
-	if !strings.HasPrefix(prefix, "/") {
-		prefix = "/" + prefix
-	}
-	return prefix
 }

@@ -9,7 +9,7 @@ import (
 	storage "github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	container "github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
-	"github.com/padok-team/burrito/internal/utils/typeutils"
+	"github.com/padok-team/burrito/internal/datastore/storage/utils"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/blob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/bloberror"
@@ -136,7 +136,7 @@ func (a *Azure) Delete(key string) error {
 
 func (a *Azure) List(prefix string) ([]string, error) {
 	keys := []string{}
-	listPrefix := fmt.Sprintf("/%s", typeutils.SanitizePrefix(prefix))
+	listPrefix := fmt.Sprintf("/%s", utils.SanitizePrefix(prefix))
 
 	pager := a.ContainerClient.NewListBlobsHierarchyPager("/", &container.ListBlobsHierarchyOptions{
 		Prefix: &listPrefix,
