@@ -35,7 +35,7 @@ const Button: React.FC<ButtonProps> = ({
           text-nuances-white
           hover:bg-nuances-400
           active:bg-nuances-400
-          focus-visible:outline
+          focus-visible:outline-solid
           focus-visible:outline-1
           focus-visible:outline-offset-[3px]
           focus-visible:outline-nuances-black
@@ -47,7 +47,7 @@ const Button: React.FC<ButtonProps> = ({
           border-nuances-black
           hover:bg-nuances-50
           active:bg-nuances-50
-          focus-visible:outline
+          focus-visible:outline-solid
           focus-visible:outline-1
           focus-visible:outline-offset-[3px]
           focus-visible:outline-nuances-white
@@ -60,7 +60,7 @@ const Button: React.FC<ButtonProps> = ({
           hover:fill-primary-400
           active:text-primary-400
           active:fill-primary-400
-          focus-visible:outline-none
+          focus-visible:outline-hidden
           fill-primary-600`
       },
 
@@ -94,7 +94,7 @@ const Button: React.FC<ButtonProps> = ({
           text-nuances-white
           hover:bg-nuances-400
           active:bg-nuances-400
-          focus-visible:outline
+          focus-visible:outline-solid
           focus-visible:outline-1
           focus-visible:outline-offset-[3px]
           focus-visible:outline-nuances-black
@@ -106,7 +106,7 @@ const Button: React.FC<ButtonProps> = ({
           border-nuances-black
           hover:bg-nuances-50
           active:bg-nuances-50
-          focus-visible:outline
+          focus-visible:outline-solid
           focus-visible:outline-1
           focus-visible:outline-offset-[3px]
           focus-visible:outline-nuances-white
@@ -119,7 +119,7 @@ const Button: React.FC<ButtonProps> = ({
           hover:fill-primary-400
           active:text-primary-400
           active:fill-primary-400
-          focus-visible:outline-none
+          focus-visible:outline-hidden
           fill-primary-600`
       },
 

@@ -45,9 +45,9 @@ const NavigationButton: React.FC<NavigationButtonProps> = ({
         items-center
         w-8
         h-8
-        flex-shrink
+        shrink
         rounded-lg
-        focus-visible:outline
+        focus-visible:outline-solid
         focus-visible:outline-1
         focus-visible:outline-offset-2
         ${selected ? styles.selected[variant] : styles.base[variant]}

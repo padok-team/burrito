@@ -11,9 +11,9 @@ const CardLoader: React.FC<CardLoaderProps> = ({
   variant = 'light'
 }) => {
   const styles = {
-    light: `bg-[linear-gradient(270deg,_#D8EBFF_0%,_#ECF5FF_100%)]
+    light: `bg-[linear-gradient(270deg,#D8EBFF_0%,#ECF5FF_100%)]
       shadow-light`,
-    dark: `bg-[linear-gradient(270deg,_#252525_0%,_rgba(68,_67,_67,_0.24)_100%)]
+    dark: `bg-[linear-gradient(270deg,#252525_0%,rgba(68,67,67,0.24)_100%)]
       shadow-dark`
   };
 

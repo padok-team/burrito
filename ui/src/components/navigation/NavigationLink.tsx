@@ -35,7 +35,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
           after:w-full
           after:h-[3px]
           after:bg-blue-500
-          after:rounded-sm
+          after:rounded-xs
           after:scale-x-0
           after:opacity-0
           after:origin-bottom-left
@@ -43,7 +43,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
           after:duration-500
           hover:after:scale-x-100
           hover:after:opacity-100
-          hover:after:rounded-sm
+          hover:after:rounded-xs
           hover:after:bg-blue-400
           hover:after:transition-all
           hover:after:duration-500`,

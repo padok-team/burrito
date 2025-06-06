@@ -1,9 +1,91 @@
-@font-face {
-  font-family: "Outfit";
-  font-style: normal;
-  font-weight: 100 900;
-  src: url(fonts/Outfit.ttf) format("truetype");
+@import 'tailwindcss';
+
+@theme {
+  --font-*: initial;
+  --font-sans: Outfit, sans-serif;
+
+  --color-*: initial;
+  --color-inherit: inherit;
+  --color-current: currentColor;
+  --color-transparent: transparent;
+
+  --color-primary-100: #fbfdff;
+  --color-primary-300: #f1f8ff;
+  --color-primary-400: #e9f4ff;
+  --color-primary-500: #c2d1df;
+  --color-primary-600: #798c8c;
+
+  --color-pink-100: #ffe5f1;
+  --color-pink-400: #ffa8d0;
+  --color-pink-500: #f463a0;
+
+  --color-blue-100: #b7daff;
+  --color-blue-400: #82bfff;
+  --color-blue-500: #3c9bff;
+
+  --color-nuances-50: #f2f2f2;
+  --color-nuances-100: #e5e5e5;
+  --color-nuances-200: #cccccc;
+  --color-nuances-300: #737373;
+  --color-nuances-400: #252525;
+  --color-nuances-white: #ffffff;
+  --color-nuances-black: #000000;
+
+  --color-status-error-default: #e14029;
+  --color-status-error-light: #f9d9d4;
+
+  --color-status-success-default: #6bef70;
+  --color-status-success-light: #e1fce2;
+
+  --color-status-warning-default: #ffea51;
+  --color-status-warning-light: #fffbdc;
+
+  --color-overlay: #00000080;
+
+  --shadow-*: initial;
+  --shadow-light: 0px 0px 32px 0px rgba(121, 140, 140, 0.16);
+  --shadow-dark: 0px 0px 32px 0px rgba(143, 143, 143, 0.24);
+
+  --background-image-*: initial;
+  --background-image-background-light:
+    url('@/assets/backgrounds/background-light.png'),
+    linear-gradient(to right, #e9f4ff, #e9f4ff);
+  --background-image-background-dark:
+    url('@/assets/backgrounds/background-dark.png'),
+    linear-gradient(to right, #252525, #252525);
+  --background-image-background-login-light:
+    url('@/assets/backgrounds/background-login-light.png'),
+    linear-gradient(to right, #e9f4ff, #e9f4ff);
+  --background-image-background-login-dark:
+    url('@/assets/backgrounds/background-login-dark.png'),
+    linear-gradient(to right, #252525, #252525);
+
+  --animate-spin-slow: spin 2s linear infinite;
 }
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer base {
+  @font-face {
+    font-family: 'Outfit';
+    font-style: normal;
+    font-weight: 100 900;
+    src: url(fonts/Outfit.ttf) format('truetype');
+  }
+}

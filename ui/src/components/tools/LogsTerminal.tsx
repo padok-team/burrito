@@ -92,7 +92,7 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
         className
       )}
     >
-      <div className="flex flex-row justify-between items-center gap-16 p-4 overflow-auto flex-shrink-0">
+      <div className="flex flex-row justify-between items-center gap-16 p-4 overflow-auto shrink-0">
         <div className="flex flex-row items-center gap-4">
           <span className="text-lg font-black">{name}</span>
           <span className="text-base font-semibold">{namespace}</span>
@@ -141,12 +141,12 @@ const LogsTerminal: React.FC<LogsTerminalProps> = ({
       </div>
       <hr
         className={`
-          h-[1px]
+          h-px
           w-full
           ${variant === 'light' ? 'border-primary-600' : 'border-nuances-300'}
         `}
       />
-      <div className="flex flex-row items-center gap-1 p-4 flex-shrink-0 overflow-auto">
+      <div className="flex flex-row items-center gap-1 p-4 shrink-0 overflow-auto">
         {selectedAttempts
           .sort((a, b) => b - a)
           .map((attempt) => (
