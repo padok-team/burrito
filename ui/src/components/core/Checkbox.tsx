@@ -18,7 +18,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         light: `bg-nuances-white
           border-primary-500
           hover:border-primary-600
-          focus:outline
+          focus:outline-solid
           focus:outline-1
           focus:outline-offset-2
           focus:outline-primary-600
@@ -29,7 +29,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         dark: `bg-nuances-400
           border-nuances-300
           hover:border-nuances-100
-          focus:outline
+          focus:outline-solid
           focus:outline-1
           focus:outline-offset-2
           focus:outline-nuances-100
@@ -80,7 +80,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             pointer-events-none
             hidden
             peer-checked:block
-            peer-checked:peer-hover:hidden
+            peer-hover:peer-checked:hidden
           `}
           height={16}
           width={16}
@@ -93,7 +93,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             pointer-events-none
             hidden
             peer-checked:hidden
-            peer-checked:peer-hover:block
+            peer-hover:peer-checked:block
           `}
           height={16}
           width={16}

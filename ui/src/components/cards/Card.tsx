@@ -96,7 +96,7 @@ const Card: React.FC<CardProps> = ({
         p-6
         gap-4
         ${styles.base[variant]}`,
-        isRunning && `outline outline-4 ${styles.isRunning[variant]}`,
+        isRunning && `outline-solid outline-4 ${styles.isRunning[variant]}`,
         className
       )}
     >
