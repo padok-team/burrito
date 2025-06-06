@@ -103,9 +103,18 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: compose
+compose: ## Run docker-compose up.
+	docker compose -f internal/e2e/docker-compose.yml up --pull missing --force-recreate --remove-orphans --renew-anon-volumes --detach --wait --wait-timeout 60
+
+.PHONY: clean-compose
+clean-compose: ## Run docker-compose down.
+	docker compose -f internal/e2e/docker-compose.yml down --remove-orphans --volumes
+
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
+test: manifests generate fmt vet envtest compose ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+	$(MAKE) clean-compose
 
 NEW_VERSION := $(shell date +%s)
 
