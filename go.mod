@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cloud.google.com/go/storage v1.45.0
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.9.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.10.1
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.1
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/aws/smithy-go v1.22.3
