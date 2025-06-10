@@ -27,14 +27,14 @@ const (
 	DefaultPasswordCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+"
 )
 
-type BasicAuth struct {
+type BasicAuthHandlers struct {
 	Username        string
 	Password        string
 	SessionCookie   string
 	LoginHTTPMethod string
 }
 
-func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie string) (*BasicAuth, error) {
+func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie string) (*BasicAuthHandlers, error) {
 	secret := &corev1.Secret{}
 	err := cl.Get(ctx, types.NamespacedName{
 		Name:      DefaultSecretName,
@@ -67,7 +67,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 			return nil, fmt.Errorf("error creating basic auth credentials secret: %v", err)
 		}
 	}
-	return &BasicAuth{
+	return &BasicAuthHandlers{
 		Username:        string(secret.Data["username"]),
 		Password:        string(secret.Data["password"]),
 		SessionCookie:   sessionCookie,
@@ -75,7 +75,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 	}, nil
 }
 
-func (b *BasicAuth) HandleLogin(c echo.Context) error {
+func (b *BasicAuthHandlers) HandleLogin(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	if username == b.Username && password == b.Password {
@@ -98,11 +98,11 @@ func (b *BasicAuth) HandleLogin(c echo.Context) error {
 	return nil
 }
 
-func (b *BasicAuth) GetLoginHTTPMethod() string {
+func (b *BasicAuthHandlers) GetLoginHTTPMethod() string {
 	return b.LoginHTTPMethod
 }
 
-func (b *BasicAuth) HandleCallback(c echo.Context) error {
+func (b *BasicAuthHandlers) HandleCallback(c echo.Context) error {
 	// Basic auth does not require a callback, so we can just redirect to the home page
 	return c.Redirect(http.StatusFound, "/")
 }
