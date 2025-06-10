@@ -19,15 +19,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type OAuth struct {
+type OAuthAuthHandlers struct {
 	OidcProvider    *oidc.Provider
 	OAuth2Config    *oauth2.Config
 	SessionCookie   string
 	LoginHTTPMethod string
 }
 
-func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie string) (*OAuth, error) {
-	oauth := &OAuth{}
+func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie string) (*OAuthAuthHandlers, error) {
+	oauth := &OAuthAuthHandlers{}
 
 	// Initialize OIDC provider and OAuth2 config
 	provider, err := oidc.NewProvider(context.Background(), c.Server.OIDC.IssuerURL)
@@ -64,7 +64,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 	return oauth, nil
 }
 
-func (o *OAuth) HandleLogin(c echo.Context) error {
+func (o *OAuthAuthHandlers) HandleLogin(c echo.Context) error {
 	// Generate state parameter for CSRF protection
 	state := generateRandomString(32)
 
@@ -84,11 +84,11 @@ func (o *OAuth) HandleLogin(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, authURL)
 }
 
-func (o *OAuth) GetLoginHTTPMethod() string {
+func (o *OAuthAuthHandlers) GetLoginHTTPMethod() string {
 	return o.LoginHTTPMethod
 }
 
-func (o *OAuth) HandleCallback(c echo.Context) error {
+func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 	sess, err := session.Get(o.SessionCookie, c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get session")

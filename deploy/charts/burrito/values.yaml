@@ -87,6 +87,11 @@ config:
           secretKey: "clientSecret"
         # -- OIDC Redirect URL, should be the Burrito server URL with /auth/callback appended (ex: https://burrito.example.com/auth/callback)
         redirectUrl: ""
+        # -- OIDC scopes to request
+        scopes:
+          - "openid"
+          - "profile"
+          - "email"
       session:
         # -- Session max age in seconds, after which the session will expire
         maxAge: 86400
