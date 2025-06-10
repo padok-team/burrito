@@ -123,9 +123,10 @@ func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 
 	// Extract claims
 	var claims struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
-		Name  string `json:"name"`
+		Sub     string `json:"sub"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
 	}
 	if err := idToken.Claims(&claims); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
@@ -135,6 +136,7 @@ func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 	sess.Values["user_id"] = claims.Sub
 	sess.Values["email"] = claims.Email
 	sess.Values["name"] = claims.Name
+	sess.Values["picture"] = claims.Picture
 	delete(sess.Values, "oauth_state") // Clean up state
 	if err := sess.Save(c.Request(), c.Response()); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to save session")

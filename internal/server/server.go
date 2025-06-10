@@ -18,6 +18,7 @@ import (
 	a "github.com/padok-team/burrito/internal/server/auth"
 	"github.com/padok-team/burrito/internal/server/auth/basic"
 	"github.com/padok-team/burrito/internal/server/auth/oauth"
+	"github.com/padok-team/burrito/internal/server/utils"
 	"github.com/padok-team/burrito/internal/webhook"
 	log "github.com/sirupsen/logrus"
 
@@ -84,6 +85,7 @@ func initClient() (*client.Client, error) {
 }
 
 func (s *Server) Exec() {
+	log.SetFormatter(&log.JSONFormatter{})
 	bgctx := context.Background()
 	datastore := datastore.NewDefaultClient(s.config.Datastore)
 	s.API.Datastore = datastore
@@ -137,7 +139,7 @@ func (s *Server) Exec() {
 	))
 
 	// Auth routes (no authentication required)
-	auth := e.Group("/auth")
+	auth := e.Group("/auth", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 	auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
 	auth.GET("/callback", authHandlers.HandleCallback)
 	auth.POST("/logout", func(c echo.Context) error {
@@ -151,6 +153,10 @@ func (s *Server) Exec() {
 		}
 		return c.JSON(http.StatusOK, map[string]string{"type": authType})
 	})
+	// User info route, used to get user information after login (requires authentication)
+	auth.GET("/user", s.authMiddleware()(func(c echo.Context) error {
+		return a.HandleUserInfo(c)
+	}))
 	// Check if user is authenticated, used to redirect /login to / if already logged in
 	auth.GET("/", func(c echo.Context) error {
 		sess, err := session.Get(cookieName, c)
@@ -161,10 +167,14 @@ func (s *Server) Exec() {
 	})
 
 	api := e.Group("/api")
-	api.Use(middleware.Logger())
 	e.GET("/healthz", handleHealthz)
-	api.POST("/webhook", s.Webhook.GetHttpHandler())
+
+	// Exposed webhook route. Logging middleware is applied here to log unauthenticated requests.
+	api.POST("/webhook", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig)(s.Webhook.GetHttpHandler()))
+
 	api.Use(s.authMiddleware())
+	// Logger middleware should be applied after auth middleware to be able log user info
+	api.Use(middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 	api.GET("/layers", s.API.LayersHandler)
 	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
 	api.GET("/repositories", s.API.RepositoriesHandler)
@@ -233,6 +243,9 @@ func (s *Server) authMiddleware() echo.MiddlewareFunc {
 			}
 			if name, ok := sess.Values["name"].(string); ok {
 				c.Set("user_name", name)
+			}
+			if picture, ok := sess.Values["picture"].(string); ok {
+				c.Set("user_picture", picture)
 			}
 			return next(c)
 		}

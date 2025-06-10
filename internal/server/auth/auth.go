@@ -19,3 +19,12 @@ func HandleLogout(c echo.Context, sessionCookie string) error {
 
 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
 }
+
+func HandleUserInfo(c echo.Context) error {
+	userEmail := c.Get("user_email")
+	name := c.Get("user_name")
+	id := c.Get("user_id")
+	picture := c.Get("user_picture")
+
+	return c.JSON(http.StatusOK, map[string]string{"email": userEmail.(string), "name": name.(string), "id": id.(string), "picture": picture.(string)})
+}

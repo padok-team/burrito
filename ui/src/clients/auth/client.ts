@@ -38,3 +38,21 @@ export async function getAuthType(): Promise<'basic' | 'oauth'> {
   const data = await res.json() as { type: string };
   return (data.type?.toLowerCase() === 'oauth' ? 'oauth' : 'basic');
 }
+
+/**
+ * Fetches current user info from session
+ * Expects JSON response: { id: string, name: string, email: string }
+ */
+export interface UserInfo {
+  id: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+}
+export async function getUserInfo(): Promise<UserInfo> {
+  const res = await fetch('/auth/user', { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error('Failed to fetch user info');
+  }
+  return res.json();
+}

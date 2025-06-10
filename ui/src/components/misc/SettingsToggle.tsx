@@ -1,7 +1,9 @@
 import React, { useContext } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { useQuery } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
+import { getUserInfo, UserInfo } from '@/clients/auth/client';
 
 import Box from '@/components/core/Box';
 import Toggle from '@/components/core/Toggle';
@@ -17,11 +19,24 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
   variant = 'light'
 }) => {
   const { theme, setTheme } = useContext(ThemeContext);
+  // Load current user info
+  const { data: user } = useQuery<UserInfo, Error>({
+    queryKey: ['userInfo'],
+    queryFn: getUserInfo,
+    retry: false,
+  });
   return (
     <Box
       variant={variant}
       className={twMerge('flex flex-col justify-center p-4 gap-4 bottom-0', className)}
     >
+
+      {user && (
+        <div className={`text-base font-bold text-center ${variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'}`}>
+          {user.name ?? user.email}
+        </div>
+      )}
+
       <Toggle
         className={`
           text-base
