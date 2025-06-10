@@ -170,6 +170,7 @@ type OIDCConfig struct {
 	ClientID     string       `mapstructure:"clientId"`
 	ClientSecret SecretConfig `mapstructure:"clientSecret"`
 	RedirectURL  string       `mapstructure:"redirectUrl"`
+	Scopes       []string     `mapstructure:"scopes"`
 }
 
 type SecretConfig struct {

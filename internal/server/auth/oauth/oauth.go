@@ -56,7 +56,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 		ClientSecret: string(clientSecret),
 		RedirectURL:  c.Server.OIDC.RedirectURL,
 		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes:       c.Server.OIDC.Scopes,
 	}
 	oauth.SessionCookie = sessionCookie
 	oauth.LoginHTTPMethod = http.MethodGet
