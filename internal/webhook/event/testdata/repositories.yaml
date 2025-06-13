@@ -20,6 +20,20 @@ kind: TerraformRepository
 metadata:
   labels:
     app.kubernetes.io/instance: in-cluster-burrito
+  name: burrito-examples-2
+  namespace: default
+spec:
+  repository:
+    secretName: burrito-repo
+    url: git@github.com:padok-team/burrito-examples.git
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  labels:
+    app.kubernetes.io/instance: in-cluster-burrito
   name: other-repo-1
   namespace: default
 spec:
