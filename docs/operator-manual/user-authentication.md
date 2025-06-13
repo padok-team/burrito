@@ -76,4 +76,4 @@ kubectl -n <burrito-namespace> create secret generic burrito-oidc-secret \
 
 ### Authorization
 
-For the moment, Burrito does not implement authorization mecanisms. All users that are able to authenticate with the configured OIDC provider will be able to access the Burrito UI.
+For the moment, Burrito does not implement authorization mechanisms. All users that are able to authenticate with the configured OIDC provider will be able to access the Burrito UI.
