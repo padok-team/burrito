@@ -35,7 +35,7 @@ var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconciler *controller.Reconciler
 
-const testTime = "Sun May  8 11:21:53 UTC 2023"
+const testTime = "Mon May  8 11:21:53 UTC 2023"
 
 func TestLayer(t *testing.T) {
 	RegisterFailHandler(Fail)
