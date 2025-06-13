@@ -361,6 +361,15 @@ var _ = Describe("Webhook", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(errors.IsNotFound(err)).To(BeTrue())
 				})
+				It("should have deleted the annotation on linked TerraformRepository", func() {
+					repository := &configv1alpha1.TerraformRepository{}
+					err := k8sClient.Get(context.TODO(), types.NamespacedName{
+						Namespace: "default",
+						Name:      "burrito-closed-single-pr",
+					}, repository)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(repository.Annotations).NotTo(HaveKey(annotations.ComputeKeyForSyncBranchNow(PullRequestClosedEventSingleAffected.Reference)))
+				})
 			})
 			Describe("Multiple pull request have been affected", Ordered, func() {
 				BeforeAll(func() {
@@ -385,6 +394,23 @@ var _ = Describe("Webhook", func() {
 					Expect(handleErr).NotTo(HaveOccurred())
 					Expect(err).To(HaveOccurred())
 					Expect(errors.IsNotFound(err)).To(BeTrue())
+				})
+				It("should have deleted the annotation on all linked TerraformRepositories", func() {
+					repository1 := &configv1alpha1.TerraformRepository{}
+					err := k8sClient.Get(context.TODO(), types.NamespacedName{
+						Namespace: "default",
+						Name:      "burrito-closed-multi-pr-1",
+					}, repository1)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(repository1.Annotations).NotTo(HaveKey(annotations.ComputeKeyForSyncBranchNow(PullRequestClosedEventMultipleAffected.Reference)))
+
+					repository2 := &configv1alpha1.TerraformRepository{}
+					err = k8sClient.Get(context.TODO(), types.NamespacedName{
+						Namespace: "default",
+						Name:      "burrito-closed-multi-pr-2",
+					}, repository2)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(repository2.Annotations).NotTo(HaveKey(annotations.ComputeKeyForSyncBranchNow(PullRequestClosedEventMultipleAffected.Reference)))
 				})
 			})
 		})
