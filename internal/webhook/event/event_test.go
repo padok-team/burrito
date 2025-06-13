@@ -262,7 +262,7 @@ var _ = Describe("Webhook", func() {
 				repository := &configv1alpha1.TerraformRepository{}
 				err := k8sClient.Get(context.TODO(), types.NamespacedName{
 					Namespace: "default",
-					Name:      "burrito-examples",
+					Name:      "burrito",
 				}, repository)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(repository.Annotations).To(HaveKey(annotations.ComputeKeyForSyncBranchNow(pushEventOneRepositoryAffected.Reference)))
