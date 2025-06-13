@@ -102,6 +102,7 @@ func (s *Server) Exec() {
 		log.Fatalf("error initializing webhook handler: %s", err)
 	}
 
+	// Initialize authentication handlers based on configuration
 	var authHandlers a.AuthHandlers
 	if s.config.Server.OIDC.Enabled {
 		log.Infof("OIDC authentication enabled, issuer: %s", s.config.Server.OIDC.IssuerURL)
@@ -124,6 +125,7 @@ func (s *Server) Exec() {
 	// Setup session middleware
 	e.Use(session.Middleware(s.sessionStore))
 
+	// Expose static web assets
 	e.Use(middleware.StaticWithConfig(
 		middleware.StaticConfig{
 			Filesystem: s.staticAssets,
@@ -145,7 +147,6 @@ func (s *Server) Exec() {
 	auth.POST("/logout", func(c echo.Context) error {
 		return a.HandleLogout(c, cookieName)
 	})
-	// Return the supported auth type: basic or oauth
 	auth.GET("/type", func(c echo.Context) error {
 		authType := "basic"
 		if s.config.Server.OIDC.Enabled {
@@ -153,18 +154,9 @@ func (s *Server) Exec() {
 		}
 		return c.JSON(http.StatusOK, map[string]string{"type": authType})
 	})
-	// User info route, used to get user information after login (requires authentication)
 	auth.GET("/user", s.authMiddleware()(func(c echo.Context) error {
 		return a.HandleUserInfo(c)
 	}))
-	// Check if user is authenticated, used to redirect /login to / if already logged in
-	auth.GET("/", func(c echo.Context) error {
-		sess, err := session.Get(cookieName, c)
-		if err != nil || sess.Values["user_id"] == nil {
-			return c.NoContent(http.StatusUnauthorized)
-		}
-		return c.NoContent(http.StatusOK)
-	})
 
 	api := e.Group("/api")
 	e.GET("/healthz", handleHealthz)

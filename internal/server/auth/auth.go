@@ -21,6 +21,10 @@ func HandleLogout(c echo.Context, sessionCookie string) error {
 }
 
 func HandleUserInfo(c echo.Context) error {
+	// Check if the user is authenticated
+	if c.Get("user_id") == nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User not authenticated"})
+	}
 	userEmail := c.Get("user_email")
 	name := c.Get("user_name")
 	id := c.Get("user_id")
