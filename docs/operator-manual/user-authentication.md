@@ -5,7 +5,7 @@ Burrito supports two modes of authentication for its server component:
 1. **Basic Authentication (default)**
 2. **OpenID Connect (OIDC)**
 
-## SAML authentication is not supported at this time but will be added in the future.
+SAML authentication is not supported at this time but will be added in the future
 
 ## Basic Authentication (Default)
 
