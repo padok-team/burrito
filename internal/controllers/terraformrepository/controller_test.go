@@ -33,7 +33,6 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconciler *controller.Reconciler
-var reconcilerMaxConcurrentPods *controller.Reconciler
 
 func TestLayer(t *testing.T) {
 	RegisterFailHandler(Fail)
