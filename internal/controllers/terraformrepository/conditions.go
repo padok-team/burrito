@@ -113,7 +113,7 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		}
 
 		nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
-		now := time.Now()
+		now := r.Clock.Now()
 
 		if nextSyncTime.Before(now) {
 			condition.Reason = "SyncTooOld"
