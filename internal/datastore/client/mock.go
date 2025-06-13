@@ -5,6 +5,7 @@ import (
 	"os"
 
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -18,6 +19,8 @@ func isBundleTestValues(namespace, name, ref, revision string) bool {
 	return namespace == TestRepoNamespace && name == TestRepoName && ref == TestRef && revision == TestRevision
 }
 
+// MockClient implements the Client interface for testing purposes in controller tests.
+// It is different from the Mock Datastore implementation used in tests of the datastore package.
 type MockClient struct {
 	// Store latest revisions in memory for testing
 	revisions map[string]string
@@ -64,6 +67,8 @@ func (c *MockClient) PutGitBundle(namespace, name, ref, revision string, bundle 
 	bundleKey := fmt.Sprintf("%s/%s/%s/%s", namespace, name, ref, revision)
 	c.bundles[bundleKey] = bundle
 
+	log.Infof("mock datastore has stored git bundle %s/%s/%s/%s", namespace, name, ref, revision)
+
 	return nil
 }
 
@@ -76,9 +81,11 @@ func (c *MockClient) CheckGitBundle(namespace, name, ref, revision string) (bool
 	revKey := fmt.Sprintf("%s/%s/%s", namespace, name, ref)
 	if rev, ok := c.revisions[revKey]; ok {
 		if rev == revision {
+			log.Infof("mock datastore has found git bundle %s = %s", revKey, rev)
 			return true, nil
 		}
 	}
+	log.Warningf("mock datastore has not found git bundle %s = %s", revKey, revision)
 	return false, nil
 }
 

@@ -15,7 +15,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -84,7 +83,7 @@ func (s *SyncNeeded) getHandler() Handler {
 					continue
 				}
 				nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
-				now := time.Now()
+				now := r.Clock.Now()
 				if !syncNow && !nextSyncTime.Before(now) && branch.LastSyncStatus == SyncStatusSuccess {
 					continue
 				}
@@ -95,7 +94,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to get remote revision for ref %s: %s", branch.Name, err)
 				syncError = err
-				branchStates = updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
+				branchStates = r.updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
 				continue
 			}
 			log.Infof("latest revision for repository %s/%s ref %s is %s", repository.Namespace, repository.Name, branch.Name, latestRev)
@@ -105,14 +104,14 @@ func (s *SyncNeeded) getHandler() Handler {
 				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to check stored revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to check stored revision for ref %s: %s", branch.Name, err)
 				syncError = err
-				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
+				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
 				continue
 			}
 
 			if isSynced {
 				log.Infof("repository %s/%s is in sync with remote for ref %s: rev %s", repository.Namespace, repository.Name, branch.Name, latestRev)
-				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
-				syncError = annotateLayers(r.Client, gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
+				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+				syncError = r.annotateLayers(gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
@@ -121,7 +120,7 @@ func (s *SyncNeeded) getHandler() Handler {
 					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to get revision bundle for ref %s: %s", branch.Name, err)
 					syncError = err
-					branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
+					branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
 					continue
 				}
 
@@ -130,14 +129,14 @@ func (s *SyncNeeded) getHandler() Handler {
 					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to store revision for ref %s: %s", branch.Name, err)
 					syncError = err
-					branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
+					branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
 					continue
 				}
 				log.Infof("stored new bundle for repository %s/%s ref:%s revision:%s", repository.Namespace, repository.Name, branch.Name, latestRev)
-				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
 
 				// Add annotation to trigger a sync for all layers that depend on this branch
-				syncError = annotateLayers(r.Client, gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
+				syncError = r.annotateLayers(gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
 			}
 		}
 		if syncError != nil {
@@ -163,10 +162,10 @@ func getStateString(state State) string {
 	return t[len(t)-1]
 }
 
-func updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, status string) []configv1alpha1.BranchState {
+func (r *Reconciler) updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, status string) []configv1alpha1.BranchState {
 	for i, b := range branchStates {
 		if b.Name == branch {
-			branchStates[i].LastSyncDate = time.Now().Format(time.UnixDate)
+			branchStates[i].LastSyncDate = r.Clock.Now().Format(time.UnixDate)
 			branchStates[i].LatestRev = rev
 			branchStates[i].LastSyncStatus = status
 			return branchStates
@@ -175,9 +174,9 @@ func updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, s
 	return branchStates
 }
 
-func annotateLayers(c client.Client, gitProvider types.GitProvider, layers []configv1alpha1.TerraformLayer, latestRev string) error {
+func (r *Reconciler) annotateLayers(gitProvider types.GitProvider, layers []configv1alpha1.TerraformLayer, latestRev string) error {
 	var err error
-	date := time.Now().Format(time.UnixDate)
+	date := r.Clock.Now().Format(time.UnixDate)
 	for _, layer := range layers {
 		ann := map[string]string{}
 
@@ -201,7 +200,7 @@ func annotateLayers(c client.Client, gitProvider types.GitProvider, layers []con
 			}
 		}
 
-		err = annotations.Add(context.TODO(), c, &layer, ann)
+		err = annotations.Add(context.TODO(), r.Client, &layer, ann)
 		if err != nil {
 			log.Errorf("could not add annotation to TerraformLayer %s/%s: %s", layer.Namespace, layer.Name, err)
 		} else {

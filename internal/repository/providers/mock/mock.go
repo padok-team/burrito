@@ -10,6 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const MOCK_REVISION = "MOCK_REVISION"
+
 type Mock struct{}
 
 func (m *Mock) GetWebhookProvider() (types.WebhookProvider, error) {
@@ -28,9 +30,10 @@ type GitProvider struct{}
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 	log.Infof("Mock provider created bundle")
-	return nil, nil
+	return make([]byte, 1), nil
 }
 
+// TODO: Implement a fake list for TerraformRepository Controller tests
 func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string {
 	log.Infof("Mock provider get changes previous commit / current commit")
 	return []string{}
@@ -38,7 +41,7 @@ func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string 
 
 func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	log.Infof("Mock provider latest revision for ref")
-	return "", nil
+	return MOCK_REVISION, nil
 }
 
 type APIProvider struct{}
