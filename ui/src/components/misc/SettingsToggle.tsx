@@ -23,16 +23,20 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
   const { data: user } = useQuery<UserInfo, Error>({
     queryKey: ['userInfo'],
     queryFn: getUserInfo,
-    retry: false,
+    retry: false
   });
   return (
     <Box
       variant={variant}
-      className={twMerge('flex flex-col justify-center p-4 gap-4 bottom-0', className)}
+      className={twMerge(
+        'flex flex-col justify-center p-4 gap-4 bottom-0',
+        className
+      )}
     >
-
       {user && (
-        <div className={`text-base font-bold text-center ${variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'}`}>
+        <div
+          className={`text-base font-bold text-center ${variant === 'light' ? 'text-nuances-black' : 'text-nuances-50'}`}
+        >
           {user.name ?? user.email}
         </div>
       )}
@@ -51,7 +55,10 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
         theme={theme}
         variant={'secondary'}
         onClick={async () => {
-          await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+          await fetch('/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
           window.location.href = '/login';
         }}
       >

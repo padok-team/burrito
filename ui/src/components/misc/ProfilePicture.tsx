@@ -20,12 +20,21 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
   const [open, setOpen] = useState(false);
   const pictureRef = useRef<HTMLDivElement>(null);
   // Load current user info
-  const { data: user } = useQuery<UserInfo, Error>({ queryKey: ['userInfo'], queryFn: getUserInfo, retry: false });
+  const { data: user } = useQuery<UserInfo, Error>({
+    queryKey: ['userInfo'],
+    queryFn: getUserInfo,
+    retry: false
+  });
 
   // Compute initials fallback
   const initials = useMemo(() => {
     if (user?.name) {
-      return user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+      return user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
     }
     if (user?.email) {
       return user.email.charAt(0).toUpperCase();
@@ -35,7 +44,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
 
   // Toggle settings dropdown on click
   const handleClick = () => {
-    setOpen(prev => !prev);
+    setOpen((prev) => !prev);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
@@ -93,7 +102,11 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
         ref={pictureRef}
       >
         {user?.picture ? (
-          <img src={user.picture} alt="Profile" className="h-full w-full rounded-full object-cover" />
+          <img
+            src={user.picture}
+            alt="Profile"
+            className="h-full w-full rounded-full object-cover"
+          />
         ) : (
           <span>{initials}</span>
         )}

@@ -1,21 +1,24 @@
-export const basicAuth =  async (formData: { username: string; password: string }) => {
+export const basicAuth = async (formData: {
+  username: string;
+  password: string;
+}) => {
   const response = await fetch('/auth/login', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: new URLSearchParams({
       username: formData.username,
-      password: formData.password,
-    }),
+      password: formData.password
+    })
   });
-  
+
   if (!response.ok) {
     throw new Error('Invalid credentials');
   }
-  
+
   return null;
-}
+};
 
 /**
  * Fetches the supported authentication method from the server.
@@ -26,8 +29,8 @@ export async function getAuthType(): Promise<'basic' | 'oauth'> {
   if (!res.ok) {
     throw new Error(`Failed to fetch auth type: ${res.status}`);
   }
-  const data = await res.json() as { type: string };
-  return (data.type?.toLowerCase() === 'oauth' ? 'oauth' : 'basic');
+  const data = (await res.json()) as { type: string };
+  return data.type?.toLowerCase() === 'oauth' ? 'oauth' : 'basic';
 }
 
 /**

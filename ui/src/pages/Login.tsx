@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
-import { basicAuth, getUserInfo, getAuthType, UserInfo } from '@/clients/auth/client';
+import {
+  basicAuth,
+  getUserInfo,
+  getAuthType,
+  UserInfo
+} from '@/clients/auth/client';
 
 import Input from '@/components/core/Input';
 import Button from '@/components/core/Button';
@@ -18,7 +23,11 @@ const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   // Fetch supported auth method from server
-  const { data: authType, isLoading: isAuthTypeLoading, isError: isAuthTypeError } = useQuery({
+  const {
+    data: authType,
+    isLoading: isAuthTypeLoading,
+    isError: isAuthTypeError
+  } = useQuery({
     queryKey: ['authType'],
     queryFn: getAuthType,
     retry: false,
@@ -32,8 +41,11 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
 
   // Check if user is already authenticated
-  const { isSuccess } = useQuery<UserInfo, Error>({ queryKey: ['userInfo'], queryFn: getUserInfo, retry: false });
-
+  const { isSuccess } = useQuery<UserInfo, Error>({
+    queryKey: ['userInfo'],
+    queryFn: getUserInfo,
+    retry: false
+  });
 
   // Login mutation
   const loginMutation = useMutation({
@@ -43,7 +55,7 @@ const Login: React.FC = () => {
     },
     onError: (error: Error) => {
       setError(error.message);
-    },
+    }
   });
 
   // show loading or error state while fetching auth type
@@ -93,7 +105,10 @@ const Login: React.FC = () => {
           </div>
           <div className="flex flex-col items-center justify-center gap-8 w-full">
             {isBasicAuth ? (
-              <form onSubmit={handleLogin} className="flex flex-col items-center justify-center gap-8 w-full">
+              <form
+                onSubmit={handleLogin}
+                className="flex flex-col items-center justify-center gap-8 w-full"
+              >
                 <Input
                   variant={theme}
                   placeholder="Your username"
@@ -112,7 +127,9 @@ const Login: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 {error && (
-                  <div className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}>
+                  <div
+                    className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}
+                  >
                     {error}
                   </div>
                 )}
