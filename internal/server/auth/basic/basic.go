@@ -83,7 +83,10 @@ func (b *BasicAuthHandlers) HandleLogin(c echo.Context) error {
 		sess, err := session.Get(b.SessionCookie, c)
 		if err != nil {
 			// Clear session cookie if session is invalid to prevent stale sessions
-			utils.RemoveSessionCookie(c, b.SessionCookie)
+			err := utils.RemoveSessionCookie(c, b.SessionCookie)
+			if err != nil {
+				log.Warnf("Failed to clear session cookie: %v", err)
+			}
 		}
 		sess.Values["user_id"] = "admin"
 		sess.Values["email"] = "admin@burrito.tf"
