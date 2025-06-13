@@ -10,6 +10,15 @@ The Burrito UI is a web-based interface that allows you to view the state of you
 
 The Burrito UI is accessible via a web browser. To access the UI, you need to expose the `burrito-server` service locally or on a public URL.
 
+## Authentication
+
+By default, Burrito uses basic authentication with a username and password. The default credentials are:
+
+- **Username:** `admin`
+- **Password:** Generated on install in a Kubernetes Secret named `burrito-admin-credentials` in the Burrito server namespace.
+
+More secure authentication methods like OpenID Connect (OIDC) can be configured for production use. For more details, see the [Authentication Guide](../operator-manual/user-authentication.md).
+
 ## Features
 
 ### Homepage
