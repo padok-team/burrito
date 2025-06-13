@@ -57,44 +57,20 @@ var _ = BeforeSuite(func() {
 	Expect(k8sClient).NotTo(BeNil())
 })
 
-var PushEventNoChanges = event.PushEvent{
-	URL:       "https://github.com/padok-team/burrito-examples",
+var pushEventNoRepositoryAffected = event.PushEvent{
+	URL:       "https://github.com/nonexistent/repo",
 	Reference: "main",
 	ChangeInfo: event.ChangeInfo{
 		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
 		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
 	},
 	Changes: []string{
-		"README.md",
+		"layer-path-changed-2/variables.tf",
+		"layer-path-changed-3/inputs.hcl",
 	},
 }
 
-var PushEventLayerPathChanges = event.PushEvent{
-	URL:       "https://github.com/padok-team/burrito-examples",
-	Reference: "main",
-	ChangeInfo: event.ChangeInfo{
-		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
-		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
-	},
-	Changes: []string{
-		"layer-path-changed/main.tf",
-	},
-}
-
-var PushEventAdditionalPathChanges = event.PushEvent{
-	URL:       "https://github.com/padok-team/burrito-examples",
-	Reference: "main",
-	ChangeInfo: event.ChangeInfo{
-		ShaBefore: "b3231e8771591b3864b3c582e85955c1f76aaded",
-		ShaAfter:  "6c193d9cad1ddafdb31ff9f733630da9705bfd64",
-	},
-	Changes: []string{
-		"modules/module-changed/variables.tf",
-		"terragrunt/layer-path-changed/module.hcl",
-	},
-}
-
-var PushEventMultiplePathChanges = event.PushEvent{
+var pushEventOneRepositoryAffected = event.PushEvent{
 	URL:       "https://github.com/padok-team/burrito-examples",
 	Reference: "main",
 	ChangeInfo: event.ChangeInfo{
@@ -164,7 +140,6 @@ var PullRequestClosedEventMultipleAffected = event.PullRequestEvent{
 var _ = Describe("Webhook", func() {
 	var handleErr error
 	// TODO 1: Move tests to Repository controller
-	// TODO 2: Test that repository are correctly annotated by webhook
 	// Describe("Push Event", func() {
 	// 	Describe("No paths are relevant to layer", Ordered, func() {
 	// 		BeforeAll(func() {
@@ -265,6 +240,43 @@ var _ = Describe("Webhook", func() {
 	// 		})
 	// 	})
 	// })
+	Describe("Push Event", func() {
+		Describe("No repository is affected", Ordered, func() {
+			It("should not have annotated any TerraformRepository", func() {
+				handleErr = pushEventNoRepositoryAffected.Handle(k8sClient)
+				Expect(handleErr).NotTo(HaveOccurred())
+
+				repositoriesAfter := &configv1alpha1.TerraformRepositoryList{}
+				afterErr := k8sClient.List(context.TODO(), repositoriesAfter)
+				Expect(afterErr).NotTo(HaveOccurred())
+				for _, repo := range repositoriesAfter.Items {
+					Expect(repo.Annotations).NotTo(HaveKey(annotations.ComputeKeyForSyncBranchNow(pushEventNoRepositoryAffected.Reference)))
+				}
+			})
+		})
+		Describe("Multiple repositories are affected", Ordered, func() {
+			It("should have annotated the affected TerraformRepositories", func() {
+				handleErr = pushEventOneRepositoryAffected.Handle(k8sClient)
+				Expect(handleErr).NotTo(HaveOccurred())
+
+				repository := &configv1alpha1.TerraformRepository{}
+				err := k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "burrito-examples",
+				}, repository)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(repository.Annotations).To(HaveKey(annotations.ComputeKeyForSyncBranchNow(pushEventOneRepositoryAffected.Reference)))
+
+				repository = &configv1alpha1.TerraformRepository{}
+				err = k8sClient.Get(context.TODO(), types.NamespacedName{
+					Namespace: "default",
+					Name:      "burrito-examples-2",
+				}, repository)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(repository.Annotations).To(HaveKey(annotations.ComputeKeyForSyncBranchNow(pushEventOneRepositoryAffected.Reference)))
+			})
+		})
+	})
 	Describe("PullRequest Event", func() {
 		Describe("Opened", func() {
 			Describe("No pull request have been created", Ordered, func() {
