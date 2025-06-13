@@ -5,8 +5,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/labstack/echo-contrib/session"
@@ -71,7 +72,10 @@ func (o *OAuthAuthHandlers) HandleLogin(c echo.Context) error {
 	sess, err := session.Get(o.SessionCookie, c)
 	if err != nil {
 		// Clear session cookie if session is invalid to prevent stale sessions
-		utils.RemoveSessionCookie(c, o.SessionCookie)
+		err := utils.RemoveSessionCookie(c, o.SessionCookie)
+		if err != nil {
+			log.Warnf("Failed to clear session cookie: %v", err)
+		}
 	}
 
 	// State is stored in session for verification in callback handler

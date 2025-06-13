@@ -15,7 +15,10 @@ type AuthHandlers interface {
 }
 
 func HandleLogout(c echo.Context, sessionCookie string) error {
-	utils.InvalidateSession(c, sessionCookie)
+	err := utils.InvalidateSession(c, sessionCookie)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to log out"})
+	}
 
 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
 }
