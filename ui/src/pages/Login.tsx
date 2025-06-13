@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
-import { basicAuth, getAuthStatus, getAuthType } from '@/clients/auth/client';
+import { basicAuth, getUserInfo, getAuthType, UserInfo } from '@/clients/auth/client';
 
 import Input from '@/components/core/Input';
 import Button from '@/components/core/Button';
@@ -32,12 +32,8 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
 
   // Check if user is already authenticated
-  const { data: isAuthenticated, isSuccess } = useQuery({
-    queryKey: ['auth'],
-    queryFn: getAuthStatus,
-    retry: false, 
-    refetchOnWindowFocus: false
-  });
+  const { isSuccess } = useQuery<UserInfo, Error>({ queryKey: ['userInfo'], queryFn: getUserInfo, retry: false });
+
 
   // Login mutation
   const loginMutation = useMutation({
@@ -55,7 +51,7 @@ const Login: React.FC = () => {
   if (isAuthTypeError) return <div>Error loading auth method</div>;
 
   // Redirect to /layers if already authenticated
-  if (isSuccess && isAuthenticated) {
+  if (isSuccess) {
     navigate('/layers', { replace: true });
     return null;
   }
