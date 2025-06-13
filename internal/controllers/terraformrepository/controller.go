@@ -18,6 +18,7 @@ package terraformrepository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
@@ -40,6 +41,16 @@ import (
 	"github.com/padok-team/burrito/internal/repository/credentials"
 )
 
+type Clock interface {
+	Now() time.Time
+}
+
+type RealClock struct{}
+
+func (c RealClock) Now() time.Time {
+	return time.Now()
+}
+
 // RepositoryReconciler reconciles a TerraformRepository object
 type Reconciler struct {
 	client.Client
@@ -48,6 +59,7 @@ type Reconciler struct {
 	Config      *config.Config
 	Credentials *credentials.CredentialStore
 	Datastore   datastore.Client
+	Clock
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -96,6 +108,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Clock = RealClock{}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&configv1alpha1.TerraformRepository{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.Config.Controller.MaxConcurrentReconciles}).

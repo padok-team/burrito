@@ -1,0 +1,22 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-never-synced
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-never-synced-layer
+  namespace: default
+spec:
+  branch: branch-not-in-datastore
+  path: layer/
+  repository:
+    name: repo-never-synced
+    namespace: default
