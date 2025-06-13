@@ -70,7 +70,7 @@ metadata:
     app.kubernetes.io/instance: in-cluster-burrito
   metadata:
     # This annotation should be removed by webhook on PR closed
-    webhook.terraform.padok.cloud/sync-feature--branch: "Sun May  8 11:21:53 UTC 2023"
+    webhook.terraform.padok.cloud/sync-feature--branch: "Mon May  8 11:21:53 UTC 2023"
   name: burrito-closed-single-pr
   namespace: default
 spec:
@@ -90,7 +90,7 @@ metadata:
     app.kubernetes.io/instance: in-cluster-burrito
   metadata:
     # This annotation should be removed by webhook on PR closed
-    webhook.terraform.padok.cloud/sync-feature--branch: "Sun May  8 11:21:53 UTC 2023"
+    webhook.terraform.padok.cloud/sync-feature--branch: "Mon May  8 11:21:53 UTC 2023"
   name: burrito-closed-multi-pr-1
   namespace: default
 spec:
@@ -110,7 +110,7 @@ metadata:
     app.kubernetes.io/instance: in-cluster-burrito
   metadata:
     # This annotation should be removed by webhook on PR closed
-    webhook.terraform.padok.cloud/sync-feature--branch: "Sun May  8 11:21:53 UTC 2023"
+    webhook.terraform.padok.cloud/sync-feature--branch: "Mon May  8 11:21:53 UTC 2023"
   name: burrito-closed-multi-pr-2
   namespace: default
 spec:
