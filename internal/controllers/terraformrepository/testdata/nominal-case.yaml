@@ -183,3 +183,59 @@ spec:
   repository:
     name: repo-with-new-layer
     namespace: default
+---
+# Repo already synced recently
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-synced-recently
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-synced-recently-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-synced-recently
+    namespace: default
+---
+# Repo already on last revision
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-already-last-revision
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-already-last-revision-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-already-last-revision
+    namespace: default
