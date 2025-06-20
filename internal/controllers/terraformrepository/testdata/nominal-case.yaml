@@ -250,3 +250,63 @@ spec:
   repository:
     name: repo-already-last-revision
     namespace: default
+---
+# Repo with a sync now request
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-sync-now
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/sync-branch: Mon May  8 10:21:53 UTC 2023
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-sync-now-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch
+  path: no-changes/
+  repository:
+    name: repo-sync-now
+    namespace: default
+---
+# Repo with a sync now request that is old compared to lastSync, the repo is already Synced, nothing should happen
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-sync-now-old
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/sync-branch: Sun May  7 10:21:53 UTC 2023
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-sync-now-old-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: no-changes/
+  repository:
+    name: repo-sync-now-old
+    namespace: default
