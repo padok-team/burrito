@@ -143,3 +143,43 @@ spec:
   repository:
     name: repo-last-sync-too-old
     namespace: default
+---
+# Repository with with a recent Sync but with a new TerraformLayer added (e.g. from the PR Controller), the Repo should end in SyncNeeded state.
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-with-new-layer
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-new-layer-existant
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-with-new-layer
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-new-layer-new
+  namespace: default
+spec:
+  branch: new-branch
+  path: layer/
+  repository:
+    name: repo-with-new-layer
+    namespace: default
