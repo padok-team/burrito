@@ -140,7 +140,7 @@ func (s *SyncNeeded) getHandler() Handler {
 			}
 		}
 		if syncError != nil {
-			return ctrl.Result{}, branchStates
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, branchStates
 		}
 
 		r.Recorder.Event(repository, corev1.EventTypeNormal, "Reconciliation", "Repository sync completed")
