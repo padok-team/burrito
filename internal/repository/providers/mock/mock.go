@@ -34,7 +34,15 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 
 // TODO: Implement a fake list for TerraformRepository Controller tests
 func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string {
-	log.Infof("Mock provider get changes previous commit / current commit")
+	// Used in TerraformRepository Controller tests, some layers with this revision as last relevant have changes
+	if previousCommit == "LAST_RELEVANT_REVISION" {
+		log.Infof("mock gitprovider changes detected")
+		return []string{
+			"layer-with-files-changed/main.tf",
+			"other-files-changed/inputs.hcl",
+		}
+	}
+
 	return []string{}
 }
 

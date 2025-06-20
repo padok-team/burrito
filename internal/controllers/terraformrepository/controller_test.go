@@ -18,6 +18,7 @@ import (
 	mock "github.com/padok-team/burrito/internal/repository/providers/mock"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -67,7 +68,37 @@ var _ = BeforeSuite(func() {
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	Expect(err).NotTo(HaveOccurred())
 	utils.LoadResources(k8sClient, "testdata")
+	statuses := []repoStatusUpdate{
+		{
+			Name:      "repo-last-sync-too-old",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformRepositoryStatus{
+				Branches: []configv1alpha1.BranchState{
+					{
+						Name:           "branch-1",
+						LastSyncStatus: "success",
+						LatestRev:      "OUTDATED_REVISION",
+						LastSyncDate:   "Sun May  7 11:21:53 UTC 2023", // 24 hours ago
+					},
+					{
+						Name:           "branch-2",
+						LastSyncStatus: "success",
+						LatestRev:      "OUTDATED_REVISION",
+						LastSyncDate:   "Sun May  7 11:21:53 UTC 2023", // 24 hours ago
+					},
+					{
+						Name:           "branch-3",
+						LastSyncStatus: "success",
+						LatestRev:      "OUTDATED_REVISION",
+						LastSyncDate:   "Sun May  7 11:21:53 UTC 2023", // 24 hours ago
+					},
+				},
+			},
+		},
+	}
+	err = initStatus(k8sClient, statuses)
 	reconciler = &controller.Reconciler{
 		Client:      k8sClient,
 		Scheme:      scheme.Scheme,
@@ -91,6 +122,41 @@ func getResult(name types.NamespacedName) (reconcile.Result, *configv1alpha1.Ter
 	repo := &configv1alpha1.TerraformRepository{}
 	err := k8sClient.Get(context.TODO(), name, repo)
 	return result, repo, reconcileError, err
+}
+
+// Helper struct to update the status of a TerraformRepository resource (because we cannot define status in the YAML files).
+// This is used to initialize the status of the TerraformRepository resource in the tests.
+type repoStatusUpdate struct {
+	Name      string
+	Namespace string
+	Status    configv1alpha1.TerraformRepositoryStatus
+}
+
+func updateStatus(c client.Client, s *repoStatusUpdate) error {
+	pr := &configv1alpha1.TerraformRepository{}
+	err := c.Get(context.Background(), types.NamespacedName{
+		Name:      s.Name,
+		Namespace: s.Namespace,
+	}, pr)
+	if err != nil {
+		return err
+	}
+	pr.Status = s.Status
+	err = c.Status().Update(context.Background(), pr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initStatus(c client.Client, statuses []repoStatusUpdate) error {
+	for _, status := range statuses {
+		err := updateStatus(c, &status)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 var _ = Describe("Run", func() {
@@ -239,6 +305,96 @@ var _ = Describe("Run", func() {
 				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
 
 				check, err = reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-2", mock.GetMockRevision("branch-2"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+		})
+
+		Describe("When a TerraformRepository has not been synced in the last 24h and changes are detected for some layers", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-last-sync-too-old",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in SyncNeeded state", func() {
+				Expect(repo.Status.State).To(Equal("SyncNeeded"))
+			})
+			It("should have the condition LastSyncTooOld to True", func() {
+				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionTrue))
+				Expect(repo.Status.Conditions[0].Reason).To(Equal("SyncTooOld"))
+			})
+			It("should update the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(3))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch-1",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch-1"),
+					LastSyncDate:   testTime,
+				}))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch-2",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch-2"),
+					LastSyncDate:   testTime,
+				}))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch-3",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch-3"),
+					LastSyncDate:   testTime,
+				}))
+			})
+			It("should update the annotations of the Terraform layers WITH changes", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-last-sync-too-old-layer-1",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-1")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch-1")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommitDate, testTime))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
+
+				layer = &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-last-sync-too-old-layer-2",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-2")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch-2")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommitDate, testTime))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
+			})
+			It("should NOT update the LastRelevantCommit annotation of the Terraform layers with NO changes", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-last-sync-too-old-layer-3",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-3")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, "LAST_RELEVANT_REVISION"))
+			})
+			It("should have put multiple bundles in the datastore", func() {
+				check, err := reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-1", mock.GetMockRevision("branch-1"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
+
+				check, err = reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-2", mock.GetMockRevision("branch-2"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
+
+				check, err = reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-3", mock.GetMockRevision("branch-3"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
 			})
