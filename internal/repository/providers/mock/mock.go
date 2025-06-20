@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"fmt"
 	"net/http"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -9,8 +10,6 @@ import (
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
 )
-
-const MOCK_REVISION = "MOCK_REVISION"
 
 type Mock struct{}
 
@@ -39,9 +38,14 @@ func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string 
 	return []string{}
 }
 
+const mock_revision = "MOCK_REVISION"
+
+func GetMockRevision(ref string) string {
+	return fmt.Sprintf("%s-%s", mock_revision, ref)
+}
+
 func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
-	log.Infof("Mock provider latest revision for ref")
-	return MOCK_REVISION, nil
+	return GetMockRevision(ref), nil
 }
 
 type APIProvider struct{}
