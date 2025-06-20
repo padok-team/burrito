@@ -84,3 +84,62 @@ spec:
   repository:
     name: repo-with-multiple-layers
     namespace: default
+---
+# Repository with Last Sync too old (2 branches), new changes are available on the repo that will affect the layers on multiple branches.
+# The status of the TerarformRepository resource is set in controller_test.go.
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-last-sync-too-old
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-last-sync-too-old-layer-1
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch-1
+  path: layer-with-files-changed/
+  repository:
+    name: repo-last-sync-too-old
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-last-sync-too-old-layer-2
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch-2
+  path: other-files-changed/
+  repository:
+    name: repo-last-sync-too-old
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-last-sync-too-old-layer-3
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch-3
+  path: no-changes/
+  repository:
+    name: repo-last-sync-too-old
+    namespace: default
