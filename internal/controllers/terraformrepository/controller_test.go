@@ -111,6 +111,34 @@ var _ = BeforeSuite(func() {
 				},
 			},
 		},
+		{
+			Name:      "repo-synced-recently",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformRepositoryStatus{
+				Branches: []configv1alpha1.BranchState{
+					{
+						Name:           "branch",
+						LastSyncStatus: "success",
+						LatestRev:      mock.GetMockRevision("branch"),
+						LastSyncDate:   testTime,
+					},
+				},
+			},
+		},
+		{
+			Name:      "repo-already-last-revision",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformRepositoryStatus{
+				Branches: []configv1alpha1.BranchState{
+					{
+						Name:           "branch",
+						LastSyncStatus: "success",
+						LatestRev:      mock.GetMockRevision("branch"),
+						LastSyncDate:   "Sun May  7 11:21:53 UTC 2023", // 24 hours ago,
+					},
+				},
+			},
+		},
 	}
 	err = initStatus(k8sClient, statuses)
 	reconciler = &controller.Reconciler{
@@ -466,6 +494,91 @@ var _ = Describe("Run", func() {
 				check, err := reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "new-branch", mock.GetMockRevision("new-branch"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+		})
+		Describe("When a TerraformRepository is already synced recently", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-synced-recently",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Synced state", func() {
+				Expect(repo.Status.State).To(Equal("Synced"))
+			})
+			It("should have the condition LastSyncTooOld to False with SyncRecent reason", func() {
+				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[0].Reason).To(Equal("SyncRecent"))
+			})
+			It("should update the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(1))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch"),
+					LastSyncDate:   testTime,
+				}))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+		})
+		Describe("When a TerraformRepository has not been synced in the last 24h but is already on last revision", Ordered, func() {
+			BeforeAll(func() {
+				// Put a fake git bundle
+				_ = reconciler.Datastore.PutGitBundle("default", "repo-already-last-revision", "branch", mock.GetMockRevision("branch"), []byte("fake"))
+				name = types.NamespacedName{
+					Name:      "repo-already-last-revision",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in SyncNeeded state", func() {
+				Expect(repo.Status.State).To(Equal("SyncNeeded"))
+			})
+			It("should have the condition LastSyncTooOld to True with SyncTooOld reason", func() {
+				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionTrue))
+				Expect(repo.Status.Conditions[0].Reason).To(Equal("SyncTooOld"))
+			})
+			It("should update the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(1))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch"),
+					LastSyncDate:   testTime,
+				}))
+			})
+			It("should update the annotations of the TerraformLayer", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-already-last-revision-layer",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
+			})
+			It("should NOT have changed the bundle of the branch in the datastore", func() {
+				bundle, err := reconciler.Datastore.GetGitBundle(repo.Namespace, repo.Name, "branch", mock.GetMockRevision("branch"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(bundle).To(Equal([]byte("fake")))
 			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
