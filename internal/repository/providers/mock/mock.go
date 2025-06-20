@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -22,18 +23,32 @@ func (m *Mock) GetAPIProvider() (types.APIProvider, error) {
 }
 
 func (m *Mock) GetGitProvider(repository *configv1alpha1.TerraformRepository) (types.GitProvider, error) {
-	return &GitProvider{}, nil
+	return &GitProvider{repository: repository}, nil
 }
 
-type GitProvider struct{}
+type GitProvider struct {
+	repository *configv1alpha1.TerraformRepository
+}
+
+// Internal function for the mock provider to make it fail on specific URL for tests purposes
+// in the TerraformRepositoryController tests
+func (p *GitProvider) testfail() bool {
+	return p.repository.Spec.Repository.Url == "https://git.mock.com/unknown"
+}
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
-	log.Infof("Mock provider created bundle")
+	if p.testfail() {
+		return nil, errors.New("mock provider: clone failed")
+	}
 	return make([]byte, 1), nil
 }
 
-// TODO: Implement a fake list for TerraformRepository Controller tests
 func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string {
+	if p.testfail() {
+		log.Errorf("mock provider: get changed failed")
+		return nil
+	}
+
 	// Used in TerraformRepository Controller tests, some layers with this revision as last relevant have changes
 	if previousCommit == "LAST_RELEVANT_REVISION" {
 		log.Infof("mock gitprovider changes detected")
@@ -53,6 +68,10 @@ func GetMockRevision(ref string) string {
 }
 
 func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
+	if p.testfail() {
+		return "", errors.New("mock provider: get latest revision failed")
+	}
+
 	return GetMockRevision(ref), nil
 }
 
