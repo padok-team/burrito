@@ -181,6 +181,20 @@ var _ = BeforeSuite(func() {
 				},
 			},
 		},
+		{
+			Name:      "repo-with-last-sync-failed",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformRepositoryStatus{
+				Branches: []configv1alpha1.BranchState{
+					{
+						Name:           "branch",
+						LastSyncStatus: "failed",
+						LatestRev:      "",
+						LastSyncDate:   testTime,
+					},
+				},
+			},
+		},
 	}
 	err = initStatus(k8sClient, statuses)
 	reconciler = &controller.Reconciler{
@@ -758,8 +772,72 @@ var _ = Describe("Run", func() {
 			})
 		})
 	})
-	// Describe("Error Case", func() {
-	// })
+	Describe("Error Case", func() {
+		Describe("When the Git Providers fails for a newly created TerraformRepository", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-unknown",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in SyncNeeded state", func() {
+				Expect(repo.Status.State).To(Equal("SyncNeeded"))
+			})
+			It("should update the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(1))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch",
+					LastSyncStatus: "failed",
+					LatestRev:      "",
+					LastSyncDate:   testTime,
+				}))
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
+		Describe("When the last sync of the TerraformRepository has already failed", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-with-last-sync-failed",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in SyncNeeded state", func() {
+				Expect(repo.Status.State).To(Equal("SyncNeeded"))
+			})
+			It("should have the condition HasLastSyncFailed to True with SyncFailed reason", func() {
+				Expect(repo.Status.Conditions[1].Status).To(Equal(metav1.ConditionTrue))
+				Expect(repo.Status.Conditions[1].Reason).To(Equal("SyncFailed"))
+			})
+			It("should update the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(1))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch",
+					LastSyncStatus: "failed",
+					LatestRev:      "",
+					LastSyncDate:   testTime,
+				}))
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
+	})
 })
 
 var _ = AfterSuite(func() {
