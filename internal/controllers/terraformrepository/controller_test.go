@@ -101,6 +101,30 @@ var _ = Describe("Run", func() {
 	var name types.NamespacedName
 
 	Describe("Nominal Case", func() {
+		Describe("When a TerraformRepository without TerraformLayer is created", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-without-layers",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Synced state", func() {
+				Expect(repo.Status.State).To(Equal("Synced"))
+			})
+			It("should not have branches in the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(0))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+		})
 		Describe("When a TerraformRepository with one TerraformLayer is created", Ordered, func() {
 			BeforeAll(func() {
 				name = types.NamespacedName{
@@ -122,7 +146,7 @@ var _ = Describe("Run", func() {
 				Expect(repo.Status.Branches).To(HaveLen(1))
 				Expect(repo.Status.Branches[0].Name).To(Equal("branch-not-in-datastore"))
 				Expect(repo.Status.Branches[0].LastSyncStatus).To(Equal("success"))
-				Expect(repo.Status.Branches[0].LatestRev).To(Equal(mock.MOCK_REVISION))
+				Expect(repo.Status.Branches[0].LatestRev).To(Equal(mock.GetMockRevision("branch-not-in-datastore")))
 				Expect(repo.Status.Branches[0].LastSyncDate).To(Equal(testTime))
 			})
 			It("should update the annotations of the TerraformLayer", func() {
@@ -131,20 +155,96 @@ var _ = Describe("Run", func() {
 					Name:      "repo-never-synced-layer",
 					Namespace: "default",
 				}, layer)).To(Succeed())
-				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.MOCK_REVISION))
-				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.MOCK_REVISION))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-not-in-datastore")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch-not-in-datastore")))
 				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommitDate, testTime))
 				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
 			})
 			It("should have put the bundle in the datastore", func() {
-				check, err := reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-not-in-datastore", mock.MOCK_REVISION)
+				check, err := reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-not-in-datastore", mock.GetMockRevision("branch-not-in-datastore"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
 			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
 			})
+		})
+		Describe("When a TerraformRepository with multiple TerraformLayer is created", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-with-multiple-layers",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in SyncNeeded state", func() {
+				Expect(repo.Status.State).To(Equal("SyncNeeded"))
+			})
+			It("should update the status of the TerraformRepository", func() {
+				Expect(repo.Status.Branches).To(HaveLen(2))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch-1",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch-1"),
+					LastSyncDate:   testTime,
+				}))
+				Expect(repo.Status.Branches).To(ContainElement(configv1alpha1.BranchState{
+					Name:           "branch-2",
+					LastSyncStatus: "success",
+					LatestRev:      mock.GetMockRevision("branch-2"),
+					LastSyncDate:   testTime,
+				}))
+			})
+			It("should update the annotations of the TerraformLayers", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-with-multiple-layers-branch-1-1",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-1")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch-1")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommitDate, testTime))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
 
+				layer = &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-with-multiple-layers-branch-1-2",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-1")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch-1")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommitDate, testTime))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
+
+				layer = &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "repo-with-multiple-layers-branch-2-1",
+					Namespace: "default",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("branch-2")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommit, mock.GetMockRevision("branch-2")))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommitDate, testTime))
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastRelevantCommitDate, testTime))
+
+			})
+			It("should have put multiple bundles in the datastore", func() {
+				check, err := reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-1", mock.GetMockRevision("branch-1"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
+
+				check, err = reconciler.Datastore.CheckGitBundle(repo.Namespace, repo.Name, "branch-2", mock.GetMockRevision("branch-2"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeTrue(), "the bundle should be in the datastore")
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
 		})
 	})
 	// TODO
