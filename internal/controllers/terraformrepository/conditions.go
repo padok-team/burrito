@@ -162,7 +162,7 @@ func (r *Reconciler) HasLastSyncFailed(repo *configv1alpha1.TerraformRepository)
 		if branch.LastSyncStatus == "" {
 			condition.Reason = "NoSyncYet"
 			condition.Message = fmt.Sprintf("Repository has never been synced on branch %s yet", branch.Name)
-			condition.Status = metav1.ConditionTrue
+			condition.Status = metav1.ConditionFalse
 			return condition, false
 		}
 
