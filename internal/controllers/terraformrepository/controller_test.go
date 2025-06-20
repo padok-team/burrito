@@ -139,6 +139,20 @@ var _ = BeforeSuite(func() {
 				},
 			},
 		},
+		{
+			Name:      "repo-without-layers-2",
+			Namespace: "default",
+			Status: configv1alpha1.TerraformRepositoryStatus{
+				Branches: []configv1alpha1.BranchState{
+					{
+						Name:           "branch",
+						LastSyncStatus: "success",
+						LatestRev:      mock.GetMockRevision("branch"),
+						LastSyncDate:   "Sun May  7 11:21:53 UTC 2023", // 24 hours ago,
+					},
+				},
+			},
+		},
 	}
 	err = initStatus(k8sClient, statuses)
 	reconciler = &controller.Reconciler{
@@ -226,8 +240,45 @@ var _ = Describe("Run", func() {
 			It("should end in Synced state", func() {
 				Expect(repo.Status.State).To(Equal("Synced"))
 			})
+			It("should have the condition LastSyncTooOld to False with NoBranches reason", func() {
+				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[0].Reason).To(Equal("NoBranches"))
+			})
+			It("should have the condition HasLastSyncFailed to False with NoBranches reason", func() {
+				Expect(repo.Status.Conditions[1].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[1].Reason).To(Equal("NoBranches"))
+			})
 			It("should not have branches in the status of the TerraformRepository", func() {
 				Expect(repo.Status.Branches).To(HaveLen(0))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+		})
+		Describe("When a TerraformRepository has not TerraformLayers anymore", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "repo-without-layers-2",
+					Namespace: "default",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Synced state", func() {
+				Expect(repo.Status.State).To(Equal("Synced"))
+			})
+			It("should have the condition LastSyncTooOld to False with NoBranches reason", func() {
+				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[0].Reason).To(Equal("NoBranches"))
+			})
+			It("should have the condition HasLastSyncFailed to False with NoBranches reason", func() {
+				Expect(repo.Status.Conditions[1].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[1].Reason).To(Equal("NoBranches"))
 			})
 			It("should set RequeueAfter to WaitAction", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
@@ -249,6 +300,14 @@ var _ = Describe("Run", func() {
 			})
 			It("should end in SyncNeeded state", func() {
 				Expect(repo.Status.State).To(Equal("SyncNeeded"))
+			})
+			It("should have the condition LastSyncTooOld to True with NewLayer reason", func() {
+				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionTrue))
+				Expect(repo.Status.Conditions[0].Reason).To(Equal("NewLayer"))
+			})
+			It("should have the condition HasLastSyncFailed to False with NoSyncYet reason", func() {
+				Expect(repo.Status.Conditions[1].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[1].Reason).To(Equal("NoSyncYet"))
 			})
 			It("should update the status of the TerraformRepository", func() {
 				Expect(repo.Status.Branches).To(HaveLen(1))
@@ -463,6 +522,10 @@ var _ = Describe("Run", func() {
 			It("should have the condition LastSyncTooOld to True with NewLayer reason", func() {
 				Expect(repo.Status.Conditions[0].Status).To(Equal(metav1.ConditionTrue))
 				Expect(repo.Status.Conditions[0].Reason).To(Equal("NewLayer"))
+			})
+			It("should have the condition HasLastSyncFailed to False with NoSyncYet reason", func() {
+				Expect(repo.Status.Conditions[1].Status).To(Equal(metav1.ConditionFalse))
+				Expect(repo.Status.Conditions[1].Reason).To(Equal("NoSyncYet"))
 			})
 			It("should update the status of the TerraformRepository", func() {
 				Expect(repo.Status.Branches).To(HaveLen(2))
