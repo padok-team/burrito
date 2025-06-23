@@ -30,10 +30,11 @@ type DatastoreConfig struct {
 }
 
 type StorageConfig struct {
-	GCS   GCSConfig   `mapstructure:"gcs"`
-	S3    S3Config    `mapstructure:"s3"`
-	Azure AzureConfig `mapstructure:"azure"`
-	Mock  bool        `mapstructure:"mock"`
+	GCS        GCSConfig        `mapstructure:"gcs"`
+	S3         S3Config         `mapstructure:"s3"`
+	Azure      AzureConfig      `mapstructure:"azure"`
+	Mock       bool             `mapstructure:"mock"`
+	Encryption EncryptionConfig `mapstructure:"encryption"`
 }
 
 type GCSConfig struct {
@@ -48,6 +49,10 @@ type S3Config struct {
 type AzureConfig struct {
 	StorageAccount string `mapstructure:"storageAccount"`
 	Container      string `mapstructure:"container"`
+}
+
+type EncryptionConfig struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 type WebhookConfig struct {
