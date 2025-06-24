@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,9 @@ import (
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 )
+
+// ErrFileAlreadyEncrypted is returned when a file is already encrypted
+var ErrFileAlreadyEncrypted = errors.New("file already encrypted")
 
 type EncryptRequest struct {
 	EncryptionKey string `json:"encryptionKey"`
@@ -88,7 +92,7 @@ func (a *API) EncryptAllFilesHandler(c echo.Context) error {
 
 func (a *API) encryptAllFiles() (int, []string) {
 	var filesEncrypted int
-	var errors []string
+	var errorMessages []string
 
 	// List all files in both layers and repositories prefixes
 	prefixes := []string{"layers"}
@@ -96,7 +100,7 @@ func (a *API) encryptAllFiles() (int, []string) {
 	for _, prefix := range prefixes {
 		files, err := a.Storage.Backend.ListRecursive(prefix)
 		if err != nil {
-			errors = append(errors, fmt.Sprintf("Failed to list files in %s: %v", prefix, err))
+			errorMessages = append(errorMessages, fmt.Sprintf("Failed to list files in %s: %v", prefix, err))
 			continue
 		}
 
@@ -108,7 +112,11 @@ func (a *API) encryptAllFiles() (int, []string) {
 
 			err := a.encryptSingleFile(file)
 			if err != nil {
-				errors = append(errors, fmt.Sprintf("Failed to encrypt %s: %v", file, err))
+				if errors.Is(err, ErrFileAlreadyEncrypted) {
+					// File already encrypted, don't count it but don't treat as error
+					continue
+				}
+				errorMessages = append(errorMessages, fmt.Sprintf("Failed to encrypt %s: %v", file, err))
 				continue
 			}
 
@@ -119,7 +127,7 @@ func (a *API) encryptAllFiles() (int, []string) {
 		}
 	}
 
-	return filesEncrypted, errors
+	return filesEncrypted, errorMessages
 }
 
 func (a *API) encryptSingleFile(filePath string) error {
@@ -149,7 +157,7 @@ func (a *API) encryptSingleFile(filePath string) error {
 	if err == nil {
 		// Decryption succeeded, so the file is already encrypted
 		log.Infof("Skipping already encrypted file: %s", filePath)
-		return nil
+		return fmt.Errorf("file already encrypted")
 	}
 
 	// Decryption failed, so the file is likely not encrypted. Encrypt it.

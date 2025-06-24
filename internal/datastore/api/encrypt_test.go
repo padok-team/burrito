@@ -36,12 +36,6 @@ var _ = Describe("Encrypt API", func() {
 			},
 		}
 
-		testAPI = &api.API{}
-		testAPI.Storage = storage.New(config)
-		testAPI = &api.API{}
-		testAPI.Storage = storage.New(config)
-		testAPI = &api.API{}
-		testAPI.Storage = storage.New(config)
 		testAPI = api.New(&config)
 		testAPI.Storage = storage.New(config)
 		e = echo.New()
