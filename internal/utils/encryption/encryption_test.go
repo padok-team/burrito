@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+var (
+	benchmarkSize = 51200 // 50KB
+)
+
 func TestEncryptor_EncryptDecrypt(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -191,7 +195,7 @@ func BenchmarkEncryptor_Encrypt(b *testing.B) {
 	if err != nil {
 		b.Fatalf("failed to create encryptor: %v", err)
 	}
-	plaintext := make([]byte, 1024) // 1KB
+	plaintext := make([]byte, benchmarkSize)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -207,7 +211,7 @@ func BenchmarkEncryptor_Decrypt(b *testing.B) {
 	if err != nil {
 		b.Fatalf("failed to create encryptor: %v", err)
 	}
-	plaintext := make([]byte, 1024) // 1KB
+	plaintext := make([]byte, benchmarkSize)
 
 	ciphertext, err := encryptor.Encrypt(plaintext)
 	if err != nil {
