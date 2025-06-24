@@ -95,6 +95,7 @@ func (a *API) encryptAllFiles() (int, []string) {
 	var errorMessages []string
 
 	// List all files in both layers and repositories prefixes
+	// TODO: implement repositories
 	prefixes := []string{"layers"}
 
 	for _, prefix := range prefixes {

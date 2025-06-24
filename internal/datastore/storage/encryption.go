@@ -45,12 +45,12 @@ func (em *EncryptionManager) GetEncryptor(namespace string) *encryption.Encrypto
 	return em.defaultEncryptor
 }
 
-// try to get the encryptor for the namespace, if not found, return the default encryptor
 func (em *EncryptionManager) Encrypt(namespace string, plaintext []byte) ([]byte, error) {
 	if em.defaultEncryptor == nil {
 		return plaintext, nil
 	}
 
+	// try to get the encryptor for the namespace, if not found, return the default encryptor
 	encryptor := em.GetEncryptor(namespace)
 	if encryptor == nil {
 		return plaintext, nil
