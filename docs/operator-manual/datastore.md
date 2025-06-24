@@ -70,6 +70,18 @@ stringData:
 !!! warning
     Losing the encryption key will make all encrypted data unrecoverable. Make sure to back up your encryption key securely.
 
+You can generate a key with:
+
+```bash
+openssl rand -hex 32
+```
+
+In order to store it in the secret, you'll need to encode it with base64: 
+
+```bash
+openssl rand -hex 32 | base64 -w0
+```
+
 ### Security Notes
 
 - Always keep your encryption keys secure
