@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var (
+const (
 	benchmarkSize = 51200 // 50KB
 )
 
