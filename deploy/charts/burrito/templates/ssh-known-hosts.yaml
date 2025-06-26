@@ -18,6 +18,6 @@ metadata:
   name: burrito-ssh-known-hosts
   namespace: {{ $namespace }}
 data:
-  known_hosts: 
+  known_hosts: |-
     {{- $.Values.global.sshKnownHosts | nindent 4 }}
 {{- end }}
