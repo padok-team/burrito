@@ -31,6 +31,7 @@ nav:
       - operator-manual/index.md
       - operator-manual/architecture.md
       - operator-manual/user-authentication.md
+      - operator-manual/repository-controller.md
       - Git Authentication:
           - Overview: operator-manual/git-authentication.md
           - GitHub App: operator-manual/git-authentication/github-app.md
