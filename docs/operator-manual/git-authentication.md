@@ -17,9 +17,6 @@ Available authentication methods:
 - [GitHub API token](./git-authentication/github-token.md)
 - [GitLab API token](./git-authentication/gitlab-token.md)
 
-!!! info
-    For detailed instructions on setting up each authentication method, see the [Authentication Methods](./git-authentication/index.md) section.
-
 ## Repository Credentials
 
 Burrito uses Kubernetes Secrets to store credentials for repositories. There are two types of credential secrets:
