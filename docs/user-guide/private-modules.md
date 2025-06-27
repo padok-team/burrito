@@ -87,7 +87,7 @@ Create a Kubernetes Secret which looks like the following:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: git-private-key–modules
+  name: git-private-key-modules
   namespace: burrito
 type: Opaque
 stringSata:
