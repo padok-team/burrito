@@ -1,7 +1,7 @@
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRepository
 metadata:
-  name: burrito-examples
+  name: burrito
   namespace: default
 spec:
   repository:
