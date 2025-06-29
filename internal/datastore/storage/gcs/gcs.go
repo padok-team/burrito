@@ -167,3 +167,44 @@ func (a *GCS) List(prefix string) ([]string, error) {
 
 	return objects, nil
 }
+
+// ListRecursive recursively lists all files under a prefix
+func (a *GCS) ListRecursive(prefix string) ([]string, error) {
+	ctx := context.Background()
+	bucket := a.Client.Bucket(a.Config.Bucket)
+	listPrefix := utils.SanitizePrefix(prefix)
+
+	it := bucket.Objects(ctx, &storage.Query{
+		Prefix: listPrefix,
+		// No delimiter means recursive listing
+	})
+
+	var objects []string
+	foundItems := false
+
+	for {
+		objAttrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error listing objects with prefix %s: %w", listPrefix, err)
+		}
+
+		// Only add actual objects (files), not prefixes
+		if objAttrs.Name != "" {
+			objects = append(objects, "/"+objAttrs.Name)
+			foundItems = true
+		}
+	}
+
+	// If no items were found, return a StorageError with Nil=true
+	if !foundItems {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix %s not found", prefix),
+			Nil: true,
+		}
+	}
+
+	return objects, nil
+}
