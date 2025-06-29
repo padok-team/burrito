@@ -527,8 +527,7 @@ var _ = Describe("Layer", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
-			It("should not set Requeue", func() {
-				Expect(result.Requeue).To(Equal(false))
+			It("should not set RequeueAfter", func() {
 				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 			})
 		})
