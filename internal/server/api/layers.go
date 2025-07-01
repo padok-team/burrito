@@ -29,6 +29,7 @@ type layer struct {
 	IsPR             bool                   `json:"isPR"`
 	LatestRuns       []Run                  `json:"latestRuns"`
 	ManualSyncStatus utils.ManualSyncStatus `json:"manualSyncStatus"`
+	HasValidPlan     bool                   `json:"hasValidPlan"`
 }
 
 type Run struct {
@@ -100,6 +101,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 			IsPR:             a.isLayerPR(l),
 			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
 			ManualSyncStatus: getManualOperationStatus(l),
+			HasValidPlan:     hasValidPlan(l),
 		})
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
@@ -165,4 +167,11 @@ func getManualOperationStatus(layer configv1alpha1.TerraformLayer) utils.ManualS
 		return applyStatus
 	}
 	return utils.GetManualSyncStatus(layer)
+}
+
+func hasValidPlan(layer configv1alpha1.TerraformLayer) bool {
+	// A valid plan exists if LastPlanSum annotation exists and is not empty
+	// This matches the logic in HasLastPlanFailed condition
+	planSum, exists := layer.Annotations[annotations.LastPlanSum]
+	return exists && planSum != ""
 }
