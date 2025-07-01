@@ -27,7 +27,8 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	c4, HasLastPlanFailed := r.HasLastPlanFailed(layer)
 	c5, IsApplyUpToDate := r.IsApplyUpToDate(layer)
 	c6, IsSyncScheduled := r.IsSyncScheduled(layer)
-	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6}
+	c7, IsApplyScheduled := r.IsApplyScheduled(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6, c7}
 	switch {
 	case IsRunning:
 		log.Infof("layer %s is running, waiting for the run to finish", layer.Name)
@@ -38,9 +39,15 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	case IsSyncScheduled:
 		log.Infof("layer %s has a sync scheduled, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
+	case IsApplyScheduled:
+		log.Infof("layer %s has a manual apply scheduled, creating a new apply run", layer.Name)
+		return &ManualApplyNeeded{}, conditions
 	case !IsApplyUpToDate && !HasLastPlanFailed:
 		log.Infof("layer %s needs to be applied, creating a new run", layer.Name)
 		return &ApplyNeeded{}, conditions
+	case IsApplyUpToDate:
+		log.Infof("layer %s is up to date, staying idle", layer.Name)
+		return &Idle{}, conditions
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is not an intended behavior.", layer.Name)
 		return &Idle{}, conditions
@@ -98,6 +105,27 @@ func (s *ApplyNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
+	}
+}
+
+type ManualApplyNeeded struct{}
+
+func (s *ManualApplyNeeded) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
+		log := log.WithContext(ctx)
+		// Check for sync windows that would block the apply action
+		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
+		run := r.getRun(layer, repository, "apply")
+		err := r.Client.Create(ctx, &run)
+		if err != nil {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Manual Apply action")
+			log.Errorf("failed to create TerraformRun for Manual Apply action on layer %s: %s", layer.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Manual Apply action")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }

@@ -16,10 +16,11 @@ import ChiliLight from '@/assets/illustrations/ChiliLight';
 import ChiliDark from '@/assets/illustrations/ChiliDark';
 import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
 import SyncIcon from '@/assets/icons/SyncIcon';
+import PlayIcon from '@/assets/icons/PlayIcon';
 import GenericIconButton from '@/components/buttons/GenericIconButton';
 
 import { Layer, LayerState } from '@/clients/layers/types';
-import { syncLayer } from '@/clients/layers/client';
+import { applyLayer, syncLayer } from '@/clients/layers/client';
 
 export interface TableProps {
   className?: string;
@@ -39,6 +40,13 @@ const Table: React.FC<TableProps> = ({
   const syncSelectedLayer = async (index: number) => {
     const sync = await syncLayer(data[index].namespace, data[index].name);
     if (sync.status === 200) {
+      data[index].manualSyncStatus = 'pending';
+    }
+  };
+
+  const applySelectedLayer = async (index: number) => {
+    const apply = await applyLayer(data[index].namespace, data[index].name);
+    if (apply.status === 200) {
       data[index].manualSyncStatus = 'pending';
     }
   };
@@ -111,6 +119,21 @@ const Table: React.FC<TableProps> = ({
                   result.row.original.manualSyncStatus === 'annotated'
                     ? 'Sync in progress...'
                     : 'Sync now'
+                }
+              />
+              <GenericIconButton
+                variant={variant}
+                Icon={PlayIcon}
+                disabled={
+                  result.row.original.manualSyncStatus === 'pending' ||
+                  result.row.original.manualSyncStatus === 'annotated'
+                }
+                onClick={() => applySelectedLayer(result.row.index)}
+                tooltip={
+                  result.row.original.manualSyncStatus === 'pending' ||
+                  result.row.original.manualSyncStatus === 'annotated'
+                    ? 'Apply in progress...'
+                    : 'Apply now'
                 }
               />
             </div>

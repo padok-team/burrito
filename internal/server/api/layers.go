@@ -99,7 +99,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 			IsRunning:        running,
 			IsPR:             a.isLayerPR(l),
 			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
-			ManualSyncStatus: utils.GetManualSyncStatus(l),
+			ManualSyncStatus: getManualOperationStatus(l),
 		})
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
@@ -156,4 +156,13 @@ func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {
 		return false
 	}
 	return layer.OwnerReferences[0].Kind == "TerraformPullRequest"
+}
+
+func getManualOperationStatus(layer configv1alpha1.TerraformLayer) utils.ManualSyncStatus {
+	// Check apply status first, then sync status
+	applyStatus := utils.GetManualApplyStatus(layer)
+	if applyStatus != utils.ManualSyncNone {
+		return applyStatus
+	}
+	return utils.GetManualSyncStatus(layer)
 }

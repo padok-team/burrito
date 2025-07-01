@@ -11,8 +11,9 @@ import ChiliDark from '@/assets/illustrations/ChiliDark';
 
 import { Layer } from '@/clients/layers/types';
 import GenericIconButton from '../buttons/GenericIconButton';
-import { syncLayer } from '@/clients/layers/client';
+import { applyLayer, syncLayer } from '@/clients/layers/client';
 import SyncIcon from '@/assets/icons/SyncIcon';
+import PlayIcon from '@/assets/icons/PlayIcon';
 
 export interface CardProps {
   className?: string;
@@ -81,7 +82,19 @@ const Card: React.FC<CardProps> = ({
     }
   };
 
+  const applySelectedLayer = async (layer: Layer) => {
+    const sync = await applyLayer(layer.namespace, layer.name);
+    if (sync.status === 200) {
+      setIsManualApplyPending(true);
+    }
+  };
+
   const [isManualSyncPending, setIsManualSyncPending] = useState(
+    layer.manualSyncStatus === 'pending' ||
+      layer.manualSyncStatus === 'annotated'
+  );
+
+  const [isManualApplyPending, setIsManualApplyPending] = useState(
     layer.manualSyncStatus === 'pending' ||
       layer.manualSyncStatus === 'annotated'
   );
@@ -184,6 +197,13 @@ const Card: React.FC<CardProps> = ({
           disabled={isManualSyncPending}
           onClick={() => syncSelectedLayer(layer)}
           tooltip={isManualSyncPending ? 'Sync in progress...' : 'Sync now'}
+        />
+        <GenericIconButton
+          variant={variant}
+          Icon={PlayIcon}
+          disabled={isManualApplyPending}
+          onClick={() => applySelectedLayer(layer)}
+          tooltip={isManualApplyPending ? 'Apply in progress...' : 'Apply now'}
         />
       </div>
       <Tooltip
