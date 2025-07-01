@@ -9,15 +9,13 @@ import (
 )
 
 type EncryptionManager struct {
-	defaultEncryptor    *encryption.Encryptor
-	namespaceEncryptors map[string]*encryption.Encryptor
-	config              config.EncryptionConfig
+	DefaultEncryptor *encryption.Encryptor
+	config           config.EncryptionConfig
 }
 
 func NewEncryptionManager(config config.EncryptionConfig) (*EncryptionManager, error) {
 	em := &EncryptionManager{
-		namespaceEncryptors: make(map[string]*encryption.Encryptor),
-		config:              config,
+		config: config,
 	}
 
 	encryptionKey := os.Getenv("BURRITO_DATASTORE_STORAGE_ENCRYPTION_KEY")
@@ -29,48 +27,29 @@ func NewEncryptionManager(config config.EncryptionConfig) (*EncryptionManager, e
 		if err != nil {
 			return nil, fmt.Errorf("failed to create encryptor: %w", err)
 		}
-		em.defaultEncryptor = encryptor
+		em.DefaultEncryptor = encryptor
 	} else {
-		em.defaultEncryptor = nil
+		em.DefaultEncryptor = nil
 	}
 
 	return em, nil
 }
 
-func (em *EncryptionManager) GetEncryptor(namespace string) *encryption.Encryptor {
-	if encryptor, exists := em.namespaceEncryptors[namespace]; exists {
-		return encryptor
-	}
-
-	return em.defaultEncryptor
-}
-
 func (em *EncryptionManager) Encrypt(namespace string, plaintext []byte) ([]byte, error) {
-	if em.defaultEncryptor == nil {
+	if em.DefaultEncryptor == nil {
 		return plaintext, nil
 	}
 
-	// try to get the encryptor for the namespace, if not found, return the default encryptor
-	encryptor := em.GetEncryptor(namespace)
-	if encryptor == nil {
-		return plaintext, nil
-	}
-
-	return encryptor.Encrypt(plaintext)
+	return em.DefaultEncryptor.Encrypt(plaintext)
 }
 
 func (em *EncryptionManager) Decrypt(namespace string, ciphertext []byte) ([]byte, error) {
-	if em.defaultEncryptor == nil {
-		return ciphertext, nil
-	}
-
-	encryptor := em.GetEncryptor(namespace)
-	if encryptor == nil {
+	if em.DefaultEncryptor == nil {
 		return ciphertext, nil
 	}
 
 	// Try to decrypt the data. If it fails, return the original ciphertext as this might be a migration from an unencrypted state
-	decrypted, err := encryptor.Decrypt(ciphertext)
+	decrypted, err := em.DefaultEncryptor.Decrypt(ciphertext)
 	if err != nil {
 		return ciphertext, nil
 	}

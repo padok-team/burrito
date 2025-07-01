@@ -81,9 +81,9 @@ func TestNewEncryptionManager_WithEnvironmentVariable(t *testing.T) {
 
 			// Check if encryptor is set as expected
 			if tt.expectEncryptor {
-				assert.NotNil(t, em.defaultEncryptor, "expected default encryptor to be set")
+				assert.NotNil(t, em.DefaultEncryptor, "expected default encryptor to be set")
 			} else {
-				assert.Nil(t, em.defaultEncryptor, "expected default encryptor to be nil")
+				assert.Nil(t, em.DefaultEncryptor, "expected default encryptor to be nil")
 			}
 		})
 	}

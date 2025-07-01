@@ -148,7 +148,7 @@ func (a *API) encryptSingleFile(filePath string) error {
 	namespace := pathParts[1] // Second part is always the namespace
 
 	// Check if the file is already encrypted by trying to decrypt it directly with the encryptor
-	encryptor := a.Storage.EncryptionManager.GetEncryptor(namespace)
+	encryptor := a.Storage.EncryptionManager.DefaultEncryptor
 	if encryptor == nil {
 		return fmt.Errorf("no encryptor available for namespace %s", namespace)
 	}
