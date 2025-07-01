@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsRunning(ctx context.Context, t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "IsRunning",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -29,7 +29,7 @@ func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Conditi
 		return condition, false
 	}
 	run := configv1alpha1.TerraformRun{}
-	err := r.Client.Get(context.TODO(), types.NamespacedName{
+	err := r.Client.Get(ctx, types.NamespacedName{
 		Namespace: t.Namespace,
 		Name:      t.Status.LastRun.Name,
 	}, &run)
