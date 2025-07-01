@@ -99,6 +99,30 @@ const Card: React.FC<CardProps> = ({
       layer.manualSyncStatus === 'annotated'
   );
 
+  const getApplyButtonState = () => {
+    const isOperationPending = isManualApplyPending;
+    const hasValidPlan = layer.hasValidPlan;
+
+    if (isOperationPending) {
+      return {
+        disabled: true,
+        tooltip: 'Apply in progress...'
+      };
+    }
+
+    if (!hasValidPlan) {
+      return {
+        disabled: true,
+        tooltip: 'No valid plan available. Run a plan first before applying.'
+      };
+    }
+
+    return {
+      disabled: false,
+      tooltip: 'Apply now'
+    };
+  };
+
   return (
     <div
       className={twMerge(
@@ -201,9 +225,9 @@ const Card: React.FC<CardProps> = ({
         <GenericIconButton
           variant={variant}
           Icon={PlayIcon}
-          disabled={isManualApplyPending}
+          disabled={getApplyButtonState().disabled}
           onClick={() => applySelectedLayer(layer)}
-          tooltip={isManualApplyPending ? 'Apply in progress...' : 'Apply now'}
+          tooltip={getApplyButtonState().tooltip}
         />
       </div>
       <Tooltip

@@ -51,6 +51,32 @@ const Table: React.FC<TableProps> = ({
     }
   };
 
+  const getApplyButtonState = (layer: Layer) => {
+    const isOperationPending =
+      layer.manualSyncStatus === 'pending' ||
+      layer.manualSyncStatus === 'annotated';
+    const hasValidPlan = layer.hasValidPlan;
+
+    if (isOperationPending) {
+      return {
+        disabled: true,
+        tooltip: 'Apply in progress...'
+      };
+    }
+
+    if (!hasValidPlan) {
+      return {
+        disabled: true,
+        tooltip: 'No valid plan available. Run a plan first before applying.'
+      };
+    }
+
+    return {
+      disabled: false,
+      tooltip: 'Apply now'
+    };
+  };
+
   const columns = [
     columnHelper.accessor('isPR', {
       header: '',
@@ -124,17 +150,9 @@ const Table: React.FC<TableProps> = ({
               <GenericIconButton
                 variant={variant}
                 Icon={PlayIcon}
-                disabled={
-                  result.row.original.manualSyncStatus === 'pending' ||
-                  result.row.original.manualSyncStatus === 'annotated'
-                }
+                disabled={getApplyButtonState(result.row.original).disabled}
                 onClick={() => applySelectedLayer(result.row.index)}
-                tooltip={
-                  result.row.original.manualSyncStatus === 'pending' ||
-                  result.row.original.manualSyncStatus === 'annotated'
-                    ? 'Apply in progress...'
-                    : 'Apply now'
-                }
+                tooltip={getApplyButtonState(result.row.original).tooltip}
               />
             </div>
           ) : result.row.original.isRunning ? (

@@ -17,6 +17,7 @@ export type Layer = {
   isRunning: boolean;
   manualSyncStatus: ManualSyncStatus;
   isPR: boolean;
+  hasValidPlan: boolean;
 };
 
 export type LayerState = 'success' | 'warning' | 'error' | 'disabled';
