@@ -98,17 +98,13 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		if err != nil {
 			return nil, err
 		}
-		baseExec = &tf.Terraform{
-			ExecPath: filepath.Join(binaryPath, "Terraform", baseExecVersion, "terraform"),
-		}
+		baseExec = tf.NewTerraform(filepath.Join(binaryPath, "Terraform", baseExecVersion, "terraform"))
 	} else if configv1alpha1.GetOpenTofuEnabled(repo, layer) {
 		baseExecVersion, err = detect(binaryPath, "tofu", configv1alpha1.GetOpenTofuVersion(repo, layer))
 		if err != nil {
 			return nil, err
 		}
-		baseExec = &ot.OpenTofu{
-			ExecPath: filepath.Join(binaryPath, "OpenTofu", baseExecVersion, "tofu"),
-		}
+		baseExec = ot.NewOpenTofu(filepath.Join(binaryPath, "OpenTofu", baseExecVersion, "tofu"))
 	} else {
 		return nil, errors.New("Please enable either Terraform or OpenTofu in the repository or layer configuration")
 	}

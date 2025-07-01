@@ -288,8 +288,8 @@ var _ = Describe("Run", func() {
 			It("should be in Succeeded state", func() {
 				Expect(run.Status.State).To(Equal("Succeeded"))
 			})
-			It("should not requeue", func() {
-				Expect(result.Requeue).To(BeFalse())
+			It("should not set RequeueAfter", func() {
+				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 			})
 			It("should not have any pod running", func() {
 				pods, err := reconciler.GetLinkedPods(run)
