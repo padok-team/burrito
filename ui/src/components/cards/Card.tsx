@@ -78,35 +78,30 @@ const Card: React.FC<CardProps> = ({
   const syncSelectedLayer = async (layer: Layer) => {
     const sync = await syncLayer(layer.namespace, layer.name);
     if (sync.status === 200) {
-      setIsManualSyncPending(true);
+      setIsManualActionPending(true);
     }
   };
 
   const applySelectedLayer = async (layer: Layer) => {
     const sync = await applyLayer(layer.namespace, layer.name);
     if (sync.status === 200) {
-      setIsManualApplyPending(true);
+      setIsManualActionPending(true);
     }
   };
 
-  const [isManualSyncPending, setIsManualSyncPending] = useState(
-    layer.manualSyncStatus === 'pending' ||
-      layer.manualSyncStatus === 'annotated'
-  );
-
-  const [isManualApplyPending, setIsManualApplyPending] = useState(
+  const [isManualActionPending, setIsManualActionPending] = useState(
     layer.manualSyncStatus === 'pending' ||
       layer.manualSyncStatus === 'annotated'
   );
 
   const getApplyButtonState = () => {
-    const isOperationPending = isManualApplyPending;
+    const isOperationPending = isManualActionPending;
     const hasValidPlan = layer.hasValidPlan;
 
     if (isOperationPending) {
       return {
         disabled: true,
-        tooltip: 'Apply in progress...'
+        tooltip: 'Run in progress...'
       };
     }
 
@@ -119,7 +114,7 @@ const Card: React.FC<CardProps> = ({
 
     return {
       disabled: false,
-      tooltip: 'Apply now'
+      tooltip: 'Apply'
     };
   };
 
@@ -218,9 +213,15 @@ const Card: React.FC<CardProps> = ({
         <GenericIconButton
           variant={variant}
           Icon={SyncIcon}
-          disabled={isManualSyncPending}
+          disabled={isManualActionPending}
           onClick={() => syncSelectedLayer(layer)}
-          tooltip={isManualSyncPending ? 'Sync in progress...' : 'Sync now'}
+          tooltip={
+            isManualActionPending
+              ? 'Run in progress...'
+              : layer.autoApply
+                ? 'Plan + Apply'
+                : 'Plan'
+          }
         />
         <GenericIconButton
           variant={variant}

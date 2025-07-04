@@ -18,6 +18,7 @@ export type Layer = {
   manualSyncStatus: ManualSyncStatus;
   isPR: boolean;
   hasValidPlan: boolean;
+  autoApply: boolean;
 };
 
 export type LayerState = 'success' | 'warning' | 'error' | 'disabled';

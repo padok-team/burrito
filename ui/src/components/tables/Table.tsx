@@ -60,7 +60,7 @@ const Table: React.FC<TableProps> = ({
     if (isOperationPending) {
       return {
         disabled: true,
-        tooltip: 'Apply in progress...'
+        tooltip: 'Run in progress...'
       };
     }
 
@@ -73,7 +73,7 @@ const Table: React.FC<TableProps> = ({
 
     return {
       disabled: false,
-      tooltip: 'Apply now'
+      tooltip: 'Apply'
     };
   };
 
@@ -143,8 +143,10 @@ const Table: React.FC<TableProps> = ({
                 tooltip={
                   result.row.original.manualSyncStatus === 'pending' ||
                   result.row.original.manualSyncStatus === 'annotated'
-                    ? 'Sync in progress...'
-                    : 'Sync now'
+                    ? 'Run in progress...'
+                    : result.row.original.autoApply
+                      ? 'Plan + Apply'
+                      : 'Plan'
                 }
               />
               <GenericIconButton
