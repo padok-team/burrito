@@ -134,22 +134,19 @@ func createApplyRun(ctx context.Context, r *Reconciler, layer *configv1alpha1.Te
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 	}
 
+	actionType := "Apply"
+	if isManual {
+		actionType = "Manual Apply"
+	}
+
 	run := r.getRun(layer, repository, "apply")
 	err := r.Client.Create(ctx, &run)
 	if err != nil {
-		actionType := "Apply"
-		if isManual {
-			actionType = "Manual Apply"
-		}
 		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to create TerraformRun for %s action", actionType))
 		log.Errorf("failed to create TerraformRun for %s action on layer %s: %s", actionType, layer.Name, err)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 	}
 
-	actionType := "Apply"
-	if isManual {
-		actionType = "Manual Apply"
-	}
 	r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", fmt.Sprintf("Created TerraformRun for %s action", actionType))
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 }
