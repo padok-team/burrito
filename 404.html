@@ -1,18 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <title>Redirecting</title>
-  <noscript>
-    <meta http-equiv="refresh" content="1; url=latest/" />
-  </noscript>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
   <script>
-    window.location.replace(
-      "latest/" + window.location.search + window.location.hash
-    );
+    // Get the current path
+    const currentPath = window.location.pathname;
+
+    // Remove leading slash if present
+    const cleanPath = currentPath.startsWith('/') ? currentPath.slice(1) : currentPath;
+
+    // Construct the new URL with /latest/ prefix using current origin
+    const newUrl = `${window.location.origin}/latest/${cleanPath}`;
+
+    // Redirect to the new URL
+    window.location.replace(newUrl);
   </script>
 </head>
+
 <body>
-  Redirecting to <a href="latest/">latest/</a>...
+  <p>Redirecting to the latest documentation...</p>
+  <p>If you are not redirected automatically, <a id="fallback-link" href="/latest/">click here</a>.</p>
+  <script>
+    // Update fallback link to use current origin
+    document.getElementById('fallback-link').href = `${window.location.origin}/latest/`;
+  </script>
 </body>
+
 </html>
