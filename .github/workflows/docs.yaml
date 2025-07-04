@@ -55,5 +55,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           mike deploy --push --update-aliases ${{ github.ref_name }} latest
-          mike set-default --push latest
           echo "Deployed version ${{ github.ref_name }} to GitHub Pages"
