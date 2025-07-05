@@ -203,3 +203,59 @@ func (a *S3) List(prefix string) ([]string, error) {
 
 	return keys, nil
 }
+
+// ListRecursive recursively lists all files under a prefix
+func (a *S3) ListRecursive(prefix string) ([]string, error) {
+	listPrefix := utils.SanitizePrefix(prefix)
+
+	var allKeys []string
+	continuationToken := (*string)(nil)
+
+	for {
+		input := &storage.ListObjectsV2Input{
+			Bucket:            &a.Config.Bucket,
+			Prefix:            aws.String(listPrefix),
+			ContinuationToken: continuationToken,
+		}
+
+		result, err := a.Client.ListObjectsV2(context.TODO(), input)
+		if err != nil {
+			return nil, fmt.Errorf("error listing objects with prefix %s: %w", prefix, err)
+		}
+
+		// Add all files (no directories since we're not using a delimiter)
+		for _, obj := range result.Contents {
+			allKeys = append(allKeys, "/"+*obj.Key)
+		}
+
+		// Check if there are more results to fetch
+		if !*result.IsTruncated {
+			break
+		}
+		continuationToken = result.NextContinuationToken
+	}
+
+	// If no files were found, check if the prefix exists by trying to list with delimiter
+	if len(allKeys) == 0 {
+		checkInput := &storage.ListObjectsV2Input{
+			Bucket:    &a.Config.Bucket,
+			Prefix:    aws.String(listPrefix),
+			Delimiter: aws.String("/"),
+			MaxKeys:   aws.Int32(1),
+		}
+		checkResult, err := a.Client.ListObjectsV2(context.TODO(), checkInput)
+		if err != nil {
+			return nil, fmt.Errorf("error checking prefix %s: %w", prefix, err)
+		}
+
+		// If there are no CommonPrefixes and no Contents, the prefix doesn't exist
+		if len(checkResult.CommonPrefixes) == 0 && len(checkResult.Contents) == 0 {
+			return nil, &storageerrors.StorageError{
+				Err: fmt.Errorf("prefix %s not found", prefix),
+				Nil: true,
+			}
+		}
+	}
+
+	return allKeys, nil
+}
