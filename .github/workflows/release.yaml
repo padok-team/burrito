@@ -70,7 +70,7 @@ jobs:
           yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
 
       - name: Commit version to repository
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: "chore(release): bump version to ${{ github.ref_name }}"
           push_options: --force
