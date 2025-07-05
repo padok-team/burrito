@@ -16,10 +16,11 @@ import ChiliLight from '@/assets/illustrations/ChiliLight';
 import ChiliDark from '@/assets/illustrations/ChiliDark';
 import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
 import SyncIcon from '@/assets/icons/SyncIcon';
+import PlayIcon from '@/assets/icons/PlayIcon';
 import GenericIconButton from '@/components/buttons/GenericIconButton';
 
 import { Layer, LayerState } from '@/clients/layers/types';
-import { syncLayer } from '@/clients/layers/client';
+import { applyLayer, syncLayer } from '@/clients/layers/client';
 
 export interface TableProps {
   className?: string;
@@ -41,6 +42,39 @@ const Table: React.FC<TableProps> = ({
     if (sync.status === 200) {
       data[index].manualSyncStatus = 'pending';
     }
+  };
+
+  const applySelectedLayer = async (index: number) => {
+    const apply = await applyLayer(data[index].namespace, data[index].name);
+    if (apply.status === 200) {
+      data[index].manualSyncStatus = 'pending';
+    }
+  };
+
+  const getApplyButtonState = (layer: Layer) => {
+    const isOperationPending =
+      layer.manualSyncStatus === 'pending' ||
+      layer.manualSyncStatus === 'annotated';
+    const hasValidPlan = layer.hasValidPlan;
+
+    if (isOperationPending) {
+      return {
+        disabled: true,
+        tooltip: 'Run in progress...'
+      };
+    }
+
+    if (!hasValidPlan) {
+      return {
+        disabled: true,
+        tooltip: 'No valid plan available. Run a plan first before applying.'
+      };
+    }
+
+    return {
+      disabled: false,
+      tooltip: 'Apply'
+    };
   };
 
   const columns = [
@@ -109,9 +143,18 @@ const Table: React.FC<TableProps> = ({
                 tooltip={
                   result.row.original.manualSyncStatus === 'pending' ||
                   result.row.original.manualSyncStatus === 'annotated'
-                    ? 'Sync in progress...'
-                    : 'Sync now'
+                    ? 'Run in progress...'
+                    : result.row.original.autoApply
+                      ? 'Plan + Apply'
+                      : 'Plan'
                 }
+              />
+              <GenericIconButton
+                variant={variant}
+                Icon={PlayIcon}
+                disabled={getApplyButtonState(result.row.original).disabled}
+                onClick={() => applySelectedLayer(result.row.index)}
+                tooltip={getApplyButtonState(result.row.original).tooltip}
               />
             </div>
           ) : result.row.original.isRunning ? (

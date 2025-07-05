@@ -11,8 +11,9 @@ import ChiliDark from '@/assets/illustrations/ChiliDark';
 
 import { Layer } from '@/clients/layers/types';
 import GenericIconButton from '../buttons/GenericIconButton';
-import { syncLayer } from '@/clients/layers/client';
+import { applyLayer, syncLayer } from '@/clients/layers/client';
 import SyncIcon from '@/assets/icons/SyncIcon';
+import PlayIcon from '@/assets/icons/PlayIcon';
 
 export interface CardProps {
   className?: string;
@@ -77,14 +78,45 @@ const Card: React.FC<CardProps> = ({
   const syncSelectedLayer = async (layer: Layer) => {
     const sync = await syncLayer(layer.namespace, layer.name);
     if (sync.status === 200) {
-      setIsManualSyncPending(true);
+      setIsManualActionPending(true);
     }
   };
 
-  const [isManualSyncPending, setIsManualSyncPending] = useState(
+  const applySelectedLayer = async (layer: Layer) => {
+    const sync = await applyLayer(layer.namespace, layer.name);
+    if (sync.status === 200) {
+      setIsManualActionPending(true);
+    }
+  };
+
+  const [isManualActionPending, setIsManualActionPending] = useState(
     layer.manualSyncStatus === 'pending' ||
       layer.manualSyncStatus === 'annotated'
   );
+
+  const getApplyButtonState = () => {
+    const isOperationPending = isManualActionPending;
+    const hasValidPlan = layer.hasValidPlan;
+
+    if (isOperationPending) {
+      return {
+        disabled: true,
+        tooltip: 'Run in progress...'
+      };
+    }
+
+    if (!hasValidPlan) {
+      return {
+        disabled: true,
+        tooltip: 'No valid plan available. Run a plan first before applying.'
+      };
+    }
+
+    return {
+      disabled: false,
+      tooltip: 'Apply'
+    };
+  };
 
   return (
     <div
@@ -181,9 +213,22 @@ const Card: React.FC<CardProps> = ({
         <GenericIconButton
           variant={variant}
           Icon={SyncIcon}
-          disabled={isManualSyncPending}
+          disabled={isManualActionPending}
           onClick={() => syncSelectedLayer(layer)}
-          tooltip={isManualSyncPending ? 'Sync in progress...' : 'Sync now'}
+          tooltip={
+            isManualActionPending
+              ? 'Run in progress...'
+              : layer.autoApply
+                ? 'Plan + Apply'
+                : 'Plan'
+          }
+        />
+        <GenericIconButton
+          variant={variant}
+          Icon={PlayIcon}
+          disabled={getApplyButtonState().disabled}
+          onClick={() => applySelectedLayer(layer)}
+          tooltip={getApplyButtonState().tooltip}
         />
       </div>
       <Tooltip
