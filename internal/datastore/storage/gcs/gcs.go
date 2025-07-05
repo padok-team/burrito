@@ -2,13 +2,14 @@ package gcs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	errors "github.com/padok-team/burrito/internal/datastore/storage/error"
+	storageErrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 	"github.com/padok-team/burrito/internal/datastore/storage/utils"
 	"google.golang.org/api/iterator"
 )
@@ -38,14 +39,14 @@ func (a *GCS) Get(key string) ([]byte, error) {
 	storageKey := strings.TrimPrefix(key, "/")
 	obj := bucket.Object(storageKey)
 	reader, err := obj.NewReader(ctx)
-	if err == storage.ErrObjectNotExist {
-		return nil, &errors.StorageError{
+	if errors.Is(err, storage.ErrObjectNotExist) {
+		return nil, &storageErrors.StorageError{
 			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
-		return make([]byte, 0), &errors.StorageError{
+		return make([]byte, 0), &storageErrors.StorageError{
 			Err: fmt.Errorf("error reading object %s: %w", key, err),
 			Nil: false,
 		}
@@ -54,7 +55,7 @@ func (a *GCS) Get(key string) ([]byte, error) {
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		return make([]byte, 0), &errors.StorageError{
+		return make([]byte, 0), &storageErrors.StorageError{
 			Err: err,
 			Nil: false,
 		}
@@ -73,7 +74,7 @@ func (a *GCS) Set(key string, data []byte, ttl int) error {
 
 	_, err := writer.Write(data)
 	if err != nil {
-		return &errors.StorageError{
+		return &storageErrors.StorageError{
 			Err: fmt.Errorf("error setting object %s: %w", storageKey, err),
 			Nil: false,
 		}
@@ -88,14 +89,14 @@ func (a *GCS) Check(key string) ([]byte, error) {
 	storageKey := strings.TrimPrefix(key, "/")
 	obj := bucket.Object(storageKey)
 	metadata, err := obj.Attrs(ctx)
-	if err == storage.ErrObjectNotExist {
-		return make([]byte, 0), &errors.StorageError{
+	if errors.Is(err, storage.ErrObjectNotExist) {
+		return make([]byte, 0), &storageErrors.StorageError{
 			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
-		return make([]byte, 0), &errors.StorageError{
+		return make([]byte, 0), &storageErrors.StorageError{
 			Err: fmt.Errorf("error checking object %s: %w", key, err),
 			Nil: false,
 		}
@@ -109,14 +110,14 @@ func (a *GCS) Delete(key string) error {
 	storageKey := strings.TrimPrefix(key, "/")
 	obj := bucket.Object(storageKey)
 	err := obj.Delete(ctx)
-	if err == storage.ErrObjectNotExist {
-		return &errors.StorageError{
+	if errors.Is(err, storage.ErrObjectNotExist) {
+		return &storageErrors.StorageError{
 			Err: fmt.Errorf("object %s not found", key),
 			Nil: true,
 		}
 	}
 	if err != nil {
-		return &errors.StorageError{
+		return &storageErrors.StorageError{
 			Err: fmt.Errorf("error deleting object %s: %w", key, err),
 			Nil: false,
 		}
@@ -159,7 +160,7 @@ func (a *GCS) List(prefix string) ([]string, error) {
 
 	// If no items were found, return a StorageError with Nil=true
 	if !foundItems {
-		return nil, &errors.StorageError{
+		return nil, &storageErrors.StorageError{
 			Err: fmt.Errorf("prefix %s not found", prefix),
 			Nil: true,
 		}
