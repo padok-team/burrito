@@ -6,6 +6,9 @@ theme:
   logo: assets/icon/burrito.png
   features:
     - navigation.indexes
+extra:
+  version:
+    provider: mike
 markdown_extensions:
 - codehilite
 - admonition
