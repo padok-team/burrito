@@ -64,7 +64,7 @@ metadata:
   namespace: <datastoreNamespace>
 type: Opaque
 stringData:
-  BURRITO_DATASTORE_STORAGE_ENCRYPTION_KEY: <your-base64-encoded-encryption-key>
+  BURRITO_DATASTORE_STORAGE_ENCRYPTION_KEY: <your-encryption-key>
 ```
 
 !!! warning
@@ -74,12 +74,6 @@ You can generate a key with:
 
 ```bash
 openssl rand -hex 32
-```
-
-In order to store it in the secret, you'll need to encode it with base64: 
-
-```bash
-openssl rand -hex 32 | base64 -w0
 ```
 
 ### Security Notes
