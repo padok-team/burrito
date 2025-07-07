@@ -57,6 +57,13 @@ const Table: React.FC<TableProps> = ({
       layer.manualSyncStatus === 'annotated';
     const hasValidPlan = layer.hasValidPlan;
 
+    if (layer.isPR) {
+      return {
+        disabled: true,
+        tooltip: 'Manual apply is not allowed on pull request layers'
+      };
+    }
+
     if (isOperationPending) {
       return {
         disabled: true,

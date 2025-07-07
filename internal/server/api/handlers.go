@@ -35,6 +35,12 @@ func (a *API) ApplyLayerHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Could not get terraform layer")
 	}
+
+	// Check if layer is managed by TerraformPullRequest controller
+	if managedBy, exists := layer.Labels["burrito/managed-by"]; exists && managedBy != "" {
+		return c.String(http.StatusForbidden, "Manual apply is not allowed on layers managed by TerraformPullRequest controller")
+	}
+
 	// Add apply annotation to trigger manual apply
 	err = annotations.Add(c.Request().Context(), a.Client, layer, map[string]string{
 		annotations.ApplyNow: "true",

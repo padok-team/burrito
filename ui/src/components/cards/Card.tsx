@@ -98,6 +98,13 @@ const Card: React.FC<CardProps> = ({
     const isOperationPending = isManualActionPending;
     const hasValidPlan = layer.hasValidPlan;
 
+    if (layer.isPR) {
+      return {
+        disabled: true,
+        tooltip: 'Manual apply is not allowed on pull request layers'
+      };
+    }
+
     if (isOperationPending) {
       return {
         disabled: true,
