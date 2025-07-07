@@ -95,6 +95,30 @@ func (a *Mock) List(prefix string) ([]string, error) {
 	return mapKeys(keySet), nil
 }
 
+// ListRecursive recursively lists all files under a prefix
+func (a *Mock) ListRecursive(prefix string) ([]string, error) {
+	listPrefix := fmt.Sprintf("/%s", utils.SanitizePrefix(prefix))
+	var keys []string
+	found := false
+
+	for k := range a.data {
+		if strings.HasPrefix(k, listPrefix) {
+			keys = append(keys, k)
+			found = true
+		}
+	}
+
+	// Return an error if no keys match the prefix
+	if !found {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix %s not found", listPrefix),
+			Nil: true,
+		}
+	}
+
+	return keys, nil
+}
+
 func mapKeys(m map[string]bool) []string {
 	keys := []string{}
 	for k := range m {

@@ -55,8 +55,9 @@ func computeGitBundleKey(namespace string, repository string, branch string, rev
 }
 
 type Storage struct {
-	Backend StorageBackend
-	Config  config.Config
+	Backend           StorageBackend
+	Config            config.Config
+	EncryptionManager *EncryptionManager
 }
 
 type StorageBackend interface {
@@ -65,25 +66,41 @@ type StorageBackend interface {
 	Set(key string, value []byte, ttl int) error
 	Delete(key string) error
 	List(prefix string) ([]string, error)
+	ListRecursive(prefix string) ([]string, error)
 }
 
 func New(config config.Config) Storage {
+	em, err := NewEncryptionManager(config.Datastore.Storage.Encryption)
+	if err != nil {
+		log.Fatalf("Failed to create encryption manager: %v", err)
+	}
+	storage := Storage{
+		Config:            config,
+		EncryptionManager: em,
+	}
+
 	switch {
 	case config.Datastore.Storage.Azure.Container != "":
-		return Storage{Backend: azure.New(config.Datastore.Storage.Azure, nil)}
+		storage.Backend = azure.New(config.Datastore.Storage.Azure, nil)
 	case config.Datastore.Storage.GCS.Bucket != "":
-		return Storage{Backend: gcs.New(config.Datastore.Storage.GCS)}
+		storage.Backend = gcs.New(config.Datastore.Storage.GCS)
 	case config.Datastore.Storage.S3.Bucket != "":
-		return Storage{Backend: s3.New(config.Datastore.Storage.S3)}
+		storage.Backend = s3.New(config.Datastore.Storage.S3)
 	case config.Datastore.Storage.Mock:
 		log.Warn("Using mock storage backend - for testing only - data will only be stored in memory and will be lost when the process exits")
-		return Storage{Backend: mock.New()}
+		storage.Backend = mock.New()
 	}
-	return Storage{}
+
+	return storage
 }
 
 func (s *Storage) GetLogs(namespace string, layer string, run string, attempt string) ([]byte, error) {
-	return s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
+	data, err := s.Backend.Get(computeLogsKey(namespace, layer, run, attempt))
+	if err != nil {
+		return nil, err
+	} else {
+		return s.EncryptionManager.Decrypt(namespace, data)
+	}
 }
 
 func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]byte, error) {
@@ -95,15 +112,30 @@ func (s *Storage) GetLatestLogs(namespace string, layer string, run string) ([]b
 		return nil, &errors.StorageError{Nil: true}
 	}
 
-	return s.Backend.Get(computeLogsKey(namespace, layer, run, latestAttempt))
+	return s.GetLogs(namespace, layer, run, latestAttempt)
 }
 
 func (s *Storage) PutLogs(namespace string, layer string, run string, attempt string, logs []byte) error {
-	return s.Backend.Set(computeLogsKey(namespace, layer, run, attempt), logs, 0)
+	dataToStore, err := s.EncryptionManager.Encrypt(namespace, logs)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.Backend.Set(computeLogsKey(namespace, layer, run, attempt), dataToStore, 0)
+	if err != nil {
+		return fmt.Errorf("failed to store logs: %w", err)
+	}
+	return nil
 }
 
 func (s *Storage) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
-	return s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
+	data, err := s.Backend.Get(computePlanKey(namespace, layer, run, attempt, format))
+	if err != nil {
+		return nil, err
+	} else {
+		return s.EncryptionManager.Decrypt(namespace, data)
+	}
 }
 
 func (s *Storage) GetLatestPlan(namespace string, layer string, run string, format string) ([]byte, error) {
@@ -115,11 +147,21 @@ func (s *Storage) GetLatestPlan(namespace string, layer string, run string, form
 		return nil, &errors.StorageError{Nil: true}
 	}
 
-	return s.Backend.Get(computePlanKey(namespace, layer, run, latestAttempt, format))
+	return s.GetPlan(namespace, layer, run, latestAttempt, format)
 }
 
 func (s *Storage) PutPlan(namespace string, layer string, run string, attempt string, format string, plan []byte) error {
-	return s.Backend.Set(computePlanKey(namespace, layer, run, attempt, format), plan, 0)
+	dataToStore, err := s.EncryptionManager.Encrypt(namespace, plan)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.Backend.Set(computePlanKey(namespace, layer, run, attempt, format), dataToStore, 0)
+	if err != nil {
+		return fmt.Errorf("failed to store plan: %w", err)
+	}
+	return nil
 }
 
 func (s *Storage) GetLatestAttempt(namespace string, layer string, run string) (string, error) {
@@ -159,7 +201,12 @@ func (s *Storage) GetAttempts(namespace string, layer string, run string) ([]str
 }
 
 func (s *Storage) GetGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
-	return s.Backend.Get(computeGitBundleKey(namespace, repository, ref, commit))
+	data, err := s.Backend.Get(computeGitBundleKey(namespace, repository, ref, commit))
+	if err != nil {
+		return nil, err
+	} else {
+		return s.EncryptionManager.Decrypt(namespace, data)
+	}
 }
 
 func (s *Storage) CheckGitBundle(namespace string, repository string, ref string, commit string) ([]byte, error) {
@@ -167,8 +214,14 @@ func (s *Storage) CheckGitBundle(namespace string, repository string, ref string
 }
 
 func (s *Storage) PutGitBundle(namespace string, repository string, ref string, commit string, bundle []byte) error {
+	dataToStore, err := s.EncryptionManager.Encrypt(namespace, bundle)
+
+	if err != nil {
+		return err
+	}
+
 	// Store the git bundle
-	err := s.Backend.Set(computeGitBundleKey(namespace, repository, ref, commit), bundle, 0)
+	err = s.Backend.Set(computeGitBundleKey(namespace, repository, ref, commit), dataToStore, 0)
 	if err != nil {
 		return fmt.Errorf("failed to store git bundle: %w", err)
 	}
