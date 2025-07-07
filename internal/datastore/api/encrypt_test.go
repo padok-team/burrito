@@ -49,8 +49,10 @@ var _ = Describe("Encrypt API", func() {
 		Context("when encryption is enabled and key is valid", func() {
 			It("should encrypt all files successfully", func() {
 				// Pre-populate some test data
-				testAPI.Storage.PutLogs("test-namespace", "test-layer", "test-run", "0", []byte("test logs"))
-				testAPI.Storage.PutPlan("test-namespace", "test-layer", "test-run", "0", "json", []byte("test plan"))
+				err := testAPI.Storage.PutLogs("test-namespace", "test-layer", "test-run", "0", []byte("test logs"))
+				Expect(err).NotTo(HaveOccurred())
+				err = testAPI.Storage.PutPlan("test-namespace", "test-layer", "test-run", "0", "json", []byte("test plan"))
+				Expect(err).NotTo(HaveOccurred())
 
 				// Prepare request
 				reqBody := map[string]string{
@@ -64,7 +66,7 @@ var _ = Describe("Encrypt API", func() {
 				c := e.NewContext(req, rec)
 
 				// Execute request
-				err := testAPI.EncryptAllFilesHandler(c)
+				err = testAPI.EncryptAllFilesHandler(c)
 				Expect(err).NotTo(HaveOccurred())
 				// Accept both OK and Partial Content (when there are some errors but process completes)
 				Expect(rec.Code).To(Or(Equal(http.StatusOK), Equal(http.StatusPartialContent)))
@@ -189,8 +191,10 @@ var _ = Describe("Encrypt API", func() {
 		Context("when files are already encrypted", func() {
 			It("should skip already encrypted files", func() {
 				// Pre-populate some test data and encrypt it first
-				testAPI.Storage.PutLogs("test-namespace", "test-layer", "test-run", "0", []byte("test logs"))
-				testAPI.Storage.PutPlan("test-namespace", "test-layer", "test-run", "0", "json", []byte("test plan"))
+				err := testAPI.Storage.PutLogs("test-namespace", "test-layer", "test-run", "0", []byte("test logs"))
+				Expect(err).NotTo(HaveOccurred())
+				err = testAPI.Storage.PutPlan("test-namespace", "test-layer", "test-run", "0", "json", []byte("test plan"))
+				Expect(err).NotTo(HaveOccurred())
 
 				// First encryption run
 				reqBody := map[string]string{
@@ -203,7 +207,7 @@ var _ = Describe("Encrypt API", func() {
 				rec := httptest.NewRecorder()
 				c := e.NewContext(req, rec)
 
-				err := testAPI.EncryptAllFilesHandler(c)
+				err = testAPI.EncryptAllFilesHandler(c)
 				Expect(err).NotTo(HaveOccurred())
 
 				var firstResponse map[string]interface{}
