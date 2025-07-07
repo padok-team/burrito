@@ -201,7 +201,7 @@ func (a *GCS) ListRecursive(prefix string) ([]string, error) {
 
 	// If no items were found, return a StorageError with Nil=true
 	if !foundItems {
-		return nil, &errors.StorageError{
+		return nil, &storageErrors.StorageError{
 			Err: fmt.Errorf("prefix %s not found", prefix),
 			Nil: true,
 		}
