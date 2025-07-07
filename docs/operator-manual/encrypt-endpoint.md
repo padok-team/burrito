@@ -50,13 +50,16 @@ The endpoint requires the same authentication as other datastore endpoints (serv
 ### Error Responses
 
 #### 400 Bad Request
+
 - Missing encryption key in request body
 - Encryption is not enabled in configuration
 
 #### 401 Unauthorized  
+
 - Invalid encryption key (doesn't match server configuration)
 
 #### 500 Internal Server Error
+
 - No encryption key configured on server
 
 ## Usage Example
@@ -64,6 +67,7 @@ The endpoint requires the same authentication as other datastore endpoints (serv
 ### Authorization Configuration
 
 By default, burrito comes with these authorized service accounts:
+
 - `burrito-project/burrito-runner`
 - `burrito-system/burrito-controllers`  
 - `burrito-system/burrito-server`

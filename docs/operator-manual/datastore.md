@@ -85,6 +85,7 @@ openssl rand -hex 32
 ### Files format
 
 The encrypted files use the following format:
+
 - First 16 bytes: Initialization Vector (IV)
 - Remaining bytes: AES-256-CBC encrypted data with PKCS#7 padding
 
