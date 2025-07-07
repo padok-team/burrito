@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	benchmarkSize = 51200 // 50KB
+	benchmarkSize       = 51200 // 50KB
+	benchmarkIterations = 100
 )
 
 func TestEncryption(t *testing.T) {
@@ -158,7 +159,7 @@ var _ = Describe("Encryptor", func() {
 					_, err := encryptor.Encrypt(plaintext)
 					Expect(err).NotTo(HaveOccurred())
 				})
-			}, gmeasure.SamplingConfig{N: 10})
+			}, gmeasure.SamplingConfig{N: benchmarkIterations})
 
 			Expect(experiment.GetStats("encryption").DurationFor(gmeasure.StatMean)).To(BeNumerically("<", time.Millisecond*10))
 		})
@@ -172,7 +173,7 @@ var _ = Describe("Encryptor", func() {
 					_, err := encryptor.Decrypt(ciphertext)
 					Expect(err).NotTo(HaveOccurred())
 				})
-			}, gmeasure.SamplingConfig{N: 10})
+			}, gmeasure.SamplingConfig{N: benchmarkIterations})
 
 			Expect(experiment.GetStats("decryption").DurationFor(gmeasure.StatMean)).To(BeNumerically("<", time.Millisecond*1))
 		})
