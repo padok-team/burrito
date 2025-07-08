@@ -51,37 +51,27 @@ const Table: React.FC<TableProps> = ({
     }
   };
 
-  const getApplyButtonState = (layer: Layer) => {
-    const isOperationPending =
-      layer.manualSyncStatus === 'pending' ||
-      layer.manualSyncStatus === 'annotated';
-    const hasValidPlan = layer.hasValidPlan;
-
+  const getApplyButtonTooltip = (layer: Layer) => {
     if (layer.isPR) {
-      return {
-        disabled: true,
-        tooltip: 'Manual apply is not allowed on pull request layers'
-      };
+      return 'Manual apply is not allowed on pull request layers';
     }
-
-    if (isOperationPending) {
-      return {
-        disabled: true,
-        tooltip: 'Run in progress...'
-      };
+    if (layer.manualSyncStatus !== 'none') {
+      return 'Run in progress...';
     }
-
-    if (!hasValidPlan) {
-      return {
-        disabled: true,
-        tooltip: 'No valid plan available. Run a plan first before applying.'
-      };
+    if (!layer.hasValidPlan) {
+      return 'No valid plan available. Run a plan first before applying.';
     }
+    return 'Apply';
+  };
 
-    return {
-      disabled: false,
-      tooltip: 'Apply'
-    };
+  const getSyncButtonTooltip = (layer: Layer) => {
+    if (layer.manualSyncStatus !== 'none') {
+      return 'Run in progress...';
+    }
+    if (layer.autoApply) {
+      return 'Plan + Apply';
+    }
+    return 'Plan';
   };
 
   const columns = [
@@ -142,26 +132,19 @@ const Table: React.FC<TableProps> = ({
               <GenericIconButton
                 variant={variant}
                 Icon={SyncIcon}
-                disabled={
-                  result.row.original.manualSyncStatus === 'pending' ||
-                  result.row.original.manualSyncStatus === 'annotated'
-                }
+                disabled={result.row.original.manualSyncStatus !== 'none'}
                 onClick={() => syncSelectedLayer(result.row.index)}
-                tooltip={
-                  result.row.original.manualSyncStatus === 'pending' ||
-                  result.row.original.manualSyncStatus === 'annotated'
-                    ? 'Run in progress...'
-                    : result.row.original.autoApply
-                      ? 'Plan + Apply'
-                      : 'Plan'
-                }
+                tooltip={getSyncButtonTooltip(result.row.original)}
               />
               <GenericIconButton
                 variant={variant}
                 Icon={PlayIcon}
-                disabled={getApplyButtonState(result.row.original).disabled}
+                disabled={
+                  result.row.original.isPR ||
+                  result.row.original.manualSyncStatus !== 'none'
+                }
                 onClick={() => applySelectedLayer(result.row.index)}
-                tooltip={getApplyButtonState(result.row.original).tooltip}
+                tooltip={getApplyButtonTooltip(result.row.original)}
               />
             </div>
           ) : result.row.original.isRunning ? (
