@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import { Tooltip } from 'react-tooltip';
 
@@ -9,7 +9,7 @@ import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
 import ChiliLight from '@/assets/illustrations/ChiliLight';
 import ChiliDark from '@/assets/illustrations/ChiliDark';
 
-import { Layer } from '@/clients/layers/types';
+import type { Layer } from '@/clients/layers/types';
 import GenericIconButton from '../buttons/GenericIconButton';
 import { applyLayer, syncLayer } from '@/clients/layers/client';
 import SyncIcon from '@/assets/icons/SyncIcon';
@@ -76,53 +76,36 @@ const Card: React.FC<CardProps> = ({
   };
 
   const syncSelectedLayer = async (layer: Layer) => {
-    const sync = await syncLayer(layer.namespace, layer.name);
-    if (sync.status === 200) {
-      setIsManualActionPending(true);
-    }
+    await syncLayer(layer.namespace, layer.name);
   };
 
   const applySelectedLayer = async (layer: Layer) => {
-    const sync = await applyLayer(layer.namespace, layer.name);
-    if (sync.status === 200) {
-      setIsManualActionPending(true);
-    }
+    await applyLayer(layer.namespace, layer.name);
   };
 
-  const [isManualActionPending, setIsManualActionPending] = useState(
-    layer.manualSyncStatus === 'pending' ||
-      layer.manualSyncStatus === 'annotated'
-  );
+  const isManualActionPending = layer.manualSyncStatus !== 'none';
 
-  const getApplyButtonState = () => {
-    const isOperationPending = isManualActionPending;
-    const hasValidPlan = layer.hasValidPlan;
-
+  const getApplyButtonTooltip = () => {
     if (layer.isPR) {
-      return {
-        disabled: true,
-        tooltip: 'Manual apply is not allowed on pull request layers'
-      };
+      return 'Manual apply is not allowed on pull request layers';
     }
-
-    if (isOperationPending) {
-      return {
-        disabled: true,
-        tooltip: 'Run in progress...'
-      };
+    if (isManualActionPending) {
+      return 'Run in progress...';
     }
-
-    if (!hasValidPlan) {
-      return {
-        disabled: true,
-        tooltip: 'No valid plan available. Run a plan first before applying.'
-      };
+    if (!layer.hasValidPlan) {
+      return 'No valid plan available. Run a plan first before applying.';
     }
+    return 'Apply';
+  };
 
-    return {
-      disabled: false,
-      tooltip: 'Apply'
-    };
+  const getSyncButtonTooltip = () => {
+    if (isManualActionPending) {
+      return 'Run in progress...';
+    }
+    if (layer.autoApply) {
+      return 'Plan + Apply';
+    }
+    return 'Plan';
   };
 
   return (
@@ -222,20 +205,14 @@ const Card: React.FC<CardProps> = ({
           Icon={SyncIcon}
           disabled={isManualActionPending}
           onClick={() => syncSelectedLayer(layer)}
-          tooltip={
-            isManualActionPending
-              ? 'Run in progress...'
-              : layer.autoApply
-                ? 'Plan + Apply'
-                : 'Plan'
-          }
+          tooltip={getSyncButtonTooltip()}
         />
         <GenericIconButton
           variant={variant}
           Icon={PlayIcon}
-          disabled={getApplyButtonState().disabled}
+          disabled={layer.isPR || isManualActionPending}
           onClick={() => applySelectedLayer(layer)}
-          tooltip={getApplyButtonState().tooltip}
+          tooltip={getApplyButtonTooltip()}
         />
       </div>
       <Tooltip
