@@ -10,13 +10,13 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/gitlab"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/utils/gitprovider/common"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	"github.com/padok-team/burrito/internal/webhook/event"
@@ -139,18 +139,12 @@ func (g *Gitlab) Clone(repository *configv1alpha1.TerraformRepository, branch st
 		return nil, err
 	}
 
-	cloneOptions := &git.CloneOptions{
-		ReferenceName: plumbing.NewBranchReferenceName(branch),
-		URL:           repository.Spec.Repository.Url,
-		Auth:          auth,
-	}
-
 	if auth == nil {
 		return nil, errors.New("no valid authentication method provided")
 	}
 
-	log.Infof("Cloning gitlab repository %s on %s branch", repository.Spec.Repository.Url, branch)
-	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
+	log.Infof("Cloning gitlab repository %s on ref %s", repository.Spec.Repository.Url, branch)
+	repo, err := common.CloneWithFallback(repository.Spec.Repository.Url, repositoryPath, branch, auth)
 	if err != nil {
 		return nil, err
 	}

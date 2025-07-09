@@ -19,6 +19,48 @@ const (
 	BundleDir  = "/tmp/burrito/gitbundles"
 )
 
+// ReferenceName converts a ref string to a plumbing.ReferenceName
+// It handles both branches and tags by trying branches first, then tags
+func ReferenceName(ref string) plumbing.ReferenceName {
+	if strings.HasPrefix(ref, "refs/") {
+		return plumbing.ReferenceName(ref)
+	}
+	// Default to branch for backward compatibility
+	return plumbing.NewBranchReferenceName(ref)
+}
+
+// ReferenceNameForTag converts a ref string to a tag plumbing.ReferenceName
+func ReferenceNameForTag(ref string) plumbing.ReferenceName {
+	if strings.HasPrefix(ref, "refs/") {
+		return plumbing.ReferenceName(ref)
+	}
+	return plumbing.ReferenceName("refs/tags/" + ref)
+}
+
+// CloneWithFallback attempts to clone a repository trying branch first, then tag
+func CloneWithFallback(url, repositoryPath, ref string, auth transport.AuthMethod) (*git.Repository, error) {
+	// Try as branch first
+	cloneOptions := &git.CloneOptions{
+		ReferenceName: ReferenceName(ref),
+		URL:           url,
+		Auth:          auth,
+	}
+	
+	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
+	if err == nil {
+		return repo, nil
+	}
+	
+	// If branch clone failed, try as tag
+	cloneOptions.ReferenceName = ReferenceNameForTag(ref)
+	repo, err = git.PlainClone(repositoryPath, false, cloneOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to clone repository as both branch and tag: %w", err)
+	}
+	
+	return repo, nil
+}
+
 func GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string, auth transport.AuthMethod) ([]byte, error) {
 	repoKey := fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, strings.ReplaceAll(ref, "/", "--"))
 	repoDir := filepath.Join(WorkingDir, repoKey)
@@ -32,15 +74,22 @@ func GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, re
 
 		// Clone if it doesn't exist
 		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
+		
+		// Try cloning with branch first, then tag
 		cloneOpts := &git.CloneOptions{
 			URL:           repository.Spec.Repository.Url,
 			Auth:          auth,
-			ReferenceName: plumbing.NewBranchReferenceName(ref),
+			ReferenceName: ReferenceName(ref),
 		}
 
 		repo, err = git.PlainClone(repoDir, false, cloneOpts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to clone repository %s: %w", repoKey, err)
+			// If branch clone failed, try as tag
+			cloneOpts.ReferenceName = ReferenceNameForTag(ref)
+			repo, err = git.PlainClone(repoDir, false, cloneOpts)
+			if err != nil {
+				return nil, fmt.Errorf("failed to clone repository %s as both branch and tag: %w", repoKey, err)
+			}
 		}
 	}
 
