@@ -7,13 +7,13 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v5/storage/memory"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/utils/gitprovider/common"
 	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
@@ -90,18 +90,12 @@ func (g *Standard) Clone(repository *configv1alpha1.TerraformRepository, branch 
 		return nil, err
 	}
 
-	cloneOptions := &git.CloneOptions{
-		ReferenceName: plumbing.NewBranchReferenceName(branch),
-		URL:           repository.Spec.Repository.Url,
-		Auth:          auth,
-	}
-
 	if auth == nil {
 		log.Info("No authentication method provided, falling back to unauthenticated clone")
 	}
 
-	log.Infof("Cloning remote repository %s on %s branch with git", repository.Spec.Repository.Url, branch)
-	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
+	log.Infof("Cloning remote repository %s on ref %s with git", repository.Spec.Repository.Url, branch)
+	repo, err := common.CloneWithFallback(repository.Spec.Repository.Url, repositoryPath, branch, auth)
 	if err != nil {
 		return nil, err
 	}
