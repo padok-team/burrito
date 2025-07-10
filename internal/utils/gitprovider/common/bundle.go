@@ -45,19 +45,19 @@ func CloneWithFallback(url, repositoryPath, ref string, auth transport.AuthMetho
 		URL:           url,
 		Auth:          auth,
 	}
-	
+
 	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
 	if err == nil {
 		return repo, nil
 	}
-	
+
 	// If branch clone failed, try as tag
 	cloneOptions.ReferenceName = ReferenceNameForTag(ref)
 	repo, err = git.PlainClone(repositoryPath, false, cloneOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to clone repository as both branch and tag: %w", err)
 	}
-	
+
 	return repo, nil
 }
 
@@ -74,7 +74,7 @@ func GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, re
 
 		// Clone if it doesn't exist
 		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
-		
+
 		// Try cloning with branch first, then tag
 		cloneOpts := &git.CloneOptions{
 			URL:           repository.Spec.Repository.Url,
