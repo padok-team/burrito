@@ -98,7 +98,7 @@ COPY --from=builder /workspace/bin/burrito /go/bin/dlv* /usr/local/bin/
 RUN mkdir -p /runner/bin
 RUN chmod +x /usr/local/bin/*
 # /home/burrito/.config is required for debug mode
-RUN mkdir -p /home/burrito/.config && chown -R burrito:burrito /runner /home/burrito/.config    
+RUN mkdir -p /home/burrito/.config && chown -R burrito:burrito /runner /home/burrito
 
 # Use an unprivileged user
 USER 65532:65532
