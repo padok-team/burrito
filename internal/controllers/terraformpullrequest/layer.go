@@ -48,8 +48,11 @@ func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.Terr
 	if layer.Spec.Repository.Namespace != pr.Spec.Repository.Namespace {
 		return false
 	}
-	if layer.Spec.Branch != pr.Spec.Base {
-		return false
+	// Skip branch check if allowPrOnTags is enabled
+	if layer.Spec.AllowPrOnTags == nil || !*layer.Spec.AllowPrOnTags {
+		if layer.Spec.Branch != pr.Spec.Base {
+			return false
+		}
 	}
 	if controller.LayerFilesHaveChanged(layer, changes) {
 		return true

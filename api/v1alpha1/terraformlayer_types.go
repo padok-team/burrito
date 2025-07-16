@@ -32,6 +32,7 @@ type TerraformLayerSpec struct {
 
 	Path                string                   `json:"path,omitempty"`
 	Branch              string                   `json:"branch,omitempty"`
+	AllowPrOnTags       *bool                    `json:"allowPrOnTags,omitempty"`
 	TerraformConfig     TerraformConfig          `json:"terraform,omitempty"`
 	OpenTofuConfig      OpenTofuConfig           `json:"opentofu,omitempty"`
 	TerragruntConfig    TerragruntConfig         `json:"terragrunt,omitempty"`

@@ -60,6 +60,8 @@ spec:
           spec:
             description: TerraformLayerSpec defines the desired state of TerraformLayer
             properties:
+              allowPrOnTags:
+                type: boolean
               branch:
                 type: string
               opentofu:
