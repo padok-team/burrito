@@ -74,7 +74,6 @@ RUN apk add --no-cache upx
 COPY --from=builder /workspace/bin/burrito /workspace/bin/burrito
 RUN upx --best --lzma /workspace/bin/burrito
 
-
 FROM docker.io/library/alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
 
 WORKDIR /home/burrito
@@ -101,7 +100,7 @@ RUN addgroup \
 
 # Copy the binary to the production image from the builder stage
 # Copy /go/bin/dlv*: the wildcard makes the copy to work, even if the binary is not present (in Release mode)
-COPY --from=upx /workspace/bin/burrito /go/bin/dlv* /usr/local/bin/
+COPY --from=upx /workspace/bin/burrito /usr/local/bin/
 
 RUN mkdir -p /runner/bin
 RUN chmod +x /usr/local/bin/*
