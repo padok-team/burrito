@@ -40,3 +40,6 @@ test.out/*
 .venv
 env/
 venv/
+
+test-repo/
+TIltfile
