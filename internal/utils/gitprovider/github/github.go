@@ -184,8 +184,14 @@ func (g *Github) Clone(repository *configv1alpha1.TerraformRepository, branch st
 		return nil, err
 	}
 
+	cloneOptions := &git.CloneOptions{
+		ReferenceName: common.ReferenceName(branch),
+		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
+	}
+
 	log.Infof("Cloning github repository %s on ref %s with github %s authentication", repository.Spec.Repository.Url, branch, g.GitHubClientType)
-	repo, err := common.CloneWithFallback(repository.Spec.Repository.Url, repositoryPath, branch, auth)
+	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
 	if err != nil {
 		return nil, err
 	}

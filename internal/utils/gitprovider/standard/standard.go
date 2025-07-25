@@ -94,8 +94,14 @@ func (g *Standard) Clone(repository *configv1alpha1.TerraformRepository, branch 
 		log.Info("No authentication method provided, falling back to unauthenticated clone")
 	}
 
+	cloneOptions := &git.CloneOptions{
+		ReferenceName: common.ReferenceName(branch),
+		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
+	}
+
 	log.Infof("Cloning remote repository %s on ref %s with git", repository.Spec.Repository.Url, branch)
-	repo, err := common.CloneWithFallback(repository.Spec.Repository.Url, repositoryPath, branch, auth)
+	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
 	if err != nil {
 		return nil, err
 	}

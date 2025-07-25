@@ -48,11 +48,23 @@ func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.Terr
 	if layer.Spec.Repository.Namespace != pr.Spec.Repository.Namespace {
 		return false
 	}
-	// Skip branch check if allowPrOnTags is enabled
-	if layer.Spec.AllowPrOnTags == nil || !*layer.Spec.AllowPrOnTags {
-		if layer.Spec.Branch != pr.Spec.Base {
-			return false
+	// Check if branch matches OR if PR base is in additionalTargetRefs
+	branchMatches := layer.Spec.Branch == pr.Spec.Base
+	additionalTargetMatches := false
+
+	// Check if PR base is in layer's additionalTargetRefs
+	if layer.Spec.AdditionalTargetRefs != nil {
+		for _, ref := range layer.Spec.AdditionalTargetRefs {
+			if ref == pr.Spec.Base {
+				additionalTargetMatches = true
+				break
+			}
 		}
+	}
+
+	// If neither branch matches nor is in additional targets, skip this layer
+	if !branchMatches && !additionalTargetMatches {
+		return false
 	}
 	if controller.LayerFilesHaveChanged(layer, changes) {
 		return true

@@ -143,8 +143,14 @@ func (g *Gitlab) Clone(repository *configv1alpha1.TerraformRepository, branch st
 		return nil, errors.New("no valid authentication method provided")
 	}
 
+	cloneOptions := &git.CloneOptions{
+		ReferenceName: common.ReferenceName(branch),
+		URL:           repository.Spec.Repository.Url,
+		Auth:          auth,
+	}
+
 	log.Infof("Cloning gitlab repository %s on ref %s", repository.Spec.Repository.Url, branch)
-	repo, err := common.CloneWithFallback(repository.Spec.Repository.Url, repositoryPath, branch, auth)
+	repo, err := git.PlainClone(repositoryPath, false, cloneOptions)
 	if err != nil {
 		return nil, err
 	}
