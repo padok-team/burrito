@@ -17,6 +17,7 @@ var (
 )
 
 type ReportedLayer struct {
+	Name       string
 	ShortDiff  string
 	Path       string
 	PrettyPlan string
@@ -49,6 +50,7 @@ func (c *DefaultComment) Generate(commit string) (string, error) {
 			return "", err
 		}
 		reportedLayer := ReportedLayer{
+			Name:       layer.Name,
 			Path:       layer.Spec.Path,
 			ShortDiff:  string(shortDiff),
 			PrettyPlan: string(plan),
