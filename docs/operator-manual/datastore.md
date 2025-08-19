@@ -9,6 +9,8 @@ config:
   burrito:
     datastore:
       storage:
+        encryption:
+          enabled: <false|true> # default: false
         mock: <false|true> # default: false
         s3:
           bucket: <bucket-name>
@@ -25,6 +27,88 @@ config:
 
 !!! warning
     The `mock` storage backend is only for testing purposes and should not be used in production. If enabled, Burrito will store the data in memory and will lose it when the pod is restarted. It also might fill up the memory of the pod if too much data is stored.
+
+## Encryption
+
+### Configuration
+
+Burrito supports encryption of data at rest in the datastore. When encryption is enabled, all data stored in the backend storage will be encrypted using AES-256-CBC. This allows you to decrypt with external tools such as `openssl`
+
+To enable encryption, you need to:
+
+1. Set `encryption.enabled: true` in the configuration
+2. Provide an encryption key via the `BURRITO_DATASTORE_STORAGE_ENCRYPTION_KEY` environment variable, through a Kubernetes secret like below
+
+```yaml
+config:
+  burrito:
+    datastore:
+      storage:
+        encryption:
+          enabled: true
+
+datastore:
+  deployment:
+    envFrom:
+      - secretRef:
+          name: burrito-datastore-encryption-key
+```
+
+You'll need to create a secret containing the encryption key:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-datastore-encryption-key
+  namespace: <datastoreNamespace>
+type: Opaque
+stringData:
+  BURRITO_DATASTORE_STORAGE_ENCRYPTION_KEY: <your-encryption-key>
+```
+
+!!! warning
+    Losing the encryption key will make all encrypted data unrecoverable. Make sure to back up your encryption key securely.
+
+You can generate a key with:
+
+```bash
+openssl rand -hex 32
+```
+
+### Security Notes
+
+- Always keep your encryption keys secure
+- The IV is stored in plaintext at the beginning of each encrypted file (this is standard practice)
+- Each encryption operation uses a random IV, ensuring the same plaintext produces different ciphertext
+
+### Files format
+
+The encrypted files use the following format:
+
+- First 16 bytes: Initialization Vector (IV)
+- Remaining bytes: AES-256-CBC encrypted data with PKCS#7 padding
+
+The encryption key is derived by taking the SHA-256 hash of the provided key string.
+
+### Decrypting with OpenSSL
+
+You have downloaded the encrypted file, you can now start to decrypt it:
+
+```bash
+# Extract the first 16 bytes (IV) as hex
+IV_HEX=$(xxd -l 16 -p plan.json)
+
+# derivate your key with sha256
+KEY_HASH=$(echo -n "your-encryption-key" | sha256sum | cut -d' ' -f1)
+
+# decrypt the file
+openssl enc -aes-256-cbc -d -in plan.json -K "${KEY_HASH}" -iv "${IV_HEX}"
+```
+
+### Encrypting existing files
+
+If you enable encryption on an existing datastore with unencrypted files, you can use the `/encrypt` endpoint to encrypt all existing files. See the [Encrypt Endpoint documentation](encrypt-endpoint.md) for detailed usage instructions.
 
 ## Authentication
 

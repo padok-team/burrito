@@ -178,3 +178,45 @@ func (a *Azure) List(prefix string) ([]string, error) {
 
 	return keys, nil
 }
+
+// ListRecursive recursively lists all files under a prefix
+func (a *Azure) ListRecursive(prefix string) ([]string, error) {
+	keys := []string{}
+	listPrefix := fmt.Sprintf("/%s", utils.SanitizePrefix(prefix))
+
+	pager := a.ContainerClient.NewListBlobsFlatPager(&container.ListBlobsFlatOptions{
+		Prefix: &listPrefix,
+	})
+
+	// Variable to track if any items were found
+	foundItems := false
+
+	for pager.More() {
+		resp, err := pager.NextPage(context.TODO())
+		if err != nil {
+			return nil, &errors.StorageError{
+				Err: fmt.Errorf("error listing objects with prefix %s: %w", prefix, err),
+				Nil: false,
+			}
+		}
+
+		// If we have blob items, mark that we found items
+		if len(resp.Segment.BlobItems) > 0 {
+			foundItems = true
+		}
+
+		for _, blob := range resp.Segment.BlobItems {
+			keys = append(keys, *blob.Name)
+		}
+	}
+
+	// If no items were found, return a StorageError with Nil=true
+	if !foundItems {
+		return nil, &errors.StorageError{
+			Err: fmt.Errorf("prefix %s not found", prefix),
+			Nil: true,
+		}
+	}
+
+	return keys, nil
+}

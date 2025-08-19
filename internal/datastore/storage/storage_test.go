@@ -464,4 +464,73 @@ var _ = Describe("Storage Backends", func() {
 		Entry("S3 backend - Minio", "minio"),
 		Entry("GCS backend", "gcs"),
 	)
+
+	DescribeTable("ListRecursive Operation",
+		func(backendName string) {
+			backend, ok := backends[backendName]
+			if !ok {
+				Skip(fmt.Sprintf("Backend %s is not available", backendName))
+			}
+
+			By("should recursively list all files under a prefix")
+			keys, err := backend.ListRecursive("/layers/ns/layer/run")
+			Expect(err).NotTo(HaveOccurred())
+
+			// Expect all 4 files to be listed recursively
+			Expect(keys).To(HaveLen(4))
+			expectedFiles := []string{
+				"/layers/ns/layer/run/0/run.log",
+				"/layers/ns/layer/run/1/plan.bin",
+				"/layers/ns/layer/run/1/run.log",
+				"/layers/ns/layer/run/1/short.diff",
+			}
+
+			for _, expectedFile := range expectedFiles {
+				Expect(keys).To(ContainElement(expectedFile))
+			}
+
+			By("should recursively list all files under a prefix with trailing slash")
+			keys, err = backend.ListRecursive("/layers/ns/layer/run/")
+			Expect(err).NotTo(HaveOccurred())
+
+			// Expect all 4 files to be listed recursively
+			Expect(keys).To(HaveLen(4))
+			for _, expectedFile := range expectedFiles {
+				Expect(keys).To(ContainElement(expectedFile))
+			}
+
+			By("should recursively list files in a specific run directory")
+			keys, err = backend.ListRecursive("/layers/ns/layer/run/1/")
+			Expect(err).NotTo(HaveOccurred())
+
+			// Expect 3 files in run/1/
+			Expect(keys).To(HaveLen(3))
+			expectedFiles = []string{
+				"/layers/ns/layer/run/1/plan.bin",
+				"/layers/ns/layer/run/1/run.log",
+				"/layers/ns/layer/run/1/short.diff",
+			}
+
+			for _, expectedFile := range expectedFiles {
+				Expect(keys).To(ContainElement(expectedFile))
+			}
+
+			By("should return error for non-existent prefix")
+			nonExistentPrefix := "/layers/non-existent-namespace/non-existent-layer/"
+			keys, err = backend.ListRecursive(nonExistentPrefix)
+
+			Expect(err).To(HaveOccurred(), "ListRecursive operation should fail for non-existent prefix")
+
+			storageErr, ok := err.(*storageErrors.StorageError)
+			Expect(ok).To(BeTrue(), "Error should be a StorageError")
+			Expect(storageErr.Nil).To(BeTrue(), "StorageError.Nil should be true")
+
+			Expect(keys).To(BeNil(), "Keys should be nil when prefix doesn't exist")
+		},
+		Entry("Mock backend", "mock"),
+		Entry("Azure backend", "azure"),
+		Entry("S3 backend - AWS", "aws"),
+		Entry("S3 backend - Minio", "minio"),
+		Entry("GCS backend", "gcs"),
+	)
 })
