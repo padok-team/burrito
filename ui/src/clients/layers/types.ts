@@ -2,6 +2,17 @@ export type Layers = {
   results: Layer[];
 };
 
+export type LayerStatusCounts = {
+  total: number;
+  ok: number;
+  outOfSync: number;
+  error: number;
+  disabled: number;
+  applyNeeded: number;
+  planNeeded: number;
+  running: number;
+};
+
 export type Layer = {
   namespace: string;
   name: string;
