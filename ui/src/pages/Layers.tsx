@@ -26,6 +26,7 @@ import PaginationDropdown from '@/components/dropdowns/PaginationDropdown';
 import SlidingPane from '@/modals/SlidingPane';
 import LayerChecklist from '@/components/tools/LayerChecklist';
 import ProgressBar from '@/components/widgets/ProgressBar';
+import OptimizedStatusBar from '@/components/status/OptimizedStatusBar';
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -189,23 +190,27 @@ const Layers: React.FC = () => {
         className={`
           flex
           flex-col
-          p-6
-          pb-3
-          gap-6
           ${theme === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}
         `}
       >
-        <div className="flex justify-between">
-          <h1
-            className={`
-              text-[32px]
-              font-extrabold
-              leading-[130%]
-              ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
-            `}
-          >
-            Layers
-          </h1>
+        
+        <div className="flex flex-col p-6 pb-3 gap-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <h1
+              className={`
+                text-[32px]
+                font-extrabold
+                leading-[130%]
+                ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
+              `}
+            >
+              Layers
+            </h1>
+            <OptimizedStatusBar 
+              variant={theme}
+            />
+          </div>
           <div className="space-x-2">
             <Button
               theme={theme}
@@ -225,6 +230,7 @@ const Layers: React.FC = () => {
             </Button>
           </div>
         </div>
+        
         <Input
           variant={theme}
           className="w-full"
@@ -482,6 +488,7 @@ const Layers: React.FC = () => {
         ) : (
           <></>
         )}
+      </div>
       </div>
     </div>
   );
