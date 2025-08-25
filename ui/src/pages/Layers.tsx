@@ -26,7 +26,7 @@ import PaginationDropdown from '@/components/dropdowns/PaginationDropdown';
 import SlidingPane from '@/modals/SlidingPane';
 import LayerChecklist from '@/components/tools/LayerChecklist';
 import ProgressBar from '@/components/widgets/ProgressBar';
-import OptimizedStatusBar from '@/components/status/OptimizedStatusBar';
+import LayersStatusBar from '@/components/status/LayersStatusBar';
 
 const Layers: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -207,7 +207,7 @@ const Layers: React.FC = () => {
             >
               Layers
             </h1>
-            <OptimizedStatusBar 
+            <LayersStatusBar 
               variant={theme}
             />
           </div>

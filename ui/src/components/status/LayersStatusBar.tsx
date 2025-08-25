@@ -45,7 +45,7 @@ const StatusItem: React.FC<StatusItemProps> = ({ label, count, variant, theme = 
   );
 };
 
-const OptimizedStatusBar: React.FC<StatusBarProps> = ({ className = '', variant = 'light' }) => {
+const LayersStatusBar: React.FC<StatusBarProps> = ({ className = '', variant = 'light' }) => {
   const statusQuery = useQuery({
     queryKey: reactQueryKeys.layersStatus,
     queryFn: fetchLayersStatus,
@@ -110,4 +110,4 @@ const OptimizedStatusBar: React.FC<StatusBarProps> = ({ className = '', variant 
   );
 };
 
-export default OptimizedStatusBar;
+export default LayersStatusBar;
