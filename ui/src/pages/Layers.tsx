@@ -92,35 +92,37 @@ const Layers: React.FC = () => {
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
     queryFn: fetchLayers,
-    select: (data) => ({
-      ...data,
-      results: data.results
-        .filter((layer) =>
-          layer.name.toLowerCase().includes(search.toLowerCase())
-        )
-        .filter(
-          (layer) =>
-            stateFilter.length === 0 || stateFilter.includes(layer.state)
-        )
-        .filter(
-          (layer) =>
-            repositoryFilter.length === 0 ||
-            repositoryFilter.includes(layer.repository)
-        )
-        .filter((layer) => !hidePRFilter || !layer.isPR)
-    })
   });
+
+  const filteredLayers = useMemo(() => {
+    if (!layersQuery.data?.results) return [];
+    
+    return layersQuery.data.results
+      .filter((layer) =>
+        layer.name.toLowerCase().includes(search.toLowerCase())
+      )
+      .filter(
+        (layer) =>
+          stateFilter.length === 0 || stateFilter.includes(layer.state)
+      )
+      .filter(
+        (layer) =>
+          repositoryFilter.length === 0 ||
+          repositoryFilter.includes(layer.repository)
+      )
+      .filter((layer) => !hidePRFilter || !layer.isPR);
+  }, [layersQuery.data?.results, search, stateFilter, repositoryFilter, hidePRFilter]);
 
   const updateLimit = useCallback(
     (limit: number) => {
-      if (layersQuery.isSuccess) {
-        if (layerOffset + limit > layersQuery.data.results.length) {
-          setLayerOffset(Math.max(0, layersQuery.data.results.length - limit));
+      if (filteredLayers) {
+        if (layerOffset + limit > filteredLayers.length) {
+          setLayerOffset(Math.max(0, filteredLayers.length - limit));
         }
         setLayerLimit(limit);
       }
     },
-    [layerOffset, layersQuery]
+    [layerOffset, filteredLayers]
   );
 
   const [selectedLayersForSync, setSelectedLayersForSync] = useState<
@@ -165,7 +167,7 @@ const Layers: React.FC = () => {
 
             {layersQuery.isSuccess && (
               <LayerChecklist
-                layers={layersQuery.data.results}
+                layers={filteredLayers}
                 variant={theme}
                 onSelectionChange={(layers) => setSelectedLayersForSync(layers)}
               />
@@ -209,6 +211,7 @@ const Layers: React.FC = () => {
             </h1>
             <LayersStatusBar 
               variant={theme}
+              layers={layersQuery.data?.results} // Pass unfiltered layers for accurate status
             />
           </div>
           <div className="space-x-2">
@@ -249,9 +252,7 @@ const Layers: React.FC = () => {
               `}
             >
               {`
-                ${
-                  layersQuery.isSuccess ? layersQuery.data.results.length : 0
-                } layers
+                ${filteredLayers ? filteredLayers.length : 0} layers
               `}
             </span>
             <span
@@ -320,10 +321,10 @@ const Layers: React.FC = () => {
                   {layerOffset + 1} -{' '}
                   {Math.min(
                     layerOffset + layerLimit,
-                    layersQuery.isSuccess ? layersQuery.data.results.length : 0
+                    filteredLayers ? filteredLayers.length : 0
                   )}{' '}
                   of{' '}
-                  {layersQuery.isSuccess ? layersQuery.data.results.length : 0}
+                  {filteredLayers ? filteredLayers.length : 0}
                 </span>
               ) : (
                 <span
@@ -343,15 +344,13 @@ const Layers: React.FC = () => {
                   setLayerOffset(
                     Math.min(
                       layerOffset + layerLimit,
-                      layersQuery.isSuccess
-                        ? layersQuery.data.results.length
-                        : 0
+                      filteredLayers ? filteredLayers.length : 0
                     )
                   )
                 }
                 disabled={
-                  !layersQuery.isSuccess ||
-                  layerOffset + layerLimit >= layersQuery.data.results.length
+                  !filteredLayers ||
+                  layerOffset + layerLimit >= filteredLayers.length
                 }
               >
                 Next
@@ -414,8 +413,8 @@ const Layers: React.FC = () => {
                 An error has occurred.
               </span>
             ) : layersQuery.isSuccess ? (
-              layersQuery.data.results.length > 0 ? (
-                layersQuery.data.results
+              filteredLayers.length > 0 ? (
+                filteredLayers
                   .slice(layerOffset, layerOffset + layerLimit)
                   .map((layer, index) => (
                     <Card key={index} variant={theme} layer={layer} />
@@ -456,10 +455,10 @@ const Layers: React.FC = () => {
                 An error has occurred.
               </span>
             ) : layersQuery.isSuccess ? (
-              layersQuery.data.results.length > 0 ? (
+              filteredLayers.length > 0 ? (
                 <Table
                   variant={theme}
-                  data={layersQuery.data.results.slice(
+                  data={filteredLayers.slice(
                     layerOffset,
                     layerOffset + layerLimit
                   )}
