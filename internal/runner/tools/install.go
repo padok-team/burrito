@@ -126,6 +126,7 @@ func InstallBinaries(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.
 		return &tg.Terragrunt{
 			ExecPath:      filepath.Join(binaryPath, "Terragrunt", terragruntVersion, "terragrunt"),
 			ChildExecPath: baseExec.GetExecPath(),
+			Version:       terragruntVersion,
 		}, nil
 	}
 	return baseExec, nil
