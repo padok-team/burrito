@@ -91,19 +91,18 @@ const Layers: React.FC = () => {
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
-    queryFn: fetchLayers,
+    queryFn: fetchLayers
   });
 
   const filteredLayers = useMemo(() => {
     if (!layersQuery.data?.results) return [];
-    
+
     return layersQuery.data.results
       .filter((layer) =>
         layer.name.toLowerCase().includes(search.toLowerCase())
       )
       .filter(
-        (layer) =>
-          stateFilter.length === 0 || stateFilter.includes(layer.state)
+        (layer) => stateFilter.length === 0 || stateFilter.includes(layer.state)
       )
       .filter(
         (layer) =>
@@ -111,7 +110,13 @@ const Layers: React.FC = () => {
           repositoryFilter.includes(layer.repository)
       )
       .filter((layer) => !hidePRFilter || !layer.isPR);
-  }, [layersQuery.data?.results, search, stateFilter, repositoryFilter, hidePRFilter]);
+  }, [
+    layersQuery.data?.results,
+    search,
+    stateFilter,
+    repositoryFilter,
+    hidePRFilter
+  ]);
 
   const updateLimit = useCallback(
     (limit: number) => {
@@ -195,68 +200,67 @@ const Layers: React.FC = () => {
           ${theme === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}
         `}
       >
-        
         <div className="flex flex-col p-6 pb-3 gap-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <h1
-              className={`
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <h1
+                className={`
                 text-[32px]
                 font-extrabold
                 leading-[130%]
                 ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
-            >
-              Layers
-            </h1>
-            <LayersStatusBar 
-              variant={theme}
-              layers={layersQuery.data?.results} // Pass unfiltered layers for accurate status
-            />
+              >
+                Layers
+              </h1>
+              <LayersStatusBar
+                variant={theme}
+                layers={layersQuery.data?.results} // Pass unfiltered layers for accurate status
+              />
+            </div>
+            <div className="space-x-2">
+              <Button
+                theme={theme}
+                variant={'secondary'}
+                onClick={() =>
+                  setShowRefreshPane((showRefreshPane) => !showRefreshPane)
+                }
+              >
+                Run Sync
+              </Button>
+              <Button
+                variant={theme === 'light' ? 'primary' : 'secondary'}
+                isLoading={layersQuery.isRefetching}
+                onClick={() => layersQuery.refetch()}
+              >
+                Refresh
+              </Button>
+            </div>
           </div>
-          <div className="space-x-2">
-            <Button
-              theme={theme}
-              variant={'secondary'}
-              onClick={() =>
-                setShowRefreshPane((showRefreshPane) => !showRefreshPane)
-              }
-            >
-              Run Sync
-            </Button>
-            <Button
-              variant={theme === 'light' ? 'primary' : 'secondary'}
-              isLoading={layersQuery.isRefetching}
-              onClick={() => layersQuery.refetch()}
-            >
-              Refresh
-            </Button>
-          </div>
-        </div>
-        
-        <Input
-          variant={theme}
-          className="w-full"
-          placeholder="Search into layers"
-          leftIcon={<SearchIcon />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="flex flex-row items-center justify-between gap-8">
-          <div className="flex flex-row items-center gap-4">
-            <span
-              className={`
+
+          <Input
+            variant={theme}
+            className="w-full"
+            placeholder="Search into layers"
+            leftIcon={<SearchIcon />}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="flex flex-row items-center justify-between gap-8">
+            <div className="flex flex-row items-center gap-4">
+              <span
+                className={`
                 text-base
                 font-semibold
                 ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
-            >
-              {`
+              >
+                {`
                 ${filteredLayers ? filteredLayers.length : 0} layers
               `}
-            </span>
-            <span
-              className={`
+              </span>
+              <span
+                className={`
                 border-l
                 h-6
                 ${
@@ -265,206 +269,160 @@ const Layers: React.FC = () => {
                     : 'border-nuances-200'
                 }
               `}
-            ></span>
-            <span
-              className={`
+              ></span>
+              <span
+                className={`
                 text-base
                 font-medium
                 ${theme === 'light' ? 'text-primary-600' : 'text-nuances-200'}
               `}
-            >
-              Filter by
-            </span>
-            <div className="flex flex-row items-center gap-2">
-              <StatesDropdown
-                variant={theme}
-                selectedStates={stateFilter}
-                setSelectedStates={setStateFilter}
-              />
-              <RepositoriesDropdown
-                variant={theme}
-                selectedRepositories={repositoryFilter}
-                setSelectedRepositories={setRepositoryFilter}
-              />
-            </div>
-            <Toggle
-              className={`
+              >
+                Filter by
+              </span>
+              <div className="flex flex-row items-center gap-2">
+                <StatesDropdown
+                  variant={theme}
+                  selectedStates={stateFilter}
+                  setSelectedStates={setStateFilter}
+                />
+                <RepositoriesDropdown
+                  variant={theme}
+                  selectedRepositories={repositoryFilter}
+                  setSelectedRepositories={setRepositoryFilter}
+                />
+              </div>
+              <Toggle
+                className={`
                 text-sm
                 font-medium
                 ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
               `}
-              checked={hidePRFilter}
-              onChange={() => setHidePRFilter(!hidePRFilter)}
-              label="Hide Pull Requests"
-            />
-          </div>
-          <div className="flex flex-row items-center gap-8">
-            <div className="flex flex-row items-center gap-2">
-              <Button
-                theme={theme}
-                variant={'tertiary'}
-                onClick={() =>
-                  setLayerOffset(Math.max(0, layerOffset - layerLimit))
-                }
-                disabled={layerOffset == 0}
-              >
-                Previous
-              </Button>
-              {layersQuery.isSuccess ? (
-                <span
-                  className={`
+                checked={hidePRFilter}
+                onChange={() => setHidePRFilter(!hidePRFilter)}
+                label="Hide Pull Requests"
+              />
+            </div>
+            <div className="flex flex-row items-center gap-8">
+              <div className="flex flex-row items-center gap-2">
+                <Button
+                  theme={theme}
+                  variant={'tertiary'}
+                  onClick={() =>
+                    setLayerOffset(Math.max(0, layerOffset - layerLimit))
+                  }
+                  disabled={layerOffset == 0}
+                >
+                  Previous
+                </Button>
+                {layersQuery.isSuccess ? (
+                  <span
+                    className={`
                       text-base
                       font-semibold
                       ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
                     `}
-                >
-                  {layerOffset + 1} -{' '}
-                  {Math.min(
-                    layerOffset + layerLimit,
-                    filteredLayers ? filteredLayers.length : 0
-                  )}{' '}
-                  of{' '}
-                  {filteredLayers ? filteredLayers.length : 0}
-                </span>
-              ) : (
-                <span
-                  className={`
-                      text-base
-                      font-semibold
-                      ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
-                    `}
-                >
-                  {layersQuery.isLoading ? 'Loading...' : '0 - 0 of 0'}
-                </span>
-              )}
-              <Button
-                theme={theme}
-                variant={'tertiary'}
-                onClick={() =>
-                  setLayerOffset(
-                    Math.min(
+                  >
+                    {layerOffset + 1} -{' '}
+                    {Math.min(
                       layerOffset + layerLimit,
                       filteredLayers ? filteredLayers.length : 0
+                    )}{' '}
+                    of {filteredLayers ? filteredLayers.length : 0}
+                  </span>
+                ) : (
+                  <span
+                    className={`
+                      text-base
+                      font-semibold
+                      ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
+                    `}
+                  >
+                    {layersQuery.isLoading ? 'Loading...' : '0 - 0 of 0'}
+                  </span>
+                )}
+                <Button
+                  theme={theme}
+                  variant={'tertiary'}
+                  onClick={() =>
+                    setLayerOffset(
+                      Math.min(
+                        layerOffset + layerLimit,
+                        filteredLayers ? filteredLayers.length : 0
+                      )
                     )
-                  )
-                }
-                disabled={
-                  !filteredLayers ||
-                  layerOffset + layerLimit >= filteredLayers.length
-                }
-              >
-                Next
-              </Button>
-              <span
-                className={`
+                  }
+                  disabled={
+                    !filteredLayers ||
+                    layerOffset + layerLimit >= filteredLayers.length
+                  }
+                >
+                  Next
+                </Button>
+                <span
+                  className={`
                   text-base
                   font-medium
                   ${theme === 'light' ? 'text-primary-600' : 'text-nuances-200'}
                 `}
-              >
-                Items per page:{' '}
-              </span>
-              <PaginationDropdown
-                className="w-16"
-                variant={theme}
-                selectedPagination={layerLimit}
-                setSelectedPagination={updateLimit}
-              />
-            </div>
-            <div className="flex flex-row items-center gap-2">
-              <NavigationButton
-                icon={<AppsIcon />}
-                variant={theme}
-                selected={view === 'grid'}
-                onClick={() => setView('grid')}
-              />
-              <NavigationButton
-                icon={<BarsIcon />}
-                variant={theme}
-                selected={view === 'table'}
-                onClick={() => setView('table')}
-              />
+                >
+                  Items per page:{' '}
+                </span>
+                <PaginationDropdown
+                  className="w-16"
+                  variant={theme}
+                  selectedPagination={layerLimit}
+                  setSelectedPagination={updateLimit}
+                />
+              </div>
+              <div className="flex flex-row items-center gap-2">
+                <NavigationButton
+                  icon={<AppsIcon />}
+                  variant={theme}
+                  selected={view === 'grid'}
+                  onClick={() => setView('grid')}
+                />
+                <NavigationButton
+                  icon={<BarsIcon />}
+                  variant={theme}
+                  selected={view === 'table'}
+                  onClick={() => setView('table')}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div
-        className={`
+        <div
+          className={`
           relative
           ${layersQuery.isSuccess ? 'overflow-auto' : 'overflow-hidden'}
         `}
-      >
-        {view === 'grid' ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,calc(100%/3)))] p-6 gap-6">
-            {layersQuery.isLoading ? (
-              Array.from({ length: 100 }).map((_, index) => (
-                <CardLoader key={index} variant={theme} />
-              ))
-            ) : layersQuery.isError ? (
-              <span
-                className={`
-                  text-lg
-                  font-semibold
-                  ${
-                    theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'
-                  }
-                `}
-              >
-                An error has occurred.
-              </span>
-            ) : layersQuery.isSuccess ? (
-              filteredLayers.length > 0 ? (
-                filteredLayers
-                  .slice(layerOffset, layerOffset + layerLimit)
-                  .map((layer, index) => (
-                    <Card key={index} variant={theme} layer={layer} />
-                  ))
-              ) : (
+        >
+          {view === 'grid' ? (
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,calc(100%/3)))] p-6 gap-6">
+              {layersQuery.isLoading ? (
+                Array.from({ length: 100 }).map((_, index) => (
+                  <CardLoader key={index} variant={theme} />
+                ))
+              ) : layersQuery.isError ? (
                 <span
                   className={`
-                    text-lg
-                    font-semibold
-                    ${
-                      theme === 'light'
-                        ? 'text-nuances-black'
-                        : 'text-nuances-50'
-                    }
-                  `}
-                >
-                  No layers found
-                </span>
-              )
-            ) : (
-              <></>
-            )}
-          </div>
-        ) : view === 'table' ? (
-          <div>
-            {layersQuery.isLoading ? (
-              <Table variant={theme} isLoading data={[]} />
-            ) : layersQuery.isError ? (
-              <span
-                className={`
                   text-lg
                   font-semibold
                   ${
                     theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'
                   }
                 `}
-              >
-                An error has occurred.
-              </span>
-            ) : layersQuery.isSuccess ? (
-              filteredLayers.length > 0 ? (
-                <Table
-                  variant={theme}
-                  data={filteredLayers.slice(
-                    layerOffset,
-                    layerOffset + layerLimit
-                  )}
-                />
-              ) : (
-                <div className="p-6">
+                >
+                  An error has occurred.
+                </span>
+              ) : layersQuery.isSuccess ? (
+                filteredLayers.length > 0 ? (
+                  filteredLayers
+                    .slice(layerOffset, layerOffset + layerLimit)
+                    .map((layer, index) => (
+                      <Card key={index} variant={theme} layer={layer} />
+                    ))
+                ) : (
                   <span
                     className={`
                     text-lg
@@ -478,16 +436,61 @@ const Layers: React.FC = () => {
                   >
                     No layers found
                   </span>
-                </div>
-              )
-            ) : (
-              <></>
-            )}
-          </div>
-        ) : (
-          <></>
-        )}
-      </div>
+                )
+              ) : (
+                <></>
+              )}
+            </div>
+          ) : view === 'table' ? (
+            <div>
+              {layersQuery.isLoading ? (
+                <Table variant={theme} isLoading data={[]} />
+              ) : layersQuery.isError ? (
+                <span
+                  className={`
+                  text-lg
+                  font-semibold
+                  ${
+                    theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'
+                  }
+                `}
+                >
+                  An error has occurred.
+                </span>
+              ) : layersQuery.isSuccess ? (
+                filteredLayers.length > 0 ? (
+                  <Table
+                    variant={theme}
+                    data={filteredLayers.slice(
+                      layerOffset,
+                      layerOffset + layerLimit
+                    )}
+                  />
+                ) : (
+                  <div className="p-6">
+                    <span
+                      className={`
+                    text-lg
+                    font-semibold
+                    ${
+                      theme === 'light'
+                        ? 'text-nuances-black'
+                        : 'text-nuances-50'
+                    }
+                  `}
+                    >
+                      No layers found
+                    </span>
+                  </div>
+                )
+              ) : (
+                <></>
+              )}
+            </div>
+          ) : (
+            <></>
+          )}
+        </div>
       </div>
     </div>
   );

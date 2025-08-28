@@ -11,7 +11,14 @@ interface StatusBarProps {
   layers?: Layer[];
 }
 
-type StatusVariant = 'success' | 'warning' | 'error' | 'disabled' | 'apply-needed' | 'plan-needed' | 'running';
+type StatusVariant =
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'disabled'
+  | 'apply-needed'
+  | 'plan-needed'
+  | 'running';
 
 interface StatusItem {
   label: string;
@@ -30,15 +37,21 @@ interface LayerCounts {
 }
 
 // Helper functions
-const getVariantStyles = (variant: StatusVariant, theme: 'light' | 'dark'): string => {
+const getVariantStyles = (
+  variant: StatusVariant,
+  theme: 'light' | 'dark'
+): string => {
   const variantStyles = {
     success: 'bg-status-success-default text-nuances-black',
     warning: 'bg-status-warning-default text-nuances-black',
     error: 'bg-status-error-default text-nuances-white',
-    disabled: theme === 'light' ? 'bg-nuances-200 text-nuances-400' : 'bg-nuances-400 text-nuances-50',
+    disabled:
+      theme === 'light'
+        ? 'bg-nuances-200 text-nuances-400'
+        : 'bg-nuances-400 text-nuances-50',
     'apply-needed': 'bg-status-warning-default text-nuances-black',
     'plan-needed': 'bg-status-warning-default text-nuances-black',
-    'running': 'bg-blue-500 text-nuances-white'
+    running: 'bg-blue-500 text-nuances-white'
   };
 
   return `flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium leading-4 ${variantStyles[variant]}`;
@@ -93,13 +106,18 @@ const computeLayerCounts = (layers: Layer[]): LayerCounts => {
 const createCoreStatuses = (counts: LayerCounts): StatusItem[] => [
   { label: 'Total', count: counts.total, variant: 'disabled' },
   { label: 'OK', count: counts.ok, variant: 'success' },
-  { label: 'Out of Sync', count: counts.applyNeeded + counts.planNeeded, variant: 'warning' },
-  { label: 'Errors', count: counts.error, variant: 'error' },
+  {
+    label: 'Out of Sync',
+    count: counts.applyNeeded + counts.planNeeded,
+    variant: 'warning'
+  },
+  { label: 'Errors', count: counts.error, variant: 'error' }
 ];
 
 const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {
   const additionalStatuses: StatusItem[] = [];
-  const hasAdditionalStatuses = counts.running > 0 || counts.applyNeeded > 0 || counts.planNeeded > 0;
+  const hasAdditionalStatuses =
+    counts.running > 0 || counts.applyNeeded > 0 || counts.planNeeded > 0;
 
   if (!hasAdditionalStatuses) {
     return additionalStatuses;
@@ -149,16 +167,18 @@ const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {
   return additionalStatuses;
 };
 
-const StatusItem: React.FC<{ 
-  item: StatusItem; 
-  theme: 'light' | 'dark' 
+const StatusItem: React.FC<{
+  item: StatusItem;
+  theme: 'light' | 'dark';
 }> = ({ item, theme }) => {
   const { label, count, variant, isParenthesis = false } = item;
 
   // If it's a parenthesis, just show the character without bubble styling
   if (isParenthesis) {
     return (
-      <span className={`text-xs font-medium ${theme === 'light' ? 'text-nuances-400' : 'text-nuances-200'}`}>
+      <span
+        className={`text-xs font-medium ${theme === 'light' ? 'text-nuances-400' : 'text-nuances-200'}`}
+      >
         {label}
       </span>
     );
@@ -187,16 +207,18 @@ const LoadingState: React.FC<{ className: string }> = ({ className }) => (
 );
 
 const ErrorState: React.FC<{ className: string }> = ({ className }) => (
-  <div className={`flex items-center gap-2 px-3 py-2 text-status-error-default ${className}`}>
+  <div
+    className={`flex items-center gap-2 px-3 py-2 text-status-error-default ${className}`}
+  >
     <div className="w-1 h-1 rounded-full bg-status-error-default" />
     <span className="text-xs font-medium">Status error</span>
   </div>
 );
 
-const LayersStatusBar: React.FC<StatusBarProps> = ({ 
-  className = '', 
-  variant = 'light', 
-  layers 
+const LayersStatusBar: React.FC<StatusBarProps> = ({
+  className = '',
+  variant = 'light',
+  layers
 }) => {
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -204,18 +226,18 @@ const LayersStatusBar: React.FC<StatusBarProps> = ({
     refetchInterval: 30000,
     staleTime: 10000,
     gcTime: 60000,
-    enabled: !layers,
+    enabled: !layers
   });
 
   const layersData = layers || layersQuery.data?.results;
 
   const statusItems = useMemo(() => {
     if (!layersData) return [];
-    
+
     const counts = computeLayerCounts(layersData);
     const coreStatuses = createCoreStatuses(counts);
     const additionalStatuses = createAdditionalStatuses(counts);
-    
+
     return [...coreStatuses, ...additionalStatuses];
   }, [layersData]);
 
