@@ -197,6 +197,9 @@ const Layers: React.FC = () => {
         className={`
           flex
           flex-col
+          p-6
+          pb-3
+          gap-6
           ${theme === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}
         `}
       >
