@@ -77,7 +77,6 @@ const computeLayerCounts = (layers: Layer[]): LayerCounts => {
   layers.forEach((layer) => {
     if (layer.isRunning) {
       counts.running++;
-      return;
     }
 
     switch (layer.state) {
