@@ -3,7 +3,6 @@ package basic
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 
 	"crypto/rand"
@@ -21,10 +20,8 @@ import (
 )
 
 const (
-	DefaultSecretName      = "burrito-admin-credentials"
-	DefaultUsername        = "admin"
-	DefaultPasswordLength  = 16
-	DefaultPasswordCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+"
+	DefaultSecretName = "burrito-admin-credentials"
+	DefaultUsername   = "admin"
 )
 
 type BasicAuthHandlers struct {
@@ -47,10 +44,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 		}
 		log.Info("No existing secret found for basic auth, generating a new one...")
 		// Generate a new secret with "admin" as username and a random password
-		defaultPassword, err := generatePassword()
-		if err != nil {
-			return nil, fmt.Errorf("error generating password: %v", err)
-		}
+		defaultPassword := rand.Text()
 		secret = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      DefaultSecretName,
@@ -112,18 +106,4 @@ func (b *BasicAuthHandlers) GetLoginHTTPMethod() string {
 func (b *BasicAuthHandlers) HandleCallback(c echo.Context) error {
 	// Basic auth does not require a callback, so we can just redirect to the home page
 	return c.Redirect(http.StatusFound, "/")
-}
-
-func generatePassword() (string, error) {
-	password := make([]byte, DefaultPasswordLength)
-	charsetLength := big.NewInt(int64(len(DefaultPasswordCharset)))
-	for i := range password {
-		index, err := rand.Int(rand.Reader, charsetLength)
-		if err != nil {
-			return "", fmt.Errorf("error generating random index: %v", err)
-		}
-		password[i] = DefaultPasswordCharset[index.Int64()]
-	}
-
-	return string(password), nil
 }
