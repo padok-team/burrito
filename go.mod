@@ -21,7 +21,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tofuutils/tenv/v4 v4.7.6
 	google.golang.org/api v0.247.0
 	k8s.io/apimachinery v0.33.2
