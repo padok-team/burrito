@@ -4,7 +4,7 @@
 
 {{ range .Layers }}
 
-### Layer {{ .Path }}
+### Layer {{ .Name }} ({{ .Path }})
 
 `{{ .ShortDiff }}`
 
