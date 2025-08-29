@@ -72,6 +72,9 @@ config:
     server:
       # -- Server exposed port
       addr: ":8080"
+      basicAuth:
+        # -- Enable/Disable Basic Authentication for the Burrito server. If both Basic Auth and OIDC are disabled, the server will be publicly accessible.
+        enabled: true
       oidc:
         # -- Enable/Disable OIDC authentication for the Burrito server
         enabled: false

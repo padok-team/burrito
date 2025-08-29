@@ -20,7 +20,7 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
 }) => {
   const { theme, setTheme } = useContext(ThemeContext);
   // Load current user info
-  const { data: user } = useQuery<UserInfo, Error>({
+  const { data: user, error } = useQuery<UserInfo, Error>({
     queryKey: ['userInfo'],
     queryFn: getUserInfo,
     retry: false
@@ -51,19 +51,21 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
         onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         label={`${variant === 'dark' ? 'Disable' : 'Enable'} Dark Mode`}
       />
-      <Button
-        theme={theme}
-        variant={'secondary'}
-        onClick={async () => {
-          await fetch('/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-          });
-          window.location.href = '/login';
-        }}
-      >
-        Logout
-      </Button>
+      {user && !error && (
+        <Button
+          theme={theme}
+          variant={'secondary'}
+          onClick={async () => {
+            await fetch('/auth/logout', {
+              method: 'POST',
+              credentials: 'include'
+            });
+            window.location.href = '/login';
+          }}
+        >
+          Logout
+        </Button>
+      )}
     </Box>
   );
 };

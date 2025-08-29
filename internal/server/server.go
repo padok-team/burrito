@@ -110,12 +110,14 @@ func (s *Server) Exec() {
 		if err != nil {
 			log.Fatalf("error initializing OIDC: %s", err)
 		}
-	} else {
-		log.Info("OIDC authentication is disabled, using basic authentication with default secret")
+	} else if s.config.Server.BasicAuth.Enabled {
+		log.Info("Basic authentication enabled. Credentials will be stored in burrito-admin-credentials secret in the main burrito namespace.")
 		authHandlers, err = basic.New(s.config, bgctx, *client, cookieName)
 		if err != nil {
 			log.Fatalf("error initializing basic auth: %s", err)
 		}
+	} else {
+		log.Warn("No authentication method enabled! The server is publicly accessible. This is NOT recommended for production environments.")
 	}
 
 	// Initialize Echo server
@@ -141,22 +143,24 @@ func (s *Server) Exec() {
 	))
 
 	// Auth routes (no authentication required)
-	auth := e.Group("/auth", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
-	auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
-	auth.GET("/callback", authHandlers.HandleCallback)
-	auth.POST("/logout", func(c echo.Context) error {
-		return a.HandleLogout(c, cookieName)
-	})
-	auth.GET("/type", func(c echo.Context) error {
-		authType := "basic"
-		if s.config.Server.OIDC.Enabled {
-			authType = "oauth"
-		}
-		return c.JSON(http.StatusOK, map[string]string{"type": authType})
-	})
-	auth.GET("/user", s.authMiddleware()(func(c echo.Context) error {
-		return a.HandleUserInfo(c)
-	}))
+	if s.getAuthEnabled() {
+		auth := e.Group("/auth", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
+		auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
+		auth.GET("/callback", authHandlers.HandleCallback)
+		auth.POST("/logout", func(c echo.Context) error {
+			return a.HandleLogout(c, cookieName)
+		})
+		auth.GET("/type", func(c echo.Context) error {
+			authType := "basic"
+			if s.config.Server.OIDC.Enabled {
+				authType = "oauth"
+			}
+			return c.JSON(http.StatusOK, map[string]string{"type": authType})
+		})
+		auth.GET("/user", s.authMiddleware()(func(c echo.Context) error {
+			return a.HandleUserInfo(c)
+		}))
+	}
 
 	api := e.Group("/api")
 	e.GET("/healthz", handleHealthz)
@@ -164,7 +168,9 @@ func (s *Server) Exec() {
 	// Exposed webhook route. Logging middleware is applied here to log unauthenticated requests.
 	api.POST("/webhook", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig)(s.Webhook.GetHttpHandler()))
 
-	api.Use(s.authMiddleware())
+	if s.getAuthEnabled() {
+		api.Use(s.authMiddleware())
+	}
 	// Logger middleware should be applied after auth middleware to be able log user info
 	api.Use(middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 	api.GET("/layers", s.API.LayersHandler)
@@ -175,6 +181,9 @@ func (s *Server) Exec() {
 
 	// Redirect root to layers if authenticated, otherwise to login
 	e.GET("/", func(c echo.Context) error {
+		if !s.getAuthEnabled() {
+			return c.Redirect(http.StatusTemporaryRedirect, "/layers")
+		}
 		sess, err := session.Get(cookieName, c)
 		if err != nil || sess.Values["user_id"] == nil {
 			return c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -242,4 +251,8 @@ func (s *Server) authMiddleware() echo.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+func (s *Server) getAuthEnabled() bool {
+	return s.config.Server.OIDC.Enabled || s.config.Server.BasicAuth.Enabled
 }

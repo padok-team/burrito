@@ -81,6 +81,10 @@ server:
 | `scopes`                  | OIDC scopes to request                                                   |
 
 
+## Disabling Authentication
+
+If both Basic Authentication and OIDC are disabled, the Burrito server will be publicly accessible. This may be suitable for development environments or if you have other means of securing access (authentication proxy, VPN, etc.)...
+
 ### Authorization
 
 For the moment, Burrito does not implement authorization mechanisms. All users that are able to authenticate with the configured OIDC provider will be able to access the Burrito UI.

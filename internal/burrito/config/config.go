@@ -158,10 +158,11 @@ type SessionConfig struct {
 }
 
 type ServerConfig struct {
-	Addr    string        `mapstructure:"addr"`
-	Webhook WebhookConfig `mapstructure:"webhook"`
-	OIDC    OIDCConfig    `mapstructure:"oidc"`
-	Session SessionConfig `mapstructure:"session"`
+	Addr      string          `mapstructure:"addr"`
+	Webhook   WebhookConfig   `mapstructure:"webhook"`
+	OIDC      OIDCConfig      `mapstructure:"oidc"`
+	BasicAuth BasicAuthConfig `mapstructure:"basicAuth"`
+	Session   SessionConfig   `mapstructure:"session"`
 }
 
 type OIDCConfig struct {
@@ -171,6 +172,10 @@ type OIDCConfig struct {
 	ClientSecret string   `mapstructure:"clientSecret"`
 	RedirectURL  string   `mapstructure:"redirectUrl"`
 	Scopes       []string `mapstructure:"scopes"`
+}
+
+type BasicAuthConfig struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 type SecretConfig struct {
