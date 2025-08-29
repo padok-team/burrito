@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../user-authentication/">
+        <link rel="prev" href="../architecture/">
       
       
-        <link rel="next" href="../pr-mr-workflow/">
+        <link rel="next" href="../git-authentication/">
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Git Authentication - Burrito</title>
+        <title>User Authentication - Burrito</title>
       
     
     
@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#git-authentication" class="md-skip">
+        <a href="#user-authentication" class="md-skip">
           Skip to content
         </a>
       
@@ -101,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Git Authentication
+              User Authentication
             
           </span>
         </div>
@@ -615,29 +615,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../user-authentication/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    User Authentication
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -655,7 +632,7 @@
   
   
   <span class="md-ellipsis">
-    Git Authentication
+    User Authentication
     
   </span>
   
@@ -668,7 +645,7 @@
   
   
   <span class="md-ellipsis">
-    Git Authentication
+    User Authentication
     
   </span>
   
@@ -691,37 +668,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#basic-authentication-default" class="md-nav__link">
     <span class="md-ellipsis">
-      Overview
+      Basic Authentication (Default)
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Basic Authentication (Default)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Credentials
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#repository-secret" class="md-nav__link">
+  <a href="#openid-connect-oidc-authentication" class="md-nav__link">
     <span class="md-ellipsis">
-      Repository Secret
+      OpenID Connect (OIDC) Authentication
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Repository Secret">
+    <nav class="md-nav" aria-label="OpenID Connect (OIDC) Authentication">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#expected-keys" class="md-nav__link">
+  <a href="#configuration_1" class="md-nav__link">
     <span class="md-ellipsis">
-      Expected keys
+      Configuration
     </span>
   </a>
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#behavior" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disabling-authentication" class="md-nav__link">
     <span class="md-ellipsis">
-      Behavior
+      Disabling Authentication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Disabling Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authorization
     </span>
   </a>
   
@@ -736,6 +752,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../git-authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Git Authentication
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1216,37 +1255,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#basic-authentication-default" class="md-nav__link">
     <span class="md-ellipsis">
-      Overview
+      Basic Authentication (Default)
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Basic Authentication (Default)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Credentials
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#repository-secret" class="md-nav__link">
+  <a href="#openid-connect-oidc-authentication" class="md-nav__link">
     <span class="md-ellipsis">
-      Repository Secret
+      OpenID Connect (OIDC) Authentication
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Repository Secret">
+    <nav class="md-nav" aria-label="OpenID Connect (OIDC) Authentication">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#expected-keys" class="md-nav__link">
+  <a href="#configuration_1" class="md-nav__link">
     <span class="md-ellipsis">
-      Expected keys
+      Configuration
     </span>
   </a>
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#behavior" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disabling-authentication" class="md-nav__link">
     <span class="md-ellipsis">
-      Behavior
+      Disabling Authentication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Disabling Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#authorization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authorization
     </span>
   </a>
   
@@ -1276,73 +1354,97 @@
   
 
 
-<h1 id="git-authentication">Git Authentication<a class="headerlink" href="#git-authentication" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>This section will guide you through the different ways to authenticate to a git repository.
-Authentication is required for:</p>
-<ul>
-<li>Cloning a private repository</li>
-<li>Implementing the <a href="../pr-mr-workflow/">PR/MR workflow</a></li>
-<li>Setting up the webhook for listening to push / pull requests events</li>
-</ul>
-<p>Available authentication methods:</p>
-<ul>
-<li>Username and password (only supports cloning)</li>
-<li>SSH private key (only supports cloning)</li>
-<li><a href="https://docs.github.com/en/apps">GitHub App</a></li>
-<li>GitHub API token</li>
-<li>GitLab API token</li>
-</ul>
-<h2 id="repository-secret">Repository Secret<a class="headerlink" href="#repository-secret" title="Permanent link">&para;</a></h2>
-<p>The <code>TerraformRepository</code> spec allows you to specify a secret that contains the credentials to authenticate to a git repository.
-The secret must be created in the <strong>same namespace</strong> as the <code>TerraformRepository</code> and be referenced in <code>spec.repository.secretName</code>.</p>
-<h3 id="expected-keys">Expected keys<a class="headerlink" href="#expected-keys" title="Permanent link">&para;</a></h3>
-<p>To add an authentication method for a repository, the secret must contain the following keys:</p>
-<p>Username and password (Git's HTTPS authentication):</p>
-<ul>
-<li><code>username</code></li>
-<li><code>password</code></li>
-</ul>
-<p>SSH private key (Git's SSH authentication):</p>
-<ul>
-<li><code>sshPrivateKey</code></li>
-</ul>
-<p>GitHub App:</p>
-<ul>
-<li><code>githubAppId</code></li>
-<li><code>githubAppInstallationId</code></li>
-<li><code>githubAppPrivateKey</code></li>
-</ul>
-<p>GitHub API token:</p>
-<ul>
-<li><code>githubToken</code></li>
-</ul>
-<p>GitLab API token:</p>
-<ul>
-<li><code>gitlabToken</code></li>
-</ul>
-<p>For the PR/MR workflow, the Kubernetes secret must also contain the webhook secret:</p>
-<ul>
-<li><code>webhookSecret</code></li>
-</ul>
-<p>Example of a Kubernetes secret for a GitHub repository, using authentication with a GitHub App and implementing the PR workflow:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-<span class="nt">metadata</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-<span class="nt">stringData</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">githubAppId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;123456&quot;</span>
-<span class="w">  </span><span class="nt">githubAppInstallationId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;12345678&quot;</span>
-<span class="w">  </span><span class="nt">githubAppPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">    </span><span class="no">-----BEGIN RSA PRIVATE KEY-----</span>
-<span class="w">    </span><span class="no">my-private-key</span>
-<span class="w">    </span><span class="no">-----END RSA PRIVATE KEY-----</span>
-<span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
+<h1 id="user-authentication">User Authentication<a class="headerlink" href="#user-authentication" title="Permanent link">&para;</a></h1>
+<p>Burrito supports two modes of authentication for its server component:</p>
+<ol>
+<li><strong>Basic Authentication (default)</strong></li>
+<li><strong>OpenID Connect (OIDC)</strong></li>
+</ol>
+<p>SAML authentication is not supported at this time but will be added in the future</p>
+<h2 id="basic-authentication-default">Basic Authentication (Default)<a class="headerlink" href="#basic-authentication-default" title="Permanent link">&para;</a></h2>
+<p>When OIDC is disabled (<code>server.oidc.enabled: false</code>), Burrito falls back to a built-in basic authentication scheme. This mode is <strong>not recommended for production</strong>.</p>
+<h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nt">server</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">oidc</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </code></pre></div>
-<h3 id="behavior">Behavior<a class="headerlink" href="#behavior" title="Permanent link">&para;</a></h3>
-<p>If multiple authentication methods are provided, the runner will try them all until one succeeds to clone the repository.</p>
+<h3 id="credentials">Credentials<a class="headerlink" href="#credentials" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Username:</strong> <code>admin</code></li>
+<li><strong>Password:</strong> Stored in the Kubernetes Secret <code>burrito-admin-credentials</code>.</li>
+</ul>
+<p>Retrieve the password with:</p>
+<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>-n<span class="w"> </span>&lt;burrito-namespace&gt;<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>burrito-admin-credentials<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s2">&quot;{.data.password}&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>--decode
+</code></pre></div>
+<p>Use <code>admin</code> and the decoded password to log in to the Burrito server.</p>
+<hr />
+<h2 id="openid-connect-oidc-authentication">OpenID Connect (OIDC) Authentication<a class="headerlink" href="#openid-connect-oidc-authentication" title="Permanent link">&para;</a></h2>
+<p>Enable OIDC to integrate Burrito with your identity provider. This is the recommended approach for production environments.</p>
+<h3 id="configuration_1">Configuration<a class="headerlink" href="#configuration_1" title="Permanent link">&para;</a></h3>
+<p>OIDC configuration requires setting up a client in your OIDC provider. You will need the following details:</p>
+<ul>
+<li><strong>Issuer URL</strong></li>
+<li><strong>Client ID</strong></li>
+<li><strong>Client Secret</strong></li>
+<li><strong>Redirect URL</strong> (should be <code>https://&lt;your-domain&gt;/auth/callback</code>)</li>
+<li><strong>Scopes</strong> (typically <code>openid</code>, <code>profile</code>, and <code>email</code>)</li>
+</ul>
+<p>The client secret must be stored in a Kubernetes Secret and referenced in the deployment environment variables.
+The environment variable name for the client secret must be <code>BURRITO_SERVER_OIDC_CLIENTSECRET</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">config</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">burrito</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">server</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">oidc</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># Enable OIDC</span>
+<span class="w">        </span><span class="nt">issuerUrl</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;OIDC_ISSUER&gt;</span><span class="w"> </span><span class="c1"># e.g. https://accounts.example.com</span>
+<span class="w">        </span><span class="nt">clientId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;CLIENT_ID&gt;</span>
+<span class="w">        </span><span class="nt">redirectUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://&lt;your-domain&gt;/auth/callback&quot;</span>
+<span class="w">        </span><span class="nt">scopes</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;openid&quot;</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;profile&quot;</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;email&quot;</span>
+<span class="nn">...</span>
+<span class="nt">server</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">deployment</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">envFrom</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">secretRef</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-oidc-client-secret</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>enabled</code></td>
+<td>Turn OIDC on or off</td>
+</tr>
+<tr>
+<td><code>issuerUrl</code></td>
+<td>Base URL of your OIDC provider</td>
+</tr>
+<tr>
+<td><code>clientId</code></td>
+<td>Registered client ID</td>
+</tr>
+<tr>
+<td><code>redirectUrl</code></td>
+<td>Callback URL for OIDC (must match the one registered with your provider)</td>
+</tr>
+<tr>
+<td><code>scopes</code></td>
+<td>OIDC scopes to request</td>
+</tr>
+</tbody>
+</table>
+<h2 id="disabling-authentication">Disabling Authentication<a class="headerlink" href="#disabling-authentication" title="Permanent link">&para;</a></h2>
+<p>If both Basic Authentication and OIDC are disabled, the Burrito server will be publicly accessible. This may be suitable for development environments or if you have other means of securing access (authentication proxy, VPN, etc.)...</p>
+<h3 id="authorization">Authorization<a class="headerlink" href="#authorization" title="Permanent link">&para;</a></h3>
+<p>For the moment, Burrito does not implement authorization mechanisms. All users that are able to authenticate with the configured OIDC provider will be able to access the Burrito UI.</p>
 
 
 

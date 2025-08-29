@@ -461,6 +461,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#features" class="md-nav__link">
     <span class="md-ellipsis">
       Features
@@ -648,6 +657,8 @@
       
         
       
+        
+      
     
     
     
@@ -701,6 +712,29 @@
   
   <span class="md-ellipsis">
     Architectural Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operator-manual/user-authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    User Authentication
     
   </span>
   
@@ -1227,6 +1261,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#features" class="md-nav__link">
     <span class="md-ellipsis">
       Features
@@ -1295,6 +1338,13 @@
 </ul>
 <h2 id="accessing-the-ui">Accessing the UI<a class="headerlink" href="#accessing-the-ui" title="Permanent link">&para;</a></h2>
 <p>The Burrito UI is accessible via a web browser. To access the UI, you need to expose the <code>burrito-server</code> service locally or on a public URL.</p>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h2>
+<p>By default, Burrito uses basic authentication with a username and password. The default credentials are:</p>
+<ul>
+<li><strong>Username:</strong> <code>admin</code></li>
+<li><strong>Password:</strong> Generated on install in a Kubernetes Secret named <code>burrito-admin-credentials</code> in the Burrito server namespace.</li>
+</ul>
+<p>More secure authentication methods like OpenID Connect (OIDC) can be configured for production use. For more details, see the <a href="../../operator-manual/user-authentication/">Authentication Guide</a>.</p>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <h3 id="homepage">Homepage<a class="headerlink" href="#homepage" title="Permanent link">&para;</a></h3>
 <p>The homepage displays a list of all the Terraform layers that have been added to Burrito. Each layer is displayed as a card with the following information:</p>
