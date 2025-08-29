@@ -119,6 +119,9 @@ func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
 	}
 
+	// Upgrade session cookie to SameSite=Strict after successful login
+	sess.Options.SameSite = http.SameSiteStrictMode
+
 	// Store user info in session
 	sess.Values["user_id"] = claims.Sub
 	sess.Values["email"] = claims.Email

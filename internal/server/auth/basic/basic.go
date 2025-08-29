@@ -88,6 +88,10 @@ func (b *BasicAuthHandlers) HandleLogin(c echo.Context) error {
 				log.Warnf("Failed to clear session cookie: %v", err)
 			}
 		}
+
+		// Upgrade session cookie to SameSite=Strict after successful login
+		sess.Options.SameSite = http.SameSiteStrictMode
+
 		sess.Values["user_id"] = "admin"
 		sess.Values["email"] = "admin@burrito.tf"
 		sess.Values["name"] = "admin"

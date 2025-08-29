@@ -18,7 +18,6 @@ func RemoveSessionCookie(c echo.Context, sessionCookie string) error {
 		MaxAge:   -1,
 		HttpOnly: true,
 		Secure:   c.Request().TLS != nil,
-		SameSite: http.SameSiteLaxMode,
 	})
 	return nil
 }

@@ -58,7 +58,7 @@ func New(c *config.Config) *Server {
 		MaxAge:   c.Server.Session.MaxAge,
 		Secure:   c.Server.Session.Secure,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteLaxMode, // Cookie is upgraded to SameSite=Strict after callback
 	}
 	sessionStore.MaxAge(c.Server.Session.MaxAge)
 
