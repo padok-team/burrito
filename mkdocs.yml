@@ -30,6 +30,7 @@ nav:
 - Operator Manual:
   - operator-manual/index.md
   - operator-manual/architecture.md
+  - operator-manual/user-authentication.md
   - operator-manual/git-authentication.md
   - operator-manual/pr-mr-workflow.md
   - operator-manual/git-webhook.md

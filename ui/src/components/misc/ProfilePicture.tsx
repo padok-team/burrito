@@ -1,7 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-import ThemeToggle from '@/components/misc/ThemeToggle';
+import { useQuery } from '@tanstack/react-query';
+import { getUserInfo, UserInfo } from '@/clients/auth/client';
+
+import SettingsToggle from '@/components/misc/SettingsToggle';
 
 import Sombrero from '@/assets/illustrations/Sombrero';
 
@@ -16,13 +19,32 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const pictureRef = useRef<HTMLDivElement>(null);
+  // Load current user info
+  const { data: user } = useQuery<UserInfo, Error>({
+    queryKey: ['userInfo'],
+    queryFn: getUserInfo,
+    retry: false
+  });
 
-  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (pictureRef.current) {
-      if (event.target === pictureRef.current) {
-        setOpen(!open);
-      }
+  // Compute initials fallback
+  const initials = useMemo(() => {
+    if (user?.name) {
+      return user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
     }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'BR';
+  }, [user]);
+
+  // Toggle settings dropdown on click
+  const handleClick = () => {
+    setOpen((prev) => !prev);
   };
 
   const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
@@ -79,10 +101,18 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
         onClick={handleClick}
         ref={pictureRef}
       >
-        BR
+        {user?.picture ? (
+          <img
+            src={user.picture}
+            alt="Profile"
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : (
+          <span>{initials}</span>
+        )}
       </div>
       {open && (
-        <ThemeToggle
+        <SettingsToggle
           className="absolute left-12 w-max z-10"
           variant={variant}
         />

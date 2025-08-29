@@ -1,6 +1,5 @@
 {{ $configChecksum := (include (print $.Template.BasePath "/config.yaml") . | sha256sum) }}
 {{ $sshKnownHostsChecksum := (include (print $.Template.BasePath "/ssh-known-hosts.yaml") . | sha256sum) }}
-{{- $baseEnv := list (dict "name" "BURRITO_CONTROLLER_MAINNAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace"))) -}}
 
 {{- with mergeOverwrite (deepCopy .Values.global) .Values.controllers }}
 apiVersion: apps/v1
@@ -55,7 +54,7 @@ spec:
           resources:
             {{- toYaml .deployment.resources | nindent 12 }}
           env:
-            {{- concat $baseEnv .deployment.env | toYaml | nindent 12}}
+            {{- toYaml .deployment.env | nindent 12 }}
           envFrom:
             {{- toYaml .deployment.envFrom | nindent 12 }}
           volumeMounts:

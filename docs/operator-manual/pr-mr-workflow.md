@@ -65,8 +65,8 @@ Follow the instructions in the GitHub documentation on [Creating a GitHub App](h
 - **Homepage URL**: Enter <https://docs.burrito.tf>.
 - **Webhook**: Unselect Active. The app doesn't use this webhook events mechanism at the moment.
 - **Permissions**: Configure the following **Repository Permissions**:
-    - **Metadata**: Select Read-only.
-    - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
+  - **Metadata**: Select Read-only.
+  - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
 - Where can this GitHub App be installed: Select **Any account**.
 
 #### Creating a custom badge for your GitHub App
@@ -147,8 +147,8 @@ Follow the instructions in the GitHub documentation for [creating a personal acc
 
 - It should be a **fine-grained token**.
 - **Permissions**: Configure the following **Repository Permissions**:
-    - **Metadata**: Select Read-only.
-    - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
+  - **Metadata**: Select Read-only.
+  - **Pull requests**: Select Read & write. This is required to issue comments on pull requests.
 - Under **Repository access**, select which repositories you want the token to access.
 
 #### Configure Burrito

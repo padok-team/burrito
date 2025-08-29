@@ -13,7 +13,30 @@ import Pulls from '@/pages/Pulls';
 import Logs from '@/pages/Logs';
 import Login from '@/pages/Login';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (
+        failureCount,
+        error: Error & { response?: { status: number } }
+      ) => {
+        // Don't retry on 401 errors
+        if (error?.response?.status === 401) {
+          window.location.href = '/login';
+          return false;
+        }
+        return failureCount < 3;
+      }
+    },
+    mutations: {
+      onError: (error: Error & { response?: { status: number } }) => {
+        if (error?.response?.status === 401) {
+          window.location.href = '/login';
+        }
+      }
+    }
+  }
+});
 const router = createBrowserRouter([
   {
     path: '/',

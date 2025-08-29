@@ -72,6 +72,28 @@ config:
     server:
       # -- Server exposed port
       addr: ":8080"
+      basicAuth:
+        # -- Enable/Disable Basic Authentication for the Burrito server. If both Basic Auth and OIDC are disabled, the server will be publicly accessible.
+        enabled: true
+      oidc:
+        # -- Enable/Disable OIDC authentication for the Burrito server
+        enabled: false
+        # -- OIDC issuer URL
+        issuerUrl: ""
+        # -- OIDC client ID -- client secret should be set in a Kubernetes secret and referenced in server.deployment.envFrom with the key "BURRITO_SERVER_OIDC_CLIENTSECRET"
+        clientId: ""
+        # -- OIDC Redirect URL, should be the Burrito server URL with /auth/callback appended (ex: https://burrito.example.com/auth/callback)
+        redirectUrl: ""
+        # -- OIDC scopes to request
+        scopes:
+          - "openid"
+          - "profile"
+          - "email"
+      session:
+        # -- Session max age in seconds, after which the session will expire
+        maxAge: 86400
+        # -- Cookie secure, set this to true if using HTTPS
+        secure: false
 
     runner:
       # -- Configmap name to store the SSH known hosts in the runner
@@ -341,6 +363,8 @@ server:
     env: []
     # -- Environment variables to pass to the Burrito server container
     envFrom: []
+    # - secretRef:
+    #     name: burrito-oidc-client-secret ## Name of the secret containing the OIDC client secret at key "BURRITO_SERVER_OIDC_CLIENTSECRET"
     # -- Additional volumes
     extraVolumes: {}
     # -- Additional volume mounts
