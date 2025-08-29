@@ -42,6 +42,7 @@ Enable OIDC to integrate Burrito with your identity provider. This is the recomm
 ### Configuration
 
 OIDC configuration requires setting up a client in your OIDC provider. You will need the following details:
+
 - **Issuer URL**
 - **Client ID**
 - **Client Secret**
@@ -79,7 +80,6 @@ server:
 | `clientId`                | Registered client ID                                                     |
 | `redirectUrl`             | Callback URL for OIDC (must match the one registered with your provider) |
 | `scopes`                  | OIDC scopes to request                                                   |
-
 
 ## Disabling Authentication
 
