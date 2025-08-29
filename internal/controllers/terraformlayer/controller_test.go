@@ -549,6 +549,33 @@ var _ = Describe("Layer", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
 			})
 		})
+		Describe("When a TerraformLayer has a LastRun that does not exist", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "last-run-not-exist",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should have created a plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(1))
+				Expect(runs.Items[0].Spec.Action).To(Equal("plan"))
+			})
+		})
 	})
 	// TODO: test cleanup of runs
 	Describe("Cleanup case", Ordered, func() {

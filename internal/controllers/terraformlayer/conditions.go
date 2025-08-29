@@ -35,9 +35,9 @@ func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Conditi
 	}, &run)
 	if errors.IsNotFound(err) {
 		condition.Reason = "RunNotFound"
-		condition.Message = "The Last Run does not exist, this is likely a bug, considering layer is running"
-		condition.Status = metav1.ConditionTrue
-		return condition, true
+		condition.Message = "The Last Run could not be fetched, it might have been manually deleted, considering layer is not running"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
 	}
 	if err != nil {
 		condition.Reason = "RunRetrievalError"

@@ -18,3 +18,25 @@ spec:
   terragrunt:
     enabled: true
     version: 0.45.4
+
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: last-run-not-exist
+  namespace: default
+spec:
+  branch: main
+  path: last-run-not-exist/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-does-not-exist
+    namespace: default
