@@ -16,7 +16,7 @@ require (
 	github.com/google/go-github/v71 v71.0.0
 	github.com/gruntwork-io/go-commons v0.17.2
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/hcl/v2 v2.23.0
+	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-json v0.26.0
 	github.com/onsi/ginkgo/v2 v2.25.1
 	github.com/onsi/gomega v1.38.2
