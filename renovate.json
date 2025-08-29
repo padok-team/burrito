@@ -45,6 +45,13 @@
       "commitMessageAction": "pin digests",
       "groupName": "docker pin digests",
       "groupSlug": "docker-all-digests"
+    },
+    {
+      "groupName": "go-github",
+      "matchPackageNames": [
+        "github.com/google/go-github/**",
+        "github.com/bradleyfalzon/ghinstallation/**"
+      ]
     }
   ],
   "postUpdateOptions": [
