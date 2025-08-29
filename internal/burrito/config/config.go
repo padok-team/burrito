@@ -165,12 +165,12 @@ type ServerConfig struct {
 }
 
 type OIDCConfig struct {
-	Enabled      bool         `mapstructure:"enabled"`
-	IssuerURL    string       `mapstructure:"issuerUrl"`
-	ClientID     string       `mapstructure:"clientId"`
-	ClientSecret SecretConfig `mapstructure:"clientSecret"`
-	RedirectURL  string       `mapstructure:"redirectUrl"`
-	Scopes       []string     `mapstructure:"scopes"`
+	Enabled      bool     `mapstructure:"enabled"`
+	IssuerURL    string   `mapstructure:"issuerUrl"`
+	ClientID     string   `mapstructure:"clientId"`
+	ClientSecret string   `mapstructure:"clientSecret"`
+	RedirectURL  string   `mapstructure:"redirectUrl"`
+	Scopes       []string `mapstructure:"scopes"`
 }
 
 type SecretConfig struct {

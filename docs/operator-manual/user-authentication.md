@@ -41,20 +41,35 @@ Enable OIDC to integrate Burrito with your identity provider. This is the recomm
 
 ### Configuration
 
+OIDC configuration requires setting up a client in your OIDC provider. You will need the following details:
+- **Issuer URL**
+- **Client ID**
+- **Client Secret**
+- **Redirect URL** (should be `https://<your-domain>/auth/callback`)
+- **Scopes** (typically `openid`, `profile`, and `email`)
+
+The client secret must be stored in a Kubernetes Secret and referenced in the deployment environment variables.
+The environment variable name for the client secret must be `BURRITO_SERVER_OIDC_CLIENTSECRET`.
+
 ```yaml
+config:
+  burrito:
+    server:
+      oidc:
+        enabled: true # Enable OIDC
+        issuerUrl: <OIDC_ISSUER> # e.g. https://accounts.example.com
+        clientId: <CLIENT_ID>
+        redirectUrl: "https://<your-domain>/auth/callback"
+        scopes:
+          - "openid"
+          - "profile"
+          - "email"
+...
 server:
-  oidc:
-    enabled: true # Enable OIDC
-    issuerUrl: <OIDC_ISSUER> # e.g. https://accounts.example.com
-    clientId: <CLIENT_ID>
-    clientSecret:
-      secretName: "burrito-oidc-secret"
-      secretKey: "clientSecret"
-    redirectUrl: "https://<your-domain>/auth/callback"
-    scopes:
-      - "openid"
-      - "profile"
-      - "email"
+  deployment:
+    envFrom:
+      - secretRef:
+          name: burrito-oidc-client-secret
 ```
 
 | Field                     | Description                                                              |
@@ -62,17 +77,9 @@ server:
 | `enabled`                 | Turn OIDC on or off                                                      |
 | `issuerUrl`               | Base URL of your OIDC provider                                           |
 | `clientId`                | Registered client ID                                                     |
-| `clientSecret.secretName` | Kubernetes Secret containing your OIDC client secret                     |
-| `clientSecret.secretKey`  | Key within the Secret that holds the client secret value                 |
 | `redirectUrl`             | Callback URL for OIDC (must match the one registered with your provider) |
 | `scopes`                  | OIDC scopes to request                                                   |
 
-### Creating the Client Secret
-
-```bash
-kubectl -n <burrito-namespace> create secret generic burrito-oidc-secret \
-  --from-literal=clientSecret=<YOUR_SECRET>
-```
 
 ### Authorization
 
