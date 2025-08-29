@@ -47,11 +47,17 @@
       "groupSlug": "docker-all-digests"
     },
     {
-      "groupName": "go-github",
+      "groupName": "go github sdk",
+      "groupSlug": "go-github",
+      "matchDatasources": [
+        "go"
+      ],
       "matchPackageNames": [
         "github.com/google/go-github/**",
         "github.com/bradleyfalzon/ghinstallation/**"
-      ]
+      ],
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
     }
   ],
   "postUpdateOptions": [
