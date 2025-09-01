@@ -93,7 +93,7 @@ manifests: controller-gen kustomize ## Generate CustomResourceDefinition objects
 	@for crd in manifests/crds/config.terraform.padok.cloud_*.yaml; do \
 		filename=$$(basename "$$crd"); \
 		chart_filename="deploy/charts/burrito/templates/crds/$$filename"; \
-		echo "{{- if .Values.crds.install }}" > "$$chart_filename"; \
+		echo "{{- if .Values.global.crds.install }}" > "$$chart_filename"; \
 		cat "$$crd" >> "$$chart_filename"; \
 		echo "{{- end }}" >> "$$chart_filename"; \
 	done

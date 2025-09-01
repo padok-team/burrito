@@ -1,9 +1,3 @@
-# Custom Resource Definitions
-# Having CRDs under the Helm templates folder allows us to manage upgrades more easily
-crds:
-  # -- Enable/Disable CRD installation through the Helm chart
-  install: true
-
 # Burrito configuration
 ## Ref: https://docs.burrito.tf/operator-manual/advanced-configuration/
 config:
@@ -236,6 +230,11 @@ global:
     labels:
       app.kubernetes.io/part-of: burrito
     annotations: {}
+  # Custom Resource Definitions
+  # Having CRDs under the Helm templates folder allows us to manage upgrades more easily
+  crds:
+    # -- Enable/Disable CRD installation through the Helm chart
+    install: true
   deployment:
     mode: Release
     autoscaling:
