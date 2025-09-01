@@ -1,7 +1,8 @@
-# TODO: Make CRD install optional? or use --skip-crds Helm flag
 # Custom Resource Definitions
-# crds:
-# install: true
+# Having CRDs under the Helm templates folder allows us to manage upgrades more easily
+crds:
+  # -- Enable/Disable CRD installation through the Helm chart
+  install: true
 
 # Burrito configuration
 ## Ref: https://docs.burrito.tf/operator-manual/advanced-configuration/

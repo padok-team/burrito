@@ -90,6 +90,13 @@ manifests: controller-gen kustomize ## Generate CustomResourceDefinition objects
 	$(CONTROLLER_GEN) crd paths="./..." output:crd:dir=manifests/crds
 	echo "# This is an auto-generated file. DO NOT EDIT" > manifests/install.yaml
 	$(KUSTOMIZE) build manifests/cluster-install >> manifests/install.yaml
+	@for crd in manifests/crds/config.terraform.padok.cloud_*.yaml; do \
+		filename=$$(basename "$$crd"); \
+		chart_filename="deploy/charts/burrito/templates/crds/$$filename"; \
+		echo "{{- if .Values.crds.install }}" > "$$chart_filename"; \
+		cat "$$crd" >> "$$chart_filename"; \
+		echo "{{- end }}" >> "$$chart_filename"; \
+	done
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
