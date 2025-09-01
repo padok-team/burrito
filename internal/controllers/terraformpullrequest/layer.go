@@ -3,6 +3,7 @@ package terraformpullrequest
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,17 +51,7 @@ func isLayerAffected(layer configv1alpha1.TerraformLayer, pr configv1alpha1.Terr
 	}
 	// Check if branch matches OR if PR base is in additionalTargetRefs
 	branchMatches := layer.Spec.Branch == pr.Spec.Base
-	additionalTargetMatches := false
-
-	// Check if PR base is in layer's additionalTargetRefs
-	if layer.Spec.AdditionalTargetRefs != nil {
-		for _, ref := range layer.Spec.AdditionalTargetRefs {
-			if ref == pr.Spec.Base {
-				additionalTargetMatches = true
-				break
-			}
-		}
-	}
+	additionalTargetMatches := slices.Contains(layer.Spec.AdditionalTargetRefs, pr.Spec.Base)
 
 	// If neither branch matches nor is in additional targets, skip this layer
 	if !branchMatches && !additionalTargetMatches {
