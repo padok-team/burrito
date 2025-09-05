@@ -19,9 +19,6 @@ permissions:
   packages: write
   id-token: write # Required for Codecov
 
-env:
-  GO_VERSION: 1.23
-
 jobs:
   unit-tests:
     name: Unit Tests
@@ -35,9 +32,9 @@ jobs:
           path: ./bin/
           key: binaries
       - name: Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "${{ env.GO_VERSION }}"
+          go-version-file: "go.mod"
       - name: Install envtest
         run: make envtest
       - name: Setup envtest
@@ -58,9 +55,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Setup Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "${{ env.GO_VERSION }}"
+          go-version-file: "go.mod"
       - name: Generate manifests
         run: make manifests
       - name: Check nothing has changed
@@ -72,9 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "${{ env.GO_VERSION }}"
+          go-version-file: "go.mod"
           cache: false
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
