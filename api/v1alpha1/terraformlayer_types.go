@@ -30,15 +30,16 @@ type TerraformLayerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Path                string                   `json:"path,omitempty"`
-	Branch              string                   `json:"branch,omitempty"`
-	TerraformConfig     TerraformConfig          `json:"terraform,omitempty"`
-	OpenTofuConfig      OpenTofuConfig           `json:"opentofu,omitempty"`
-	TerragruntConfig    TerragruntConfig         `json:"terragrunt,omitempty"`
-	Repository          TerraformLayerRepository `json:"repository,omitempty"`
-	RemediationStrategy RemediationStrategy      `json:"remediationStrategy,omitempty"`
-	OverrideRunnerSpec  OverrideRunnerSpec       `json:"overrideRunnerSpec,omitempty"`
-	RunHistoryPolicy    RunHistoryPolicy         `json:"runHistoryPolicy,omitempty"`
+	Path                 string                   `json:"path,omitempty"`
+	Branch               string                   `json:"branch,omitempty"`
+	AdditionalTargetRefs []string                 `json:"additionalTargetRefs,omitempty"`
+	TerraformConfig      TerraformConfig          `json:"terraform,omitempty"`
+	OpenTofuConfig       OpenTofuConfig           `json:"opentofu,omitempty"`
+	TerragruntConfig     TerragruntConfig         `json:"terragrunt,omitempty"`
+	Repository           TerraformLayerRepository `json:"repository,omitempty"`
+	RemediationStrategy  RemediationStrategy      `json:"remediationStrategy,omitempty"`
+	OverrideRunnerSpec   OverrideRunnerSpec       `json:"overrideRunnerSpec,omitempty"`
+	RunHistoryPolicy     RunHistoryPolicy         `json:"runHistoryPolicy,omitempty"`
 }
 
 type TerraformLayerRepository struct {

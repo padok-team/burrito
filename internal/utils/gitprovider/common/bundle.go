@@ -19,6 +19,16 @@ const (
 	BundleDir  = "/tmp/burrito/gitbundles"
 )
 
+// ReferenceName converts a ref string to a plumbing.ReferenceName
+// If ref starts with "refs/", use it directly; otherwise assume it's a branch
+func ReferenceName(ref string) plumbing.ReferenceName {
+	if strings.HasPrefix(ref, "refs/") {
+		return plumbing.ReferenceName(ref)
+	}
+	// Default to branch for backward compatibility
+	return plumbing.NewBranchReferenceName(ref)
+}
+
 func GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, revision string, auth transport.AuthMethod) ([]byte, error) {
 	repoKey := fmt.Sprintf("%s-%s-%s", repository.Namespace, repository.Name, strings.ReplaceAll(ref, "/", "--"))
 	repoDir := filepath.Join(WorkingDir, repoKey)
@@ -32,10 +42,11 @@ func GetGitBundle(repository *configv1alpha1.TerraformRepository, ref string, re
 
 		// Clone if it doesn't exist
 		log.Infof("Cloning repository %s to %s", repository.Spec.Repository.Url, repoDir)
+
 		cloneOpts := &git.CloneOptions{
 			URL:           repository.Spec.Repository.Url,
 			Auth:          auth,
-			ReferenceName: plumbing.NewBranchReferenceName(ref),
+			ReferenceName: ReferenceName(ref),
 		}
 
 		repo, err = git.PlainClone(repoDir, false, cloneOpts)
