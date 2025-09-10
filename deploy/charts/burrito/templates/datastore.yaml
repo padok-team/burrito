@@ -86,6 +86,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .deployment.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: burrito-config
           configMap:
@@ -114,6 +118,9 @@ metadata:
     {{- toYaml .metadata.annotations | nindent 4}}
 spec:
   type: {{ .service.type }}
+  {{- if .service.trafficDistribution }}
+  trafficDistribution: {{ .service.trafficDistribution }}
+  {{- end }}
   ports:
     {{- toYaml .service.ports | nindent 4 }}
   selector:
