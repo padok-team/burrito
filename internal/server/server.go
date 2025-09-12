@@ -93,6 +93,7 @@ func (s *Server) Exec() {
 	}
 	s.client = *client
 	s.API.Client = s.client
+	s.Webhook = webhook.New(s.config, *client)
 
 	// Initialize authentication handlers based on configuration
 	var authHandlers a.AuthHandlers
