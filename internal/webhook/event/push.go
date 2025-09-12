@@ -27,12 +27,6 @@ func (e *PushEvent) Handle(c client.Client) error {
 		log.Errorf("could not list TerraformRepositories: %s", err)
 		return err
 	}
-	layers := &configv1alpha1.TerraformLayerList{}
-	err = c.List(context.Background(), layers)
-	if err != nil {
-		log.Errorf("could not list TerraformLayers: %s", err)
-		return err
-	}
 	prs := &configv1alpha1.TerraformPullRequestList{}
 	err = c.List(context.Background(), prs)
 	if err != nil {
