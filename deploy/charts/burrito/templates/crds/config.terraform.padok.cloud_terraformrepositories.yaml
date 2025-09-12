@@ -4843,8 +4843,6 @@ spec:
                 type: object
               repository:
                 properties:
-                  secretName:
-                    type: string
                   url:
                     type: string
                 type: object
