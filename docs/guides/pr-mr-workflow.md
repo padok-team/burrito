@@ -25,12 +25,11 @@ spec:
     enabled: true
 ```
 
-You will also need to setup a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) to allow Burrito to comment on your PRs/MRs. Follow the instructions in the [PR/MR workflow](../operator-manual/pr-mr-workflow.md#configuration) section of the operator manual to set up the GitHub app.
+You will also need to setup a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) to allow Burrito to comment on your PRs/MRs. Follow the instructions in the [GitHub App](../operator-manual/git-authentication/github-app.md) section of the operator manual to set up the GitHub app.
 Make sure that you created a secret associated to your repository that include the GitHub app ID, installation ID, and private key.
 
 !!! note
-    You can also use a personal access token instead of a GitHub app. Your GitHub account will be used to comment on the PRs/MRs.
-    The secret should include the personal access token in the `githubToken` key.
+    You can also use a [personal access token](../operator-manual/git-authentication/github-token.md) instead of a GitHub app. Your GitHub account will be used to comment on the PRs/MRs.
 
 Now let's configure the GitHub webhook. Expose the `burrito-server` kubernetes service to the internet using the method of your choice. (for testing purposes on a local cluster, you can use `kubectl port-forward` and [ngrok](https://ngrok.com/) to expose the service to the internet).
 
@@ -47,18 +46,21 @@ metadata:
 spec:
   repository:
     url: https://github.com/<your-github-handle>/burrito-examples
-    secretName: burrito-secret
   terraform:
     enabled: true
 ---
+apiVersion: v1
 kind: Secret
 metadata:
   name: burrito-webhook-secret
   namespace: burrito-project
-type: Opaque
+type: credentials.burrito.tf/repository
 stringData:
-  githubAppId: "123456"
-  githubAppInstallationId: "12345678"
+  provider: github
+  url: https://github.com/<your-github-handle>/burrito-examples
+  webhookSecret: "your-webhook-secret"
+  githubAppID: "123456"
+  githubAppInstallationID: "12345678"
   githubAppPrivateKey: |
     -----BEGIN RSA PRIVATE KEY-----
     my-private-key

@@ -63,12 +63,15 @@ Create a Kubernetes `Secret` to reference the necessary credentials to clone you
 <!-- markdownlint-enable MD046 -->
 
 ```yaml
+apiVersion: v1
 kind: Secret
 metadata:
   name: burrito-repo
   namespace: <tenant-namespace>
-type: Opaque
+type: credentials.burrito.tf/repository
 stringData:
+  provider: standard
+  url: <https-or-ssh-repository-url>
   username: <my-username>
   password: <my-password | my-access-token>
   sshPrivateKey: |
@@ -88,13 +91,12 @@ metadata:
 spec:
   repository:
     url: <https-or-ssh-repository-url>
-    secretName: burrito-repo
   terraform:
     enabled: true
 ```
 
 !!! info
-    You can also connect to a public repository by omitting `spec.repository.secretName` in your `TerraformRepository` definition.
+    You can also connect to a public repository without creating any credentials.
 
 ## 3. Synchronize a Terraform layer
 
