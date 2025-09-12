@@ -1,7 +1,7 @@
 package standard
 
 import (
-	"errors"
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"os/exec"
@@ -115,21 +115,39 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 }
 
 func (p *GitProvider) clone() error {
+	// Create a consistent directory name based on repository URL hash
+	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(p.RepoURL)))
+	p.workingDir = filepath.Join(os.TempDir(), "burrito-repo-"+hash)
+	p.repositoryPath = filepath.Join(p.workingDir, "repository")
+
+	// Check if repository already exists
+	if _, err := os.Stat(p.repositoryPath); err == nil {
+		// Repository already exists, just open it
+		log.Infof("repository already exists at %s, opening existing clone", p.repositoryPath)
+		repo, err := git.PlainOpen(p.repositoryPath)
+		if err != nil {
+			return fmt.Errorf("failed to open existing repository: %w", err)
+		}
+		p.gitRepository = repo
+		return nil
+	}
+
+	// Create the working directory
+	if err := os.MkdirAll(p.workingDir, 0755); err != nil {
+		return fmt.Errorf("failed to create working directory: %w", err)
+	}
+
 	cloneOptions := &git.CloneOptions{
 		URL:  p.RepoURL,
 		Auth: p.AuthMethod,
 	}
-	workingDir, err := os.MkdirTemp("", "burrito-repo-*")
-	if err != nil {
-		return errors.New("failed to create temporary directory")
-	}
-	p.workingDir = workingDir
-	p.repositoryPath = filepath.Join(p.workingDir, "repository")
+
 	log.Infof("cloning repository %s to %s", p.RepoURL, p.repositoryPath)
-	p.gitRepository, err = git.PlainClone(p.repositoryPath, false, cloneOptions)
+	repo, err := git.PlainClone(p.repositoryPath, false, cloneOptions)
 	if err != nil {
 		return err
 	}
+	p.gitRepository = repo
 	return nil
 }
 
