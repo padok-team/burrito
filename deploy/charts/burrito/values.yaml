@@ -103,7 +103,7 @@ config:
         repository: ghcr.io/padok-team/burrito
         tag: "" # By default use Chart's appVersion
         pullPolicy: Always
-      
+
       # -- Command to run in the Burrito runner container
       command: ["burrito"]
       # -- Arguments to pass to the Burrito runner container
@@ -485,3 +485,18 @@ tenants: []
 #       annotations:
 #         iam.cloud.provider/role: cloud-provider-role
 #       labels: {}
+
+# Network Policy configuration
+networkPolicy:
+  # -- Enable/Disable Network Policy creation
+  enabled: false
+  # -- Metadata configuration for Network Policies
+  metadata:
+    labels: {}
+    annotations: {}
+  # -- Network policy to allow ingress traffic from all the tenant namespaces to the release namespace
+  ingressFromTenants:
+    # -- Enable/Disable tenant ingress network policy
+    enabled: true
+    # -- Additional ingress rules for tenant namespaces network policy
+    additionalIngressRules: []
