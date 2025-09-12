@@ -25,10 +25,12 @@ type GitProvider struct {
 	repositoryPath string
 }
 
+const remote string = "origin"
+
 func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	// Create an in-memory remote
 	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
-		Name: "origin",
+		Name: remote,
 		URLs: []string{p.RepoURL},
 	})
 
@@ -67,7 +69,7 @@ func getReferenceName(ref string) plumbing.ReferenceName {
 	}
 
 	// Default to branch for backward compatibility
-	return plumbing.NewRemoteReferenceName("origin", ref)
+	return plumbing.NewRemoteReferenceName(remote, ref)
 }
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
@@ -80,7 +82,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 
 	reference, err := p.gitRepository.Reference(getReferenceName(ref), true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", ref, p.RepoURL, err)
+		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", getReferenceName(ref), p.RepoURL, err)
 	}
 
 	// Pull latest changes
@@ -92,15 +94,16 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 	pullOpts := &git.PullOptions{
 		Auth:          p.AuthMethod,
 		ReferenceName: reference.Name(),
+		RemoteName:    remote,
 	}
 
-	log.Infof("pulling latest changes for repo %s", p.RepoURL)
+	log.Infof("pulling latest changes for repo %s on branch %s", p.RepoURL, reference.Name())
 	err = worktree.Pull(pullOpts)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("repository is already up-to-date")
 		} else {
-			return nil, fmt.Errorf("failed to pull latest changes: %w", err)
+			return nil, fmt.Errorf("failed to pull latest changes for ref %s: %w", reference.Name(), err)
 		}
 	}
 
