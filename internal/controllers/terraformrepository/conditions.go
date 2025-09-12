@@ -3,6 +3,7 @@ package terraformrepository
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -11,6 +12,7 @@ import (
 )
 
 // Add newly found branches in the repository's branch state object
+// Remove stale branches
 func mergeBranchesWithBranchState(found []string, branchStates []configv1alpha1.BranchState) []configv1alpha1.BranchState {
 	for _, branch := range found {
 		if _, ok := configv1alpha1.GetBranchState(branch, branchStates); !ok {
@@ -19,7 +21,15 @@ func mergeBranchesWithBranchState(found []string, branchStates []configv1alpha1.
 			})
 		}
 	}
-	return branchStates
+
+	// Remove branches that are no longer found in the repository
+	var filteredBranchStates []configv1alpha1.BranchState
+	for _, branchState := range branchStates {
+		if slices.Contains(found, branchState.Name) {
+			filteredBranchStates = append(filteredBranchStates, branchState)
+		}
+	}
+	return filteredBranchStates
 }
 
 func isSyncNowRequested(repo *configv1alpha1.TerraformRepository, branch string, lastSyncDate time.Time) (bool, error) {
