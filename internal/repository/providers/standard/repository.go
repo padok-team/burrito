@@ -63,11 +63,11 @@ func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 // Add the remote because otherwise it will fail
 func getReferenceName(ref string) plumbing.ReferenceName {
 	if strings.HasPrefix(ref, "refs/") {
-		return plumbing.NewRemoteReferenceName("origin", ref)
+		return plumbing.ReferenceName(ref)
 	}
 
 	// Default to branch for backward compatibility
-	return plumbing.NewRemoteReferenceName("origin", string(plumbing.NewBranchReferenceName(ref)))
+	return plumbing.NewRemoteReferenceName("origin", ref)
 }
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
