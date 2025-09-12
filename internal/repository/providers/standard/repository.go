@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -57,6 +58,17 @@ func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	return "", fmt.Errorf("unable to find commit SHA for ref %q in %q", ref, p.RepoURL)
 }
 
+// getReferenceName converts a ref string to a plumbing.ReferenceName
+// If ref starts with "refs/", use it directly; otherwise assume it's a branch
+func getReferenceName(ref string) plumbing.ReferenceName {
+	if strings.HasPrefix(ref, "refs/") {
+		return plumbing.ReferenceName(ref)
+	}
+
+	// Default to branch for backward compatibility
+	return plumbing.NewBranchReferenceName(ref)
+}
+
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 	// Clone repository if it doesn't exist
 	if p.gitRepository == nil {
@@ -65,7 +77,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 		}
 	}
 
-	reference, err := p.gitRepository.Reference(plumbing.NewBranchReferenceName(ref), true)
+	reference, err := p.gitRepository.Reference(getReferenceName(ref), true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", ref, p.RepoURL, err)
 	}
