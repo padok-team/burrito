@@ -7,6 +7,9 @@ metadata:
   annotations:
     {{- toYaml .service.annotations | nindent 4 }}
 spec:
+  {{- if .service.trafficDistribution }}
+  trafficDistribution: {{ .service.trafficDistribution }}
+  {{- end }}
   selector:
     {{- toYaml .metadata.labels | nindent 4 }}
   ports:
@@ -96,6 +99,10 @@ spec:
         {{- toYaml .deployment.nodeSelector | nindent 8 }}
       affinity:
         {{- toYaml .deployment.affinity | nindent 8 }}
+      {{- with .deployment.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 ---
 {{- if .tls.certManager.use }}
 apiVersion: cert-manager.io/v1

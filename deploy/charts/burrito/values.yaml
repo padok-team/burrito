@@ -157,6 +157,8 @@ hermitcrab:
   service:
     # -- Hermitcrab service annotations
     annotations: {}
+    # -- Hermitcrab service traffic distribution policy
+    trafficDistribution: ""
   deployment:
     # -- Hermitcrab replicas
     replicas: 1
@@ -166,6 +168,8 @@ hermitcrab:
     nodeSelector: {}
     # -- Hermitcrab affinity
     affinity: {}
+    # -- Hermitcrab topology spread constraints
+    topologySpreadConstraints: []
     # -- Hermitcrab image configuration
     image:
       pullPolicy: Always
@@ -374,12 +378,22 @@ server:
     extraVolumes: {}
     # -- Additional volume mounts
     extraVolumeMounts: {}
+    # -- Server tolerations
+    tolerations: []
+    # -- Server node selector
+    nodeSelector: {}
+    # -- Server affinity
+    affinity: {}
+    # -- Server topology spread constraints
+    topologySpreadConstraints: []
   # -- Service configuration for the Burrito server
   service:
     ports:
       - name: http
         port: 80
         targetPort: http
+    # -- Server service traffic distribution policy
+    trafficDistribution: ""
   # -- Ingress configuration for the Burrito server
   ingress:
     # -- Enable/Disable ingress creation for the Burrito server
@@ -436,6 +450,14 @@ datastore:
     extraVolumes: {}
     # -- Additional volume mounts
     extraVolumeMounts: {}
+    # -- Datastore tolerations
+    tolerations: []
+    # -- Datastore node selector
+    nodeSelector: {}
+    # -- Datastore affinity
+    affinity: {}
+    # -- Datastore topology spread constraints
+    topologySpreadConstraints: []
   # -- Service configuration for the Burrito datastore
   service:
     ports:
@@ -445,6 +467,8 @@ datastore:
       - name: https
         port: 443
         targetPort: http
+    # -- Datastore service traffic distribution policy
+    trafficDistribution: ""
   # -- TLS configuration for the Burrito datastore
   tls:
     # -- Enable/Disable TLS for the Burrito datastore (recommended for production use)
