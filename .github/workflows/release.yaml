@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   packages: write
+  pull-requests: write
 
 jobs:
   goreleaser:
@@ -18,10 +19,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-      - name: Fetch all tags
-        run: git fetch --force --tags
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -66,11 +63,16 @@ jobs:
           yq -i '.version = env(CHART_VERSION)' $CHART_PATH/Chart.yaml
           yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
 
-      - name: Commit version to repository
-        uses: stefanzweifel/git-auto-commit-action@v6
-        with:
-          commit_message: "chore(release): bump version to ${{ github.ref_name }}"
-          push_options: --force
+      - name: Commit version to repository and open PR
+        run: |
+          BRANCH_NAME="bump-version-${{ github.ref_name }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git switch -c $BRANCH_NAME
+          git commit -m "chore(release): bump version to ${{ github.ref_name }}"
+          git push origin $BRANCH_NAME
+          gh pr create --fill --base main --head $BRANCH_NAME
 
   build-and-push:
     uses: ./.github/workflows/build-and-push.yaml
