@@ -64,6 +64,8 @@ jobs:
           yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
 
       - name: Commit version to repository and open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           BRANCH_NAME="bump-version-${{ github.ref_name }}"
           git config user.name "github-actions[bot]"
