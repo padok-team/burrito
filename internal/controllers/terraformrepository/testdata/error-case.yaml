@@ -1,0 +1,49 @@
+# Repository with an invalid URL repository
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-unknown
+  namespace: default
+spec:
+  repository:
+    url: https://git.mock.com/unknown
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-unknown-layer
+  namespace: default
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-unknown
+    namespace: default
+---
+# Repository with an invalid URL repository
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-with-last-sync-failed
+  namespace: default
+spec:
+  repository:
+    url: https://git.mock.com/unknown
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-last-sync-failed-layer
+  namespace: default
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-with-last-sync-failed
+    namespace: default
