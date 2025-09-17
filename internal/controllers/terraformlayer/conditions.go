@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+func (r *Reconciler) IsRunning(ctx context.Context, t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "IsRunning",
 		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
@@ -29,7 +29,7 @@ func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Conditi
 		return condition, false
 	}
 	run := configv1alpha1.TerraformRun{}
-	err := r.Client.Get(context.TODO(), types.NamespacedName{
+	err := r.Client.Get(ctx, types.NamespacedName{
 		Namespace: t.Namespace,
 		Name:      t.Status.LastRun.Name,
 	}, &run)
@@ -265,6 +265,31 @@ func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.C
 	}
 	condition.Reason = "NoSyncScheduled"
 	condition.Message = "No sync has been manually scheduled"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
+}
+
+func (r *Reconciler) IsApplyScheduled(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsApplyScheduled",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	// check if annotations.ApplyNow is present
+	if _, ok := t.Annotations[annotations.ApplyNow]; ok {
+		condition.Reason = "ApplyScheduled"
+		condition.Message = "An apply has been manually scheduled"
+		condition.Status = metav1.ConditionTrue
+		// Remove the annotation to avoid running the apply again
+		err := annotations.Remove(context.Background(), r.Client, t, annotations.ApplyNow)
+		if err != nil {
+			log.Errorf("Failed to remove annotation %s from layer %s: %s", annotations.ApplyNow, t.Name, err)
+		}
+		return condition, true
+	}
+	condition.Reason = "NoApplyScheduled"
+	condition.Message = "No apply has been manually scheduled"
 	condition.Status = metav1.ConditionFalse
 	return condition, false
 }
