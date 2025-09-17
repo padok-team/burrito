@@ -4,3 +4,29 @@ description: A Helm chart for handling a complete burrito deployment
 type: application
 version: 0.8.0
 appVersion: "v0.8.0"
+home: https://docs.burrito.tf/
+icon: https://raw.githubusercontent.com/padok-team/burrito/refs/heads/main/docs/assets/icon/burrito.png
+sources:
+  - https://github.com/padok-team/burrito
+annotations:
+  artifacthub.io/crds: |
+    - kind: TerraformLayer
+      version: v1alpha1
+      name: terraformlayers.config.terraform.padok.cloud
+      displayName: TerraformLayer
+      description: TerraformLayer is the Schema for the TerraformLayers API.
+    - kind: TerraformPullRequest
+      version: v1alpha1
+      name: terraformpullrequests.config.terraform.padok.cloud
+      displayName: TerraformPullRequest
+      description: TerraformPullRequest is the Schema for the TerraformPullRequests API.
+    - kind: TerraformRepository
+      version: v1alpha1
+      name: terraformrepositories.config.terraform.padok.cloud
+      displayName: TerraformRepository
+      description: TerraformRepository is the Schema for the TerraformRepositories API.
+    - kind: TerraformRun
+      version: v1alpha1
+      name: terraformruns.config.terraform.padok.cloud
+      displayName: TerraformRun
+      description: TerraformRun is the Schema for the TerraformRuns API.
