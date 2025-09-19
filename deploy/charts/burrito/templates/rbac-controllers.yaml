@@ -1,11 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app.kubernetes.io/component: controllers
-    app.kubernetes.io/name: burrito-controllers
-    app.kubernetes.io/part-of: burrito
   name: burrito-controllers
+  {{- with mergeOverwrite (deepCopy .Values.global.metadata) .Values.controllers.metadata }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 rules:
 - apiGroups:
   - events.k8s.io

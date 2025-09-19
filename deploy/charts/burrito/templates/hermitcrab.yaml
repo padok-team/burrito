@@ -4,8 +4,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: burrito-hermitcrab
+  {{- with mergeOverwrite (deepCopy .metadata) .service.metadata }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
   annotations:
-    {{- toYaml .service.annotations | nindent 4 }}
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   {{- if .service.trafficDistribution }}
   trafficDistribution: {{ .service.trafficDistribution }}
@@ -24,8 +28,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: burrito-hermitcrab
+  {{- with mergeOverwrite (deepCopy .metadata) .deployment.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   replicas: {{ .deployment.replicas }}
   selector:
@@ -109,8 +117,12 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: burrito-hermitcrab
+  {{- with mergeOverwrite (deepCopy .metadata) .tls.certManager.certificate.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   {{- toYaml .tls.certManager.certificate.spec | nindent 4 }}
 {{- end }}
