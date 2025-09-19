@@ -12,10 +12,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: burrito-datastore
-  annotations:
-    {{- toYaml .metadata.annotations | nindent 4 }}
+  {{- with mergeOverwrite (deepCopy .metadata) .deployment.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   {{- if not .deployment.autoscaling.enabled }}
   replicas: {{ .deployment.replicas }}
@@ -112,10 +114,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: burrito-datastore
+  {{- with mergeOverwrite (deepCopy .metadata) .service.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4}}
+    {{- toYaml .labels | nindent 4}}
   annotations:
-    {{- toYaml .metadata.annotations | nindent 4}}
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   type: {{ .service.type }}
   {{- if .service.trafficDistribution }}
@@ -160,8 +164,12 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: burrito-datastore
+  {{- with mergeOverwrite (deepCopy .metadata) .tls.certManager.certificate.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   {{- toYaml .tls.certManager.certificate.spec | nindent 4 }}
 {{- end }}

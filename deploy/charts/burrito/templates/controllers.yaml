@@ -6,10 +6,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: burrito-controllers
-  annotations:
-    {{- toYaml .metadata.annotations | nindent 4 }}
+  {{- with mergeOverwrite (deepCopy .metadata) .deployment.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4 }}
+  annotations:
+    {{- toYaml .annotations | nindent 4 }}
+  {{- end }}
 spec:
   {{- if not .deployment.autoscaling.enabled }}
   replicas: {{ .deployment.replicas }}
@@ -127,7 +129,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: burrito-controllers
-  {{- with mergeOverwrite (deepCopy .metadata) .serviceAccount.metadata }}
+  {{- with mergeOverwrite (deepCopy .metadata) .service.metadata }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
@@ -145,10 +147,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: burrito-controllers
+  {{- with mergeOverwrite (deepCopy .metadata) .serviceAccount.metadata }}
   labels:
-    {{- toYaml .metadata.labels | nindent 4 }}
+    {{- toYaml .labels | nindent 4 }}
   annotations:
-    {{- toYaml .metadata.annotations | nindent 4 }}
+    {{- toYaml .annotations | nindent 4 }}
+  {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
