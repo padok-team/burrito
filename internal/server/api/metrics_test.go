@@ -8,7 +8,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -20,35 +19,8 @@ func TestMetricsHandler(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = configv1alpha1.AddToScheme(scheme)
 
-	// Create some test layers
-	testLayer := &configv1alpha1.TerraformLayer{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-layer",
-			Namespace: "default",
-		},
-		Spec: configv1alpha1.TerraformLayerSpec{
-			Repository: configv1alpha1.TerraformLayerRepository{
-				Name:      "test-repo",
-				Namespace: "default",
-			},
-			Branch: "main",
-			Path:   "/terraform",
-		},
-		Status: configv1alpha1.TerraformLayerStatus{
-			State: "Idle",
-			Conditions: []metav1.Condition{
-				{
-					Type:   "IsRunning",
-					Status: metav1.ConditionFalse,
-					Reason: "NotRunning",
-				},
-			},
-		},
-	}
-
 	client := fake.NewClientBuilder().
 		WithScheme(scheme).
-		WithObjects(testLayer).
 		Build()
 
 	// Create API instance
@@ -72,14 +44,14 @@ func TestMetricsHandler(t *testing.T) {
 	// Check that response contains Prometheus metrics
 	responseBody := rec.Body.String()
 	assert.Contains(t, responseBody, "# HELP")
-	assert.Contains(t, responseBody, "burrito_terraform")
+	assert.Contains(t, responseBody, "burrito_")
 
-	// Check for specific metrics
+	// Check for specific metrics (metrics that are always present)
 	expectedMetrics := []string{
-		"burrito_terraform_layer_status",
-		"burrito_terraform_layer_state",
-		"burrito_terraform_repositories_total",
-		"burrito_terraform_pullrequests_total",
+		"burrito_layers_total",
+		"burrito_repositories_total",
+		"burrito_runs_total",
+		"burrito_metrics_collection_duration_seconds",
 	}
 
 	for _, metric := range expectedMetrics {

@@ -25,8 +25,8 @@ curl http://localhost:8080/metrics
 
 #### `burrito_terraform_layer_status`
 - **Type**: Gauge
-- **Description**: Status of Terraform layers based on UI representation
-- **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `status`
+- **Description**: Status of individual Terraform layers
+- **Labels**: `namespace`, `layer_name`, `repository_name`, `status`
 - **Values**:
   - `0`: disabled - Layer has no conditions set
   - `1`: success - Layer is in sync and working properly
@@ -36,8 +36,8 @@ curl http://localhost:8080/metrics
 
 #### `burrito_terraform_layer_state`
 - **Type**: Gauge
-- **Description**: Current state of Terraform layers (controller state)
-- **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `state`
+- **Description**: Current state of individual Terraform layers (controller state)
+- **Labels**: `namespace`, `layer_name`, `repository_name`, `state`
 - **Values**: `1` when the layer is in the given state
 - **States**: `Idle`, `PlanNeeded`, `ApplyNeeded`, `unknown`
 
@@ -56,26 +56,11 @@ curl http://localhost:8080/metrics
 - **Description**: Duration of the last run for Terraform layers in seconds
 - **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `action`, `status`
 
-#### `burrito_terraform_layer_condition`
-- **Type**: Gauge
-- **Description**: Condition status for Terraform layers
-- **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `condition`, `status`, `reason`
-- **Values**:
-  - `1`: True
-  - `0`: False
-  - `-1`: Unknown
-
 ### Terraform Repository Metrics
 
 #### `burrito_terraform_repositories_total`
 - **Type**: Gauge
 - **Description**: Total number of Terraform repositories
-
-#### `burrito_terraform_repository_status`
-- **Type**: Gauge
-- **Description**: Status of Terraform repositories
-- **Labels**: `namespace`, `name`, `url`, `branch`, `status`
-- **Values**: Same as layer status values
 
 ### Terraform Run Metrics
 
@@ -127,22 +112,28 @@ scrape_configs:
 #### Layers by Status
 ```promql
 # Count layers by status
-sum by (status) (burrito_terraform_layer_status)
+sum by (status) (burrito_terraform_layer_status > 0)
 
 # Get all layers in error state
-burrito_terraform_layer_status{status="error"}
+burrito_terraform_layer_status{status="error"} > 0
 
 # Get layers that need attention (warning or error)
-burrito_terraform_layer_status{status=~"warning|error"}
+burrito_terraform_layer_status{status=~"warning|error"} > 0
+
+# Get layers by repository
+sum by (repository_name) (burrito_terraform_layer_status > 0)
 ```
 
 #### Layer States
 ```promql
 # Count layers by state
-sum by (state) (burrito_terraform_layer_state)
+sum by (state) (burrito_terraform_layer_state > 0)
 
 # Get layers that need planning
-burrito_terraform_layer_state{state="PlanNeeded"}
+burrito_terraform_layer_state{state="PlanNeeded"} > 0
+
+# Get specific layer status
+burrito_terraform_layer_status{namespace="production", layer_name="app-infrastructure"}
 ```
 
 #### Run Metrics
@@ -157,13 +148,13 @@ burrito_terraform_run_retries > 0
 burrito_terraform_run_status{state="Failed"}
 ```
 
-#### Layer Conditions
+#### Layer Detailed Analysis
 ```promql
-# Layers that are running
-burrito_terraform_layer_condition{condition="IsRunning", status="True"}
+# Layers currently running (derived from conditions)
+burrito_terraform_layer_status{status="running"} > 0
 
-# Layers with failed conditions
-burrito_terraform_layer_condition{status="False"}
+# Layers with errors (more actionable than raw conditions)
+burrito_terraform_layer_status{status="error"} > 0
 ```
 
 ### Alerting Rules
@@ -174,17 +165,17 @@ The most important alert for monitoring Terraform layers is when they are not OK
 # Alert when a layer is not OK (error or warning state) but not currently running
 - alert: BurritoLayerNotOK
   expr: |
-    burrito_terraform_layer_status{status=~"error|warning"} == 1
-    and
-    burrito_terraform_layer_status{status="running"} == 0
+    burrito_terraform_layer_status{status=~"error|warning"} > 0
+    unless
+    burrito_terraform_layer_status{status="running"} > 0
   for: 5m
   labels:
     severity: warning
   annotations:
-    summary: "Terraform layer {{ $labels.name }} in {{ $labels.namespace }} is not OK"
+    summary: "Terraform layer {{ $labels.layer_name }} in {{ $labels.namespace }} is not OK"
     description: |
-      Layer "{{ $labels.name }}" has status "{{ $labels.status }}" and needs attention.
-      Repository: {{ $labels.repository }}, Path: {{ $labels.path }}
+      Layer "{{ $labels.layer_name }}" has status "{{ $labels.status }}" and needs attention.
+      Repository: {{ $labels.repository_name }}
 ```
 
 For a complete set of alerting rules, see: [examples/prometheus-alerts.yaml](../../examples/prometheus-alerts.yaml)

@@ -162,6 +162,9 @@ func (s *Server) Exec() {
 		}))
 	}
 
+	// Capture the api package reference before local variable shadows it
+	stopMetricsCollector := api.StopMetricsCollector
+
 	api := e.Group("/api")
 	e.GET("/healthz", handleHealthz)
 	e.GET("/metrics", s.API.MetricsHandler)
@@ -194,7 +197,10 @@ func (s *Server) Exec() {
 
 	// start a goroutine to refresh webhook handlers every minute
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	defer func() {
+		cancel()
+		stopMetricsCollector() // Graceful shutdown of metrics collector
+	}()
 	go s.refreshWebhookHandlers(ctx)
 
 	e.Logger.Fatal(e.Start(s.config.Server.Addr))

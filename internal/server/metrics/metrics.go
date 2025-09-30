@@ -2,6 +2,8 @@ package metrics
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
@@ -11,294 +13,435 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// MetricsCollector collects and exposes Burrito metrics
-type MetricsCollector struct {
-	client   client.Client
-	registry *prometheus.Registry
+const (
+	// Default refresh interval for background collection
+	DefaultRefreshInterval = 30 * time.Second
+	// Maximum number of runs to include in metrics (to control cardinality)
+	MaxRunsInMetrics = 100
+	// Cache TTL for metrics
+	MetricsCacheTTL = 60 * time.Second
+)
 
-	// Layer metrics
+// MetricsCollector provides a scalable metrics collection implementation
+type MetricsCollector struct {
+	client          client.Client
+	registry        *prometheus.Registry
+	refreshInterval time.Duration
+	maxRuns         int
+
+	// Background collection
+	stopCh         chan struct{}
+	mutex          sync.RWMutex
+	lastCollection time.Time
+	cacheTTL       time.Duration
+
+	// Optimized metrics with controlled cardinality
 	layerStatusGauge *prometheus.GaugeVec
 	layerStateGauge  *prometheus.GaugeVec
 	layerRunsTotal   *prometheus.CounterVec
 	layerLastRunTime *prometheus.GaugeVec
-	layerRunDuration *prometheus.GaugeVec
-	layerConditions  *prometheus.GaugeVec
+
+	// Summary metrics for better scalability
+	layersByStatus    *prometheus.GaugeVec
+	layersByNamespace *prometheus.GaugeVec
+	runsByAction      *prometheus.GaugeVec
+	runsByStatus      *prometheus.GaugeVec
 
 	// Repository metrics
 	repositoryStatusGauge *prometheus.GaugeVec
-	repositoriesTotal     prometheus.Gauge
 
-	// Run metrics
-	runStatusGauge *prometheus.GaugeVec
-	runDuration    *prometheus.GaugeVec
-	runRetries     *prometheus.GaugeVec
+	// High-level aggregate metrics
+	totalLayers       prometheus.Gauge
+	totalRepositories prometheus.Gauge
+	totalRuns         prometheus.Gauge
+	totalPullRequests prometheus.Gauge
 
-	// Pull Request metrics
-	pullRequestStatusGauge *prometheus.GaugeVec
-	pullRequestsTotal      prometheus.Gauge
+	// Performance metrics
+	collectionDuration prometheus.Histogram
+	apiCallsTotal      *prometheus.CounterVec
+
+	// Error metrics
+	collectionErrors *prometheus.CounterVec
 }
 
-// NewMetricsCollector creates a new metrics collector with its own registry
-func NewMetricsCollector(client client.Client) *MetricsCollector {
+type CollectorConfig struct {
+	RefreshInterval time.Duration
+	MaxRuns         int
+	CacheTTL        time.Time
+}
+
+// NewMetricsCollector creates a new metrics collector
+func NewMetricsCollector(client client.Client, config *CollectorConfig) *MetricsCollector {
+	if config == nil {
+		config = &CollectorConfig{
+			RefreshInterval: DefaultRefreshInterval,
+			MaxRuns:         MaxRunsInMetrics,
+		}
+	}
+
 	registry := prometheus.NewRegistry()
 
+	// Individual layer metrics with layer and repository names
 	layerStatusGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "burrito_terraform_layer_status",
-			Help: "Status of Terraform layers (0=disabled, 1=success, 2=warning, 3=error)",
+			Help: "Status of individual Terraform layers (0=disabled, 1=success, 2=warning, 3=error, 4=running)",
 		},
-		[]string{"namespace", "name", "repository", "branch", "path", "status"},
+		[]string{"namespace", "layer_name", "repository_name", "status"},
 	)
 
 	layerStateGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "burrito_terraform_layer_state",
-			Help: "State of Terraform layers (1=active for the given state)",
+			Help: "State of individual Terraform layers (1=active for the given state)",
 		},
-		[]string{"namespace", "name", "repository", "branch", "path", "state"},
+		[]string{"namespace", "layer_name", "repository_name", "state"},
 	)
 
 	layerRunsTotal := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "burrito_terraform_layer_runs_total",
-			Help: "Total number of runs for Terraform layers",
+			Name: "burrito_layer_runs_total",
+			Help: "Total number of runs by namespace and action",
 		},
-		[]string{"namespace", "name", "repository", "branch", "path", "action"},
+		[]string{"namespace", "action", "status"},
 	)
 
 	layerLastRunTime := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "burrito_terraform_layer_last_run_timestamp",
-			Help: "Timestamp of the last run for Terraform layers",
+			Name: "burrito_layer_last_run_timestamp",
+			Help: "Timestamp of most recent run by namespace",
 		},
-		[]string{"namespace", "name", "repository", "branch", "path", "action"},
+		[]string{"namespace", "action"},
 	)
 
-	layerRunDuration := prometheus.NewGaugeVec(
+	// Summary metrics
+	layersByStatus := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "burrito_terraform_layer_run_duration_seconds",
-			Help: "Duration of the last run for Terraform layers in seconds",
+			Name: "burrito_layers_status_total",
+			Help: "Total layers by status across all namespaces",
 		},
-		[]string{"namespace", "name", "repository", "branch", "path", "action", "status"},
+		[]string{"status"},
 	)
 
-	layerConditions := prometheus.NewGaugeVec(
+	layersByNamespace := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "burrito_terraform_layer_condition",
-			Help: "Condition status for Terraform layers (1=true, 0=false, -1=unknown)",
+			Name: "burrito_layers_namespace_total",
+			Help: "Total layers per namespace",
 		},
-		[]string{"namespace", "name", "repository", "branch", "path", "condition", "status", "reason"},
+		[]string{"namespace"},
 	)
 
+	runsByAction := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "burrito_runs_by_action_total",
+			Help: "Total runs by action type",
+		},
+		[]string{"action"},
+	)
+
+	runsByStatus := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "burrito_runs_by_status_total",
+			Help: "Total runs by status",
+		},
+		[]string{"status"},
+	)
+
+	// Repository metrics
 	repositoryStatusGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "burrito_terraform_repository_status",
-			Help: "Status of Terraform repositories",
+			Help: "Status of individual Terraform repositories (0=disabled, 1=success, 2=warning, 3=error)",
 		},
-		[]string{"namespace", "name", "url", "branch", "status"},
+		[]string{"namespace", "repository_name", "url", "status"},
 	)
 
-	repositoriesTotal := prometheus.NewGauge(
+	// High-level aggregates
+	totalLayers := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "burrito_terraform_repositories_total",
+			Name: "burrito_layers_total",
+			Help: "Total number of Terraform layers",
+		},
+	)
+
+	totalRepositories := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "burrito_repositories_total",
 			Help: "Total number of Terraform repositories",
 		},
 	)
 
-	runStatusGauge := prometheus.NewGaugeVec(
+	totalRuns := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "burrito_terraform_run_status",
-			Help: "Status of Terraform runs",
+			Name: "burrito_runs_total",
+			Help: "Total number of Terraform runs",
 		},
-		[]string{"namespace", "name", "layer_name", "action", "state"},
 	)
 
-	runDuration := prometheus.NewGaugeVec(
+	totalPullRequests := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "burrito_terraform_run_duration_seconds",
-			Help: "Duration of Terraform runs in seconds",
-		},
-		[]string{"namespace", "name", "layer_name", "action", "state"},
-	)
-
-	runRetries := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "burrito_terraform_run_retries",
-			Help: "Number of retries for Terraform runs",
-		},
-		[]string{"namespace", "name", "layer_name", "action", "state"},
-	)
-
-	pullRequestStatusGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "burrito_terraform_pullrequest_status",
-			Help: "Status of Terraform pull requests",
-		},
-		[]string{"namespace", "name", "repository", "pr_id", "state"},
-	)
-
-	pullRequestsTotal := prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "burrito_terraform_pullrequests_total",
+			Name: "burrito_pullrequests_total",
 			Help: "Total number of Terraform pull requests",
 		},
 	)
 
-	// Register all metrics with the registry
-	registry.MustRegister(
-		layerStatusGauge,
-		layerStateGauge,
-		layerRunsTotal,
-		layerLastRunTime,
-		layerRunDuration,
-		layerConditions,
-		repositoryStatusGauge,
-		repositoriesTotal,
-		runStatusGauge,
-		runDuration,
-		runRetries,
-		pullRequestStatusGauge,
-		pullRequestsTotal,
+	// Performance metrics
+	collectionDuration := prometheus.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "burrito_metrics_collection_duration_seconds",
+			Help:    "Time spent collecting metrics",
+			Buckets: prometheus.DefBuckets,
+		},
 	)
 
-	return &MetricsCollector{
-		client:                 client,
-		registry:               registry,
-		layerStatusGauge:       layerStatusGauge,
-		layerStateGauge:        layerStateGauge,
-		layerRunsTotal:         layerRunsTotal,
-		layerLastRunTime:       layerLastRunTime,
-		layerRunDuration:       layerRunDuration,
-		layerConditions:        layerConditions,
-		repositoryStatusGauge:  repositoryStatusGauge,
-		repositoriesTotal:      repositoriesTotal,
-		runStatusGauge:         runStatusGauge,
-		runDuration:            runDuration,
-		runRetries:             runRetries,
-		pullRequestStatusGauge: pullRequestStatusGauge,
-		pullRequestsTotal:      pullRequestsTotal,
+	apiCallsTotal := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "burrito_metrics_api_calls_total",
+			Help: "Total API calls made during metrics collection",
+		},
+		[]string{"resource", "status"},
+	)
+
+	collectionErrors := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "burrito_metrics_collection_errors_total",
+			Help: "Total errors during metrics collection",
+		},
+		[]string{"resource", "error_type"},
+	)
+
+	// Register all metrics
+	registry.MustRegister(
+		layerStatusGauge, layerStateGauge, layerRunsTotal, layerLastRunTime,
+		layersByStatus, layersByNamespace, runsByAction, runsByStatus,
+		repositoryStatusGauge, totalLayers, totalRepositories, totalRuns, totalPullRequests,
+		collectionDuration, apiCallsTotal, collectionErrors,
+	)
+
+	collector := &MetricsCollector{
+		client:          client,
+		registry:        registry,
+		refreshInterval: config.RefreshInterval,
+		maxRuns:         config.MaxRuns,
+		cacheTTL:        MetricsCacheTTL,
+		stopCh:          make(chan struct{}),
+
+		layerStatusGauge:      layerStatusGauge,
+		layerStateGauge:       layerStateGauge,
+		layerRunsTotal:        layerRunsTotal,
+		layerLastRunTime:      layerLastRunTime,
+		layersByStatus:        layersByStatus,
+		layersByNamespace:     layersByNamespace,
+		runsByAction:          runsByAction,
+		runsByStatus:          runsByStatus,
+		repositoryStatusGauge: repositoryStatusGauge,
+		totalLayers:           totalLayers,
+		totalRepositories:     totalRepositories,
+		totalRuns:             totalRuns,
+		totalPullRequests:     totalPullRequests,
+		collectionDuration:    collectionDuration,
+		apiCallsTotal:         apiCallsTotal,
+		collectionErrors:      collectionErrors,
+	}
+
+	return collector
+}
+
+// Start begins background metrics collection
+func (smc *MetricsCollector) Start(ctx context.Context) {
+	ticker := time.NewTicker(smc.refreshInterval)
+	defer ticker.Stop()
+
+	// Initial collection
+	smc.collectMetrics(ctx)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-smc.stopCh:
+			return
+		case <-ticker.C:
+			smc.collectMetrics(ctx)
+		}
 	}
 }
 
-// GetRegistry returns the Prometheus registry for this collector
-func (mc *MetricsCollector) GetRegistry() *prometheus.Registry {
-	return mc.registry
+// Stop stops background collection
+func (smc *MetricsCollector) Stop() {
+	close(smc.stopCh)
 }
 
-// CollectMetrics collects all metrics from Kubernetes resources
-func (mc *MetricsCollector) CollectMetrics(ctx context.Context) error {
-	// Reset all metrics to avoid stale data
-	mc.resetMetrics()
+// GetRegistry returns the Prometheus registry
+func (smc *MetricsCollector) GetRegistry() *prometheus.Registry {
+	return smc.registry
+}
 
-	// Collect layer metrics
-	if err := mc.collectLayerMetrics(ctx); err != nil {
-		log.Errorf("Failed to collect layer metrics: %v", err)
-		return err
-	}
+// GetMetrics returns cached metrics if still valid, otherwise triggers collection
+func (smc *MetricsCollector) GetMetrics(ctx context.Context) error {
+	smc.mutex.RLock()
+	cacheValid := time.Since(smc.lastCollection) < smc.cacheTTL
+	smc.mutex.RUnlock()
 
-	// Collect repository metrics
-	if err := mc.collectRepositoryMetrics(ctx); err != nil {
-		log.Errorf("Failed to collect repository metrics: %v", err)
-		return err
-	}
-
-	// Collect run metrics
-	if err := mc.collectRunMetrics(ctx); err != nil {
-		log.Errorf("Failed to collect run metrics: %v", err)
-		return err
-	}
-
-	// Collect pull request metrics
-	if err := mc.collectPullRequestMetrics(ctx); err != nil {
-		log.Errorf("Failed to collect pull request metrics: %v", err)
-		return err
+	if !cacheValid {
+		return smc.collectMetrics(ctx)
 	}
 
 	return nil
 }
 
-func (mc *MetricsCollector) resetMetrics() {
-	mc.layerStatusGauge.Reset()
-	mc.layerStateGauge.Reset()
-	mc.layerLastRunTime.Reset()
-	mc.layerRunDuration.Reset()
-	mc.layerConditions.Reset()
-	mc.repositoryStatusGauge.Reset()
-	mc.runStatusGauge.Reset()
-	mc.runDuration.Reset()
-	mc.runRetries.Reset()
-	mc.pullRequestStatusGauge.Reset()
+func (smc *MetricsCollector) collectMetrics(ctx context.Context) error {
+	start := time.Now()
+	defer func() {
+		smc.collectionDuration.Observe(time.Since(start).Seconds())
+	}()
+
+	smc.mutex.Lock()
+	defer smc.mutex.Unlock()
+
+	// Reset metrics
+	smc.resetMetrics()
+
+	// Collect all resource types with error handling
+	if err := smc.collectLayerMetricsOptimized(ctx); err != nil {
+		smc.collectionErrors.WithLabelValues("layers", "api_error").Inc()
+		log.Errorf("Failed to collect layer metrics: %v", err)
+	}
+
+	if err := smc.collectRepositoryMetrics(ctx); err != nil {
+		smc.collectionErrors.WithLabelValues("repositories", "api_error").Inc()
+		log.Errorf("Failed to collect repository metrics: %v", err)
+	}
+
+	if err := smc.collectRunMetricsOptimized(ctx); err != nil {
+		smc.collectionErrors.WithLabelValues("runs", "api_error").Inc()
+		log.Errorf("Failed to collect run metrics: %v", err)
+	}
+
+	if err := smc.collectPullRequestMetricsOptimized(ctx); err != nil {
+		smc.collectionErrors.WithLabelValues("pullrequests", "api_error").Inc()
+		log.Errorf("Failed to collect pull request metrics: %v", err)
+	}
+
+	smc.lastCollection = time.Now()
+	return nil
 }
 
-func (mc *MetricsCollector) collectLayerMetrics(ctx context.Context) error {
+func (smc *MetricsCollector) resetMetrics() {
+	smc.layerStatusGauge.Reset()
+	smc.layerStateGauge.Reset()
+	smc.layersByStatus.Reset()
+	smc.layersByNamespace.Reset()
+	smc.runsByAction.Reset()
+	smc.runsByStatus.Reset()
+	smc.repositoryStatusGauge.Reset()
+}
+
+func (smc *MetricsCollector) collectLayerMetricsOptimized(ctx context.Context) error {
 	var layers configv1alpha1.TerraformLayerList
-	if err := mc.client.List(ctx, &layers); err != nil {
+
+	// Use field selectors for optimization if needed
+	listOptions := []client.ListOption{}
+
+	smc.apiCallsTotal.WithLabelValues("layers", "started").Inc()
+	if err := smc.client.List(ctx, &layers, listOptions...); err != nil {
+		smc.apiCallsTotal.WithLabelValues("layers", "error").Inc()
 		return err
 	}
+	smc.apiCallsTotal.WithLabelValues("layers", "success").Inc()
+
+	// Aggregate counters
+	statusCounts := make(map[string]map[string]int) // namespace -> status -> count
+	stateCounts := make(map[string]map[string]int)  // namespace -> state -> count
+	namespaceCounts := make(map[string]int)         // namespace -> total count
+	globalStatusCounts := make(map[string]int)      // status -> total count
+
+	var mostRecentRunTime int64
 
 	for _, layer := range layers.Items {
 		namespace := layer.Namespace
-		name := layer.Name
-		repository := layer.Spec.Repository.Name
-		branch := layer.Spec.Branch
-		path := layer.Spec.Path
+		layerName := layer.Name
+		repositoryName := layer.Spec.Repository.Name
 
-		// Layer status metrics (based on UI logic)
-		status := mc.getLayerUIStatus(layer)
-		statusValue := mc.statusToValue(status)
+		// Initialize maps if needed
+		if statusCounts[namespace] == nil {
+			statusCounts[namespace] = make(map[string]int)
+			stateCounts[namespace] = make(map[string]int)
+		}
 
-		mc.layerStatusGauge.WithLabelValues(namespace, name, repository, branch, path, status).Set(statusValue)
-
-		// Layer state metrics
+		// Get status and state
+		status := smc.getLayerUIStatus(layer)
 		state := layer.Status.State
 		if state == "" {
 			state = "unknown"
 		}
-		mc.layerStateGauge.WithLabelValues(namespace, name, repository, branch, path, state).Set(1)
 
-		// Layer condition metrics
-		for _, condition := range layer.Status.Conditions {
-			conditionValue := mc.conditionToValue(condition.Status)
-			mc.layerConditions.WithLabelValues(
-				namespace, name, repository, branch, path,
-				condition.Type, string(condition.Status), condition.Reason,
-			).Set(conditionValue)
-		}
+		// Set individual layer metrics
+		statusValue := smc.statusToValue(status)
+		smc.layerStatusGauge.WithLabelValues(namespace, layerName, repositoryName, status).Set(statusValue)
+		smc.layerStateGauge.WithLabelValues(namespace, layerName, repositoryName, state).Set(1)
 
-		// Last run metrics
-		if layer.Status.LastRun.Name != "" {
+		// Increment aggregate counters
+		statusCounts[namespace][status]++
+		stateCounts[namespace][state]++
+		namespaceCounts[namespace]++
+		globalStatusCounts[status]++
+
+		// Track most recent run
+		if layer.Status.LastRun.Name != "" && !layer.Status.LastRun.Date.Time.IsZero() {
 			runTime := layer.Status.LastRun.Date.Unix()
-			action := layer.Status.LastRun.Action
-			if action == "" {
-				action = "unknown"
+			if runTime > mostRecentRunTime {
+				mostRecentRunTime = runTime
+				smc.layerLastRunTime.WithLabelValues(namespace, layer.Status.LastRun.Action).Set(float64(runTime))
 			}
-
-			mc.layerLastRunTime.WithLabelValues(namespace, name, repository, branch, path, action).Set(float64(runTime))
-
-			// Count total runs (approximation based on latest runs)
-			mc.layerRunsTotal.WithLabelValues(namespace, name, repository, branch, path, action).Add(float64(len(layer.Status.LatestRuns)))
 		}
+	}
+
+	// Set aggregated metrics
+	smc.totalLayers.Set(float64(len(layers.Items)))
+
+	for namespace, counts := range statusCounts {
+		for status, count := range counts {
+			smc.layerStatusGauge.WithLabelValues(namespace, status).Set(float64(count))
+		}
+	}
+
+	for namespace, counts := range stateCounts {
+		for state, count := range counts {
+			smc.layerStateGauge.WithLabelValues(namespace, state).Set(float64(count))
+		}
+	}
+
+	for namespace, count := range namespaceCounts {
+		smc.layersByNamespace.WithLabelValues(namespace).Set(float64(count))
+	}
+
+	for status, count := range globalStatusCounts {
+		smc.layersByStatus.WithLabelValues(status).Set(float64(count))
 	}
 
 	return nil
 }
 
-func (mc *MetricsCollector) collectRepositoryMetrics(ctx context.Context) error {
+func (smc *MetricsCollector) collectRepositoryMetrics(ctx context.Context) error {
 	var repositories configv1alpha1.TerraformRepositoryList
-	if err := mc.client.List(ctx, &repositories); err != nil {
+
+	smc.apiCallsTotal.WithLabelValues("repositories", "started").Inc()
+	if err := smc.client.List(ctx, &repositories); err != nil {
+		smc.apiCallsTotal.WithLabelValues("repositories", "error").Inc()
 		return err
 	}
+	smc.apiCallsTotal.WithLabelValues("repositories", "success").Inc()
 
-	mc.repositoriesTotal.Set(float64(len(repositories.Items)))
+	smc.totalRepositories.Set(float64(len(repositories.Items)))
 
 	for _, repo := range repositories.Items {
 		namespace := repo.Namespace
 		name := repo.Name
 		url := repo.Spec.Repository.Url
-		branch := "main" // Default branch since it's not stored in the repository spec
 
 		// Repository status based on conditions
-		status := "unknown"
+		status := "success" // default
 		if len(repo.Status.Conditions) > 0 {
 			// Check if any condition indicates an error
 			hasError := false
@@ -310,52 +453,73 @@ func (mc *MetricsCollector) collectRepositoryMetrics(ctx context.Context) error 
 			}
 			if hasError {
 				status = "error"
-			} else {
-				status = "success"
 			}
 		}
 
-		statusValue := mc.statusToValue(status)
-		mc.repositoryStatusGauge.WithLabelValues(namespace, name, url, branch, status).Set(statusValue)
+		statusValue := smc.statusToValue(status)
+		smc.repositoryStatusGauge.WithLabelValues(namespace, name, url, status).Set(statusValue)
 	}
 
 	return nil
 }
 
-func (mc *MetricsCollector) collectRunMetrics(ctx context.Context) error {
+func (smc *MetricsCollector) collectRunMetricsOptimized(ctx context.Context) error {
 	var runs configv1alpha1.TerraformRunList
-	if err := mc.client.List(ctx, &runs); err != nil {
+
+	// Limit to recent runs to control cardinality
+	listOptions := []client.ListOption{}
+	if smc.maxRuns > 0 {
+		listOptions = append(listOptions, client.Limit(int64(smc.maxRuns)))
+	}
+
+	smc.apiCallsTotal.WithLabelValues("runs", "started").Inc()
+	if err := smc.client.List(ctx, &runs, listOptions...); err != nil {
+		smc.apiCallsTotal.WithLabelValues("runs", "error").Inc()
 		return err
 	}
+	smc.apiCallsTotal.WithLabelValues("runs", "success").Inc()
+
+	smc.totalRuns.Set(float64(len(runs.Items)))
+
+	// Aggregate run metrics
+	actionCounts := make(map[string]int)
+	statusCounts := make(map[string]int)
+	runTotals := make(map[string]map[string]map[string]int) // namespace -> action -> status -> count
 
 	for _, run := range runs.Items {
-		namespace := run.Namespace
-		name := run.Name
-		layerName := run.Spec.Layer.Name
 		action := run.Spec.Action
 		state := run.Status.State
-
 		if state == "" {
 			state = "unknown"
 		}
+		namespace := run.Namespace
 
-		mc.runStatusGauge.WithLabelValues(namespace, name, layerName, action, state).Set(1)
+		actionCounts[action]++
+		statusCounts[state]++
 
-		// Run retries
-		mc.runRetries.WithLabelValues(namespace, name, layerName, action, state).Set(float64(run.Status.Retries))
+		// Initialize nested maps
+		if runTotals[namespace] == nil {
+			runTotals[namespace] = make(map[string]map[string]int)
+		}
+		if runTotals[namespace][action] == nil {
+			runTotals[namespace][action] = make(map[string]int)
+		}
+		runTotals[namespace][action][state]++
+	}
 
-		// Run duration (if we can calculate it from creation time and last update)
-		if run.CreationTimestamp.Time.IsZero() == false {
-			var duration float64
-			if len(run.Status.Conditions) > 0 {
-				// Use the last condition update time as end time for finished runs
-				lastCondition := run.Status.Conditions[len(run.Status.Conditions)-1]
-				if state == "Succeeded" || state == "Failed" {
-					duration = lastCondition.LastTransitionTime.Sub(run.CreationTimestamp.Time).Seconds()
-				}
-			}
-			if duration > 0 {
-				mc.runDuration.WithLabelValues(namespace, name, layerName, action, state).Set(duration)
+	// Set metrics
+	for action, count := range actionCounts {
+		smc.runsByAction.WithLabelValues(action).Set(float64(count))
+	}
+
+	for status, count := range statusCounts {
+		smc.runsByStatus.WithLabelValues(status).Set(float64(count))
+	}
+
+	for namespace, actions := range runTotals {
+		for action, states := range actions {
+			for state, count := range states {
+				smc.layerRunsTotal.WithLabelValues(namespace, action, state).Add(float64(count))
 			}
 		}
 	}
@@ -363,34 +527,23 @@ func (mc *MetricsCollector) collectRunMetrics(ctx context.Context) error {
 	return nil
 }
 
-func (mc *MetricsCollector) collectPullRequestMetrics(ctx context.Context) error {
+func (smc *MetricsCollector) collectPullRequestMetricsOptimized(ctx context.Context) error {
 	var pullRequests configv1alpha1.TerraformPullRequestList
-	if err := mc.client.List(ctx, &pullRequests); err != nil {
+
+	smc.apiCallsTotal.WithLabelValues("pullrequests", "started").Inc()
+	if err := smc.client.List(ctx, &pullRequests); err != nil {
+		smc.apiCallsTotal.WithLabelValues("pullrequests", "error").Inc()
 		return err
 	}
+	smc.apiCallsTotal.WithLabelValues("pullrequests", "success").Inc()
 
-	mc.pullRequestsTotal.Set(float64(len(pullRequests.Items)))
-
-	for _, pr := range pullRequests.Items {
-		namespace := pr.Namespace
-		name := pr.Name
-		repository := pr.Spec.Repository.Name
-		prID := pr.Spec.ID
-		state := pr.Status.State
-
-		if state == "" {
-			state = "unknown"
-		}
-
-		mc.pullRequestStatusGauge.WithLabelValues(namespace, name, repository, prID, state).Set(1)
-	}
+	smc.totalPullRequests.Set(float64(len(pullRequests.Items)))
 
 	return nil
 }
 
-// getLayerUIStatus returns the UI status based on the layer state and conditions
-// This mirrors the logic in internal/server/api/layers.go:getLayerState
-func (mc *MetricsCollector) getLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
+// getLayerUIStatus returns the UI status (same logic as original)
+func (smc *MetricsCollector) getLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
 	state := "success"
 
 	switch {
@@ -425,7 +578,7 @@ func (mc *MetricsCollector) getLayerUIStatus(layer configv1alpha1.TerraformLayer
 	return state
 }
 
-func (mc *MetricsCollector) statusToValue(status string) float64 {
+func (smc *MetricsCollector) statusToValue(status string) float64 {
 	switch status {
 	case "disabled":
 		return 0
@@ -437,19 +590,6 @@ func (mc *MetricsCollector) statusToValue(status string) float64 {
 		return 3
 	case "running":
 		return 4
-	default:
-		return -1
-	}
-}
-
-func (mc *MetricsCollector) conditionToValue(status metav1.ConditionStatus) float64 {
-	switch status {
-	case metav1.ConditionTrue:
-		return 1
-	case metav1.ConditionFalse:
-		return 0
-	case metav1.ConditionUnknown:
-		return -1
 	default:
 		return -1
 	}
