@@ -62,13 +62,22 @@ func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 
 // getReferenceName converts a ref string to a plumbing.ReferenceName
 // If ref starts with "refs/", use it directly; otherwise assume it's a branch
-// Add the remote because otherwise it will fail
 func getReferenceName(ref string) plumbing.ReferenceName {
 	if strings.HasPrefix(ref, "refs/") {
 		return plumbing.ReferenceName(ref)
 	}
 
 	// Default to branch for backward compatibility
+	return plumbing.NewBranchReferenceName(ref)
+}
+
+// getRemoteReferenceName converts a ref string to a remote plumbing.ReferenceName
+func getRemoteReferenceName(ref string) plumbing.ReferenceName {
+	if strings.HasPrefix(ref, "refs/") {
+		return plumbing.ReferenceName(ref)
+	}
+
+	// Default to remote branch
 	return plumbing.NewRemoteReferenceName(remote, ref)
 }
 
@@ -80,21 +89,48 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 		}
 	}
 
-	reference, err := p.gitRepository.Reference(getReferenceName(ref), true)
+	// First, try to get the local branch reference
+	localRefName := getReferenceName(ref)
+	reference, err := p.gitRepository.Reference(localRefName, true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get HEAD of reference %s for repository %s: %w", getReferenceName(ref), p.RepoURL, err)
+		// If local branch doesn't exist, try to find the remote reference and create local branch
+		remoteRefName := getRemoteReferenceName(ref)
+		remoteRef, remoteErr := p.gitRepository.Reference(remoteRefName, true)
+		if remoteErr != nil {
+			return nil, fmt.Errorf("failed to get reference %s (tried both local %s and remote %s): local_err=%w, remote_err=%v", ref, localRefName, remoteRefName, err, remoteErr)
+		}
+
+		// Create a local branch from the remote reference
+		log.Infof("creating local branch %s from remote %s", localRefName, remoteRefName)
+		localRef := plumbing.NewHashReference(localRefName, remoteRef.Hash())
+		err = p.gitRepository.Storer.SetReference(localRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create local branch %s: %w", localRefName, err)
+		}
+		reference = localRef
 	}
 
-	// Pull latest changes
+	// Checkout the branch
 	worktree, err := p.gitRepository.Worktree()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get worktree for repository %s: %w", p.RepoURL, err)
 	}
 
+	// Checkout the specific branch
+	checkoutOpts := &git.CheckoutOptions{
+		Branch: reference.Name(),
+	}
+
+	log.Infof("checking out branch %s", reference.Name())
+	err = worktree.Checkout(checkoutOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to checkout branch %s: %w", reference.Name(), err)
+	}
+
+	// Pull latest changes
 	pullOpts := &git.PullOptions{
-		Auth:          p.AuthMethod,
-		ReferenceName: reference.Name(),
-		RemoteName:    remote,
+		Auth:       p.AuthMethod,
+		RemoteName: remote,
 	}
 
 	log.Infof("pulling latest changes for repo %s on branch %s", p.RepoURL, reference.Name())
@@ -132,6 +168,16 @@ func (p *GitProvider) clone() error {
 			return fmt.Errorf("failed to open existing repository: %w", err)
 		}
 		p.gitRepository = repo
+
+		// Fetch latest changes from remote, notably to fetch new branches or tags
+		log.Infof("fetching latest changes from remote")
+		err = repo.Fetch(&git.FetchOptions{
+			Auth: p.AuthMethod,
+		})
+		if err != nil && err != git.NoErrAlreadyUpToDate {
+			log.Warnf("failed to fetch latest changes: %v", err)
+		}
+
 		return nil
 	}
 

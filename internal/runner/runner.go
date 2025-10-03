@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -178,7 +179,12 @@ func (r *Runner) cloneGitBundle() error {
 		return err
 	}
 
-	cmd := exec.Command("git", "clone", bundlePath, r.repoDir, "--branch", r.Layer.Spec.Branch)
+	// Remove prefix not authorized by `git clone` command (because users could provide `refs/tags/v1.0.0` or `refs/heads/main`)
+	// in their TerraformLayer spec.
+	branch := strings.TrimPrefix(r.Layer.Spec.Branch, "refs/heads/")
+	branch = strings.TrimPrefix(branch, "refs/tags/")
+
+	cmd := exec.Command("git", "clone", bundlePath, r.repoDir, "--branch", branch)
 	err = cmd.Run()
 	if err != nil {
 		log.Errorf("error cloning repository: %s", err)
