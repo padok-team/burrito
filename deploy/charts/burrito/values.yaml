@@ -601,9 +601,10 @@ networkPolicy:
     additionalIngressRules: []
 
 runners:
-  # -- Metadata configuration for the Burrito runnners
-  metadata:
-    labels:
-      app.kubernetes.io/component: runner
-      app.kubernetes.io/name: burrito-runner
-    annotations: {}
+  rbac:
+    # -- Metadata configuration for RBAC of the Burrito runners managed by this chart
+    metadata:
+      labels:
+        app.kubernetes.io/component: runner
+        app.kubernetes.io/name: burrito-runner
+      annotations: {}

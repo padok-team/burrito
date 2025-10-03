@@ -1,5 +1,5 @@
 {{- $metadataControllers := mergeOverwrite (deepCopy .Values.global.metadata) .Values.controllers.metadata }}
-{{- $metadataRunners := mergeOverwrite (deepCopy .Values.global.metadata) .Values.runners.metadata }}
+{{- $metadataRbacRunners := mergeOverwrite (deepCopy .Values.global.metadata) .Values.runners.rbac.metadata }}
 {{- $metadataServer := mergeOverwrite (deepCopy .Values.global.metadata) .Values.server.metadata }}
 
 {{- range $tenant := .Values.tenants }}
@@ -46,7 +46,7 @@ kind: ServiceAccount
 metadata:
   name: burrito-runner
   namespace: {{ $tenant.namespace.name }}
-  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataRunners }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataRbacRunners }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
@@ -59,7 +59,7 @@ kind: RoleBinding
 metadata:
   name: burrito-runner
   namespace: {{ $tenant.namespace.name }}
-  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataRunners }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataRbacRunners }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
@@ -138,7 +138,7 @@ kind: RoleBinding
 metadata:
   name: {{ $serviceAccount.name }}-burrito-runner
   namespace: {{ $tenant.namespace.name }}
-  {{- with mergeOverwrite (deepCopy $metadataServiceAccount) $metadataRunners }}
+  {{- with mergeOverwrite (deepCopy $metadataServiceAccount) $metadataRbacRunners }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:

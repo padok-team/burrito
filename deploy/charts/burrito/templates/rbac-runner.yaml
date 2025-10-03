@@ -3,7 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: burrito-runner
-  {{- with mergeOverwrite (deepCopy .Values.global.metadata) .Values.runners.metadata }}
+  {{- with mergeOverwrite (deepCopy .Values.global.metadata) .Values.runners.rbac.metadata }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
