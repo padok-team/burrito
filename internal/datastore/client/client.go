@@ -27,6 +27,8 @@ type Client interface {
 	PutGitBundle(namespace, name, ref, revision string, bundle []byte) error
 	CheckGitBundle(namespace, name, ref, revision string) (bool, error)
 	GetGitBundle(namespace, name, ref, revision string) ([]byte, error)
+	GetStateGraph(namespace string, layer string) ([]byte, error)
+	PutStateGraph(namespace string, layer string, graph []byte) error
 }
 
 type DefaultClient struct {
@@ -280,13 +282,11 @@ func (c *DefaultClient) GetGitBundle(namespace, name, ref, revision string) ([]b
 	if err != nil {
 		return nil, err
 	}
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, &storageerrors.StorageError{
 			Err: fmt.Errorf("bundle not found"),
@@ -308,4 +308,62 @@ func (c *DefaultClient) GetGitBundle(namespace, name, ref, revision string) ([]b
 	}
 
 	return body, nil
+}
+
+func (c *DefaultClient) PutStateGraph(namespace string, layer string, content []byte) error {
+	req, err := c.buildRequest(
+		"/api/stategraph",
+		url.Values{
+			"namespace": {namespace},
+			"layer":     {layer},
+		},
+		http.MethodPut,
+		bytes.NewBuffer(content),
+	)
+	req.Header.Set("Content-Type", "application/octet-stream")
+	if err != nil {
+		return err
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		message, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("could not put state graph, there's an issue reading the response from datastore: %s", err)
+		}
+		return fmt.Errorf("could not put state graph, there's an issue with the storage backend: %s", string(message))
+	}
+	return nil
+}
+
+func (c *DefaultClient) GetStateGraph(namespace string, layer string) ([]byte, error) {
+	req, err := c.buildRequest("/api/stategraph", url.Values{
+		"namespace": {namespace},
+		"layer":     {layer},
+	}, http.MethodGet, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &storageerrors.StorageError{
+			Err: fmt.Errorf("no state graph for this layer"),
+			Nil: true,
+		}
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("could not get state graph, there's an issue with the storage backend")
+	}
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }

@@ -14,6 +14,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-json"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/runner/stategraph"
 	runnerutils "github.com/padok-team/burrito/internal/utils/runner"
 	log "github.com/sirupsen/logrus"
 )
@@ -127,6 +128,30 @@ func (r *Runner) execPlan() (string, error) {
 		log.Errorf("could not put plan binary in cache: %s", err)
 		return "", err
 	}
+
+	state, err := r.exec.StatePull(r.workingDir)
+	if err != nil {
+		log.Errorf("could not pull state for state graph creation: %s", err)
+		return "", err
+	}
+	if len(state) == 0 {
+		log.Info("empty state, this likely means no resources are managed yet, skipping state graph creation")
+		return b64.StdEncoding.EncodeToString(sum[:]), nil
+	} else {
+		log.Infof("successfully pulled state for state graph creation")
+		stateGraph, err := stategraph.BuildGraphFromState(state)
+		if err != nil {
+			log.Errorf("could not build state graph: %s", err)
+			return "", err
+		}
+		err = r.Datastore.PutStateGraph(r.Layer.Namespace, r.Layer.Name, stateGraph)
+		if err != nil {
+			log.Errorf("could not put state graph in datastore: %s", err)
+			return "", err
+		}
+		log.Info("successfully created and stored state graph in datastore")
+	}
+
 	log.Infof("%s plan ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
@@ -166,6 +191,30 @@ func (r *Runner) execApply() (string, error) {
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
+
+	state, err := r.exec.StatePull(r.workingDir)
+	if err != nil {
+		log.Errorf("could not pull state for state graph creation: %s", err)
+		return "", err
+	}
+	if len(state) == 0 {
+		log.Info("empty state, this likely means no resources are managed yet, skipping state graph creation")
+		return b64.StdEncoding.EncodeToString(sum[:]), nil
+	} else {
+		log.Infof("successfully pulled state for state graph creation")
+		stateGraph, err := stategraph.BuildGraphFromState(state)
+		if err != nil {
+			log.Errorf("could not build state graph: %s", err)
+			return "", err
+		}
+		err = r.Datastore.PutStateGraph(r.Layer.Namespace, r.Layer.Name, stateGraph)
+		if err != nil {
+			log.Errorf("could not put state graph in datastore: %s", err)
+			return "", err
+		}
+		log.Info("successfully created and stored state graph in datastore")
+	}
+
 	log.Infof("%s apply ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }

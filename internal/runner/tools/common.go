@@ -5,6 +5,7 @@ type BaseExec interface {
 	Plan(string) error
 	Apply(string) error
 	Show(string, string) ([]byte, error)
+	StatePull(string) ([]byte, error)
 	TenvName() string
 	GetExecPath() string
 }
