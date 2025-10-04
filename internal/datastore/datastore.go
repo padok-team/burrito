@@ -49,6 +49,8 @@ func (s *Datastore) Exec() {
 	api.PUT("/logs", s.API.PutLogsHandler)
 	api.GET("/plans", s.API.GetPlanHandler)
 	api.PUT("/plans", s.API.PutPlanHandler)
+	api.GET("/stategraph", s.API.GetStateGraphHandler)
+	api.PUT("/stategraph", s.API.PutStateGraphHandler)
 	api.PUT("/repository/revision/bundle", s.API.PutGitBundleHandler)
 	api.GET("/repository/revision/bundle", s.API.GetGitBundleHandler)
 	api.HEAD("/repository/revision/bundle", s.API.HeadGitBundleHandler)
