@@ -171,7 +171,7 @@ func (s *Server) Exec() {
 	api.GET("/repositories", s.API.RepositoriesHandler)
 	api.GET("/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
 	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
-
+	api.GET("/stategraph/:namespace/:layer", s.API.GetStateGraphHandler)
 	// Redirect root to layers if authenticated, otherwise to login
 	e.GET("/", func(c echo.Context) error {
 		if !s.getAuthEnabled() {

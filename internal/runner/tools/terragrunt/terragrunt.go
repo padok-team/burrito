@@ -134,6 +134,21 @@ func (t *Terragrunt) Show(planArtifactPath, mode string) ([]byte, error) {
 	return output, nil
 }
 
+func (t *Terragrunt) StatePull(workingDir string) ([]byte, error) {
+	t.WorkingDir = workingDir
+	options, err := t.getDefaultOptions("state pull")
+	if err != nil {
+		return nil, err
+	}
+	cmd := exec.Command(t.ExecPath, options...)
+	cmd.Dir = t.WorkingDir
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (t *Terragrunt) GetExecPath() string {
 	return t.ExecPath
 }
