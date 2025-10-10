@@ -172,7 +172,8 @@ func (r *Runner) cloneGitBundle() error {
 		log.Errorf("error creating repository directory: %s", err)
 	}
 
-	bundlePath := filepath.Join(r.config.Runner.RepositoryPath, fmt.Sprintf("%s-%s.gitbundle", r.Layer.Spec.Branch, r.Run.Spec.Layer.Revision))
+	sanitizedBranch := strings.ReplaceAll(r.Layer.Spec.Branch, "/", "--")
+	bundlePath := filepath.Join(r.config.Runner.RepositoryPath, fmt.Sprintf("%s-%s.gitbundle", sanitizedBranch, r.Run.Spec.Layer.Revision))
 	err = os.WriteFile(bundlePath, bundle, 0644)
 	if err != nil {
 		log.Errorf("error writing git bundle to disk: %s", err)
