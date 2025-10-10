@@ -3,8 +3,11 @@
 config:
   # -- Create ConfigMap with Burrito configuration
   create: true
-  # -- Annotations to be added to the ConfigMap
-  annotations: {}
+  # -- Metadata configuration for config map
+  metadata:
+    labels:
+      app.kubernetes.io/name: burrito-config
+    annotations: {}
 
   burrito:
     controller:
@@ -23,7 +26,7 @@ config:
         failureGracePeriod: 30
       # -- Default sync windows for layer reconciliation
       defaultSyncWindows: []
-      # -- Maximum number of concurrent reconciles for the controller, increse this value if you have a lot of resources to reconcile
+      # -- Maximum number of concurrent reconciles for the controller, increase this value if you have a lot of resources to reconcile
       maxConcurrentReconciles: 1
       # -- Maximum number of concurrent runners pods. 0 means no limit
       maxConcurrentRunnerPods: 0
@@ -37,14 +40,16 @@ config:
         enabled: true
         # -- Leader election lock name
         id: 6d185457.terraform.padok.cloud
-      # -- Adress to bind the controller metrics
+      # -- Address to bind the controller metrics
       metricsBindAddress: ":8080"
-      # -- Adress to bind the controller health probe
+      # -- Address to bind the controller health probe
       healthProbeBindAddress: ":8081"
       # -- Port used to handle the Kubernetes webhook
       kubernetesWebhookPort: 9443
+
     # -- Provider cache custom configuration
     hermitcrab: {}
+
     datastore:
       # -- Service accounts that are allowed to access the datastore API in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that)
       serviceAccounts: []
@@ -99,7 +104,7 @@ config:
       # -- Configmap name to store the SSH known hosts in the runner
       sshKnownHostsConfigMapName: burrito-ssh-known-hosts
       image:
-        # -- Default image to use for runners, can be overriden with spec.OverrideRunnerSpec in repositories and layer definitions
+        # -- Default image to use for runners, can be overridden with spec.OverrideRunnerSpec in repositories and layer definitions
         repository: ghcr.io/padok-team/burrito
         tag: "" # By default use Chart's appVersion
         pullPolicy: Always
@@ -112,11 +117,12 @@ config:
 hermitcrab:
   # -- Enable/Disable Hermitcrab (terraform provider cache in cluster)
   enabled: false
+    # -- Metadata configuration for Hermitcrab
   metadata:
-    # -- Labels to be added to the Hermitcrab resources
     labels:
       app.kubernetes.io/component: hermitcrab
       app.kubernetes.io/name: burrito-hermitcrab
+    annotations: {}
   storage:
     emptyDir:
       # -- Use emptyDir for Hermitcrab storage
@@ -139,6 +145,10 @@ hermitcrab:
       # -- Use CertManager for Hermitcrab TLS (recommended - requires cert-manager to be installed on the cluster)
       use: true
       certificate:
+        # -- Metadata configuration for Hermitcrab certificate
+        metadata:
+          labels: {}
+          annotations: {}
         spec:
           # -- Secret name to store the Hermitcrab TLS certificate
           secretName: burrito-hermitcrab-tls
@@ -155,11 +165,17 @@ hermitcrab:
             kind: Issuer
   # -- Hermitcrab service configuration
   service:
-    # -- Hermitcrab service annotations
-    annotations: {}
+    # -- Metadata configuration for Hermitcrab service
+    metadata:
+      labels: {}
+      annotations: {}
     # -- Hermitcrab service traffic distribution policy
     trafficDistribution: ""
   deployment:
+    # -- Metadata configuration for Hermitcrab deployment
+    metadata:
+      labels: {}
+      annotations: {}
     # -- Hermitcrab replicas
     replicas: 1
     # -- Hermitcrab tolerations
@@ -229,7 +245,7 @@ hermitcrab:
     extraVolumeMounts: {}
 
 global:
-  # -- Global metadata configuration
+  # -- Global metadata configuration for Burrito components
   metadata:
     labels:
       app.kubernetes.io/part-of: burrito
@@ -240,6 +256,10 @@ global:
     # -- Enable/Disable CRD installation through the Helm chart
     install: true
   deployment:
+    # -- Global metadata configuration for Burrito components deployments
+    metadata:
+      labels: {}
+      annotations: {}
     mode: Release
     autoscaling:
       # -- Enable/Disable autoscaling for Burrito pods
@@ -276,11 +296,15 @@ global:
   service:
     # -- Enable/Disable service creation for Burrito components
     enabled: true
-  serviceAccount:
-    # -- Global metadata configuration for service accounts used by Burrito components
+    # -- Global metadata configuration for Burrito components services
     metadata:
-      annotations: {}
       labels: {}
+      annotations: {}
+  serviceAccount:
+    # -- Global metadata configuration for Burrito components service accounts
+    metadata:
+      labels: {}
+      annotations: {}
   sshKnownHosts: |-
     bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==
     github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
@@ -298,8 +322,19 @@ controllers:
     labels:
       app.kubernetes.io/component: controllers
       app.kubernetes.io/name: burrito-controllers
+    annotations: {}
+  # -- Service account configuration for the Burrito controller deployment
+  serviceAccount:
+    # -- Metadata configuration for the Burrito controller service account
+    metadata:
+      labels: {}
+      annotations: {}
   # -- Deployment configuration for the Burrito controller
   deployment:
+    # -- Metadata configuration for the Burrito controller deployment
+    metadata:
+      labels: {}
+      annotations: {}
     # -- Annotations to be added to the pods generated by the Burrito controller deployment
     podAnnotations:
       kubectl.kubernetes.io/default-container: burrito
@@ -334,6 +369,10 @@ controllers:
   service:
     # -- Enable/Disable service creation for the Burrito controller
     enabled: false
+    # -- Metadata configuration for the Burrito controller service
+    metadata:
+      labels: {}
+      annotations: {}
 
 server:
   # -- Metadata configuration for the Burrito server
@@ -341,8 +380,19 @@ server:
     labels:
       app.kubernetes.io/component: server
       app.kubernetes.io/name: burrito-server
+    annotations: {}
+  # -- Service account configuration for the Burrito server deployment
+  serviceAccount:
+    # -- Metadata configuration for the Burrito server service account
+    metadata:
+      labels: {}
+      annotations: {}
   # -- Deployment configuration for the Burrito server
   deployment:
+    # -- Metadata configuration for the Burrito server deployment
+    metadata:
+      labels: {}
+      annotations: {}
     # -- Annotations to be added to the pods generated by the Burrito server deployment
     podAnnotations:
       kubectl.kubernetes.io/default-container: burrito
@@ -388,6 +438,10 @@ server:
     topologySpreadConstraints: []
   # -- Service configuration for the Burrito server
   service:
+    # -- Metadata configuration for the Burrito server service
+    metadata:
+      labels: {}
+      annotations: {}
     ports:
       - name: http
         port: 80
@@ -398,8 +452,10 @@ server:
   ingress:
     # -- Enable/Disable ingress creation for the Burrito server
     enabled: false
-    # -- Annotations to be added to the Burrito server ingress
-    annotations: {}
+    # -- Metadata configuration for the Burrito server ingress
+    metadata:
+      labels: {}
+      annotations: {}
     # -- Ingress class name to use for the Burrito server ingress
     ingressClassName: nginx
     # -- Hostname for the Burrito server ingress
@@ -413,12 +469,18 @@ datastore:
     labels:
       app.kubernetes.io/component: datastore
       app.kubernetes.io/name: burrito-datastore
+    annotations: {}
   # -- Service account configuration for the Burrito datastore deployment. Use this to grant permission to the datastore to interact with external storage
   serviceAccount:
+    # -- Metadata configuration for the Burrito datastore service account
     metadata:
-      annotations: {}
       labels: {}
+      annotations: {}
   deployment:
+    # -- Metadata configuration for the Burrito datastore deployment
+    metadata:
+      labels: {}
+      annotations: {}
     # -- Annotations to be added to the pods generated by the Burrito datastore deployment
     podAnnotations:
       kubectl.kubernetes.io/default-container: burrito
@@ -460,6 +522,10 @@ datastore:
     topologySpreadConstraints: []
   # -- Service configuration for the Burrito datastore
   service:
+    # -- Metadata configuration for the Burrito datastore service
+    metadata:
+      labels: {}
+      annotations: {}
     ports:
       - name: http
         port: 80
@@ -480,6 +546,10 @@ datastore:
       use: true
       # -- CertManager certificate configuration
       certificate:
+        # -- Metadata configuration for the Burrito datastore certificate
+        metadata:
+          annotations: {}
+          labels: {}
         spec:
           secretName: burrito-datastore-tls
           commonName: burrito-datastore.burrito-system.svc.cluster.local
@@ -494,21 +564,26 @@ datastore:
 
 # -- List of tenants to create to manage Terraform resources
 tenants: []
-# - namespace:
-#     create: true
-#     name: "burrito-project-1"
-#     labels: {}
-#     annotations: {}
-#   serviceAccounts:
-#     - name: runner-project-1
-#       additionalRoleBindings:
-#         - name: custom
-#           role:
-#             kind: ClusterRole
-#             name: my-custom-role
-#       annotations:
-#         iam.cloud.provider/role: cloud-provider-role
-#       labels: {}
+  # - metadata:
+  #     labels: {}
+  #     annotations: {}
+  #   namespace:
+  #     create: true
+  #     name: burrito-project-1
+  #     metadata:
+  #       labels: {}
+  #       annotations: {}
+  #   serviceAccounts:
+  #     - name: runner-project-1
+  #       additionalRoleBindings:
+  #         - name: runner-project-1
+  #           role:
+  #             kind: ClusterRole
+  #             name: runner-project-1
+  #       metadata:
+  #         labels: {}
+  #         annotations:
+  #           iam.cloud.provider/role: cloud-provider-role
 
 # Network Policy configuration
 networkPolicy:
@@ -524,3 +599,12 @@ networkPolicy:
     enabled: true
     # -- Additional ingress rules for tenant namespaces network policy
     additionalIngressRules: []
+
+runners:
+  rbac:
+    # -- Metadata configuration for RBAC of the Burrito runners managed by this chart
+    metadata:
+      labels:
+        app.kubernetes.io/component: runner
+        app.kubernetes.io/name: burrito-runner
+      annotations: {}

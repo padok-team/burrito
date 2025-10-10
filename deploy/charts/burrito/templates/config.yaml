@@ -68,14 +68,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: burrito-config
+  {{- with mergeOverwrite (deepCopy .Values.global.metadata) .Values.config.metadata }}
   labels:
-    app.kubernetes.io/name: burrito-config
-    {{- toYaml .Values.global.metadata.labels | nindent 4 }}
-  {{- with (mergeOverwrite (deepCopy .Values.global.metadata.annotations) .Values.config.annotations) }}
+    {{- toYaml .labels | nindent 4 }}
   annotations:
-    {{- range $key, $value := . }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
+    {{- toYaml .annotations | nindent 4 }}
   {{- end }}
 data:
   config.yaml: |-
