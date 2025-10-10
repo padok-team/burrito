@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.18.0
+# syntax=docker/dockerfile:1.19.0
 
 # Build Burrito UI
 
