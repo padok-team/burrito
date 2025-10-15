@@ -11,6 +11,8 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/server/utils"
 	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type layer struct {
@@ -29,41 +31,87 @@ type layer struct {
 	IsPR             bool                   `json:"isPR"`
 	LatestRuns       []Run                  `json:"latestRuns"`
 	ManualSyncStatus utils.ManualSyncStatus `json:"manualSyncStatus"`
+	AutoApply        bool                   `json:"autoApply"`
+	OpenTofu         bool                   `json:"openTofu"`
+	Terraform        bool                   `json:"terraform"`
+	Terragrunt       bool                   `json:"terragrunt"`
 }
 
 type Run struct {
-	Name   string `json:"id"`
-	Commit string `json:"commit"`
-	Date   string `json:"date"`
-	Action string `json:"action"`
+	Name          string `json:"id"`
+	Commit        string `json:"commit"`
+	CommitAuthor  string `json:"commitAuthor"`
+	CommitMessage string `json:"commitMessage"`
+	Date          string `json:"date"`
+	Action        string `json:"action"`
 }
 
 type layersResponse struct {
 	Results []layer `json:"results"`
 }
 
-func (a *API) getLayersAndRuns() ([]configv1alpha1.TerraformLayer, map[string]configv1alpha1.TerraformRun, error) {
+func (a *API) getLayersRunsRepositories() ([]configv1alpha1.TerraformLayer, map[string]configv1alpha1.TerraformRun, map[string]configv1alpha1.TerraformRepository, error) {
 	layers := &configv1alpha1.TerraformLayerList{}
 	err := a.Client.List(context.Background(), layers)
 	if err != nil {
 		log.Errorf("could not list TerraformLayers: %s", err)
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	runs := &configv1alpha1.TerraformRunList{}
 	indexedRuns := map[string]configv1alpha1.TerraformRun{}
 	err = a.Client.List(context.Background(), runs)
 	if err != nil {
 		log.Errorf("could not list TerraformRuns: %s", err)
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	for _, run := range runs.Items {
 		indexedRuns[fmt.Sprintf("%s/%s", run.Namespace, run.Name)] = run
 	}
-	return layers.Items, indexedRuns, err
+	repositories := &configv1alpha1.TerraformRepositoryList{}
+	indexedRepositories := map[string]configv1alpha1.TerraformRepository{}
+	err = a.Client.List(context.Background(), repositories)
+	if err != nil {
+		log.Errorf("could not list TerraformRepositories: %s", err)
+		return nil, nil, nil, err
+	}
+	for _, repo := range repositories.Items {
+		indexedRepositories[fmt.Sprintf("%s/%s", repo.Namespace, repo.Name)] = repo
+	}
+	return layers.Items, indexedRuns, indexedRepositories, err
+}
+
+func (a *API) getLayer(namespace, name string) (*configv1alpha1.TerraformLayer, error) {
+	layer := &configv1alpha1.TerraformLayer{}
+	err := a.Client.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, layer)
+	if err != nil {
+		log.Errorf("could not get TerraformLayer %s/%s: %s", namespace, name, err)
+		return nil, err
+	}
+	return layer, nil
+}
+
+func (a *API) getRepository(namespace, name string) (*configv1alpha1.TerraformRepository, error) {
+	repo := &configv1alpha1.TerraformRepository{}
+	err := a.Client.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, repo)
+	if err != nil {
+		log.Errorf("could not get TerraformRepository %s/%s: %s", namespace, name, err)
+		return nil, err
+	}
+	return repo, nil
+}
+
+func (a *API) getRun(namespace, name string) (configv1alpha1.TerraformRun, bool) {
+	run := configv1alpha1.TerraformRun{}
+	err := a.Client.Get(context.Background(), types.NamespacedName{Namespace: namespace, Name: name}, &run)
+	if err != nil {
+		log.Errorf("could not get TerraformRun %s/%s: %s", namespace, name, err)
+		return run, false
+	}
+	return run, true
 }
 
 func (a *API) LayersHandler(c echo.Context) error {
-	layers, runs, err := a.getLayersAndRuns()
+	layers, runs, repositories, err := a.getLayersRunsRepositories()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform layers or runs: %s", err))
 	}
@@ -84,6 +132,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 			}
 			running = runStillRunning(run)
 		}
+		r, ok := repositories[fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name)]
 		results = append(results, layer{
 			UID:              string(l.UID),
 			Name:             l.Name,
@@ -100,12 +149,77 @@ func (a *API) LayersHandler(c echo.Context) error {
 			IsPR:             a.isLayerPR(l),
 			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
 			ManualSyncStatus: utils.GetManualSyncStatus(l),
+			AutoApply:        configv1alpha1.GetAutoApplyEnabled(&r, &l),
+			OpenTofu:         configv1alpha1.GetOpenTofuEnabled(&r, &l),
+			Terraform:        configv1alpha1.GetTerraformEnabled(&r, &l),
+			Terragrunt:       configv1alpha1.GetTerragruntEnabled(&r, &l),
 		})
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
 		Results: results,
 	},
 	)
+}
+
+func (a *API) LayerHandler(c echo.Context) error {
+	namespace := c.Param("namespace")
+	layerName := c.Param("layer")
+	layerObj, err := a.getLayer(namespace, layerName)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return c.String(http.StatusNotFound, fmt.Sprintf("terraform layer %s/%s not found", namespace, layerName))
+		}
+		log.Errorf("could not get TerraformLayer %s/%s: %s", namespace, layerName, err)
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not get terraform layer %s/%s: %s", namespace, layerName, err))
+	}
+	run, ok := configv1alpha1.TerraformRun{}, false
+	if layerObj.Status.LastRun.Name != "" {
+		run, ok = a.getRun(namespace, layerObj.Status.LastRun.Name)
+		if !ok {
+			log.Warnf("could not find last run %s for layer %s/%s", layerObj.Status.LastRun.Name, namespace, layerName)
+		}
+	}
+	runAPI := Run{}
+	running := false
+	if ok {
+		runAPI = Run{
+			Name:   run.Name,
+			Commit: "",
+			Date:   run.CreationTimestamp.Format(time.RFC3339),
+			Action: run.Spec.Action,
+		}
+		running = runStillRunning(run)
+	}
+	repositoryObj, err := a.getRepository(layerObj.Spec.Repository.Namespace, layerObj.Spec.Repository.Name)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return c.String(http.StatusNotFound, fmt.Sprintf("terraform repository %s/%s not found", layerObj.Spec.Repository.Namespace, layerObj.Spec.Repository.Name))
+		}
+		log.Errorf("could not get TerraformRepository %s/%s: %s", layerObj.Spec.Repository.Namespace, layerObj.Spec.Repository.Name, err)
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not get terraform repository %s/%s: %s", layerObj.Spec.Repository.Namespace, layerObj.Spec.Repository.Name, err))
+	}
+	result := layer{
+		UID:              string(layerObj.UID),
+		Name:             layerObj.Name,
+		Namespace:        layerObj.Namespace,
+		Repository:       fmt.Sprintf("%s/%s", layerObj.Spec.Repository.Namespace, layerObj.Spec.Repository.Name),
+		Branch:           layerObj.Spec.Branch,
+		Path:             layerObj.Spec.Path,
+		State:            a.getLayerState(*layerObj),
+		RunCount:         len(layerObj.Status.LatestRuns),
+		LastRun:          runAPI,
+		LastRunAt:        layerObj.Status.LastRun.Date.Format(time.RFC3339),
+		LastResult:       layerObj.Status.LastResult,
+		IsRunning:        running,
+		IsPR:             a.isLayerPR(*layerObj),
+		LatestRuns:       transformLatestRuns(layerObj.Status.LatestRuns),
+		ManualSyncStatus: utils.GetManualSyncStatus(*layerObj),
+		AutoApply:        configv1alpha1.GetAutoApplyEnabled(repositoryObj, layerObj),
+		OpenTofu:         configv1alpha1.GetOpenTofuEnabled(repositoryObj, layerObj),
+		Terraform:        configv1alpha1.GetTerraformEnabled(repositoryObj, layerObj),
+		Terragrunt:       configv1alpha1.GetTerragruntEnabled(repositoryObj, layerObj),
+	}
+	return c.JSON(http.StatusOK, result)
 }
 
 func runStillRunning(run configv1alpha1.TerraformRun) bool {
