@@ -167,11 +167,12 @@ func (s *Server) Exec() {
 	// Logger middleware should be applied after auth middleware to be able log user info
 	api.Use(middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 	api.GET("/layers", s.API.LayersHandler)
+	api.GET("/layers/:namespace/:layer", s.API.LayerHandler)
 	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
+	api.GET("/layers/:namespace/:layer/stategraph", s.API.GetStateGraphHandler)
 	api.GET("/repositories", s.API.RepositoriesHandler)
 	api.GET("/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
 	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
-	api.GET("/stategraph/:namespace/:layer", s.API.GetStateGraphHandler)
 	// Redirect root to layers if authenticated, otherwise to login
 	e.GET("/", func(c echo.Context) error {
 		if !s.getAuthEnabled() {
