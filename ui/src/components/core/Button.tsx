@@ -30,6 +30,7 @@ const Button: React.FC<ButtonProps> = ({
   type = 'button',
   onClick
 }) => {
+  const cursorClass = disabled ? 'cursor-not-allowed' : 'cursor-pointer';
   const styles = {
     light: {
       base: {
@@ -157,7 +158,8 @@ const Button: React.FC<ButtonProps> = ({
         `relative
         px-4
         py-2
-        rounded-md`,
+        rounded-md
+        ${cursorClass}`,
         styles[theme].base[variant],
         disabled && styles[theme].disabled[variant],
         className

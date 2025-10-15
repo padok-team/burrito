@@ -133,8 +133,11 @@ func BuildGraphFromState(data []byte) ([]byte, error) {
 		}
 		return edges[i].From < edges[j].From
 	})
+	graph := Graph{Nodes: nodes, Edges: uniqueEdges(edges)}
+	graph = *onlyManaged(&graph)
+	graph = *reduceTransitive(&graph)
 
-	jsonGraph, err := json.Marshal(Graph{Nodes: nodes, Edges: uniqueEdges(edges)})
+	jsonGraph, err := json.Marshal(graph)
 	if err != nil {
 		return nil, fmt.Errorf("encode graph: %w", err)
 	}
@@ -145,7 +148,7 @@ func BuildGraphFromState(data []byte) ([]byte, error) {
 // where both endpoints are managed.
 // It basically filters out data resources which are noisy in the graph and not
 // relevant for plan / apply operations.
-func OnlyManaged(g *Graph) *Graph {
+func onlyManaged(g *Graph) *Graph {
 	keep := make(map[string]bool, len(g.Nodes))
 	out := &Graph{}
 	for _, n := range g.Nodes {
@@ -337,7 +340,7 @@ func guessCreatedAt(attrs map[string]any) string {
 // ReduceTransitive removes edges (u->v) for which there exists an alternate
 // path u => ... => v of length >= 2. Assumes a DAG, but works conservatively
 // even with cycles (keeps the original edge if unsure).
-func ReduceTransitive(g *Graph) *Graph {
+func reduceTransitive(g *Graph) *Graph {
 	// Build adjacency
 	adj := map[string][]string{}
 	for _, e := range g.Edges {
