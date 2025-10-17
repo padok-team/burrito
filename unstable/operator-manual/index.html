@@ -548,6 +548,8 @@
       
         
       
+        
+      
     
     
     
@@ -641,8 +643,52 @@
   
   
     <li class="md-nav__item">
-      <a href="git-authentication/" class="md-nav__link">
+      <a href="repository-controller/" class="md-nav__link">
         
+  
+  
+  <span class="md-ellipsis">
+    Repository Controller
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -651,7 +697,111 @@
   </span>
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            Git Authentication
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="git-authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="git-authentication/github-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub App
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="git-authentication/github-token/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub Token
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="git-authentication/gitlab-token/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitLab Token
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1089,6 +1239,78 @@
   
   
   
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Migration Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Migration Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration-guides/new-credential-system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migrating to the New Credential System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../contributing/" class="md-nav__link">
         
@@ -1125,6 +1347,23 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#in-this-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      In this section
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1143,11 +1382,24 @@
 
 
 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
-<p>This guide is for administrator and operator wanting to install and configure burrito for other developers.</p>
+<p>This guide is for administrators and operators wanting to install and configure Burrito for other developers.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Please make sure you've completed the <a href="../getting-started/">getting started guide</a>.</p>
 </div>
+<h2 id="in-this-section">In this section<a class="headerlink" href="#in-this-section" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="architecture/">Architecture</a> - Overview of Burrito's architecture and components</li>
+<li><a href="repository-controller/">Repository Controller</a> - How Burrito manages Git repositories, bundles, and revisions</li>
+<li><a href="git-authentication/">Git Authentication</a> - Setting up authentication for Git repositories</li>
+<li><a href="pr-mr-workflow/">PR/MR Workflow</a> - Configuration for handling pull requests and merge requests</li>
+<li><a href="git-webhook/">Git Webhook</a> - Setting up webhooks for repository events</li>
+<li><a href="advanced-configuration/">Advanced Configuration</a> - Additional configuration options</li>
+<li><a href="multi-tenant-architecture/">Multi-tenant Architecture</a> - Running Burrito in a multi-tenant environment</li>
+<li><a href="datastore/">Datastore</a> - Configuration of the datastore component</li>
+<li><a href="provider-caching/">Provider Caching</a> - Caching Terraform providers for better performance</li>
+<li><a href="runner-scheduling/">Runner Scheduling</a> - Configuring how Terraform runners are scheduled</li>
+</ul>
 
 
 

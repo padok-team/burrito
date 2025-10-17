@@ -641,6 +641,8 @@
       
         
       
+        
+      
     
     
     
@@ -734,8 +736,52 @@
   
   
     <li class="md-nav__item">
-      <a href="../../operator-manual/git-authentication/" class="md-nav__link">
+      <a href="../../operator-manual/repository-controller/" class="md-nav__link">
         
+  
+  
+  <span class="md-ellipsis">
+    Repository Controller
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -744,7 +790,111 @@
   </span>
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            Git Authentication
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operator-manual/git-authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operator-manual/git-authentication/github-app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub App
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operator-manual/git-authentication/github-token/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub Token
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operator-manual/git-authentication/gitlab-token/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitLab Token
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1182,6 +1332,78 @@
   
   
   
+    
+    
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Migration Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Migration Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../migration-guides/new-credential-system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migrating to the New Credential System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         
@@ -1315,12 +1537,11 @@ Fork the <a href="https://github.com/padok-team/burrito-examples">burrito-exampl
 <span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </code></pre></div>
-<p>You will also need to setup a <a href="https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps">GitHub App</a> to allow Burrito to comment on your PRs/MRs. Follow the instructions in the <a href="../../operator-manual/pr-mr-workflow/#configuration">PR/MR workflow</a> section of the operator manual to set up the GitHub app.
+<p>You will also need to setup a <a href="https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps">GitHub App</a> to allow Burrito to comment on your PRs/MRs. Follow the instructions in the <a href="../../operator-manual/git-authentication/github-app/">GitHub App</a> section of the operator manual to set up the GitHub app.
 Make sure that you created a secret associated to your repository that include the GitHub app ID, installation ID, and private key.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>You can also use a personal access token instead of a GitHub app. Your GitHub account will be used to comment on the PRs/MRs.
-The secret should include the personal access token in the <code>githubToken</code> key.</p>
+<p>You can also use a <a href="../../operator-manual/git-authentication/github-token/">personal access token</a> instead of a GitHub app. Your GitHub account will be used to comment on the PRs/MRs.</p>
 </div>
 <p>Now let's configure the GitHub webhook. Expose the <code>burrito-server</code> kubernetes service to the internet using the method of your choice. (for testing purposes on a local cluster, you can use <code>kubectl port-forward</code> and <a href="https://ngrok.com/">ngrok</a> to expose the service to the internet).</p>
 <p>Configure a webhook in your GitHub repository to point to the exposed <code>burrito-server</code> service. <strong>Make sure to specify the <code>/api/webhook</code> path in the target url.</strong> The webhook should be triggered on <code>push</code> and <code>pull_request</code> events. Reference your webhook secret in the secret associated to your repository, in the <code>webhookSecret</code> key.</p>
@@ -1333,18 +1554,21 @@ The secret should include the personal access token in the <code>githubToken</co
 <span class="nt">spec</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/&lt;your-github-handle&gt;/burrito-examples</span>
-<span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-secret</span>
 <span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="nn">---</span>
+<span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
 <span class="nt">metadata</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-webhook-secret</span>
 <span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
 <span class="nt">stringData</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">githubAppId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;123456&quot;</span>
-<span class="w">  </span><span class="nt">githubAppInstallationId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;12345678&quot;</span>
+<span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
+<span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/&lt;your-github-handle&gt;/burrito-examples</span>
+<span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;your-webhook-secret&quot;</span>
+<span class="w">  </span><span class="nt">githubAppID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;123456&quot;</span>
+<span class="w">  </span><span class="nt">githubAppInstallationID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;12345678&quot;</span>
 <span class="w">  </span><span class="nt">githubAppPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">    </span><span class="no">-----BEGIN RSA PRIVATE KEY-----</span>
 <span class="w">    </span><span class="no">my-private-key</span>
