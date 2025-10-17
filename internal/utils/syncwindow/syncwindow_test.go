@@ -10,7 +10,7 @@ import (
 	"github.com/padok-team/burrito/internal/utils/syncwindow"
 )
 
-const testTime = "Sun May  8 11:21:53 UTC 2023"
+const testTime = "Mon May  8 11:21:53 UTC 2023"
 
 func TestSyncWindow(t *testing.T) {
 	RegisterFailHandler(Fail)

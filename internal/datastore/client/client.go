@@ -26,6 +26,7 @@ type Client interface {
 	PutLogs(namespace string, layer string, run string, attempt string, content []byte) error
 	PutGitBundle(namespace, name, ref, revision string, bundle []byte) error
 	CheckGitBundle(namespace, name, ref, revision string) (bool, error)
+	GetGitBundle(namespace, name, ref, revision string) ([]byte, error)
 }
 
 type DefaultClient struct {
@@ -262,4 +263,49 @@ func (c *DefaultClient) CheckGitBundle(namespace, name, ref, revision string) (b
 	}
 
 	return true, nil
+}
+
+func (c *DefaultClient) GetGitBundle(namespace, name, ref, revision string) ([]byte, error) {
+	req, err := c.buildRequest(
+		"/api/repository/revision/bundle",
+		url.Values{
+			"namespace": {namespace},
+			"name":      {name},
+			"ref":       {ref},
+			"revision":  {revision},
+		},
+		http.MethodGet,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &storageerrors.StorageError{
+			Err: fmt.Errorf("bundle not found"),
+			Nil: true,
+		}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		msg, e := io.ReadAll(resp.Body)
+		if e != nil {
+			return nil, fmt.Errorf("could not retrieve bundle: %w", e)
+		}
+		return nil, fmt.Errorf("could not retrieve bundle: %s", string(msg))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }

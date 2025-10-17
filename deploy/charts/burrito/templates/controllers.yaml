@@ -76,6 +76,10 @@ spec:
               subPath: burrito-ca.crt
               readOnly: true
             {{- end }}
+            {{- if or .storage.emptyDir.enabled .storage.ephemeral.enabled }}
+            - name: burrito-repositories
+              mountPath: /var/run/burrito/repositories
+            {{- end }}
             {{- if .deployment.extraVolumeMounts }}
             {{- toYaml .deployment.extraVolumeMounts | nindent 12 }}
             {{- end }}
@@ -119,6 +123,23 @@ spec:
             items:
               - key: {{ $.Values.datastore.tls.caKey }}
                 path: burrito-ca.crt
+        {{- end }}
+        {{- if or .storage.emptyDir.enabled .storage.ephemeral.enabled }}
+        - name: burrito-repositories
+          {{- if .storage.emptyDir.enabled }}
+          emptyDir:
+            medium: {{ .storage.emptyDir.medium }}
+            sizeLimit: {{ .storage.emptyDir.sizeLimit }}
+          {{- else if .storage.ephemeral.enabled }}
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes: [ "ReadWriteOnce" ]
+                storageClassName: {{ .storage.ephemeral.storageClassName }}
+                resources:
+                  requests:
+                    storage: {{ .storage.ephemeral.size }}
+          {{- end }}
         {{- end }}
         {{- if .deployment.extraVolumes }}
         {{- toYaml .deployment.extraVolumes | nindent 8 }}

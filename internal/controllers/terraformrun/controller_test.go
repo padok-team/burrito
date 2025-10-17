@@ -35,7 +35,7 @@ var testEnv *envtest.Environment
 var reconciler *controller.Reconciler
 var reconcilerMaxConcurrentPods *controller.Reconciler
 
-const testTime = "Sun May  8 11:21:53 UTC 2023"
+const testTime = "Mon May  8 11:21:53 UTC 2023"
 
 func TestLayer(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -333,6 +333,24 @@ var _ = Describe("Run", func() {
 			})
 			It("should return an error", func() {
 				Expect(reconcileError).To(HaveOccurred())
+			})
+			It("should set RequeueAfter to OnError", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			})
+		})
+		Describe("When a TerraformRun is associated to an unknown revision", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-4",
+					Namespace: "default",
+				}
+				result, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
 			})
 			It("should set RequeueAfter to OnError", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))

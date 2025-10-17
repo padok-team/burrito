@@ -4,6 +4,8 @@ kind: TerraformLayer
 metadata:
   name: non-existent-repository
   namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: nominal-case-one/
@@ -25,6 +27,8 @@ kind: TerraformLayer
 metadata:
   name: last-run-not-exist
   namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
 spec:
   branch: main
   path: last-run-not-exist/

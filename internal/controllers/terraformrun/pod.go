@@ -116,7 +116,7 @@ func mountCA(podSpec *corev1.PodSpec, caSecretName, caName string) {
 }
 
 func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) corev1.Pod {
-	defaultSpec := defaultPodSpec(r.Config, layer, repository, run)
+	defaultSpec := defaultPodSpec(r.Config, layer, run)
 
 	if r.Config.Hermitcrab.Enabled {
 		err := r.ensureCertificateAuthoritySecret(layer.Namespace, r.Config.Hermitcrab.CertificateSecretName)
@@ -158,104 +158,6 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "apply",
-		})
-	}
-	if repository.Spec.Repository.SecretName != "" {
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_USERNAME",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "username",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_PASSWORD",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "password",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_SSHPRIVATEKEY",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "sshPrivateKey",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBAPPID",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "githubAppId",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBAPPINSTALLATIONID",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "githubAppInstallationId",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBAPPPRIVATEKEY",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "githubAppPrivateKey",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_GITHUBTOKEN",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "githubToken",
-					Optional: &[]bool{true}[0],
-				},
-			},
-		})
-		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
-			Name: "BURRITO_RUNNER_REPOSITORY_GITLABTOKEN",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: repository.Spec.Repository.SecretName,
-					},
-					Key:      "gitlabToken",
-					Optional: &[]bool{true}[0],
-				},
-			},
 		})
 	}
 
@@ -333,7 +235,7 @@ func mergeMaps(a, b map[string]string) map[string]string {
 	return result
 }
 
-func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, run *configv1alpha1.TerraformRun) corev1.PodSpec {
+func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) corev1.PodSpec {
 	return corev1.PodSpec{
 		Volumes: []corev1.Volume{
 			{

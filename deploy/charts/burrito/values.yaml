@@ -23,7 +23,7 @@ config:
         # -- Duration to wait before retrying on locked layer
         waitAction: 10s
         # -- Duration to wait before retrying on failure (increases exponentially with the amount of failed retries)
-        failureGracePeriod: 30
+        failureGracePeriod: 15s
       # -- Default sync windows for layer reconciliation
       defaultSyncWindows: []
       # -- Maximum number of concurrent reconciles for the controller, increase this value if you have a lot of resources to reconcile
@@ -32,9 +32,8 @@ config:
       maxConcurrentRunnerPods: 0
       # -- Maximum number of retries for Terraform operations (plan, apply...)
       terraformMaxRetries: 3
-      # TODO: enable repository controller by default
-      # -- Resource types to watch for reconciliation. Note: by default repository controller is disabled as it is not yet fully usable.
-      types: ["layer", "run", "pullrequest"]
+      # -- Resource types to watch for reconciliation.
+      types: ["layer", "repository", "run", "pullrequest"]
       leaderElection:
         # -- Enable/Disable leader election
         enabled: true
@@ -366,6 +365,22 @@ controllers:
     extraVolumes: {}
     # -- Additional volume mounts
     extraVolumeMounts: {}
+  storage:
+    emptyDir:
+      # -- Use emptyDir for Burrito repositories storage
+      enabled: true
+      # -- EmptyDir medium
+      medium: ""
+      # -- EmptyDir size limit
+      sizeLimit: "2Gi"
+    ephemeral:
+      # -- Use ephemeral storage for Burrito repositories storage
+      enabled: false
+      # -- Ephemeral storage size
+      size: "2Gi"
+      # -- Ephemeral storage class name
+      storageClassName: ""
+
   service:
     # -- Enable/Disable service creation for the Burrito controller
     enabled: false
