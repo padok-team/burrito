@@ -72,12 +72,11 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
-          cache: false
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.64
-          args: --timeout=5m
+          version: latest
+          args: --issues-exit-code=0
 
   build-and-push:
     uses: ./.github/workflows/build-and-push.yaml

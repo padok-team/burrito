@@ -111,10 +111,11 @@ func isActionBlocked(r *Reconciler, layer *configv1alpha1.TerraformLayer, reposi
 	defaultSyncWindows := r.Config.Controller.DefaultSyncWindows
 	syncBlocked, reason := syncwindow.IsSyncBlocked(append(repository.Spec.SyncWindows, defaultSyncWindows...), action, layer.Name)
 	if syncBlocked {
-		if reason == syncwindow.BlockReasonInsideDenyWindow {
+		switch reason {
+		case syncwindow.BlockReasonInsideDenyWindow:
 			log.Infof("layer %s is in a deny window, no %s action taken", layer.Name, string(action))
 			r.Recorder.Eventf(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a deny window, no %s action taken", string(action))
-		} else if reason == syncwindow.BlockReasonOutsideAllowWindow {
+		case syncwindow.BlockReasonOutsideAllowWindow:
 			log.Infof("layer %s is outside an allow window, no %s action taken", layer.Name, string(action))
 			r.Recorder.Eventf(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is outside an allow window, no %s action taken", string(action))
 		}
