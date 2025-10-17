@@ -16,10 +16,11 @@ import ChiliLight from '@/assets/illustrations/ChiliLight';
 import ChiliDark from '@/assets/illustrations/ChiliDark';
 import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
 import SyncIcon from '@/assets/icons/SyncIcon';
+import PlayIcon from '@/assets/icons/PlayIcon';
 import GenericIconButton from '@/components/buttons/GenericIconButton';
 
 import { Layer, LayerState } from '@/clients/layers/types';
-import { syncLayer } from '@/clients/layers/client';
+import { applyLayer, syncLayer } from '@/clients/layers/client';
 
 export interface TableProps {
   className?: string;
@@ -41,6 +42,36 @@ const Table: React.FC<TableProps> = ({
     if (sync.status === 200) {
       data[index].manualSyncStatus = 'pending';
     }
+  };
+
+  const applySelectedLayer = async (index: number) => {
+    const apply = await applyLayer(data[index].namespace, data[index].name);
+    if (apply.status === 200) {
+      data[index].manualSyncStatus = 'pending';
+    }
+  };
+
+  const getApplyButtonTooltip = (layer: Layer) => {
+    if (layer.isPR) {
+      return 'Manual apply is not allowed on pull request layers';
+    }
+    if (layer.manualSyncStatus !== 'none') {
+      return 'Run in progress...';
+    }
+    if (!layer.hasValidPlan) {
+      return 'No valid plan available. Run a plan first before applying.';
+    }
+    return 'Apply';
+  };
+
+  const getSyncButtonTooltip = (layer: Layer) => {
+    if (layer.manualSyncStatus !== 'none') {
+      return 'Run in progress...';
+    }
+    if (layer.autoApply) {
+      return 'Plan + Apply';
+    }
+    return 'Plan';
   };
 
   const columns = [
@@ -101,17 +132,19 @@ const Table: React.FC<TableProps> = ({
               <GenericIconButton
                 variant={variant}
                 Icon={SyncIcon}
-                disabled={
-                  result.row.original.manualSyncStatus === 'pending' ||
-                  result.row.original.manualSyncStatus === 'annotated'
-                }
+                disabled={result.row.original.manualSyncStatus !== 'none'}
                 onClick={() => syncSelectedLayer(result.row.index)}
-                tooltip={
-                  result.row.original.manualSyncStatus === 'pending' ||
-                  result.row.original.manualSyncStatus === 'annotated'
-                    ? 'Sync in progress...'
-                    : 'Sync now'
+                tooltip={getSyncButtonTooltip(result.row.original)}
+              />
+              <GenericIconButton
+                variant={variant}
+                Icon={PlayIcon}
+                disabled={
+                  result.row.original.isPR ||
+                  result.row.original.manualSyncStatus !== 'none'
                 }
+                onClick={() => applySelectedLayer(result.row.index)}
+                tooltip={getApplyButtonTooltip(result.row.original)}
               />
             </div>
           ) : result.row.original.isRunning ? (
