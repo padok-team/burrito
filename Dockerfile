@@ -17,7 +17,7 @@ ENV VITE_API_BASE_URL=/api
 RUN yarn build
 
 # Build the manager binary
-FROM docker.io/library/golang:1.24.7-alpine@sha256:fc2cff6625f3c1c92e6c85938ac5bd09034ad0d4bc2dfb08278020b68540dbb5 AS builder
+FROM docker.io/library/golang:1.25.3-alpine@sha256:aee43c3ccbf24fdffb7295693b6e33b21e01baec1b2a55acc351fde345e9ec34 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
@@ -54,18 +54,18 @@ RUN if [ "${BUILD_MODE}" = "Debug" ]; then go install github.com/go-delve/delve/
 # Build with different flags based on debug mode
 RUN --mount=type=cache,target=/root/.cache/go-build \
     if [ "${BUILD_MODE}" = "Debug" ]; then \
-        GCFLAGS="all=-N -l"; \
-        LDFLAGS=""; \
+    GCFLAGS="all=-N -l"; \
+    LDFLAGS=""; \
     else \
-        GCFLAGS=""; \
-        LDFLAGS="-w -s"; \
+    GCFLAGS=""; \
+    LDFLAGS="-w -s"; \
     fi && \
     CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build \
-        -gcflags "${GCFLAGS}" \
-        -ldflags="${LDFLAGS} -X ${PACKAGE}/internal/version.Version=${VERSION} \
-        -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
-        -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
-        -o bin/burrito main.go
+    -gcflags "${GCFLAGS}" \
+    -ldflags="${LDFLAGS} -X ${PACKAGE}/internal/version.Version=${VERSION} \
+    -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
+    -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
+    -o bin/burrito main.go
 
 FROM docker.io/library/alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
 
@@ -81,15 +81,15 @@ ENV GROUP=burrito
 
 # Create a non-root user to run the app
 RUN addgroup \
-  -g $GID \
-  $GROUP && \
-  adduser \
-  --disabled-password \
-  --no-create-home \
-  --home $(pwd) \
-  --uid $UID \
-  --ingroup $GROUP \
-  $USER
+    -g $GID \
+    $GROUP && \
+    adduser \
+    --disabled-password \
+    --no-create-home \
+    --home $(pwd) \
+    --uid $UID \
+    --ingroup $GROUP \
+    $USER
 
 # Copy the binary to the production image from the builder stage
 # Copy /go/bin/dlv*: the wildcard makes the copy to work, even if the binary is not present (in Release mode)
