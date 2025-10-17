@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.7
 
 require (
-	cloud.google.com/go/storage v1.56.1
+	cloud.google.com/go/storage v1.57.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.11.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.2
 	github.com/aws/aws-sdk-go-v2 v1.39.0
@@ -144,7 +144,7 @@ require (
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
-	google.golang.org/grpc v1.74.2 // indirect
+	google.golang.org/grpc v1.74.3 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
