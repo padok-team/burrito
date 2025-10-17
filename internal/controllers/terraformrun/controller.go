@@ -201,7 +201,7 @@ func GetRunExponentialBackOffTime(DefaultRequeueAfter time.Duration, run *config
 }
 
 func getExponentialBackOffTime(DefaultRequeueAfter time.Duration, attempts int) time.Duration {
-	var x float64 = float64(attempts)
+	x := float64(attempts)
 	return time.Duration(int32(math.Exp(x))) * DefaultRequeueAfter
 }
 

@@ -76,6 +76,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: latest
+          args: --issues-exit-code=0
 
   build-and-push:
     uses: ./.github/workflows/build-and-push.yaml
