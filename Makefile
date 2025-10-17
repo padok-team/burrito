@@ -232,7 +232,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 KUSTOMIZE_VERSION ?= 5.7.1
 ## Update from https://github.com/kubernetes-sigs/controller-tools/releases
 CONTROLLER_TOOLS_VERSION ?= v0.19.0
-ENVTEST_VERSION ?= v0.22.3
+ENVTEST_VERSION ?= release-0.22
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
