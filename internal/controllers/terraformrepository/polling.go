@@ -4,6 +4,7 @@ import (
 	"context"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 )
 
 // Returns the list of layers that are managed by this repository
@@ -40,4 +41,14 @@ func retrieveLayersForRef(ref string, layers []configv1alpha1.TerraformLayer) []
 		}
 	}
 	return result
+}
+
+// Checks if there is at least one new layer in the list of layers (without last branch commit annotation)
+func isThereANewLayer(layers []configv1alpha1.TerraformLayer) bool {
+	for _, layer := range layers {
+		if _, ok := layer.Annotations[annotations.LastBranchCommit]; !ok {
+			return true
+		}
+	}
+	return false
 }

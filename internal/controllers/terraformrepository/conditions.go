@@ -46,15 +46,6 @@ func isSyncNowRequested(repo *configv1alpha1.TerraformRepository, branch string,
 	return false, nil
 }
 
-func isThereANewLayer(layers []configv1alpha1.TerraformLayer) bool {
-	for _, layer := range layers {
-		if _, ok := layer.Annotations[annotations.LastBranchCommit]; !ok {
-			return true
-		}
-	}
-	return false
-}
-
 // IsLastSyncTooOld checks if the last sync was too long ago for at least one of the branches tracked by the repository
 // This also catches new layers that have never been synced (no last branch commit annotation)
 func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) (metav1.Condition, bool) {

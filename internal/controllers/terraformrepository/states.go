@@ -75,6 +75,7 @@ func (s *SyncNeeded) getHandler() Handler {
 		// Update datastore with latest revisions for each ref that needs to be synced
 		var syncError error
 		for _, branch := range branchStates {
+			layersForRef := retrieveLayersForRef(branch.Name, layers)
 			// Filter out branches that have been synced succesfully recently or do not have been requested to sync now
 			if lastSync, err := time.Parse(time.UnixDate, branch.LastSyncDate); err == nil {
 				syncNow, err := isSyncNowRequested(repository, branch.Name, lastSync)
@@ -84,7 +85,10 @@ func (s *SyncNeeded) getHandler() Handler {
 				}
 				nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
 				now := r.Clock.Now()
-				if !syncNow && !nextSyncTime.Before(now) && branch.LastSyncStatus == SyncStatusSuccess {
+
+				// Skip sync if last sync is too recent and no new layer
+				if !syncNow && !nextSyncTime.Before(now) && branch.LastSyncStatus == SyncStatusSuccess && !isThereANewLayer(layersForRef) {
+					log.Infof("skipping sync for repository %s/%s ref %s: last sync was at %s and no new layer for this branch", repository.Namespace, repository.Name, branch.Name, lastSync.Format(time.UnixDate))
 					continue
 				}
 			}
@@ -111,7 +115,7 @@ func (s *SyncNeeded) getHandler() Handler {
 			if isSynced {
 				log.Infof("repository %s/%s is in sync with remote for ref %s: rev %s", repository.Namespace, repository.Name, branch.Name, latestRev)
 				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
-				syncError = r.annotateLayers(gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
+				syncError = r.annotateLayers(gitProvider, layersForRef, latestRev)
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
@@ -136,7 +140,7 @@ func (s *SyncNeeded) getHandler() Handler {
 				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
 
 				// Add annotation to trigger a sync for all layers that depend on this branch
-				syncError = r.annotateLayers(gitProvider, retrieveLayersForRef(branch.Name, layers), latestRev)
+				syncError = r.annotateLayers(gitProvider, layersForRef, latestRev)
 			}
 		}
 		if syncError != nil {
