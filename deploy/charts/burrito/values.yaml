@@ -365,6 +365,22 @@ controllers:
     extraVolumes: {}
     # -- Additional volume mounts
     extraVolumeMounts: {}
+  storage:
+    emptyDir:
+      # -- Use emptyDir for Burrito repositories storage
+      enabled: true
+      # -- EmptyDir medium
+      medium: ""
+      # -- EmptyDir size limit
+      sizeLimit: "2Gi"
+    ephemeral:
+      # -- Use ephemeral storage for Burrito repositories storage
+      enabled: false
+      # -- Ephemeral storage size
+      size: "2Gi"
+      # -- Ephemeral storage class name
+      storageClassName: ""
+
   service:
     # -- Enable/Disable service creation for the Burrito controller
     enabled: false

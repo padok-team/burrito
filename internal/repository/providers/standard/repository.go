@@ -26,6 +26,7 @@ type GitProvider struct {
 }
 
 const remote string = "origin"
+const repositoryDir string = "/var/run/burrito/repositories"
 
 func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	// Create an in-memory remote
@@ -145,7 +146,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 
 	// Create git bundle
 	commit := reference.Hash().String()
-	bundleDest := filepath.Join(p.repositoryPath, fmt.Sprintf("%s.gitbundle", commit))
+	bundleDest := filepath.Join(p.workingDir, fmt.Sprintf("%s.gitbundle", commit))
 	bundle, err := createGitBundle(p.repositoryPath, bundleDest, ref)
 	if err != nil {
 		return nil, err
@@ -156,7 +157,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 func (p *GitProvider) clone() error {
 	// Create a consistent directory name based on repository URL hash
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(p.RepoURL)))
-	p.workingDir = filepath.Join(os.TempDir(), "burrito-repo-"+hash)
+	p.workingDir = filepath.Join(repositoryDir, hash)
 	p.repositoryPath = filepath.Join(p.workingDir, "repository")
 
 	// Check if repository already exists
