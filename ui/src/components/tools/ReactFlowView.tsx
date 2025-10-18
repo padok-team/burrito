@@ -2,7 +2,6 @@ import React, { useEffect, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   MarkerType,
   useEdgesState,
   useNodesState,
