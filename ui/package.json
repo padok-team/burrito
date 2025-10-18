@@ -16,11 +16,13 @@
     "@tanstack/react-query": "^5.8.3",
     "@tanstack/react-table": "^8.10.7",
     "axios": "^1.5.1",
+    "elkjs": "^0.11.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-focus-lock": "^2.13.2",
     "react-router-dom": "^7.0.0",
     "react-tooltip": "^5.21.6",
+    "reactflow": "^11.11.4",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {

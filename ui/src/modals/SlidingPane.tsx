@@ -46,30 +46,30 @@ const SlidingPane: React.FC<SlidingPaneProps> = ({
     <>
       {/* Background */}
       <div
-        className={`fixed inset-0 flex bg-nuances-400 bg-opacity-50 z-9 duration-300 ease-in-out ${
-          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        className={`fixed inset-0 bg-nuances-400/50 z-40 transition-opacity duration-300 ease-in-out ${
+          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
         onClick={onClose}
         aria-hidden={!isOpen}
-      ></div>
+      />
 
       {/* Sliding Pane */}
       <FocusLock disabled={!isOpen}>
         <div
-          className={`fixed top-0 right-0 h-screen z-10 shadow-lg transform transition-transform duration-300 ease-in-out ${
+          className={`fixed top-0 right-0 h-screen z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
             isOpen ? 'translate-x-0' : 'translate-x-full'
           } ${width} ${variant === 'light' ? 'bg-primary-100' : 'bg-nuances-black'}`}
         >
           {/* Close Button */}
-          <button
+            <button
             aria-label="Close"
-            className={`absolute top-4 right-8 text-2xl focus:outline-hidden ${
+            className={`absolute top-4 right-8 text-2xl focus:outline-hidden cursor-pointer ${
               variant === 'light' ? 'text-gray-600' : 'text-nuances-50'
             }`}
             onClick={onClose}
-          >
+            >
             &times;
-          </button>
+            </button>
           {/* Content */}
           <div className="p-8 pt-12 overflow-y-auto h-full">{children}</div>
         </div>

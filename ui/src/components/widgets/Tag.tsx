@@ -1,12 +1,14 @@
 import React from 'react';
 
 import { LayerState } from '@/clients/layers/types';
+import { twMerge } from 'tailwind-merge';
 
 export interface TagProps {
   variant: LayerState;
+  className?: string;
 }
 
-const Tag: React.FC<TagProps> = ({ variant }) => {
+const Tag: React.FC<TagProps> = ({ variant, className }) => {
   const styles = {
     success: `bg-status-success-default
       text-nuances-black`,
@@ -33,7 +35,7 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
 
   return (
     <div
-      className={`
+      className={twMerge(`
         flex
         px-3 py-1
         items-center
@@ -43,7 +45,7 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
         font-semibold
         leading-5
         ${styles[variant]}
-      `}
+      `, className)}
     >
       {getContent()}
     </div>

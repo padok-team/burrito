@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { Tooltip } from 'react-tooltip';
+import { useNavigate } from 'react-router-dom';
 
 import Running from '@/components/widgets/Running';
 import Tag from '@/components/widgets/Tag';
@@ -86,8 +87,24 @@ const Card: React.FC<CardProps> = ({
       layer.manualSyncStatus === 'annotated'
   );
 
+  const navigate = useNavigate();
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking on buttons or interactive elements
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('[role="button"]') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+    navigate(`/layers/${namespace}/${name}`);
+  };
+
   return (
     <div
+      onClick={handleCardClick}
       className={twMerge(
         `flex
         flex-col
@@ -95,6 +112,9 @@ const Card: React.FC<CardProps> = ({
         rounded-2xl
         p-6
         gap-4
+        cursor-pointer
+        transition-transform
+        hover:scale-[1.02]
         ${styles.base[variant]}`,
         isRunning && `outline-solid outline-4 ${styles.isRunning[variant]}`,
         className

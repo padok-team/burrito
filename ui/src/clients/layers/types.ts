@@ -16,6 +16,10 @@ export type Layer = {
   lastResult: string;
   isRunning: boolean;
   manualSyncStatus: ManualSyncStatus;
+  autoApply: boolean;
+  openTofu: boolean;
+  terraform: boolean;
+  terragrunt: boolean;
   isPR: boolean;
 };
 
@@ -27,4 +31,31 @@ export type Run = {
   commit: string;
   date: string;
   action: string;
+};
+
+export type StateGraphNode = {
+  id: string;
+  addr: string;
+  mode: string;
+  type: string;
+  name: string;
+  module?: string;
+  provider: string;
+  instances_count: number;
+  instances?: Array<{
+    addr: string;
+    dependencies?: string[];
+    attributes?: Record<string, unknown>;
+    created_at?: string;
+  }>;
+};
+
+export type StateGraphEdge = {
+  from: string;
+  to: string;
+};
+
+export type StateGraph = {
+  nodes: StateGraphNode[];
+  edges: StateGraphEdge[];
 };

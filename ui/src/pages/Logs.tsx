@@ -23,7 +23,7 @@ import { Layer } from '@/clients/layers/types';
 
 const Logs: React.FC = () => {
   const { theme } = useContext(ThemeContext);
-  const { layerId, runId } = useParams();
+  const { namespace, layerId, runId } = useParams();
   const [layerOffset, setLayerOffset] = useState(0);
   const [layerLimit, setLayerLimit] = useState(10);
   const [searchParams, setSerchParams] = useSearchParams();
@@ -123,7 +123,7 @@ const Logs: React.FC = () => {
     [layerOffset, layersQuery]
   );
 
-  const handleActive = (layer: Layer, run?: string) => {
+  const handleActive = useCallback((layer: Layer, run?: string) => {
     navigate({
       pathname: `/logs/${layer.namespace}/${layer.name}${
         run
@@ -134,7 +134,25 @@ const Logs: React.FC = () => {
       }`,
       search: searchParams.toString()
     });
-  };
+  }, [navigate, searchParams]);
+
+  // Redirect to default run when no runId is provided
+  if (
+    namespace &&
+    layerId &&
+    layersQuery.isSuccess &&
+    !runId
+  ) {
+    const activeLayer = layersQuery.data.results.find(
+      layer => layer.namespace === namespace && layer.name === layerId
+    );
+
+    if (activeLayer?.lastRun) {
+      const defaultRunId = activeLayer.lastRun.id;
+      const searchString = searchParams.toString();
+      navigate(`/logs/${namespace}/${layerId}/${defaultRunId}${searchString ? `?${searchString}` : ''}`, { replace: true });
+    }
+  }
 
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
