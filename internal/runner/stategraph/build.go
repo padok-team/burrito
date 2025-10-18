@@ -74,7 +74,7 @@ func BuildGraphFromState(data []byte) ([]byte, error) {
 				Type:     rsrc.Type,
 				Name:     rsrc.Name,
 				Module:   rsrc.Module,
-				Provider: rsrc.Provider,
+				Provider: cleanProvider(rsrc.Provider),
 			}
 			groups[base] = g
 			byBase[base] = g.ID
@@ -241,6 +241,41 @@ func normalizeIndex(addr string) string {
 		return addr
 	}
 	return addr[:i] + "[\"" + inner + "\"]"
+}
+
+// cleanProvider extracts a short provider name from Terraform provider
+// address strings which usually look like:
+//
+//	provider["registry.terraform.io/hashicorp/random"]
+//
+// It can also be other formats, e.g.:
+//
+//	provider["random"]
+//	provider['random']
+//	provider[registry.terraform.io/hashicorp/random]
+//
+//	...
+func cleanProvider(in string) string {
+	if in == "" {
+		return ""
+	}
+	// Look for content inside the brackets: provider["..."]
+	// We'll accept both single and double quotes.
+	// First, find the first '[' and the last ']'.
+	i := strings.Index(in, "[")
+	j := strings.LastIndex(in, "]")
+	var inside string
+	if i >= 0 && j > i {
+		inside = in[i+1 : j]
+		inside = strings.Trim(inside, "'\" ")
+	}
+	// If we found something like registry.terraform.io/hashicorp/random
+	// return the full path
+	if inside != "" {
+		return inside
+	}
+	// Fallback: return the trimmed original string (remove surrounding quotes/space)
+	return strings.Trim(in, "'\" ")
 }
 
 // uniqueEdges removes duplicate edges while preserving order.

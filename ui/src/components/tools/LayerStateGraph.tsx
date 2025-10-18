@@ -4,17 +4,20 @@ import { fetchLayer, fetchStateGraph } from '@/clients/layers/client';
 import { useQuery } from '@tanstack/react-query';
 import ReactFlowView from './ReactFlowView';
 import { buildReactFlow, type ReactFlowGraph } from '@/utils/stateGraph';
+import { StateGraphNode } from "@/clients/layers/types";
 
 export interface LayerStateGraphProps {
   variant?: 'light' | 'dark';
   namespace: string;
   name: string;
+  onNodeClick?: (n: StateGraphNode) => void;
 }
 
 const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   variant = 'light',
   namespace,
-  name
+  name,
+  onNodeClick,
 }) => {
   const layerQuery = useQuery({
     queryKey: reactQueryKeys.layer(namespace, name),
@@ -92,7 +95,11 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
 
   return (
     <div className="h-full w-full">
-      <ReactFlowView rf={rf} variant={variant} />
+      <ReactFlowView
+        rf={rf}
+        variant={variant}
+        onNodeClick={(id) => onNodeClick && onNodeClick(stateGraphQuery.data!.nodes.find(n => n.id === id)!)}
+      />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useContext, useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useContext, useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
