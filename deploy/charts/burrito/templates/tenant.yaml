@@ -3,13 +3,13 @@
 {{- $metadataServer := mergeOverwrite (deepCopy .Values.global.metadata) .Values.server.metadata }}
 
 {{- range $tenant := .Values.tenants }}
-{{- $metadataTenant := mergeOverwrite (deepCopy $.Values.global.metadata) $tenant.metadata }}
+{{- $metadataTenant := mergeOverwrite (deepCopy $.Values.global.metadata) (default (dict) $tenant.metadata) }}
 {{- if $tenant.namespace.create }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ $tenant.namespace.name }}
-  {{- with mergeOverwrite (deepCopy $metadataTenant) $tenant.namespace.metadata }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) (default (dict) $tenant.namespace.metadata) }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
@@ -120,7 +120,7 @@ subjects:
     namespace: {{ $.Release.Namespace }}
 ---
 {{- range $serviceAccount := .serviceAccounts }}
-{{- $metadataServiceAccount := mergeOverwrite (deepCopy $metadataTenant) $serviceAccount.metadata }}
+{{- $metadataServiceAccount := mergeOverwrite (deepCopy $metadataTenant) (default (dict) $serviceAccount.metadata) }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
