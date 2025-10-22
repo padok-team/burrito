@@ -49,6 +49,9 @@ type TerraformRunStatus struct {
 	LastRun    string             `json:"lastRun,omitempty"`
 	Attempts   []Attempt          `json:"attempts,omitempty"`
 	RunnerPod  string             `json:"runnerPod,omitempty"`
+	Commit     string             `json:"commit,omitempty"`
+	Message    string             `json:"message,omitempty"`
+	Author     string             `json:"author,omitempty"`
 }
 
 type Attempt struct {

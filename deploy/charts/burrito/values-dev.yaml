@@ -3,18 +3,27 @@ config:
     runner:
       image:
         repository: burrito
-        tag: DEV_TAG
+        tag: "1760790932"
         pullPolicy: Never
     datastore:
       storage:
         mock: true
+    server:
+      basicAuth:
+        enabled: false
 global:
   deployment:
     image:
       repository: burrito
-      tag: DEV_TAG
+      tag: "1760790932"
       pullPolicy: Never
 tenants:
   - namespace:
       create: true
       name: "burrito-project"
+      metadata:
+        labels: {}
+        annotations: {}
+    metadata:
+      labels: {}
+      annotations: {}

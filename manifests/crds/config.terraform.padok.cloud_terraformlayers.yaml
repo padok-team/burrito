@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.16.4
   name: terraformlayers.config.terraform.padok.cloud
 spec:
   group: config.terraform.padok.cloud
@@ -4956,10 +4956,14 @@ spec:
                 properties:
                   action:
                     type: string
+                  author:
+                    type: string
                   commit:
                     type: string
                   date:
                     format: date-time
+                    type: string
+                  message:
                     type: string
                   name:
                     type: string
@@ -4969,10 +4973,14 @@ spec:
                   properties:
                     action:
                       type: string
+                    author:
+                      type: string
                     commit:
                       type: string
                     date:
                       format: date-time
+                      type: string
+                    message:
                       type: string
                     name:
                       type: string

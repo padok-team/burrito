@@ -57,10 +57,12 @@ type TerraformLayerStatus struct {
 }
 
 type TerraformLayerRun struct {
-	Name   string      `json:"name,omitempty"`
-	Commit string      `json:"commit,omitempty"`
-	Date   metav1.Time `json:"date,omitempty"`
-	Action string      `json:"action,omitempty"`
+	Name    string      `json:"name,omitempty"`
+	Commit  string      `json:"commit,omitempty"`
+	Author  string      `json:"author,omitempty"`
+	Message string      `json:"message,omitempty"`
+	Date    metav1.Time `json:"date,omitempty"`
+	Action  string      `json:"action,omitempty"`
 }
 
 // +kubebuilder:object:root=true

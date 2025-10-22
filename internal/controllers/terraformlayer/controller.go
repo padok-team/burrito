@@ -178,10 +178,12 @@ func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.Terr
 
 func getRun(run configv1alpha1.TerraformRun) configv1alpha1.TerraformLayerRun {
 	return configv1alpha1.TerraformLayerRun{
-		Name:   run.Name,
-		Commit: "",
-		Date:   run.CreationTimestamp,
-		Action: run.Spec.Action,
+		Name:    run.Name,
+		Commit:  run.Status.Commit,
+		Author:  run.Status.Author,
+		Message: run.Status.Message,
+		Date:    run.CreationTimestamp,
+		Action:  run.Spec.Action,
 	}
 }
 
