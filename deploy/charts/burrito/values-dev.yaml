@@ -3,11 +3,14 @@ config:
     runner:
       image:
         repository: burrito
-        tag: "1783089222"
+        tag: DEV_TAG
         pullPolicy: Never
     datastore:
       storage:
         mock: true
+    server:
+      basicAuth:
+        enabled: false
     controller:
       timers:
         driftDetection: 10m
@@ -16,9 +19,15 @@ global:
   deployment:
     image:
       repository: burrito
-      tag: "1783089222"
+      tag: DEV_TAG
       pullPolicy: Never
 tenants:
   - namespace:
       create: true
       name: "burrito-project"
+      metadata:
+        labels: {}
+        annotations: {}
+    metadata:
+      labels: {}
+      annotations: {}

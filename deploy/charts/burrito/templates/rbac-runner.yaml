@@ -33,6 +33,12 @@ rules:
 - apiGroups:
   - config.terraform.padok.cloud
   resources:
+  - terraformruns/status
+  verbs:
+  - patch
+- apiGroups:
+  - config.terraform.padok.cloud
+  resources:
   - terraformrepositories
   verbs:
   - get

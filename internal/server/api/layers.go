@@ -38,12 +38,12 @@ type layer struct {
 }
 
 type Run struct {
-	Name          string `json:"id"`
-	Commit        string `json:"commit"`
-	CommitAuthor  string `json:"commitAuthor"`
-	CommitMessage string `json:"commitMessage"`
-	Date          string `json:"date"`
-	Action        string `json:"action"`
+	Name    string `json:"id"`
+	Commit  string `json:"commit"`
+	Author  string `json:"author"`
+	Message string `json:"message"`
+	Date    string `json:"date"`
+	Action  string `json:"action"`
 }
 
 type layersResponse struct {
@@ -125,10 +125,12 @@ func (a *API) LayersHandler(c echo.Context) error {
 		running := false
 		if ok {
 			runAPI = Run{
-				Name:   run.Name,
-				Commit: "",
-				Date:   run.CreationTimestamp.Format(time.RFC3339),
-				Action: run.Spec.Action,
+				Name:    run.Name,
+				Commit:  run.Status.Commit,
+				Author:  run.Status.Author,
+				Message: run.Status.Message,
+				Date:    run.CreationTimestamp.Format(time.RFC3339),
+				Action:  run.Spec.Action,
 			}
 			running = runStillRunning(run)
 		}
@@ -183,10 +185,12 @@ func (a *API) LayerHandler(c echo.Context) error {
 	running := false
 	if ok {
 		runAPI = Run{
-			Name:   run.Name,
-			Commit: "",
-			Date:   run.CreationTimestamp.Format(time.RFC3339),
-			Action: run.Spec.Action,
+			Name:    run.Name,
+			Commit:  run.Status.Commit,
+			Author:  run.Status.Author,
+			Message: run.Status.Message,
+			Date:    run.CreationTimestamp.Format(time.RFC3339),
+			Action:  run.Spec.Action,
 		}
 		running = runStillRunning(run)
 	}
@@ -233,10 +237,12 @@ func transformLatestRuns(runs []configv1alpha1.TerraformLayerRun) []Run {
 	results := []Run{}
 	for _, r := range runs {
 		results = append(results, Run{
-			Name:   r.Name,
-			Commit: r.Commit,
-			Date:   r.Date.Format(time.RFC3339),
-			Action: r.Action,
+			Name:    r.Name,
+			Commit:  r.Commit,
+			Author:  r.Author,
+			Message: r.Message,
+			Date:    r.Date.Format(time.RFC3339),
+			Action:  r.Action,
 		})
 	}
 	return results
