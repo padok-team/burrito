@@ -94,6 +94,10 @@ spec:
                   - podName
                   type: object
                 type: array
+              author:
+                type: string
+              commit:
+                type: string
               conditions:
                 items:
                   description: Condition contains details for one aspect of the current
@@ -151,6 +155,8 @@ spec:
                   type: object
                 type: array
               lastRun:
+                type: string
+              message:
                 type: string
               retries:
                 type: integer

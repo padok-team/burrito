@@ -71,7 +71,7 @@ const SlidingPane: React.FC<SlidingPaneProps> = ({
             &times;
             </button>
           {/* Content */}
-          <div className="p-8 pt-12 overflow-y-auto h-full">{children}</div>
+          <div className="px-8 py-4 overflow-y-auto h-full">{children}</div>
         </div>
       </FocusLock>
     </>,

@@ -25,9 +25,6 @@ const titleOptions: Record<LayerStatusProps['variant'], string> = {
   details: 'Details',
 };
 
-
-
-
 const LayerStatus: React.FC<LayerStatusProps> = ({
   className,
   variant = 'health',
@@ -57,7 +54,6 @@ const LayerStatus: React.FC<LayerStatusProps> = ({
     }
   };
 
-
   return (
     <div className={className}>
       <div className={twMerge(`h-full py-3 px-6 rounded-2xl ${styles.base[theme]}`, layer?.isRunning && variant === 'health' ? `outline-solid outline-4 ${styles.isRunning[theme]}` : '')}>
@@ -82,11 +78,11 @@ const LayerStatus: React.FC<LayerStatusProps> = ({
           <div className="flex flex-col min-w-32">
             <div className="grid grid-cols-[20%_80%] mt-4 gap-x-8">
               <span className="text-sm text-gray-500 text-right">Author:</span>
-              <span className="text-sm text-gray-500 truncate pr-8">Lucas</span>
+              <span className="text-sm text-gray-500 truncate pr-8" title={layer.lastRun?.author}>{layer.lastRun?.author}</span>
               <span className="text-sm text-gray-500 text-right">Message:</span>
-              <span className="text-sm text-gray-500 truncate pr-8" title="commit msg">feat(toto): mezaziahofzioj ezssagedazuiofhapjz</span>
+              <span className="text-sm text-gray-500 truncate pr-8" title={layer.lastRun?.message}>{layer.lastRun?.message}</span>
               <span className="text-sm text-gray-500 text-right">Commit:</span>
-              <span className="text-sm text-gray-500 truncate pr-8">9w3jop3</span>
+              <span className="text-sm text-gray-500 truncate pr-8" title={layer.lastRun?.commit}>{layer.lastRun?.commit}</span>
             </div>
           </div>
         </div>
