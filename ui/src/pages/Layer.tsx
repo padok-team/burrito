@@ -11,6 +11,7 @@ import LayerStatus from '@/components/status/LayerStatus';
 import Button from '@/components/core/Button';
 import type { Layer, StateGraphNode } from '@/clients/layers/types';
 import SlidingPane from '@/modals/SlidingPane';
+import StateGraphInstanceCard from '@/components/cards/StateGraphInstanceCard';
 
 const Layer: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -74,39 +75,31 @@ const Layer: React.FC = () => {
         onClose={() => setShowResourcePane(false)}
         variant={theme}
       >
-        <div className="p-6">
-          <h2 className="text-2xl font-semibold mb-2">{selectedResourceData?.name}</h2>
-          <h3 className="text-sm mb-2 uppercase">{selectedResourceData?.type}</h3>
-          <p className="text-sm mb-2">Provider: <span className="font-medium">{selectedResourceData?.provider}</span></p>
-          <p className="text-sm mb-2">Instance count: <span className="font-medium">{selectedResourceData?.instances_count}</span></p>
-          { selectedResourceData?.module !== undefined && <p className="text-sm mb-2">Module: <span className="font-medium">{selectedResourceData?.module || '(root)'}</span></p>}
-          <p className="text-sm mb-2">Address: <span className="font-medium">{selectedResourceData?.addr}</span></p>
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Ressource: {selectedResourceData?.name}</h2>
+          <h3 className="text-sm uppercase font-semibold text-primary-600">{selectedResourceData?.type}</h3>
+            <div className="grid grid-cols-[min-content_1fr] mt-4 gap-x-8">
+            <span className="text-sm text-gray-500 text-right">Provider:</span>
+            <span className="text-sm text-gray-500 truncate pr-8" title={selectedResourceData?.provider}>{selectedResourceData?.provider}</span>
+            <span className="text-sm text-gray-500 text-right">Address:</span>
+            <span className="text-sm text-gray-500 truncate pr-8" title={selectedResourceData?.addr}>{selectedResourceData?.addr}</span>
+            {selectedResourceData?.module !== undefined && (
+              <>
+              <span className="text-sm text-gray-500 text-right">Module:</span>
+              <span className="text-sm text-gray-500 truncate pr-8" title={selectedResourceData?.module || '(root)'}>{selectedResourceData?.module || '(root)'}</span>
+              </>
+            )}
+            <span className="text-sm text-gray-500 text-right">Count:</span>
+            <span className="text-sm text-gray-500 truncate pr-8">{selectedResourceData?.instances_count}</span>
+            </div>
           <h3 className="text-lg font-semibold mt-4 mb-2">Instance{ (selectedResourceData?.instances_count ?? 0) > 1 ? 's' : '' } details</h3>
-          <ul className="list-disc list-inside">
+          <ul className="list-inside">
             {selectedResourceData?.instances?.map((inst) => (
               <li key={inst.addr} className="mb-2">
-                <p className="text-sm">Address: <span className="font-medium">{inst.addr}</span></p>
-                { inst.created_at && <p className="text-sm">Created at: <span className="font-medium">{new Date(inst.created_at).toLocaleString()}</span></p> }
-                { inst.dependencies && inst.dependencies.length > 0 && (
-                  <p className="text-sm">Dependencies: <span className="font-medium">{inst.dependencies.join(', ')}</span></p>
-                ) }
-                { inst.attributes && (
-                  <details className="mt-1">
-                    <summary className="cursor-pointer text-sm text-primary-500">View attributes</summary>
-                    <pre className="bg-nuances-white p-2 rounded mt-1 overflow-auto text-xs text-nuances-black">
-                      {JSON.stringify(inst.attributes, null,
-
-                        2)}
-                    </pre>
-                  </details>
-                ) }
+                <StateGraphInstanceCard instance={inst} defaultExpanded={selectedResourceData?.instances_count === 1} />
               </li>
             )) }
           </ul>
-          <h3 className="text-lg font-semibold mt-4 mb-2">Raw data</h3>
-          <pre className="bg-nuances-white p-4 rounded-lg overflow-auto text-sm text-nuances-black">
-            {JSON.stringify(selectedResourceData, null, 2)}
-          </pre>
         </div>
       </SlidingPane>
       <div

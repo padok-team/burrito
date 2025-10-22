@@ -30,6 +30,8 @@ export type ManualSyncStatus = 'none' | 'annotated' | 'pending';
 export type Run = {
   id: string;
   commit: string;
+  author: string;
+  message: string;
   date: string;
   action: string;
 };
@@ -43,12 +45,14 @@ export type StateGraphNode = {
   module?: string;
   provider: string;
   instances_count: number;
-  instances?: Array<{
-    addr: string;
-    dependencies?: string[];
-    attributes?: Record<string, unknown>;
-    created_at?: string;
-  }>;
+  instances?: Array<StateGraphResourceInstance>;
+};
+
+export type StateGraphResourceInstance = {
+  addr: string;
+  dependencies?: string[];
+  attributes?: Record<string, unknown>;
+  created_at?: string;
 };
 
 export type StateGraphEdge = {

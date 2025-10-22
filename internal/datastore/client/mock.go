@@ -109,3 +109,12 @@ func (c *MockClient) GetGitBundle(namespace, name, ref, revision string) ([]byte
 		Nil: true,
 	}
 }
+
+// Todo: add mock implementations for state graph methods
+func (c *MockClient) GetStateGraph(namespace string, layer string) ([]byte, error) {
+	return nil, nil
+}
+
+func (c *MockClient) PutStateGraph(namespace string, layer string, graph []byte) error {
+	return nil
+}
