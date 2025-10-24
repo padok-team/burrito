@@ -126,7 +126,7 @@ kind: ServiceAccount
 metadata:
   name: {{ $serviceAccount.name }}
   namespace: {{ $tenant.namespace.name }}
-  {{- with $metadataServiceAccount.metadata }}
+  {{- with $metadataServiceAccount }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
@@ -159,7 +159,7 @@ kind: RoleBinding
 metadata:
   name: {{ $additionalRoleBinding.name }}
   namespace: {{ $tenant.namespace.name }}
-  {{- with $metadataServiceAccount.metadata }}
+  {{- with $metadataServiceAccount }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
