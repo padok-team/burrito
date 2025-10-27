@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 import AngleDownIcon from '@/assets/icons/AngleDownIcon';
+import CopyIcon from '@/assets/icons/CopyIcon';
 
 import { StateGraphResourceInstance } from '@/clients/layers/types';
 import type { PlanAction } from '@/utils/terraformPlan';
@@ -14,6 +15,8 @@ export interface StateGraphInstanceCardProps {
   tone?: 'current' | 'future';
   planAction?: PlanAction | null;
   badge?: React.ReactNode;
+  onDependencyClick?: (addr: string) => void;
+  isDependencyAvailable?: (addr: string) => boolean;
 }
 
 const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
@@ -23,9 +26,13 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
   defaultExpanded = false,
   tone = 'current',
   planAction = null,
-  badge
+  badge,
+  onDependencyClick,
+  isDependencyAvailable
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
+  const copyResetRef = useRef<number | null>(null);
   const handleExpand = () => {
     setIsExpanded(!isExpanded);
   };
@@ -110,7 +117,77 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
     variant === 'light' ? 'text-gray-500' : 'text-nuances-200';
 
   const propertiesClass =
-    variant === 'light' ? 'bg-nuances-300 text-nuances-white' : 'bg-nuances-100 text-nuances-black';
+    variant === 'light'
+      ? 'bg-gray-50 text-gray-900'
+      : 'bg-nuances-black/70 text-nuances-50';
+  const dependencyLinkClass = twMerge(
+    'underline decoration-dotted text-left focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 rounded-sm transition-colors cursor-pointer',
+    variant === 'light'
+      ? 'text-primary-600 hover:text-primary-400 focus-visible:outline-primary-600'
+      : 'text-primary-300 hover:text-primary-100 focus-visible:outline-nuances-50'
+  );
+  const dependencyDisabledClass =
+    'text-nuances-300 dark:text-nuances-400 cursor-not-allowed hover:text-nuances-300 focus-visible:outline-none';
+  const copyButtonStyles = {
+    light: `bg-nuances-white text-nuances-black border border-nuances-300 hover:bg-primary-100`,
+    dark: `bg-nuances-400 text-nuances-50 border border-nuances-200/60 hover:bg-nuances-400`
+  } as const;
+  const copyButtonClass = twMerge(
+    'absolute top-2 right-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2',
+    copyButtonStyles[variant],
+    variant === 'light'
+      ? 'focus-visible:outline-primary-600 focus-visible:outline-offset-2'
+      : 'focus-visible:outline-nuances-50 focus-visible:outline-offset-2'
+  );
+
+  useEffect(() => {
+    return () => {
+      if (copyResetRef.current) {
+        window.clearTimeout(copyResetRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyAttributes = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (!attributes) return;
+    const text = JSON.stringify(attributes, null, 2);
+
+    const setCopied = () => {
+      setCopyStatus('copied');
+      if (copyResetRef.current) {
+        window.clearTimeout(copyResetRef.current);
+      }
+      copyResetRef.current = window.setTimeout(() => setCopyStatus('idle'), 1500);
+    };
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(setCopied)
+        .catch((error) => {
+          console.error('Failed to copy attributes', error);
+        });
+      return;
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (successful) {
+        setCopied();
+      }
+    } catch (error) {
+      console.error('Failed to copy attributes', error);
+    }
+  };
 
   return (
     <div
@@ -153,9 +230,30 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
             <div className={twMerge('text-sm mb-2', mutedTextClass)}>
               <p>Dependencies:</p>
               <ul className="ml-4 list-disc">
-                {dependencies.map((dep) => (
-                  <li key={dep}>{dep}</li>
-                ))}
+                {dependencies.map((dep) => {
+                  const isAvailable = isDependencyAvailable
+                    ? isDependencyAvailable(dep)
+                    : !!onDependencyClick;
+                  return (
+                  <li key={dep}>
+                    <button
+                      type="button"
+                      className={twMerge(
+                        dependencyLinkClass,
+                        !isAvailable && dependencyDisabledClass
+                      )}
+                      disabled={!isAvailable}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (isAvailable && onDependencyClick) {
+                          onDependencyClick(dep);
+                        }
+                      }}
+                    >
+                      {dep}
+                    </button>
+                  </li>
+                )})}
               </ul>
             </div>
           )}
@@ -164,13 +262,27 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
               Attributes:
             </h3>
           </div>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={twMerge(propertiesClass,"mt-2 text-sm shadow-light p-3 rounded-md overflow-auto max-h-48 font-mono whitespace-pre")}
-            role="region"
-            aria-label="attributes-json"
-          >
-            <pre className="m-0">{JSON.stringify(attributes, null, 2)}</pre>
+          <div className="relative mt-2">
+            <button
+              type="button"
+              onClick={handleCopyAttributes}
+              className={copyButtonClass}
+              aria-label={copyStatus === 'copied' ? 'Attributes copied' : 'Copy attributes to clipboard'}
+            >
+              <CopyIcon className="h-4 w-4 fill-current" />
+              {copyStatus === 'copied' && <span>Copied</span>}
+            </button>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={twMerge(
+                propertiesClass,
+                'text-sm shadow-light p-3 rounded-md overflow-auto max-h-48 font-mono whitespace-pre'
+              )}
+              role="region"
+              aria-label="attributes-json"
+            >
+              <pre className="m-0">{JSON.stringify(attributes, null, 2)}</pre>
+            </div>
           </div>
         </div>
       )}
