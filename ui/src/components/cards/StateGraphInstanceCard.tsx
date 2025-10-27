@@ -121,13 +121,17 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
       ? 'bg-gray-50 text-gray-900'
       : 'bg-nuances-black/70 text-nuances-50';
   const dependencyLinkClass = twMerge(
-    'underline decoration-dotted text-left focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 rounded-sm transition-colors cursor-pointer',
+    'underline text-left focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 rounded-sm transition-colors cursor-pointer',
     variant === 'light'
       ? 'text-primary-600 hover:text-primary-400 focus-visible:outline-primary-600'
       : 'text-primary-300 hover:text-primary-100 focus-visible:outline-nuances-50'
   );
-  const dependencyDisabledClass =
-    'text-nuances-300 dark:text-nuances-400 cursor-not-allowed hover:text-nuances-300 focus-visible:outline-none';
+  const dependencyDisabledClass = twMerge(
+    'cursor-not-allowed focus-visible:outline-none hover:text-current no-underline',
+    variant === 'light'
+      ? 'text-nuances-300 hover:text-nuances-300'
+      : 'text-nuances-200 hover:text-nuances-200'
+  );
   const copyButtonStyles = {
     light: `bg-nuances-white text-nuances-black border border-nuances-300 hover:bg-primary-100`,
     dark: `bg-nuances-400 text-nuances-50 border border-nuances-200/60 hover:bg-nuances-400`
