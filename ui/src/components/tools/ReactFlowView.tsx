@@ -10,6 +10,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import ResourceNode from './ResourceNode';
 import { ReactFlowGraph } from '@/utils/stateGraph';
+import { twMerge } from 'tailwind-merge';
 
 const nodeTypes = { resource: ResourceNode };
 
@@ -52,6 +53,12 @@ const ReactFlowView: React.FC<ReactFlowViewProps> = ({
   );
 
   const fitViewOptions = useMemo(() => ({ padding: 0.2 }), []);
+  const flowClass = twMerge(
+    'rounded-2xl outline-1',
+    variant === 'light'
+      ? 'bg-nuances-white outline-primary-500'
+      : 'bg-nuances-400 outline-nuances-50 react-flow-dark'
+  );
 
   return (
     <ReactFlow
@@ -64,7 +71,7 @@ const ReactFlowView: React.FC<ReactFlowViewProps> = ({
       fitView
       fitViewOptions={fitViewOptions}
       onNodeClick={(_, n) => onNodeClick && onNodeClick(n.id)}
-      className='bg-nuances-white rounded-2xl outline-1 outline-primary-500'
+      className={flowClass}
     >
       <Background
         gap={32}

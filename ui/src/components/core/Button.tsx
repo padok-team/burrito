@@ -59,23 +59,23 @@ const Button: React.FC<ButtonProps> = ({
         tertiary: `
           text-primary-600
           underline
-          hover:text-primary-400
-          hover:fill-primary-400
-          active:text-primary-400
-          active:fill-primary-400
+          hover:text-primary-500
+          hover:fill-primary-500
+          active:text-primary-500
+          active:fill-primary-500
           focus-visible:outline-hidden
           fill-primary-600`
       },
 
       disabled: {
-        primary: `bg-nuances-50
-          text-nuances-300
-          fill-nuances-300
+        primary: `disabled:bg-nuances-50
+          disabled:text-nuances-300
           active: bg-nuances-50
           hover:bg-nuances-50
           `,
 
-        secondary: `bg-nuances-50
+        secondary: `disabled:bg-nuances-50
+          disabled:border-hidden
           text-nuances-300
           fill-nuances-300
           active: bg-nuances-50
@@ -93,8 +93,20 @@ const Button: React.FC<ButtonProps> = ({
     },
     dark: {
       base: {
-        primary: `bg-nuances-black
+        primary: `bg-nuances-white
+          text-nuances-400
+          hover:bg-nuances-100
+          active:bg-nuances-100
+          focus-visible:outline-solid
+          focus-visible:outline-1
+          focus-visible:outline-offset-[3px]
+          focus-visible:outline-nuances-black
+          fill-nuances-white`,
+
+        secondary: `bg-nuances-black
           text-nuances-white
+          border
+          border-nuances-white
           hover:bg-nuances-400
           active:bg-nuances-400
           focus-visible:outline-solid
@@ -102,18 +114,6 @@ const Button: React.FC<ButtonProps> = ({
           focus-visible:outline-offset-[3px]
           focus-visible:outline-nuances-black
           fill-nuances-white`,
-
-        secondary: `bg-nuances-white
-          text-nuances-black
-          border
-          border-nuances-black
-          hover:bg-nuances-50
-          active:bg-nuances-50
-          focus-visible:outline-solid
-          focus-visible:outline-1
-          focus-visible:outline-offset-[3px]
-          focus-visible:outline-nuances-white
-          fill-nuances-black`,
 
         tertiary: `bg-nuances-black
           text-primary-600

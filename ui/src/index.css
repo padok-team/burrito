@@ -89,3 +89,19 @@
     src: url(fonts/Outfit.ttf) format('truetype');
   }
 }
+
+/*
+  Override react flow attribution panel styles for dark mode to actually see it
+*/
+
+
+@layer components {
+  .react-flow-dark .react-flow__panel.react-flow__attribution {
+    background: none !important;
+    color: var(--color-nuances-50) !important;
+  }
+
+  .react-flow-dark .react-flow__panel.react-flow__attribution a {
+    color: inherit !important;
+  }
+}
