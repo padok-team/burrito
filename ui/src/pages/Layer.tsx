@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { ThemeContext } from '@/contexts/ThemeContext';
 import LayerStateGraph from '@/components/tools/LayerStateGraph';
@@ -10,7 +10,7 @@ import { fetchAttempts } from '@/clients/runs/client';
 import { fetchPlan } from '@/clients/plans/client';
 import LayerStatus from '@/components/status/LayerStatus';
 import Button from '@/components/core/Button';
-import type { Layer, StateGraphNode } from '@/clients/layers/types';
+import type { Layer, StateGraph, StateGraphNode } from '@/clients/layers/types';
 import SlidingPane from '@/modals/SlidingPane';
 import StateGraphInstanceCard from '@/components/cards/StateGraphInstanceCard';
 import {
@@ -28,6 +28,7 @@ const Layer: React.FC = () => {
   const [selectedResourceData, setSelectedResourceData] = useState<StateGraphNode | null>(null);
   const [isManualSyncPending, setIsManualSyncPending] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [stateGraph, setStateGraph] = useState<StateGraph | null>(null);
 
   const layerQuery = useQuery({
     queryKey: reactQueryKeys.layer(namespace, name),
@@ -188,6 +189,28 @@ const Layer: React.FC = () => {
       : 'text-emerald-200 bg-emerald-900/30 border-emerald-800'
   );
 
+  const resolveDependencyNode = useCallback(
+    (dependencyAddr: string): StateGraphNode | null => {
+      if (!stateGraph?.nodes?.length) return null;
+      const trimmed = dependencyAddr.trim();
+      return (
+        stateGraph.nodes.find((n) => n.id === trimmed || n.addr === trimmed) ??
+        stateGraph.nodes.find((n) =>
+          n.instances?.some((inst) => inst.addr === trimmed)
+        ) ??
+        null
+      );
+    },
+    [stateGraph]
+  );
+
+  const handleDependencyClick = (dependencyAddr: string) => {
+    const node = resolveDependencyNode(dependencyAddr);
+    if (!node) return;
+    setSelectedResourceData(node);
+    setShowResourcePane(true);
+  };
+
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
       <SlidingPane
@@ -281,6 +304,8 @@ const Layer: React.FC = () => {
                       defaultExpanded={currentInstances.length === 1}
                       variant={theme}
                       tone="current"
+                      isDependencyAvailable={(addr) => !!resolveDependencyNode(addr)}
+                      onDependencyClick={handleDependencyClick}
                     />
                   </li>
                 ))}
@@ -300,6 +325,8 @@ const Layer: React.FC = () => {
                       variant={theme}
                       tone="future"
                       planAction={selectedPlanDetails.action}
+                      isDependencyAvailable={(addr) => !!resolveDependencyNode(addr)}
+                      onDependencyClick={handleDependencyClick}
                       badge={
                         <span
                           className={twMerge(
@@ -391,6 +418,7 @@ const Layer: React.FC = () => {
             variant={theme === 'light' ? 'light' : 'dark'}
             plan={planHighlights}
             planLoading={planQuery.isLoading || planQuery.isFetching}
+            onGraphChange={setStateGraph}
             onNodeClick={(n) => { setShowResourcePane(true)
               setSelectedResourceData(n);
               console.log('Clicked node', n);
