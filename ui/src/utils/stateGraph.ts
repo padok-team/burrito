@@ -9,6 +9,8 @@ export type ReactFlowNode = Node<{
   count: number;
   provider: string;
   module: string;
+  change: 'create' | 'delete' | 'update' | 'replace' | null;
+  future?: unknown;
 }>;
 
 export type ReactFlowEdge = Edge;
@@ -48,7 +50,8 @@ export async function buildReactFlow(graph: StateGraph): Promise<ReactFlowGraph>
         name: n.name || '',
         count: n.instances_count || 0,
         provider: n.provider || '',
-        module: n.module || ''
+        module: n.module || '',
+        change: null
       }
     };
   });

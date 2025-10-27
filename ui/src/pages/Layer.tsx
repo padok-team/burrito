@@ -1,17 +1,24 @@
-import React, { useContext, useEffect, useState } from 'react';
-
-
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 import { ThemeContext } from '@/contexts/ThemeContext';
 import LayerStateGraph from '@/components/tools/LayerStateGraph';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { reactQueryKeys } from '@/clients/reactQueryConfig';
 import { fetchLayer, syncLayer } from '@/clients/layers/client';
+import { fetchAttempts } from '@/clients/runs/client';
+import { fetchPlan } from '@/clients/plans/client';
 import LayerStatus from '@/components/status/LayerStatus';
 import Button from '@/components/core/Button';
 import type { Layer, StateGraphNode } from '@/clients/layers/types';
 import SlidingPane from '@/modals/SlidingPane';
 import StateGraphInstanceCard from '@/components/cards/StateGraphInstanceCard';
+import {
+  parseTerraformPlan,
+  type AggregatedPlanChange,
+  type PlanAction,
+  type PlanChange
+} from '@/utils/terraformPlan';
 
 const Layer: React.FC = () => {
   const { theme } = useContext(ThemeContext);
@@ -68,6 +75,100 @@ const Layer: React.FC = () => {
     });
   };
 
+  const latestRunId = layer?.lastRun?.id ?? '';
+
+  const attemptsQuery = useQuery({
+    queryKey: reactQueryKeys.attempts(namespace, name, latestRunId),
+    queryFn: () => fetchAttempts(namespace, name, latestRunId),
+    enabled: !!latestRunId
+  });
+
+  const latestAttempt = useMemo<number | null>(() => {
+    if (!attemptsQuery.data || attemptsQuery.data.count === 0) {
+      return null;
+    }
+    return attemptsQuery.data.count - 1;
+  }, [attemptsQuery.data]);
+
+  const planQuery = useQuery({
+    queryKey: reactQueryKeys.plan(namespace, name, latestRunId || null, latestAttempt),
+    queryFn: () => fetchPlan(namespace, name, latestRunId, latestAttempt!),
+    enabled: !!latestRunId && latestAttempt !== null,
+    select: (data) => parseTerraformPlan(data)
+  });
+
+  const planHighlights = planQuery.data ?? null;
+
+  const gatherPlanChanges = (
+    aggregate: AggregatedPlanChange | undefined | null,
+    fallback: PlanChange | undefined | null
+  ): PlanChange[] => {
+    const list: PlanChange[] = [];
+    if (aggregate) {
+      if (aggregate.single) {
+        list.push(aggregate.single);
+      }
+      for (const change of Object.values(aggregate.instances ?? {})) {
+        list.push(change);
+      }
+    }
+    if (list.length === 0 && fallback) {
+      list.push(fallback);
+    }
+    return list;
+  };
+
+  const selectedPlanDetails = useMemo(() => {
+    if (!selectedResourceData || !planHighlights) {
+      return null;
+    }
+    const baseId = selectedResourceData.id;
+    const exact = planHighlights.byAddr.get(baseId);
+    const base = planHighlights.byBase.get(baseId);
+    const action = (base?.action ?? exact?.action ?? null) as PlanAction | null;
+    if (!action) {
+      return null;
+    }
+    const planChanges = gatherPlanChanges(base, exact);
+    const futureInstances = planChanges
+      .filter((change) => change.after !== undefined && change.after !== null)
+      .map((change) => ({
+        addr: change.addr,
+        // cast to the expected record type or undefined
+        attributes: (change.after ?? undefined) as Record<string, unknown> | undefined
+      }));
+    const planHasOnlyCreates =
+      planChanges.length > 0 &&
+      planChanges.every((change) => change.before === null || change.before === undefined);
+    return {
+      action,
+      futureInstances,
+      planHasOnlyCreates,
+      hasPlanChanges: planChanges.length > 0
+    };
+  }, [planHighlights, selectedResourceData]);
+
+  const currentInstances = useMemo(() => {
+    if (!selectedResourceData) {
+      return [];
+    }
+    if (selectedPlanDetails?.action === 'create' && selectedPlanDetails.planHasOnlyCreates) {
+      return [];
+    }
+    return selectedResourceData.instances ?? [];
+  }, [selectedPlanDetails, selectedResourceData]);
+
+  const futureInstances = selectedPlanDetails?.futureInstances ?? [];
+
+  const currentInstanceCount = currentInstances.length;
+  const futureInstanceCount = selectedPlanDetails
+    ? selectedPlanDetails.action === 'delete'
+      ? 0
+      : futureInstances.length
+    : null;
+  const showCountArrow =
+    futureInstanceCount !== null && futureInstanceCount !== currentInstanceCount;
+
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
       <SlidingPane
@@ -90,16 +191,82 @@ const Layer: React.FC = () => {
               </>
             )}
             <span className="text-sm text-gray-500 text-right">Count:</span>
-            <span className="text-sm text-gray-500 truncate pr-8">{selectedResourceData?.instances_count}</span>
+            <span className="text-sm text-gray-500 truncate pr-8">
+              {currentInstanceCount}
+              {showCountArrow ? ` → ${futureInstanceCount}` : ''}
+            </span>
             </div>
-          <h3 className="text-lg font-semibold mt-4 mb-2">Instance{ (selectedResourceData?.instances_count ?? 0) > 1 ? 's' : '' } details</h3>
-          <ul className="list-inside">
-            {selectedResourceData?.instances?.map((inst) => (
-              <li key={inst.addr} className="mb-2">
-                <StateGraphInstanceCard instance={inst} defaultExpanded={selectedResourceData?.instances_count === 1} />
-              </li>
-            )) }
-          </ul>
+          {selectedPlanDetails && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Planned change</h3>
+              <div className="text-sm text-gray-500 mb-2">
+                <span className="text-gray-600 font-medium">Action:</span> {selectedPlanDetails.action}
+              </div>
+              {selectedPlanDetails.action === 'delete' && (
+                <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md p-3">
+                  All current instances will be destroyed when this plan is applied.
+                </div>
+              )}
+            </div>
+          )}
+          {currentInstances.length > 0 && (
+            <>
+              <h3 className="text-lg font-semibold mt-4 mb-2">
+                Current instance{currentInstances.length > 1 ? 's' : ''}
+              </h3>
+              <ul className="list-inside">
+                {currentInstances.map((inst) => (
+                  <li key={inst.addr} className="mb-2">
+                    <StateGraphInstanceCard
+                      instance={inst}
+                      defaultExpanded={currentInstances.length === 1}
+                      tone="current"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {futureInstances.length > 0 && selectedPlanDetails && selectedPlanDetails.action !== 'delete' && (
+            <>
+              <h3 className="text-lg font-semibold mt-4 mb-2">
+                Future instance{futureInstances.length > 1 ? 's' : ''}
+              </h3>
+              <ul className="list-inside">
+                {futureInstances.map((inst) => (
+                  <li key={`future-${inst.addr}`} className="mb-2">
+                    <StateGraphInstanceCard
+                      instance={inst}
+                      tone="future"
+                      planAction={selectedPlanDetails.action}
+                      badge={
+                        <span
+                          className={twMerge(
+                            'text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border',
+                            selectedPlanDetails.action === 'create' &&
+                              'bg-emerald-100 text-emerald-700 border-emerald-300',
+                            selectedPlanDetails.action === 'update' &&
+                              'bg-amber-100 text-amber-700 border-amber-300',
+                            selectedPlanDetails.action === 'replace' &&
+                              'bg-violet-100 text-violet-700 border-violet-300'
+                          )}
+                        >
+                          {selectedPlanDetails.action}
+                        </span>
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {selectedPlanDetails?.action === 'create' &&
+            futureInstances.length === 0 &&
+            selectedPlanDetails.planHasOnlyCreates && (
+              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md p-3 mt-4">
+                This resource will be created when the plan is applied.
+              </div>
+            )}
         </div>
       </SlidingPane>
       <div
@@ -145,6 +312,8 @@ const Layer: React.FC = () => {
             namespace={namespace}
             name={name}
             variant={theme === 'light' ? 'light' : 'dark'}
+            plan={planHighlights}
+            planLoading={planQuery.isLoading || planQuery.isFetching}
             onNodeClick={(n) => { setShowResourcePane(true)
               setSelectedResourceData(n);
               console.log('Clicked node', n);
