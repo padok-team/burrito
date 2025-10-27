@@ -220,7 +220,7 @@ const Layer: React.FC = () => {
       >
         <div>
           <h2 className={twMerge('text-2xl font-bold mb-2', paneTitleClass)}>
-            Ressource: {selectedResourceData?.name}
+            Resource: {selectedResourceData?.name}
           </h2>
           <h3
             className={twMerge(
