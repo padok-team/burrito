@@ -169,6 +169,25 @@ const Layer: React.FC = () => {
   const showCountArrow =
     futureInstanceCount !== null && futureInstanceCount !== currentInstanceCount;
 
+  const paneTitleClass =
+    theme === 'light' ? 'text-nuances-black' : 'text-nuances-50';
+  const paneLabelClass = theme === 'light' ? 'text-gray-500' : 'text-nuances-300';
+  const paneValueClass = theme === 'light' ? 'text-gray-500' : 'text-nuances-200';
+  const paneMutedTextClass =
+    theme === 'light' ? 'text-gray-500' : 'text-nuances-200';
+  const plannedDeletionClass = twMerge(
+    'text-sm rounded-md p-3 border',
+    theme === 'light'
+      ? 'text-red-600 bg-red-50 border-red-100'
+      : 'text-red-200 bg-red-900/30 border-red-800'
+  );
+  const plannedCreationClass = twMerge(
+    'text-sm rounded-md p-3 mt-4 border',
+    theme === 'light'
+      ? 'text-emerald-700 bg-emerald-50 border-emerald-100'
+      : 'text-emerald-200 bg-emerald-900/30 border-emerald-800'
+  );
+
   return (
     <div className="flex flex-col flex-1 h-screen min-w-0">
       <SlidingPane
@@ -177,33 +196,73 @@ const Layer: React.FC = () => {
         variant={theme}
       >
         <div>
-          <h2 className="text-2xl font-bold mb-2">Ressource: {selectedResourceData?.name}</h2>
-          <h3 className="text-sm uppercase font-semibold text-primary-600">{selectedResourceData?.type}</h3>
-            <div className="grid grid-cols-[min-content_1fr] mt-4 gap-x-8">
-            <span className="text-sm text-gray-500 text-right">Provider:</span>
-            <span className="text-sm text-gray-500 truncate pr-8" title={selectedResourceData?.provider}>{selectedResourceData?.provider}</span>
-            <span className="text-sm text-gray-500 text-right">Address:</span>
-            <span className="text-sm text-gray-500 truncate pr-8" title={selectedResourceData?.addr}>{selectedResourceData?.addr}</span>
+          <h2 className={twMerge('text-2xl font-bold mb-2', paneTitleClass)}>
+            Ressource: {selectedResourceData?.name}
+          </h2>
+          <h3
+            className={twMerge(
+              'text-sm uppercase font-semibold',
+              theme === 'light' ? 'text-primary-600' : 'text-primary-300'
+            )}
+          >
+            {selectedResourceData?.type}
+          </h3>
+          <div className="grid grid-cols-[min-content_1fr] mt-4 gap-x-8">
+            <span className={twMerge('text-sm text-right', paneLabelClass)}>
+              Provider:
+            </span>
+            <span
+              className={twMerge('text-sm truncate pr-8', paneValueClass)}
+              title={selectedResourceData?.provider}
+            >
+              {selectedResourceData?.provider}
+            </span>
+            <span className={twMerge('text-sm text-right', paneLabelClass)}>
+              Address:
+            </span>
+            <span
+              className={twMerge('text-sm truncate pr-8', paneValueClass)}
+              title={selectedResourceData?.addr}
+            >
+              {selectedResourceData?.addr}
+            </span>
             {selectedResourceData?.module !== undefined && (
               <>
-              <span className="text-sm text-gray-500 text-right">Module:</span>
-              <span className="text-sm text-gray-500 truncate pr-8" title={selectedResourceData?.module || '(root)'}>{selectedResourceData?.module || '(root)'}</span>
+                <span className={twMerge('text-sm text-right', paneLabelClass)}>
+                  Module:
+                </span>
+                <span
+                  className={twMerge('text-sm truncate pr-8', paneValueClass)}
+                  title={selectedResourceData?.module || '(root)'}
+                >
+                  {selectedResourceData?.module || '(root)'}
+                </span>
               </>
             )}
-            <span className="text-sm text-gray-500 text-right">Count:</span>
-            <span className="text-sm text-gray-500 truncate pr-8">
+            <span className={twMerge('text-sm text-right', paneLabelClass)}>
+              Count:
+            </span>
+            <span className={twMerge('text-sm truncate pr-8', paneValueClass)}>
               {currentInstanceCount}
               {showCountArrow ? ` → ${futureInstanceCount}` : ''}
             </span>
-            </div>
+          </div>
           {selectedPlanDetails && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Planned change</h3>
-              <div className="text-sm text-gray-500 mb-2">
-                <span className="text-gray-600 font-medium">Action:</span> {selectedPlanDetails.action}
+              <div className={twMerge('text-sm mb-2', paneMutedTextClass)}>
+                <span
+                  className={twMerge(
+                    'font-medium',
+                    theme === 'light' ? 'text-gray-600' : 'text-nuances-100'
+                  )}
+                >
+                  Action:
+                </span>{' '}
+                {selectedPlanDetails.action}
               </div>
               {selectedPlanDetails.action === 'delete' && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md p-3">
+                <div className={plannedDeletionClass}>
                   All current instances will be destroyed when this plan is applied.
                 </div>
               )}
@@ -220,6 +279,7 @@ const Layer: React.FC = () => {
                     <StateGraphInstanceCard
                       instance={inst}
                       defaultExpanded={currentInstances.length === 1}
+                      variant={theme}
                       tone="current"
                     />
                   </li>
@@ -237,6 +297,7 @@ const Layer: React.FC = () => {
                   <li key={`future-${inst.addr}`} className="mb-2">
                     <StateGraphInstanceCard
                       instance={inst}
+                      variant={theme}
                       tone="future"
                       planAction={selectedPlanDetails.action}
                       badge={
@@ -263,7 +324,7 @@ const Layer: React.FC = () => {
           {selectedPlanDetails?.action === 'create' &&
             futureInstances.length === 0 &&
             selectedPlanDetails.planHasOnlyCreates && (
-              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md p-3 mt-4">
+              <div className={plannedCreationClass}>
                 This resource will be created when the plan is applied.
               </div>
             )}
@@ -293,18 +354,34 @@ const Layer: React.FC = () => {
           </h1>
         </div>
         <div className="flex p-6 justify-between gap-4">
-          <LayerStatus layer={layer} variant="health" syncPending={isManualSyncPending} />
-          <LayerStatus layer={layer} variant="lastOperation" />
-          <LayerStatus layer={layer} variant="details" />
+          <LayerStatus layer={layer} variant="health" theme={theme} syncPending={isManualSyncPending} />
+          <LayerStatus layer={layer} variant="lastOperation" theme={theme} />
+          <LayerStatus layer={layer} variant="details" theme={theme} />
           <div className="flex flex-col justify-between gap-2 min-w-32">
             <Button
+              theme={theme}
+              variant="primary"
+              disabled={!layer || isRefreshing}
+              onClick={() => refresh()}
+            >
+              {'Refresh'}
+            </Button>
+            <Button
+              theme={theme}
+              variant="secondary"
               onClick={() => syncSelectedLayer(layer!).then(() => layerQuery.refetch())}
               disabled={!layer || isManualSyncPending}
             >
               Run sync
             </Button>
-            <Button variant='secondary' onClick={() => navigate(`/logs/${layer!.namespace}/${layer!.name}`)}>View logs</Button>
-            <Button variant='secondary' disabled={!layer || isRefreshing} onClick={() => refresh()}>{'Refresh'}</Button>
+            <Button
+              theme={theme}
+              variant="secondary"
+              onClick={() => navigate(`/logs/${layer!.namespace}/${layer!.name}`)}
+            >
+              View logs
+            </Button>
+
           </div>
         </div>
         <div className="flex-1 min-h-0 overflow-auto p-6">

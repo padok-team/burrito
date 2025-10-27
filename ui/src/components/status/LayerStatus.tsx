@@ -53,6 +53,7 @@ const LayerStatus: React.FC<LayerStatusProps> = ({
       dark: `outline-blue-500`
     }
   };
+  const mutedText = theme === 'light' ? 'text-gray-500' : 'text-nuances-200';
 
   return (
     <div className={className}>
@@ -71,18 +72,18 @@ const LayerStatus: React.FC<LayerStatusProps> = ({
         {layer && variant==='lastOperation' &&
         <div className="flex">
           <div className="flex flex-col min-w-40">
-            <span className="text-lg py-1 font-bold"> {layer.lastRun?.action && operationResult.find(op => op.value === layer.lastRun.action)?.label}</span>
-            <span className="text-sm text-gray-500" title={lastRunAtTitle}> {lastRunAtText}</span>
-            <span className="text-sm text-gray-500">Auto Apply is <span className="font-semibold">{layer.autoApply ? 'enabled' : 'disabled'}</span></span>
+            <span className={twMerge("text-lg py-1 font-bold",mutedText)}> {layer.lastRun?.action && operationResult.find(op => op.value === layer.lastRun.action)?.label}</span>
+            <span className={twMerge('text-sm', mutedText)} title={lastRunAtTitle}> {lastRunAtText}</span>
+            <span className={twMerge('text-sm', mutedText)}>Auto Apply is <span className="font-semibold">{layer.autoApply ? 'enabled' : 'disabled'}</span></span>
           </div>
           <div className="flex flex-col min-w-32">
             <div className="grid grid-cols-[20%_80%] mt-4 gap-x-8">
-              <span className="text-sm text-gray-500 text-right">Author:</span>
-              <span className="text-sm text-gray-500 truncate pr-8" title={layer.lastRun?.author}>{layer.lastRun?.author}</span>
-              <span className="text-sm text-gray-500 text-right">Message:</span>
-              <span className="text-sm text-gray-500 truncate pr-8" title={layer.lastRun?.message}>{layer.lastRun?.message}</span>
-              <span className="text-sm text-gray-500 text-right">Commit:</span>
-              <span className="text-sm text-gray-500 truncate pr-8" title={layer.lastRun?.commit}>{layer.lastRun?.commit}</span>
+              <span className={twMerge('text-sm text-right', mutedText)}>Author:</span>
+              <span className={twMerge('text-sm truncate pr-8', mutedText)} title={layer.lastRun?.author}>{layer.lastRun?.author}</span>
+              <span className={twMerge('text-sm text-right', mutedText)}>Message:</span>
+              <span className={twMerge('text-sm truncate pr-8', mutedText)} title={layer.lastRun?.message}>{layer.lastRun?.message}</span>
+              <span className={twMerge('text-sm text-right', mutedText)}>Commit:</span>
+              <span className={twMerge('text-sm truncate pr-8', mutedText)} title={layer.lastRun?.commit}>{layer.lastRun?.commit}</span>
             </div>
           </div>
         </div>
@@ -90,15 +91,15 @@ const LayerStatus: React.FC<LayerStatusProps> = ({
         {layer && variant==='details' &&
           <div className="flex flex-col min-w-58">
             <div className="grid grid-cols-[30%_70%] mt-4 gap-x-4">
-              <span className="text-sm text-gray-500 text-right">Type:</span>
-              <span className="text-sm text-gray-500 truncate pr-8">{getLayerType(layer)}</span>
+              <span className={twMerge('text-sm text-right', mutedText)}>Type:</span>
+              <span className={twMerge('text-sm truncate pr-8', mutedText)}>{getLayerType(layer)}</span>
               {layer.terragrunt &&
-                <span className="text-sm text-gray-500 text-right">Terragrunt Enabled</span>
+                <span className={twMerge('text-sm text-right', mutedText)}>Terragrunt Enabled</span>
               }
-              <span className="text-sm text-gray-500 text-right">Git ref:</span>
-              <span className="text-sm text-gray-500 truncate pr-8">{layer.branch}</span>
-              <span className="text-sm text-gray-500 text-right">Code path:</span>
-              <span className="text-sm text-gray-500 truncate pr-8" title={layer.path}>{layer.path || '/'}</span>
+              <span className={twMerge('text-sm text-right', mutedText)}>Git ref:</span>
+              <span className={twMerge('text-sm truncate pr-8', mutedText)}>{layer.branch}</span>
+              <span className={twMerge('text-sm text-right', mutedText)}>Code path:</span>
+              <span className={twMerge('text-sm truncate pr-8', mutedText)} title={layer.path}>{layer.path || '/'}</span>
               </div>
           </div>
         }

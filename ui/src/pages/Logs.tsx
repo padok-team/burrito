@@ -178,7 +178,8 @@ const Logs: React.FC = () => {
             Logs
           </h1>
           <Button
-            variant={theme === 'light' ? 'primary' : 'secondary'}
+            variant="primary"
+            theme={theme}
             isLoading={layersQuery.isRefetching}
             onClick={() => layersQuery.refetch()}
           >
