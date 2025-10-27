@@ -180,7 +180,8 @@ const Layers: React.FC = () => {
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
             <Button
-              variant={theme === 'light' ? 'primary' : 'secondary'}
+              variant="primary"
+              theme={theme}
               className="w-full"
               disabled={selectedLayersForSync.length === 0}
               onClick={() => {
@@ -233,7 +234,8 @@ const Layers: React.FC = () => {
                 Run Sync
               </Button>
               <Button
-                variant={theme === 'light' ? 'primary' : 'secondary'}
+                variant="primary"
+                theme={theme}
                 isLoading={layersQuery.isRefetching}
                 onClick={() => layersQuery.refetch()}
               >

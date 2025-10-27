@@ -37,7 +37,7 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
         outline-primary-500
         hover:bg-nuances-white`,
 
-      dark: `bg-nuances-black
+      dark: `bg-nuances-400
         text-nuances-50
         outline-nuances-50
         hover:bg-nuances-400`
@@ -106,6 +106,11 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
           replace: 'fill-violet-600'
         }[futureKey as 'create' | 'update' | 'replace']
       : 'fill-primary-600';
+  const mutedTextClass =
+    variant === 'light' ? 'text-gray-500' : 'text-nuances-200';
+
+  const propertiesClass =
+    variant === 'light' ? 'bg-nuances-300 text-nuances-white' : 'bg-nuances-100 text-nuances-black';
 
   return (
     <div
@@ -137,7 +142,7 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
       {isExpanded && attributes && (
         <div>
           {created_at && (
-            <p className="text-sm text-gray-500 mb-2">
+            <p className={twMerge('text-sm mb-2', mutedTextClass)}>
               Created at:{' '}
               <span className="font-medium">
                 {new Date(created_at).toLocaleString()}
@@ -145,7 +150,7 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
             </p>
           )}
           {dependencies && dependencies.length > 0 && (
-            <div className="text-sm text-gray-500 mb-2">
+            <div className={twMerge('text-sm mb-2', mutedTextClass)}>
               <p>Dependencies:</p>
               <ul className="ml-4 list-disc">
                 {dependencies.map((dep) => (
@@ -155,11 +160,13 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
             </div>
           )}
           <div>
-            <h3 className="text-sm text-gray-500 mb-2">Attributes:</h3>
+            <h3 className={twMerge('text-sm mb-2', mutedTextClass)}>
+              Attributes:
+            </h3>
           </div>
           <div
             onClick={(e) => e.stopPropagation()}
-            className="mt-2 bg-gray-50 dark:bg-nuances-black/70 text-sm shadow-light text-gray-900 dark:text-nuances-50 p-3 rounded-md overflow-auto max-h-48 font-mono whitespace-pre"
+            className={twMerge(propertiesClass,"mt-2 text-sm shadow-light p-3 rounded-md overflow-auto max-h-48 font-mono whitespace-pre")}
             role="region"
             aria-label="attributes-json"
           >

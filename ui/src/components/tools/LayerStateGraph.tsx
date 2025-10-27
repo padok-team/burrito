@@ -7,6 +7,7 @@ import { buildReactFlow, type ReactFlowGraph } from '@/utils/stateGraph';
 import { StateGraph, StateGraphNode } from '@/clients/layers/types';
 import type { ParsedTerraformPlan } from '@/utils/terraformPlan';
 import { augmentStateGraphWithPlan } from '@/utils/terraformPlan';
+import { twMerge } from 'tailwind-merge';
 
 export interface LayerStateGraphProps {
   variant?: 'light' | 'dark';
@@ -48,11 +49,21 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
     setGraph(augmentedGraph);
     buildReactFlow(augmentedGraph).then((res) => {
       if (cancelled) return;
+      const withVariant = {
+        nodes: res.nodes.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            variant
+          }
+        })),
+        edges: res.edges
+      };
       if (!plan) {
-        setRf(res);
+        setRf(withVariant);
         return;
       }
-      const nodesWithPlan = res.nodes.map((node) => {
+      const nodesWithPlan = withVariant.nodes.map((node) => {
         const exact = plan.byAddr.get(node.id);
         const base = plan.byBase.get(node.id);
         const change = exact?.action ?? base?.action ?? null;
@@ -75,19 +86,23 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
           }
         };
       });
-      setRf({ nodes: nodesWithPlan, edges: res.edges });
+      setRf({ nodes: nodesWithPlan, edges: withVariant.edges });
     });
     return () => {
       cancelled = true;
     };
-  }, [augmentedGraph, plan]);
+  }, [augmentedGraph, plan, variant]);
 
   const hasGraphData = (graph?.nodes?.length ?? 0) > 0;
+  const infoTextClass =
+    variant === 'light' ? 'text-slate-500' : 'text-nuances-200';
+  const errorTextClass =
+    variant === 'light' ? 'text-red-500' : 'text-red-400';
 
   if (layerQuery.isLoading) {
     return (
       <div className="flex items-center justify-center h-full p-4">
-        <div className="text-slate-500">Loading layer...</div>
+        <div className={twMerge(infoTextClass)}>Loading layer...</div>
       </div>
     );
   }
@@ -95,7 +110,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   if (layerQuery.isError) {
     return (
       <div className="flex items-center justify-center h-full p-4">
-        <div className="text-red-500">
+        <div className={twMerge(errorTextClass)}>
           Error loading layer: {(layerQuery.error as Error).message}
         </div>
       </div>
@@ -105,7 +120,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   if (!hasGraphData && (stateGraphQuery.isLoading || planLoading)) {
     return (
       <div className="flex items-center justify-center h-full p-4">
-        <div className="text-slate-500">Loading state graph...</div>
+        <div className={twMerge(infoTextClass)}>Loading state graph...</div>
       </div>
     );
   }
@@ -118,7 +133,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   ) {
     return (
       <div className="flex items-center justify-center h-full p-4">
-        <div className="text-slate-500">
+        <div className={twMerge(infoTextClass)}>
           No state graph available for this layer
         </div>
       </div>
@@ -128,7 +143,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   if (!hasGraphData || rf.nodes.length === 0) {
     return (
       <div className="flex items-center justify-center h-full p-4">
-        <div className="text-slate-500">
+        <div className={twMerge(infoTextClass)}>
           No state graph data available for this layer
         </div>
       </div>

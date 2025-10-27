@@ -11,6 +11,7 @@ export type ReactFlowNode = Node<{
   module: string;
   change: 'create' | 'delete' | 'update' | 'replace' | null;
   future?: unknown;
+  variant?: 'light' | 'dark';
 }>;
 
 export type ReactFlowEdge = Edge;
