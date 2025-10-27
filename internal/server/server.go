@@ -170,6 +170,7 @@ func (s *Server) Exec() {
 	api.GET("/layers/:namespace/:layer", s.API.LayerHandler)
 	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
 	api.GET("/layers/:namespace/:layer/stategraph", s.API.GetStateGraphHandler)
+	api.GET("/plans/:namespace/:layer/:run/:attempt", s.API.GetPlanHandler)
 	api.GET("/repositories", s.API.RepositoriesHandler)
 	api.GET("/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)
 	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
