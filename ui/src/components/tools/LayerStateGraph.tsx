@@ -14,6 +14,7 @@ export interface LayerStateGraphProps {
   namespace: string;
   name: string;
   onNodeClick?: (n: StateGraphNode) => void;
+  onGraphChange?: (graph: StateGraph) => void;
   plan?: ParsedTerraformPlan | null;
   planLoading?: boolean;
 }
@@ -23,6 +24,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   namespace,
   name,
   onNodeClick,
+  onGraphChange,
   plan,
   planLoading = false
 }) => {
@@ -43,6 +45,12 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   const augmentedGraph = useMemo<StateGraph>(() => {
     return augmentStateGraphWithPlan(stateGraphQuery.data, plan);
   }, [stateGraphQuery.data, plan]);
+
+  useEffect(() => {
+    if (onGraphChange) {
+      onGraphChange(augmentedGraph);
+    }
+  }, [augmentedGraph, onGraphChange]);
 
   useEffect(() => {
     let cancelled = false;
