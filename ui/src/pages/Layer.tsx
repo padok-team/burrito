@@ -217,6 +217,7 @@ const Layer: React.FC = () => {
         isOpen={showResourcePane}
         onClose={() => setShowResourcePane(false)}
         variant={theme}
+        width="w-3/7"
       >
         <div>
           <h2 className={twMerge('text-2xl font-bold mb-2', paneTitleClass)}>
@@ -327,21 +328,6 @@ const Layer: React.FC = () => {
                       planAction={selectedPlanDetails.action}
                       isDependencyAvailable={(addr) => !!resolveDependencyNode(addr)}
                       onDependencyClick={handleDependencyClick}
-                      badge={
-                        <span
-                          className={twMerge(
-                            'text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border',
-                            selectedPlanDetails.action === 'create' &&
-                              'bg-emerald-100 text-emerald-700 border-emerald-300',
-                            selectedPlanDetails.action === 'update' &&
-                              'bg-amber-100 text-amber-700 border-amber-300',
-                            selectedPlanDetails.action === 'replace' &&
-                              'bg-violet-100 text-violet-700 border-violet-300'
-                          )}
-                        >
-                          {selectedPlanDetails.action}
-                        </span>
-                      }
                     />
                   </li>
                 ))}
