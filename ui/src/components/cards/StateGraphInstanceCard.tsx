@@ -51,40 +51,22 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
     },
     future: {
       create: {
-        light: `bg-emerald-50
-          text-emerald-900
-          outline-emerald-400
-          border border-emerald-200
-          hover:bg-emerald-100`,
-        dark: `bg-emerald-900/30
-          text-emerald-100
-          outline-emerald-500
-          border border-emerald-800
-          hover:bg-emerald-900/40`
+        light: `outline-terraform-create
+          border-2 border-terraform-create`,
+        dark: `outline-terraform-create
+          border-2 border-terraform-create`,
       },
       update: {
-        light: `bg-amber-50
-          text-amber-900
-          outline-amber-400
-          border border-amber-200
-          hover:bg-amber-100`,
-        dark: `bg-amber-900/30
-          text-amber-100
-          outline-amber-500
-          border border-amber-800
-          hover:bg-amber-900/40`
+        light: `outline-terraform-update
+          border-2 border-terraform-update`,
+        dark: `outline-terraform-update
+          border-2 border-terraform-update`,
       },
       replace: {
-        light: `bg-violet-50
-          text-violet-900
-          outline-violet-400
-          border border-violet-200
-          hover:bg-violet-100`,
-        dark: `bg-violet-900/30
-          text-violet-100
-          outline-violet-500
-          border border-violet-800
-          hover:bg-violet-900/40`
+        light: `outline-terraform-replace
+          border-2 border-terraform-replace`,
+        dark: `outline-terraform-replace
+          border-2 border-terraform-replace`,
       }
     }
   };
@@ -95,22 +77,22 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
       : 'update';
   const cardClass =
     tone === 'future'
-      ? styles.future[futureKey as 'create' | 'update' | 'replace'][variant]
+      ? twMerge(styles.future[futureKey as 'create' | 'update' | 'replace'][variant],styles.current[variant])
       : styles.current[variant];
   const headerColor =
     tone === 'future'
       ? {
-          create: 'text-emerald-700 dark:text-emerald-200',
-          update: 'text-amber-700 dark:text-amber-200',
-          replace: 'text-violet-700 dark:text-violet-200'
+          create: 'text-terraform-create dark:text-terraform-create',
+          update: 'text-terraform-update dark:text-terraform-update',
+          replace: 'text-terraform-replace dark:text-terraform-replace'
         }[futureKey as 'create' | 'update' | 'replace']
       : 'text-primary-600';
   const iconColor =
     tone === 'future'
       ? {
-          create: 'fill-emerald-600',
-          update: 'fill-amber-600',
-          replace: 'fill-violet-600'
+          create: 'fill-terraform-create',
+          update: 'fill-terraform-update',
+          replace: 'fill-terraform-replace'
         }[futureKey as 'create' | 'update' | 'replace']
       : 'fill-primary-600';
   const mutedTextClass =
@@ -120,12 +102,42 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
     variant === 'light'
       ? 'bg-gray-50 text-gray-900'
       : 'bg-nuances-black/70 text-nuances-50';
+  const futureBadgeStyles: Record<'create' | 'update' | 'replace', Record<'light' | 'dark', string>> = {
+    create: {
+      light: 'text-terraform-create border border-terraform-create',
+      dark: 'text-terraform-create border border-terraform-create/60'
+    },
+    update: {
+      light: 'text-terraform-update border border-terraform-update',
+      dark: 'text-terraform-update border border-terraform-update/60'
+    },
+    replace: {
+      light: 'text-terraform-replace border border-terraform-replace',
+      dark: 'text-terraform-replace border border-terraform-replace/60'
+    }
+  };
   const dependencyLinkClass = twMerge(
     'underline text-left focus-visible:outline-solid focus-visible:outline-1 focus-visible:outline-offset-2 rounded-sm transition-colors cursor-pointer',
     variant === 'light'
       ? 'text-primary-600 hover:text-primary-400 focus-visible:outline-primary-600'
       : 'text-primary-300 hover:text-primary-100 focus-visible:outline-nuances-50'
   );
+  const computedBadge =
+    badge ??
+    (tone === 'future' &&
+    planAction &&
+    futureBadgeStyles[futureKey as 'create' | 'update' | 'replace']
+      ? (
+          <span
+            className={twMerge(
+              'text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
+              futureBadgeStyles[futureKey as 'create' | 'update' | 'replace'][variant]
+            )}
+          >
+            {planAction}
+          </span>
+        )
+      : null);
   const dependencyDisabledClass = twMerge(
     'cursor-not-allowed focus-visible:outline-none hover:text-current no-underline',
     variant === 'light'
@@ -202,12 +214,18 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
         className
       )}
     >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <p className={twMerge('text-sm uppercase font-semibold', headerColor)}>
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <p
+            className={twMerge(
+              'text-sm uppercase font-semibold truncate',
+              headerColor
+            )}
+            title={addr}
+          >
             {addr}
           </p>
-          {badge}
+          {computedBadge && <span className="flex-shrink-0">{computedBadge}</span>}
         </div>
         <AngleDownIcon
           className={twMerge(
@@ -280,7 +298,7 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
               onClick={(e) => e.stopPropagation()}
               className={twMerge(
                 propertiesClass,
-                'text-sm shadow-light p-3 rounded-md overflow-auto max-h-48 font-mono whitespace-pre'
+                'text-xs shadow-light p-3 rounded-md overflow-auto max-h-64 font-mono whitespace-pre'
               )}
               role="region"
               aria-label="attributes-json"
