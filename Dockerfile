@@ -2,7 +2,7 @@
 
 # Build Burrito UI
 
-FROM docker.io/library/node:22.21.0@sha256:23c24e85395992be118734a39903e08c8f7d1abc73978c46b6bda90060091a49 AS builder-ui
+FROM docker.io/library/node:22.21.1@sha256:22ab967fdf8d9ce32387d0c06ab2e32c6793d860bb93ccce6e27927ccdfeee6d AS builder-ui
 
 WORKDIR /workspace
 # Copy the node modules manifests
@@ -67,7 +67,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
     -o bin/burrito main.go
 
-FROM docker.io/library/alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
+FROM docker.io/library/alpine:3.22.2@sha256:4b7ce07002c69e8f3d704a9c5d6fd3053be500b7f1c69fc0d80990c2ad8dd412
 
 WORKDIR /home/burrito
 
