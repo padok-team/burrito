@@ -140,7 +140,12 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("repository is already up-to-date")
 		} else {
-			return nil, fmt.Errorf("failed to pull latest changes for ref %s: %w", reference.Name(), err)
+			log.Warnf("failed to pull latest changes for ref %s: %v, deleting local repository", reference.Name(), err)
+			p.gitRepository = nil
+			if removeErr := os.RemoveAll(p.repositoryPath); removeErr != nil {
+				return nil, fmt.Errorf("failed to remove repository at %s: %w", p.repositoryPath, removeErr)
+			}
+			return nil, fmt.Errorf("failed to pull latest changes for ref %s: %w, likely because of force-push, next run will re-clone", reference.Name(), err)
 		}
 	}
 
