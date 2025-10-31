@@ -11,35 +11,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: "go.mod"
-
-      - name: Get ldflags env values
-        run: |
-          echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   version:
     runs-on: ubuntu-latest
     environment: production
