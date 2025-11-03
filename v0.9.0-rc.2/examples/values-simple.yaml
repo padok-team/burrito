@@ -1,0 +1,17 @@
+config:
+  burrito:
+    controller:
+      timers:
+        driftDetection: 10m # run drift detection every 10 minutes
+        onError: 10s # wait 10 seconds before retrying on error
+        waitAction: 1m # wait 1 minute before retrying on locked layer
+        failureGracePeriod: 30s # set a grace period of 30 seconds before retrying on failure (increases exponentially with the amount of failed retries)
+    datastore:
+      storage:
+        mock: true # use a mock storage for the datastore (useful for testing, not recommended for production)
+tenants:
+  - namespace:
+      create: true
+      name: "burrito-project"
+    serviceAccounts:
+    - name: burrito-runner
