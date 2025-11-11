@@ -7,7 +7,7 @@ spec:
   branch: main
   path: terraform/
   repository:
-    name: burrito-examples
+    name: burrito
     namespace: default
   remediationStrategy:
     applyWithoutPlanArtifact: true
@@ -24,6 +24,7 @@ spec:
   layer:
     name: nominal-case-1
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -35,6 +36,7 @@ spec:
   layer:
     name: nominal-case-1
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -45,7 +47,7 @@ spec:
   branch: main
   path: terragrunt/random-pets/test/
   repository:
-    name: burrito-examples
+    name: burrito
     namespace: default
   remediationStrategy:
     applyWithoutPlanArtifact: true
@@ -65,6 +67,7 @@ spec:
   layer:
     name: nominal-case-2
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformRun
@@ -76,6 +79,7 @@ spec:
   layer:
     name: nominal-case-2
     namespace: default
+    revision: TEST_REVISION
 ---
 apiVersion: config.terraform.padok.cloud/v1alpha1
 kind: TerraformLayer
@@ -86,7 +90,7 @@ spec:
   branch: main
   path: terraform-with-version/
   repository:
-    name: burrito-examples
+    name: burrito
     namespace: default
   remediationStrategy:
     applyWithoutPlanArtifact: true
@@ -101,3 +105,4 @@ spec:
   layer:
     name: nominal-case-3
     namespace: default
+    revision: TEST_REVISION

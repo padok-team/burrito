@@ -7,13 +7,13 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/utils/gitprovider"
-	gt "github.com/padok-team/burrito/internal/utils/gitprovider/types"
-	"github.com/padok-team/burrito/internal/utils/typeutils"
+	"github.com/padok-team/burrito/internal/annotations"
+	layerCtrl "github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/types"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -49,30 +49,25 @@ func (s *SyncNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository) (ctrl.Result, []configv1alpha1.BranchState) {
 		log := log.WithContext(ctx)
 		branchStates := repository.Status.Branches
-		// Initialize git providers for the repository if needed
-		if _, ok := r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)]; !ok {
-			provider, err := r.initializeProvider(ctx, repository)
-			if err != nil {
-				log.Errorf("could not initialize provider for repository %s: %s", repository.Name, err)
-				return ctrl.Result{}, branchStates
-			}
-			if provider != nil {
-				log.Infof("initialized git provider for repository %s/%s", repository.Namespace, repository.Name)
-				r.Providers[fmt.Sprintf("%s/%s", repository.Namespace, repository.Name)] = provider
-			}
+		gitProvider, err := repo.GetGitProviderFromRepository(r.Credentials, repository)
+		if err != nil {
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get git provider: %s", err))
+			log.Errorf("failed to get git provider for repo %s/%s: %s", repository.Namespace, repository.Name, err)
+			return ctrl.Result{}, branchStates
 		}
 
 		// Update the list of layer branches by querying the TerraformLayer resources
-		layerBranches, err := r.retrieveLayerBranches(ctx, repository)
+		layers, err := r.retrieveManagedLayers(ctx, repository)
 		if err != nil {
-			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Failed to list managed branches")
-			log.Errorf("failed to list managed branches: %s", err)
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to list managed layers: %s", err))
+			log.Errorf("failed to list managed layers by repo %s/%s: %s", repository.Namespace, repository.Name, err)
 			return ctrl.Result{}, branchStates
 		}
-		if len(layerBranches) == 0 {
-			log.Warningf("no managed branches found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
+		if len(layers) == 0 {
+			log.Warningf("no managed layers found for repository %s/%s, have you created TerraformLayer resources?", repository.Namespace, repository.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, []configv1alpha1.BranchState{}
 		}
+		layerBranches := retrieveAllLayerRefs(layers)
 
 		// add in branchStates branches that were not previously managed
 		branchStates = mergeBranchesWithBranchState(layerBranches, branchStates)
@@ -80,68 +75,76 @@ func (s *SyncNeeded) getHandler() Handler {
 		// Update datastore with latest revisions for each ref that needs to be synced
 		var syncError error
 		for _, branch := range branchStates {
+			layersForRef := retrieveLayersForRef(branch.Name, layers)
 			// Filter out branches that have been synced succesfully recently or do not have been requested to sync now
 			if lastSync, err := time.Parse(time.UnixDate, branch.LastSyncDate); err == nil {
 				syncNow, err := isSyncNowRequested(repository, branch.Name, lastSync)
 				if err != nil {
-					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to parse sync now annotation for ref %s", branch.Name))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to parse sync now annotation for ref %s: %s", branch.Name, err))
 					continue
 				}
 				nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
-				now := time.Now()
-				if !syncNow && !nextSyncTime.Before(now) && branch.LastSyncStatus == SyncStatusSuccess {
+				now := r.Clock.Now()
+
+				// Skip sync if last sync is too recent and no new layer
+				if !syncNow && !nextSyncTime.Before(now) && branch.LastSyncStatus == SyncStatusSuccess && !isThereANewLayer(layersForRef) {
+					log.Infof("skipping sync for repository %s/%s ref %s: last sync was at %s and no new layer for this branch", repository.Namespace, repository.Name, branch.Name, lastSync.Format(time.UnixDate))
 					continue
 				}
 			}
 
-			latestRev, err := r.getRemoteRevision(repository, branch.Name)
+			latestRev, err := gitProvider.GetLatestRevisionForRef(branch.Name)
 			if err != nil {
-				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s", branch.Name))
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get remote revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to get remote revision for ref %s: %s", branch.Name, err)
 				syncError = err
-				branchStates = updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
+				branchStates = r.updateBranchState(branchStates, branch.Name, "", SyncStatusFailed)
 				continue
 			}
-			log.Infof("latest revision for repository %s/%s ref:%s is %s", repository.Namespace, repository.Name, branch, latestRev)
+			log.Infof("latest revision for repository %s/%s ref %s is %s", repository.Namespace, repository.Name, branch.Name, latestRev)
 
 			isSynced, err := r.Datastore.CheckGitBundle(repository.Namespace, repository.Name, branch.Name, latestRev)
 			if err != nil {
-				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to check stored revision for ref %s", branch.Name))
+				r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to check stored revision for ref %s: %s", branch.Name, err))
 				log.Errorf("failed to check stored revision for ref %s: %s", branch.Name, err)
 				syncError = err
-				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
+				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
 				continue
 			}
 
 			if isSynced {
 				log.Infof("repository %s/%s is in sync with remote for ref %s: rev %s", repository.Namespace, repository.Name, branch.Name, latestRev)
-				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+				syncError = r.annotateLayers(gitProvider, layersForRef, latestRev)
 				continue
 			} else {
 				log.Infof("repository %s/%s is out of sync with remote for ref %s. Syncing...", repository.Namespace, repository.Name, branch.Name)
-				bundle, err := r.getRevisionBundle(repository, branch.Name, latestRev)
+				bundle, err := gitProvider.Bundle(branch.Name)
 				if err != nil {
-					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s", branch.Name))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get revision bundle for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to get revision bundle for ref %s: %s", branch.Name, err)
 					syncError = err
-					branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
+					branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
 					continue
 				}
 
 				err = r.Datastore.PutGitBundle(repository.Namespace, repository.Name, branch.Name, latestRev, bundle)
 				if err != nil {
-					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s", branch.Name))
+					r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to store revision for ref %s: %s", branch.Name, err))
 					log.Errorf("failed to store revision for ref %s: %s", branch.Name, err)
 					syncError = err
-					branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
+					branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusFailed)
 					continue
 				}
 				log.Infof("stored new bundle for repository %s/%s ref:%s revision:%s", repository.Namespace, repository.Name, branch.Name, latestRev)
-				branchStates = updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+				branchStates = r.updateBranchState(branchStates, branch.Name, latestRev, SyncStatusSuccess)
+
+				// Add annotation to trigger a sync for all layers that depend on this branch
+				syncError = r.annotateLayers(gitProvider, layersForRef, latestRev)
 			}
 		}
 		if syncError != nil {
-			return ctrl.Result{}, branchStates
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, branchStates
 		}
 
 		r.Recorder.Event(repository, corev1.EventTypeNormal, "Reconciliation", "Repository sync completed")
@@ -163,10 +166,10 @@ func getStateString(state State) string {
 	return t[len(t)-1]
 }
 
-func updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, status string) []configv1alpha1.BranchState {
+func (r *Reconciler) updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, status string) []configv1alpha1.BranchState {
 	for i, b := range branchStates {
 		if b.Name == branch {
-			branchStates[i].LastSyncDate = time.Now().Format(time.UnixDate)
+			branchStates[i].LastSyncDate = r.Clock.Now().Format(time.UnixDate)
 			branchStates[i].LatestRev = rev
 			branchStates[i].LastSyncStatus = status
 			return branchStates
@@ -175,58 +178,38 @@ func updateBranchState(branchStates []configv1alpha1.BranchState, branch, rev, s
 	return branchStates
 }
 
-func (r *Reconciler) initializeProvider(ctx context.Context, repository *configv1alpha1.TerraformRepository) (gitprovider.Provider, error) {
-	if repository.Spec.Repository.Url == "" {
-		return nil, fmt.Errorf("no repository URL found in TerraformRepository.spec.repository.url for repository %s. Skipping provider initialization", repository.Name)
-	}
-	var config gitprovider.Config
+func (r *Reconciler) annotateLayers(gitProvider types.GitProvider, layers []configv1alpha1.TerraformLayer, latestRev string) error {
+	var err error
+	date := r.Clock.Now().Format(time.UnixDate)
+	for _, layer := range layers {
+		ann := map[string]string{}
 
-	if repository.Spec.Repository.SecretName != "" {
-		secret := &corev1.Secret{}
-		err := r.Client.Get(ctx, types.NamespacedName{
-			Name:      repository.Spec.Repository.SecretName,
-			Namespace: repository.Namespace,
-		}, secret)
-		if err != nil {
-			log.Errorf("failed to get credentials secret for repository %s: %s", repository.Name, err)
-			config = gitprovider.Config{
-				URL: repository.Spec.Repository.Url,
-			}
+		// If the layer already has the latest branch commit == latestRev, we skip it
+		if currentLastBranch, ok := layer.Annotations[annotations.LastBranchCommit]; !ok || currentLastBranch != latestRev {
+			ann[annotations.LastBranchCommit] = latestRev
+			ann[annotations.LastBranchCommitDate] = date
+		}
+
+		// If the layer does not have a last relevant commit, we set it to the last branch commit
+		if currentLastRelevant, ok := layer.Annotations[annotations.LastRelevantCommit]; !ok {
+			ann[annotations.LastRelevantCommit] = latestRev
+			ann[annotations.LastRelevantCommitDate] = date
 		} else {
-			config = gitprovider.Config{
-				URL:        repository.Spec.Repository.Url,
-				EnableMock: secret.Data["enableMock"] != nil && string(secret.Data["enableMock"]) == "true",
-				// GitHub App Auth
-				AppID:             typeutils.ParseSecretInt64(secret.Data["githubAppId"]),
-				AppInstallationID: typeutils.ParseSecretInt64(secret.Data["githubAppInstallationId"]),
-				AppPrivateKey:     string(secret.Data["githubAppPrivateKey"]),
-				// Token Auth
-				GitHubToken: string(secret.Data["githubToken"]),
-				GitLabToken: string(secret.Data["gitlabToken"]),
-				// Basic Auth
-				Username: string(secret.Data["username"]),
-				Password: string(secret.Data["password"]),
-				// SSH Auth
-				SSHPrivateKey: string(secret.Data["sshPrivateKey"]),
+			// We compare the current last relevant commit with the latest revision
+			changes := gitProvider.GetChanges(currentLastRelevant, latestRev)
+			if layerCtrl.LayerFilesHaveChanged(layer, changes) {
+				log.Infof("layer %s/%s is affected by new revision %s", layer.Namespace, layer.Name, latestRev)
+				ann[annotations.LastRelevantCommit] = latestRev
+				ann[annotations.LastRelevantCommitDate] = date
 			}
 		}
-	} else {
-		log.Infof("no secret configured for repository %s/%s, using empty config", repository.Namespace, repository.Name)
-		config = gitprovider.Config{
-			URL: repository.Spec.Repository.Url,
+
+		err = annotations.Add(context.TODO(), r.Client, &layer, ann)
+		if err != nil {
+			log.Errorf("could not add annotation to TerraformLayer %s/%s: %s", layer.Namespace, layer.Name, err)
+		} else {
+			log.Infof("layer %s/%s annotated with new revision %s", layer.Namespace, layer.Name, latestRev)
 		}
 	}
-
-	provider, err := gitprovider.New(config, []string{gt.Capabilities.Clone})
-	if err != nil {
-		log.Errorf("failed to create provider for repository %s: %s", repository.Name, err)
-		return nil, err
-	}
-
-	err = provider.Init()
-	if err != nil {
-		log.Errorf("failed to initialize provider for repository %s: %s", repository.Name, err)
-		return nil, err
-	}
-	return provider, nil
+	return err
 }

@@ -6,7 +6,6 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
 
@@ -28,18 +27,15 @@ func (e *PushEvent) Handle(c client.Client) error {
 		log.Errorf("could not list TerraformRepositories: %s", err)
 		return err
 	}
-	layers := &configv1alpha1.TerraformLayerList{}
-	err = c.List(context.Background(), layers)
-	if err != nil {
-		log.Errorf("could not list TerraformLayers: %s", err)
-		return err
-	}
 	prs := &configv1alpha1.TerraformPullRequestList{}
 	err = c.List(context.Background(), prs)
 	if err != nil {
 		log.Errorf("could not list TerraformPullRequests: %s", err)
 		return err
 	}
+
+	// Push events annotates the affected repositories with the commit sha to
+	// trigger a sync of the repository
 	affectedRepositories := e.getAffectedRepositories(repositories.Items)
 	for _, repo := range affectedRepositories {
 		ann := map[string]string{}
@@ -51,29 +47,7 @@ func (e *PushEvent) Handle(c client.Client) error {
 		}
 	}
 
-	for _, layer := range e.getAffectedLayers(layers.Items, affectedRepositories) {
-		ann := map[string]string{}
-		log.Printf("evaluating TerraformLayer %s for revision %s", layer.Name, e.Reference)
-		if layer.Spec.Branch != e.Reference {
-			log.Infof("branch %s for TerraformLayer %s not matching revision %s", layer.Spec.Branch, layer.Name, e.Reference)
-			continue
-		}
-		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
-		ann[annotations.LastBranchCommitDate] = date
-
-		if controller.LayerFilesHaveChanged(layer, e.Changes) {
-			log.Infof("layer %s is affected by push event", layer.Name)
-			ann[annotations.LastRelevantCommit] = e.ChangeInfo.ShaAfter
-			ann[annotations.LastRelevantCommitDate] = date
-		}
-
-		err := annotations.Add(context.TODO(), c, &layer, ann)
-		if err != nil {
-			log.Errorf("could not add annotation to TerraformLayer %s", err)
-			return err
-		}
-	}
-
+	// TODO: Remove this loop once the repo controller implements the same behavior
 	for _, pr := range e.getAffectedPullRequests(prs.Items, affectedRepositories) {
 		ann := map[string]string{}
 		ann[annotations.LastBranchCommit] = e.ChangeInfo.ShaAfter
@@ -97,16 +71,6 @@ func (e *PushEvent) getAffectedRepositories(repositories []configv1alpha1.Terraf
 		}
 	}
 	return affectedRepositories
-}
-
-func (e *PushEvent) getAffectedLayers(allLayers []configv1alpha1.TerraformLayer, affectedRepositories []configv1alpha1.TerraformRepository) []configv1alpha1.TerraformLayer {
-	layers := []configv1alpha1.TerraformLayer{}
-	for _, layer := range allLayers {
-		if isLayerLinkedToAnyRepositories(affectedRepositories, layer) {
-			layers = append(layers, layer)
-		}
-	}
-	return layers
 }
 
 func (e *PushEvent) getAffectedPullRequests(prs []configv1alpha1.TerraformPullRequest, affectedRepositories []configv1alpha1.TerraformRepository) []configv1alpha1.TerraformPullRequest {

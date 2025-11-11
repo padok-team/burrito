@@ -12,11 +12,13 @@ Create ConfigMap in all tenant namespaces + release namespace
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  labels:
-    app.kubernetes.io/part-of: burrito
-    app.kubernetes.io/name: burrito-ssh-known-hosts
   name: burrito-ssh-known-hosts
   namespace: {{ $namespace }}
+  labels:
+    app.kubernetes.io/name: burrito-ssh-known-hosts
+    {{- toYaml $.Values.global.metadata.labels | nindent 4 }}
+  annotations:
+    {{- toYaml $.Values.global.metadata.annotations | nindent 4 }}
 data:
   known_hosts: |-
     {{- $.Values.global.sshKnownHosts | nindent 4 }}

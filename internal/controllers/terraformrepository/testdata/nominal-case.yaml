@@ -1,0 +1,312 @@
+# Repository never synced with 1 layer
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-never-synced
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-never-synced-layer
+  namespace: default
+spec:
+  branch: branch-not-in-datastore
+  path: layer/
+  repository:
+    name: repo-never-synced
+    namespace: default
+---
+# Repositories without layer
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-without-layers
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-without-layers-2
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+# Repository with multiple layers: 2 layers on branch-1 and 1 layer on branch-2.
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-with-multiple-layers
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-multiple-layers-branch-1-1
+  namespace: default
+spec:
+  branch: branch-1
+  path: layer-1/
+  repository:
+    name: repo-with-multiple-layers
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-multiple-layers-branch-1-2
+  namespace: default
+spec:
+  branch: branch-1
+  path: layer-2/
+  repository:
+    name: repo-with-multiple-layers
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-multiple-layers-branch-2-1
+  namespace: default
+spec:
+  branch: branch-2
+  path: layer-1/
+  repository:
+    name: repo-with-multiple-layers
+    namespace: default
+---
+# Repository with Last Sync too old (2 branches), new changes are available on the repo that will affect the layers on multiple branches.
+# The status of the TerarformRepository resource is set in controller_test.go.
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-last-sync-too-old
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-last-sync-too-old-layer-1
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch-1
+  path: layer-with-files-changed/
+  repository:
+    name: repo-last-sync-too-old
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-last-sync-too-old-layer-2
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch-2
+  path: other-files-changed/
+  repository:
+    name: repo-last-sync-too-old
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-last-sync-too-old-layer-3
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch-3
+  path: no-changes/
+  repository:
+    name: repo-last-sync-too-old
+    namespace: default
+---
+# Repository with with a recent Sync but with a new TerraformLayer added (e.g. from the PR Controller), the Repo should end in SyncNeeded state.
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-with-new-layer
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-new-layer-existant
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-with-new-layer
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-with-new-layer-new
+  namespace: default
+spec:
+  branch: new-branch
+  path: layer/
+  repository:
+    name: repo-with-new-layer
+    namespace: default
+---
+# Repo already synced recently
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-synced-recently
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-synced-recently-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-synced-recently
+    namespace: default
+---
+# Repo already on last revision
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-already-last-revision
+  namespace: default
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-already-last-revision-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: layer/
+  repository:
+    name: repo-already-last-revision
+    namespace: default
+---
+# Repo with a sync now request
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-sync-now
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/sync-branch: Mon May  8 10:21:53 UTC 2023
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-sync-now-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: OUTDATED_REVISION
+    webhook.terraform.padok.cloud/relevant-commit: LAST_RELEVANT_REVISION
+spec:
+  branch: branch
+  path: no-changes/
+  repository:
+    name: repo-sync-now
+    namespace: default
+---
+# Repo with a sync now request that is old compared to lastSync, the repo is already Synced, nothing should happen
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: repo-sync-now-old
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/sync-branch: Sun May  7 10:21:53 UTC 2023
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: repo-sync-now-old-layer
+  namespace: default
+  annotations:
+    webhook.terraform.padok.cloud/branch-commit: MOCK_REVISION-branch
+    webhook.terraform.padok.cloud/relevant-commit: MOCK_REVISION-branch
+spec:
+  branch: branch
+  path: no-changes/
+  repository:
+    name: repo-sync-now-old
+    namespace: default

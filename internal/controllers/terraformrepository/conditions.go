@@ -3,6 +3,7 @@ package terraformrepository
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -11,6 +12,7 @@ import (
 )
 
 // Add newly found branches in the repository's branch state object
+// Remove stale branches
 func mergeBranchesWithBranchState(found []string, branchStates []configv1alpha1.BranchState) []configv1alpha1.BranchState {
 	for _, branch := range found {
 		if _, ok := configv1alpha1.GetBranchState(branch, branchStates); !ok {
@@ -19,7 +21,15 @@ func mergeBranchesWithBranchState(found []string, branchStates []configv1alpha1.
 			})
 		}
 	}
-	return branchStates
+
+	// Remove branches that are no longer found in the repository
+	var filteredBranchStates []configv1alpha1.BranchState
+	for _, branchState := range branchStates {
+		if slices.Contains(found, branchState.Name) {
+			filteredBranchStates = append(filteredBranchStates, branchState)
+		}
+	}
+	return filteredBranchStates
 }
 
 func isSyncNowRequested(repo *configv1alpha1.TerraformRepository, branch string, lastSyncDate time.Time) (bool, error) {
@@ -37,6 +47,7 @@ func isSyncNowRequested(repo *configv1alpha1.TerraformRepository, branch string,
 }
 
 // IsLastSyncTooOld checks if the last sync was too long ago for at least one of the branches tracked by the repository
+// This also catches new layers that have never been synced (no last branch commit annotation)
 func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) (metav1.Condition, bool) {
 	condition := metav1.Condition{
 		Type:               "IsLastSyncTooOld",
@@ -45,7 +56,7 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 
-	layerBranches, err := r.retrieveLayerBranches(context.Background(), repo)
+	layers, err := r.retrieveManagedLayers(context.Background(), repo)
 	if err != nil {
 		condition.Reason = "ErrorListingLayers"
 		condition.Message = err.Error()
@@ -53,6 +64,15 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		return condition, true
 	}
 
+	// If there are new layers, we need to trigger a sync to annotate them
+	if isThereANewLayer(layers) {
+		condition.Reason = "NewLayer"
+		condition.Message = "At least one new layer found, sync needed"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+
+	layerBranches := retrieveAllLayerRefs(layers)
 	if len(layerBranches) == 0 {
 		condition.Reason = "NoBranches"
 		condition.Message = "No branches managed by this repository, no layers found"
@@ -94,7 +114,7 @@ func (r *Reconciler) IsLastSyncTooOld(repo *configv1alpha1.TerraformRepository) 
 		}
 
 		nextSyncTime := lastSync.Add(r.Config.Controller.Timers.RepositorySync)
-		now := time.Now()
+		now := r.Clock.Now()
 
 		if nextSyncTime.Before(now) {
 			condition.Reason = "SyncTooOld"
@@ -120,7 +140,7 @@ func (r *Reconciler) HasLastSyncFailed(repo *configv1alpha1.TerraformRepository)
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 
-	layerBranches, err := r.retrieveLayerBranches(context.Background(), repo)
+	layers, err := r.retrieveManagedLayers(context.Background(), repo)
 	if err != nil {
 		condition.Reason = "ErrorListingLayers"
 		condition.Message = err.Error()
@@ -128,6 +148,7 @@ func (r *Reconciler) HasLastSyncFailed(repo *configv1alpha1.TerraformRepository)
 		return condition, true
 	}
 
+	layerBranches := retrieveAllLayerRefs(layers)
 	if len(layerBranches) == 0 {
 		condition.Reason = "NoBranches"
 		condition.Message = "No branches managed by this repository, no layers found"
@@ -142,7 +163,7 @@ func (r *Reconciler) HasLastSyncFailed(repo *configv1alpha1.TerraformRepository)
 		if branch.LastSyncStatus == "" {
 			condition.Reason = "NoSyncYet"
 			condition.Message = fmt.Sprintf("Repository has never been synced on branch %s yet", branch.Name)
-			condition.Status = metav1.ConditionTrue
+			condition.Status = metav1.ConditionFalse
 			return condition, false
 		}
 

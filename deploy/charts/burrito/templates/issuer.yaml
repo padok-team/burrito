@@ -3,6 +3,12 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: burrito-selfsigned-issuer
+  {{- with .Values.global.metadata }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   selfSigned: {}
 ---
@@ -10,6 +16,12 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: burrito-ca
+  {{- with .Values.global.metadata}}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   isCA: true
   commonName: burrito-ca
@@ -26,6 +38,12 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: burrito-ca-issuer
+  {{- with .Values.global.metadata}}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   ca:
     secretName: burrito-ca

@@ -54,20 +54,6 @@ type AzureConfig struct {
 type EncryptionConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 }
-
-type WebhookConfig struct {
-	Github WebhookGithubConfig `mapstructure:"github"`
-	Gitlab WebhookGitlabConfig `mapstructure:"gitlab"`
-}
-
-type WebhookGithubConfig struct {
-	Secret string `mapstructure:"secret"`
-}
-
-type WebhookGitlabConfig struct {
-	Secret string `mapstructure:"secret"`
-}
-
 type ControllerConfig struct {
 	MainNamespace           string                      `mapstructure:"mainNamespace"`
 	Namespaces              []string                    `mapstructure:"namespaces"`
@@ -79,23 +65,9 @@ type ControllerConfig struct {
 	MetricsBindAddress      string                      `mapstructure:"metricsBindAddress"`
 	HealthProbeBindAddress  string                      `mapstructure:"healthProbeBindAddress"`
 	KubernetesWebhookPort   int                         `mapstructure:"kubernetesWebhookPort"`
-	GithubConfig            GithubConfig                `mapstructure:"githubConfig"`
-	GitlabConfig            GitlabConfig                `mapstructure:"gitlabConfig"`
 	RunParallelism          int                         `mapstructure:"runParallelism"`
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
-}
-
-type GithubConfig struct {
-	AppId          int64  `mapstructure:"appId"`
-	InstallationId int64  `mapstructure:"installationId"`
-	PrivateKey     string `mapstructure:"privateKey"`
-	APIToken       string `mapstructure:"apiToken"`
-}
-
-type GitlabConfig struct {
-	APIToken string `mapstructure:"apiToken"`
-	URL      string `mapstructure:"url"`
 }
 
 type LeaderElectionConfig struct {
@@ -109,30 +81,19 @@ type ControllerTimers struct {
 	WaitAction         time.Duration `mapstructure:"waitAction"`
 	FailureGracePeriod time.Duration `mapstructure:"failureGracePeriod"`
 	RepositorySync     time.Duration `mapstructure:"repositorySync"`
-}
-
-type RepositoryConfig struct {
-	SSHPrivateKey           string `mapstructure:"sshPrivateKey"`
-	Username                string `mapstructure:"username"`
-	Password                string `mapstructure:"password"`
-	GithubAppId             int64  `mapstructure:"githubAppId"`
-	GithubAppInstallationId int64  `mapstructure:"githubAppInstallationId"`
-	GithubAppPrivateKey     string `mapstructure:"githubAppPrivateKey"`
-	GithubToken             string `mapstructure:"githubToken"`
-	GitlabToken             string `mapstructure:"gitlabToken"`
+	CredentialsTTL     time.Duration `mapstructure:"credentialsTTL"`
 }
 
 type RunnerConfig struct {
-	Action                     string           `mapstructure:"action"`
-	Layer                      Layer            `mapstructure:"layer"`
-	Run                        string           `mapstructure:"run"`
-	Repository                 RepositoryConfig `mapstructure:"repository"`
-	SSHKnownHostsConfigMapName string           `mapstructure:"sshKnownHostsConfigMapName"`
-	Image                      ImageConfig      `mapstructure:"image"`
-	RunnerBinaryPath           string           `mapstructure:"runnerBinaryPath"`
-	RepositoryPath             string           `mapstructure:"repositoryPath"`
-	Args                       []string         `mapstructure:"args"`
-	Command                    []string         `mapstructure:"command"`
+	Action                     string      `mapstructure:"action"`
+	Layer                      Layer       `mapstructure:"layer"`
+	Run                        string      `mapstructure:"run"`
+	SSHKnownHostsConfigMapName string      `mapstructure:"sshKnownHostsConfigMapName"`
+	Image                      ImageConfig `mapstructure:"image"`
+	RunnerBinaryPath           string      `mapstructure:"runnerBinaryPath"`
+	RepositoryPath             string      `mapstructure:"repositoryPath"`
+	Args                       []string    `mapstructure:"args"`
+	Command                    []string    `mapstructure:"command"`
 }
 
 type ImageConfig struct {
@@ -159,7 +120,6 @@ type SessionConfig struct {
 
 type ServerConfig struct {
 	Addr      string          `mapstructure:"addr"`
-	Webhook   WebhookConfig   `mapstructure:"webhook"`
 	OIDC      OIDCConfig      `mapstructure:"oidc"`
 	BasicAuth BasicAuthConfig `mapstructure:"basicAuth"`
 	Session   SessionConfig   `mapstructure:"session"`
@@ -272,6 +232,7 @@ func TestConfig() *Config {
 				FailureGracePeriod: 15 * time.Second,
 				OnError:            1 * time.Minute,
 				RepositorySync:     5 * time.Minute,
+				CredentialsTTL:     5 * time.Second,
 			},
 		},
 		Runner: RunnerConfig{

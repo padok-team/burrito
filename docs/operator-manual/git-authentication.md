@@ -13,47 +13,101 @@ Available authentication methods:
 
 - Username and password (only supports cloning)
 - SSH private key (only supports cloning)
-- [GitHub App](https://docs.github.com/en/apps)
-- GitHub API token
-- GitLab API token
+- [GitHub App](./git-authentication/github-app.md) (recommended for GitHub)
+- [GitHub API token](./git-authentication/github-token.md)
+- [GitLab API token](./git-authentication/gitlab-token.md)
 
-## Repository Secret
+## Repository Credentials
 
-The `TerraformRepository` spec allows you to specify a secret that contains the credentials to authenticate to a git repository.
-The secret must be created in the **same namespace** as the `TerraformRepository` and be referenced in `spec.repository.secretName`.
+Burrito uses Kubernetes Secrets to store credentials for repositories. There are two types of credential secrets:
 
-### Expected keys
+1. **Repository-specific credentials** - Used for a specific repository in a specific namespace
+2. **Shared credentials** - Can be used across multiple repositories and namespaces
 
-To add an authentication method for a repository, the secret must contain the following keys:
+### Repository-specific Credentials
 
-Username and password (Git's HTTPS authentication):
+Repository-specific credentials are tied to a single repository URL in a single namespace. These secrets use the type `credentials.burrito.tf/repository`.
 
-- `username`
-- `password`
+Example of a repository-specific credential secret:
 
-SSH private key (Git's SSH authentication):
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: default
+type: credentials.burrito.tf/repository
+stringData:
+  provider: github
+  url: https://github.com/padok-team/burrito-examples
+  githubToken: "github_pat_xxx"
+  webhookSecret: "my-webhook-secret"
+```
 
-- `sshPrivateKey`
+### Shared Credentials
 
-GitHub App:
+Shared credentials can be used across multiple repositories and optionally restricted to specific namespaces. These secrets use the type `credentials.burrito.tf/shared`.
 
-- `githubAppId`
-- `githubAppInstallationId`
-- `githubAppPrivateKey`
+To restrict shared credentials to specific namespaces, add the annotation `burrito.tf/allowed-tenants` with a comma-separated list of namespace names.
 
-GitHub API token:
+Example of a shared credential secret:
 
-- `githubToken`
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-shared-credentials
+  namespace: burrito-system
+  annotations:
+    burrito.tf/allowed-tenants: "team-a,team-b"
+type: credentials.burrito.tf/shared
+stringData:
+  provider: github
+  url: github.com
+  githubToken: "github_pat_xxx"
+  webhookSecret: "my-webhook-secret"
+```
 
-GitLab API token:
+### Credentials Fields
 
-- `gitlabToken`
+The following fields are available in credential secrets:
 
-For the PR/MR workflow, the Kubernetes secret must also contain the webhook secret:
+Authentication methods:
 
-- `webhookSecret`
+- Basic authentication:
+    - `username` - Username for basic authentication
+    - `password` - Password for basic authentication
 
-Example of a Kubernetes secret for a GitHub repository, using authentication with a GitHub App and implementing the PR workflow:
+- SSH authentication:
+    - `sshPrivateKey` - SSH private key for authentication
+
+- GitHub App authentication:
+    - `githubAppID` - GitHub App ID
+    - `githubAppInstallationID` - GitHub App Installation ID
+    - `githubAppPrivateKey` - GitHub App Private Key
+
+- Token-based authentication:
+    - `githubToken` - GitHub API token
+    - `gitlabToken` - GitLab API token
+
+Additional fields:
+
+- `provider` - The Git provider (`github`, `gitlab` or `standard`)
+- `url` - The repository URL or domain for matching
+- `webhookSecret` - Secret used for webhook validation
+
+### Credential Resolution
+
+When Burrito needs to authenticate to a repository, it follows these steps:
+
+1. First, it looks for a repository-specific credential in the same namespace with an exact URL match.
+2. If no repository-specific credential is found, it looks for shared credentials that match the repository URL.
+3. For shared credentials, the most specific URL match is selected (e.g., `github.com/org` is more specific than `github.com`).
+4. For shared credentials with namespace restrictions, only credentials that allow the repository's namespace will be considered.
+
+### Examples
+
+#### Repository-specific credential using username/password standard git authentication
 
 ```yaml
 apiVersion: v1
@@ -61,10 +115,63 @@ kind: Secret
 metadata:
   name: burrito-repo
   namespace: burrito-project
-type: Opaque
+type: credentials.burrito.tf/repository
 stringData:
-  githubAppId: "123456"
-  githubAppInstallationId: "12345678"
+  provider: standard
+  url: https://git.example.com/my-org/my-repo
+  username: "my-username"
+  password: "my-password"
+```
+
+#### Repository-specific credential using SSH private key
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: standard
+  url: git@git.example.com:my-org/my-repo
+  sshPrivateKey: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    my-private-key
+    -----END OPENSSH PRIVATE KEY-----
+  webhookSecret: "my-webhook-secret"
+```
+
+#### Repository-specific credential for GitHub using Personal Access Token
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: github
+  url: https://github.com/my-org/my-repo
+  githubToken: "github_pat_xxx"
+  webhookSecret: "my-webhook-secret"
+```
+
+#### Repository-specific credential for GitHub using GitHub App
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: github
+  url: https://github.com/my-org/my-repo
+  githubAppID: "123456"
+  githubAppInstallationID: "12345678"
   githubAppPrivateKey: |
     -----BEGIN RSA PRIVATE KEY-----
     my-private-key
@@ -72,6 +179,43 @@ stringData:
   webhookSecret: "my-webhook-secret"
 ```
 
-### Behavior
+#### Shared credential for all repositories on gitlab.example.com
 
-If multiple authentication methods are provided, the runner will try them all until one succeeds to clone the repository.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-shared-credentials
+  namespace: burrito-system
+# 👇 by default this secret is shared with all tenants
+type: credentials.burrito.tf/shared
+stringData:
+  provider: gitlab
+  url: https://gitlab.example.com
+  gitlabToken: "glpat-xxxx"
+  webhookSecret: "my-webhook-secret"
+```
+
+#### Shared credential for all repos in an organization repositories with namespace restrictions
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-org-credentials
+  namespace: burrito-system
+  annotations:
+    # 👇 only repositories with those 3 tenants can use these credentials
+    burrito.tf/allowed-tenants: "team-a,team-b,team-c"
+type: credentials.burrito.tf/shared
+stringData:
+  provider: github
+  url: https://github.com/my-org
+  githubAppID: "123456"
+  githubAppInstallationID: "12345678"
+  githubAppPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    my-private-key
+    -----END RSA PRIVATE KEY-----
+  webhookSecret: "my-webhook-secret"
+```

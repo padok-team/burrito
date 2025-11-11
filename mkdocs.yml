@@ -10,46 +10,53 @@ extra:
   version:
     provider: mike
 markdown_extensions:
-- codehilite
-- admonition
-- pymdownx.superfences
-- toc:
-    permalink: true
+  - codehilite
+  - admonition
+  - pymdownx.superfences
+  - toc:
+      permalink: true
 nav:
-- Home: index.md
-- Overview: overview.md
-- Getting started: getting-started.md
-- Guides:
-  - guides/index.md
-  - IaC Drift Detection: guides/iac-drift-detection.md
-  - PR/MR Workflow: guides/pr-mr-workflow.md
-  - UI Overview: guides/ui.md
-- Installation:
-  - Install with Helm (recommended): installation/with-helm.md
-  - Install with static manifests: installation/with-static-manifests.md
-- Operator Manual:
-  - operator-manual/index.md
-  - operator-manual/architecture.md
-  - operator-manual/user-authentication.md
-  - operator-manual/git-authentication.md
-  - operator-manual/pr-mr-workflow.md
-  - operator-manual/git-webhook.md
-  - operator-manual/advanced-configuration.md
-  - operator-manual/multi-tenant-architecture.md
-  - operator-manual/datastore.md
-  - operator-manual/provider-caching.md
-  - operator-manual/runner-scheduling.md
-  - operator-manual/encrypt-endpoint.md
-- User Guide:
-  - user-guide/index.md
-  - user-guide/override-runner.md
-  - user-guide/remediation-strategy.md
-  - user-guide/terraform-version.md
-  - user-guide/private-modules.md
-  - user-guide/additionnal-trigger-path.md
-  - user-guide/ssh-known-hosts.md
-  - user-guide/sync-windows.md
-- Contributing: contributing.md
+  - Home: index.md
+  - Overview: overview.md
+  - Getting started: getting-started.md
+  - Guides:
+      - guides/index.md
+      - IaC Drift Detection: guides/iac-drift-detection.md
+      - PR/MR Workflow: guides/pr-mr-workflow.md
+      - UI Overview: guides/ui.md
+  - Installation:
+      - Install with Helm (recommended): installation/with-helm.md
+      - Install with static manifests: installation/with-static-manifests.md
+  - Operator Manual:
+      - operator-manual/index.md
+      - operator-manual/architecture.md
+      - operator-manual/user-authentication.md
+      - operator-manual/repository-controller.md
+      - Git Authentication:
+          - Overview: operator-manual/git-authentication.md
+          - GitHub App: operator-manual/git-authentication/github-app.md
+          - GitHub Token: operator-manual/git-authentication/github-token.md
+          - GitLab Token: operator-manual/git-authentication/gitlab-token.md
+      - operator-manual/pr-mr-workflow.md
+      - operator-manual/git-webhook.md
+      - operator-manual/advanced-configuration.md
+      - operator-manual/multi-tenant-architecture.md
+      - operator-manual/datastore.md
+      - operator-manual/provider-caching.md
+      - operator-manual/runner-scheduling.md
+      - operator-manual/encrypt-endpoint.md
+  - User Guide:
+      - user-guide/index.md
+      - user-guide/override-runner.md
+      - user-guide/remediation-strategy.md
+      - user-guide/terraform-version.md
+      - user-guide/private-modules.md
+      - user-guide/additionnal-trigger-path.md
+      - user-guide/ssh-known-hosts.md
+      - user-guide/sync-windows.md
+  - Migration Guides:
+      - migration-guides/new-credential-system.md
+  - Contributing: contributing.md
 # - Reference:
 #   - reference/index.md
 #   - reference/api.md

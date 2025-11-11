@@ -9976,8 +9976,6 @@ spec:
                 type: object
               repository:
                 properties:
-                  secretName:
-                    type: string
                   url:
                     type: string
                 type: object
@@ -10188,6 +10186,8 @@ spec:
                   name:
                     type: string
                   namespace:
+                    type: string
+                  revision:
                     type: string
                 type: object
             type: object

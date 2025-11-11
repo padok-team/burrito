@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/padok-team/burrito/internal/utils/gitprovider/gitlab"
-	"github.com/padok-team/burrito/internal/utils/gitprovider/types"
+	"github.com/padok-team/burrito/internal/repository/credentials"
+	"github.com/padok-team/burrito/internal/repository/providers/gitlab"
 	"github.com/padok-team/burrito/internal/webhook/event"
 
 	webhook "github.com/go-playground/webhooks/gitlab"
@@ -41,19 +41,19 @@ func TestGitlab_GetEventFromWebhookPayload_PushEvent(t *testing.T) {
 
 	secret := "test-secret"
 	gitlab := &gitlab.Gitlab{
-		Config: types.Config{
+		Config: credentials.Credential{
 			WebhookSecret: secret,
 		},
 	}
-	err = gitlab.InitWebhookHandler()
+	webhookProvider, err := gitlab.GetWebhookProvider()
 	assert.NoError(t, err)
 
 	req.Header.Set("X-GitLab-Event", "Push Hook")
 	req.Header.Set("X-Gitlab-Token", secret)
 
-	parsed, ok := gitlab.ParseWebhookPayload(req)
+	parsed, ok := webhookProvider.ParseWebhookPayload(req)
 	assert.True(t, ok)
-	evt, err := gitlab.GetEventFromWebhookPayload(parsed)
+	evt, err := webhookProvider.GetEventFromWebhookPayload(parsed)
 	assert.NoError(t, err)
 	assert.IsType(t, &event.PushEvent{}, evt)
 
@@ -95,19 +95,19 @@ func TestGitlab_GetEventFromWebhookPayload_MergeRequestEvent(t *testing.T) {
 
 		secret := "test-secret"
 		gitlab := &gitlab.Gitlab{
-			Config: types.Config{
+			Config: credentials.Credential{
 				WebhookSecret: secret,
 			},
 		}
-		err = gitlab.InitWebhookHandler()
+		webhookProvider, err := gitlab.GetWebhookProvider()
 		assert.NoError(t, err)
 
 		req.Header.Set("X-GitLab-Event", "Merge Request Hook")
 		req.Header.Set("X-Gitlab-Token", secret)
 
-		parsed, ok := gitlab.ParseWebhookPayload(req)
+		parsed, ok := webhookProvider.ParseWebhookPayload(req)
 		assert.True(t, ok)
-		evt, err := gitlab.GetEventFromWebhookPayload(parsed)
+		evt, err := webhookProvider.GetEventFromWebhookPayload(parsed)
 		assert.NoError(t, err)
 		assert.IsType(t, &event.PullRequestEvent{}, evt)
 
@@ -124,66 +124,4 @@ func TestGitlab_GetEventFromWebhookPayload_MergeRequestEvent(t *testing.T) {
 	testWithGivenAction("reopen", event.PullRequestOpened)
 	testWithGivenAction("close", event.PullRequestClosed)
 	testWithGivenAction("merge", event.PullRequestClosed)
-}
-
-func TestGitlab_IsAvailable(t *testing.T) {
-	tests := []struct {
-		name         string
-		config       types.Config
-		capabilities []string
-		want         bool
-	}{
-		{
-			name: "GitLab Token",
-			config: types.Config{
-				GitLabToken: "test-token",
-				URL:         "https://gitlab.com/org/repo",
-			},
-			capabilities: []string{types.Capabilities.Clone, types.Capabilities.Comment},
-			want:         true,
-		},
-		{
-			name: "Webhook only with secret",
-			config: types.Config{
-				WebhookSecret: "secret",
-				URL:           "https://gitlab.com/org/repo",
-			},
-			capabilities: []string{types.Capabilities.Webhook},
-			want:         true,
-		},
-		{
-			name: "Unsupported capability",
-			config: types.Config{
-				GitLabToken: "test-token",
-				URL:         "https://gitlab.com/org/repo",
-			},
-			capabilities: []string{"unsupported"},
-			want:         false,
-		},
-		{
-			name: "No authentication",
-			config: types.Config{
-				URL: "https://gitlab.com/org/repo",
-			},
-			capabilities: []string{types.Capabilities.Clone},
-			want:         false,
-		},
-		{
-			name: "Basic auth not supported",
-			config: types.Config{
-				Username: "user",
-				Password: "pass",
-				URL:      "https://gitlab.com/org/repo",
-			},
-			capabilities: []string{types.Capabilities.Clone},
-			want:         false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := gitlab.IsAvailable(tt.config, tt.capabilities)
-			assert.Equal(t, tt.want, got)
-		})
-	}
 }
