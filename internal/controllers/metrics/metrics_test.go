@@ -1,271 +1,283 @@
-package metrics
+package metrics_test
 
 import (
 	"testing"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 )
 
-func TestInitMetrics(t *testing.T) {
+func TestMetrics(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Metrics Suite")
+}
+
+var _ = BeforeSuite(func() {
 	// Reset global metrics for testing
-	Metrics = nil
+	metrics.Metrics = nil
+})
 
-	m := InitMetrics()
+var _ = Describe("Metrics", func() {
+	Describe("InitMetrics", func() {
+		It("should initialize all metrics", func() {
+			metrics.Metrics = nil
+			m := metrics.InitMetrics()
 
-	assert.NotNil(t, m)
-	assert.NotNil(t, m.LayerStatusGauge)
-	assert.NotNil(t, m.LayerStateGauge)
-	assert.NotNil(t, m.RepositoryStatusGauge)
-	assert.NotNil(t, m.TotalLayers)
-	assert.NotNil(t, m.TotalRepositories)
-	assert.NotNil(t, m.TotalRuns)
-	assert.NotNil(t, m.TotalPullRequests)
-
-	// Verify we can get the metrics again
-	m2 := GetMetrics()
-	assert.Equal(t, m, m2)
-}
-
-func TestGetLayerUIStatus(t *testing.T) {
-	tests := []struct {
-		name     string
-		layer    configv1alpha1.TerraformLayer
-		expected string
-	}{
-		{
-			name: "disabled - no conditions",
-			layer: configv1alpha1.TerraformLayer{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"runner.terraform.padok.cloud/plan-sum": "abc123",
-					},
-				},
-				Status: configv1alpha1.TerraformLayerStatus{
-					Conditions: []metav1.Condition{},
-				},
-			},
-			expected: "disabled",
-		},
-		{
-			name: "success - ApplyNeeded with no changes",
-			layer: configv1alpha1.TerraformLayer{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"runner.terraform.padok.cloud/plan-sum": "abc123",
-					},
-				},
-				Status: configv1alpha1.TerraformLayerStatus{
-					Conditions: []metav1.Condition{
-						{Type: "Ready", Status: metav1.ConditionTrue},
-					},
-					State:      "ApplyNeeded",
-					LastResult: "Plan: 0 to create, 0 to update, 0 to delete",
-				},
-			},
-			expected: "success",
-		},
-		{
-			name: "warning - ApplyNeeded with changes",
-			layer: configv1alpha1.TerraformLayer{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"runner.terraform.padok.cloud/plan-sum": "abc123",
-					},
-				},
-				Status: configv1alpha1.TerraformLayerStatus{
-					Conditions: []metav1.Condition{
-						{Type: "Ready", Status: metav1.ConditionTrue},
-					},
-					State:      "ApplyNeeded",
-					LastResult: "Plan: 1 to create, 0 to update, 0 to delete",
-				},
-			},
-			expected: "warning",
-		},
-		{
-			name: "warning - PlanNeeded",
-			layer: configv1alpha1.TerraformLayer{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"runner.terraform.padok.cloud/plan-sum": "abc123",
-					},
-				},
-				Status: configv1alpha1.TerraformLayerStatus{
-					Conditions: []metav1.Condition{
-						{Type: "Ready", Status: metav1.ConditionTrue},
-					},
-					State: "PlanNeeded",
-				},
-			},
-			expected: "warning",
-		},
-		{
-			name: "running - IsRunning condition",
-			layer: configv1alpha1.TerraformLayer{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"runner.terraform.padok.cloud/plan-sum": "abc123",
-					},
-				},
-				Status: configv1alpha1.TerraformLayerStatus{
-					Conditions: []metav1.Condition{
-						{Type: "IsRunning", Status: metav1.ConditionTrue},
-					},
-					State: "PlanNeeded",
-				},
-			},
-			expected: "running",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := GetLayerUIStatus(tt.layer)
-			assert.Equal(t, tt.expected, result)
+			Expect(m).NotTo(BeNil())
+			Expect(m.LayerStatusGauge).NotTo(BeNil())
+			Expect(m.LayerStateGauge).NotTo(BeNil())
+			Expect(m.RepositoryStatusGauge).NotTo(BeNil())
+			Expect(m.TotalLayers).NotTo(BeNil())
+			Expect(m.TotalRepositories).NotTo(BeNil())
+			Expect(m.TotalRuns).NotTo(BeNil())
+			Expect(m.TotalPullRequests).NotTo(BeNil())
 		})
-	}
-}
 
-func TestGetRepositoryStatus(t *testing.T) {
-	tests := []struct {
-		name     string
-		repo     configv1alpha1.TerraformRepository
-		expected string
-	}{
-		{
-			name: "success - no conditions",
-			repo: configv1alpha1.TerraformRepository{
-				Status: configv1alpha1.TerraformRepositoryStatus{
-					Conditions: []metav1.Condition{},
+		It("should return the same instance when called again", func() {
+			m1 := metrics.InitMetrics()
+			m2 := metrics.GetMetrics()
+			Expect(m1).To(Equal(m2))
+		})
+	})
+
+	Describe("GetLayerUIStatus", func() {
+		Context("when layer has no conditions", func() {
+			It("should return disabled", func() {
+				layer := configv1alpha1.TerraformLayer{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"runner.terraform.padok.cloud/plan-sum": "abc123",
+						},
+					},
+					Status: configv1alpha1.TerraformLayerStatus{
+						Conditions: []metav1.Condition{},
+					},
+				}
+				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("disabled"))
+			})
+		})
+
+		Context("when layer is in ApplyNeeded state with no changes", func() {
+			It("should return success", func() {
+				layer := configv1alpha1.TerraformLayer{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"runner.terraform.padok.cloud/plan-sum": "abc123",
+						},
+					},
+					Status: configv1alpha1.TerraformLayerStatus{
+						Conditions: []metav1.Condition{
+							{Type: "Ready", Status: metav1.ConditionTrue},
+						},
+						State:      "ApplyNeeded",
+						LastResult: "Plan: 0 to create, 0 to update, 0 to delete",
+					},
+				}
+				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("success"))
+			})
+		})
+
+		Context("when layer is in ApplyNeeded state with changes", func() {
+			It("should return warning", func() {
+				layer := configv1alpha1.TerraformLayer{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"runner.terraform.padok.cloud/plan-sum": "abc123",
+						},
+					},
+					Status: configv1alpha1.TerraformLayerStatus{
+						Conditions: []metav1.Condition{
+							{Type: "Ready", Status: metav1.ConditionTrue},
+						},
+						State:      "ApplyNeeded",
+						LastResult: "Plan: 1 to create, 0 to update, 0 to delete",
+					},
+				}
+				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("warning"))
+			})
+		})
+
+		Context("when layer is in PlanNeeded state", func() {
+			It("should return warning", func() {
+				layer := configv1alpha1.TerraformLayer{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"runner.terraform.padok.cloud/plan-sum": "abc123",
+						},
+					},
+					Status: configv1alpha1.TerraformLayerStatus{
+						Conditions: []metav1.Condition{
+							{Type: "Ready", Status: metav1.ConditionTrue},
+						},
+						State: "PlanNeeded",
+					},
+				}
+				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("warning"))
+			})
+		})
+
+		Context("when layer has IsRunning condition", func() {
+			It("should return running", func() {
+				layer := configv1alpha1.TerraformLayer{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"runner.terraform.padok.cloud/plan-sum": "abc123",
+						},
+					},
+					Status: configv1alpha1.TerraformLayerStatus{
+						Conditions: []metav1.Condition{
+							{Type: "IsRunning", Status: metav1.ConditionTrue},
+						},
+						State: "PlanNeeded",
+					},
+				}
+				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("running"))
+			})
+		})
+	})
+
+	Describe("GetRepositoryStatus", func() {
+		Context("when repository has no conditions", func() {
+			It("should return success", func() {
+				repo := configv1alpha1.TerraformRepository{
+					Status: configv1alpha1.TerraformRepositoryStatus{
+						Conditions: []metav1.Condition{},
+					},
+				}
+				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("success"))
+			})
+		})
+
+		Context("when repository has all conditions true", func() {
+			It("should return success", func() {
+				repo := configv1alpha1.TerraformRepository{
+					Status: configv1alpha1.TerraformRepositoryStatus{
+						Conditions: []metav1.Condition{
+							{Type: "Ready", Status: metav1.ConditionTrue},
+						},
+					},
+				}
+				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("success"))
+			})
+		})
+
+		Context("when repository has a false condition", func() {
+			It("should return error", func() {
+				repo := configv1alpha1.TerraformRepository{
+					Status: configv1alpha1.TerraformRepositoryStatus{
+						Conditions: []metav1.Condition{
+							{Type: "Ready", Status: metav1.ConditionFalse},
+						},
+					},
+				}
+				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("error"))
+			})
+		})
+	})
+
+	Describe("UpdateLayerMetrics", func() {
+		BeforeEach(func() {
+			if metrics.Metrics == nil {
+				metrics.InitMetrics()
+			}
+		})
+
+		It("should not panic when updating layer metrics", func() {
+			layer := configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-layer",
+					Namespace: "test-namespace",
 				},
-			},
-			expected: "success",
-		},
-		{
-			name: "success - all conditions true",
-			repo: configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					Repository: configv1alpha1.TerraformLayerRepository{
+						Name: "test-repo",
+					},
+				},
+				Status: configv1alpha1.TerraformLayerStatus{
+					Conditions: []metav1.Condition{
+						{Type: "Ready", Status: metav1.ConditionTrue},
+					},
+					State: "Idle",
+				},
+			}
+
+			Expect(func() {
+				metrics.UpdateLayerMetrics(layer)
+			}).NotTo(Panic())
+			Expect(metrics.Metrics).NotTo(BeNil())
+		})
+	})
+
+	Describe("UpdateRepositoryMetrics", func() {
+		BeforeEach(func() {
+			if metrics.Metrics == nil {
+				metrics.InitMetrics()
+			}
+		})
+
+		It("should not panic when updating repository metrics", func() {
+			repo := configv1alpha1.TerraformRepository{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-repo",
+					Namespace: "test-namespace",
+				},
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					Repository: configv1alpha1.TerraformRepositoryRepository{
+						Url: "https://github.com/test/repo",
+					},
+				},
 				Status: configv1alpha1.TerraformRepositoryStatus{
 					Conditions: []metav1.Condition{
 						{Type: "Ready", Status: metav1.ConditionTrue},
 					},
 				},
-			},
-			expected: "success",
-		},
-		{
-			name: "error - condition false",
-			repo: configv1alpha1.TerraformRepository{
-				Status: configv1alpha1.TerraformRepositoryStatus{
-					Conditions: []metav1.Condition{
-						{Type: "Ready", Status: metav1.ConditionFalse},
-					},
-				},
-			},
-			expected: "error",
-		},
-	}
+			}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := GetRepositoryStatus(tt.repo)
-			assert.Equal(t, tt.expected, result)
+			Expect(func() {
+				metrics.UpdateRepositoryMetrics(repo)
+			}).NotTo(Panic())
+			Expect(metrics.Metrics).NotTo(BeNil())
 		})
-	}
-}
+	})
 
-func TestUpdateLayerMetrics(t *testing.T) {
-	// Get or initialize metrics (don't re-initialize if already set)
-	if Metrics == nil {
-		InitMetrics()
-	}
+	Describe("MetricsRegistration", func() {
+		var m *metrics.BurritoMetrics
+		var registry *prometheus.Registry
 
-	layer := configv1alpha1.TerraformLayer{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-layer",
-			Namespace: "test-namespace",
-		},
-		Spec: configv1alpha1.TerraformLayerSpec{
-			Repository: configv1alpha1.TerraformLayerRepository{
-				Name: "test-repo",
-			},
-		},
-		Status: configv1alpha1.TerraformLayerStatus{
-			Conditions: []metav1.Condition{
-				{Type: "Ready", Status: metav1.ConditionTrue},
-			},
-			State: "Idle",
-		},
-	}
+		BeforeEach(func() {
+			if metrics.Metrics != nil {
+				m = metrics.Metrics
+			} else {
+				m = metrics.InitMetrics()
+			}
+			registry = prometheus.NewRegistry()
+		})
 
-	// Should not panic
-	UpdateLayerMetrics(layer)
+		It("should have all metrics initialized", func() {
+			Expect(m.LayerStatusGauge).NotTo(BeNil())
+			Expect(m.LayerStateGauge).NotTo(BeNil())
+			Expect(m.LayersByStatus).NotTo(BeNil())
+			Expect(m.LayersByNamespace).NotTo(BeNil())
+			Expect(m.RepositoryStatusGauge).NotTo(BeNil())
+			Expect(m.RunsByAction).NotTo(BeNil())
+			Expect(m.RunsByStatus).NotTo(BeNil())
+			Expect(m.TotalLayers).NotTo(BeNil())
+			Expect(m.TotalRepositories).NotTo(BeNil())
+			Expect(m.TotalRuns).NotTo(BeNil())
+			Expect(m.TotalPullRequests).NotTo(BeNil())
+			Expect(m.ReconcileDuration).NotTo(BeNil())
+			Expect(m.ReconcileTotal).NotTo(BeNil())
+			Expect(m.ReconcileErrors).NotTo(BeNil())
+		})
 
-	// Verify metric was set (we can't easily verify the exact value without accessing the registry)
-	// But we can verify it doesn't panic
-	assert.NotNil(t, Metrics)
-}
-
-func TestUpdateRepositoryMetrics(t *testing.T) {
-	// Get or initialize metrics (don't re-initialize if already set)
-	if Metrics == nil {
-		InitMetrics()
-	}
-
-	repo := configv1alpha1.TerraformRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-repo",
-			Namespace: "test-namespace",
-		},
-		Spec: configv1alpha1.TerraformRepositorySpec{
-			Repository: configv1alpha1.TerraformRepositoryRepository{
-				Url: "https://github.com/test/repo",
-			},
-		},
-		Status: configv1alpha1.TerraformRepositoryStatus{
-			Conditions: []metav1.Condition{
-				{Type: "Ready", Status: metav1.ConditionTrue},
-			},
-		},
-	}
-
-	// Should not panic
-	UpdateRepositoryMetrics(repo)
-	assert.NotNil(t, Metrics)
-}
-
-func TestMetricsRegistration(t *testing.T) {
-	// Get existing metrics or create if needed
-	var m *BurritoMetrics
-	if Metrics != nil {
-		m = Metrics
-	} else {
-		m = InitMetrics()
-	}
-
-	// Create a new registry for testing gathering
-	registry := prometheus.NewRegistry()
-
-	// Verify all metrics are non-nil
-	assert.NotNil(t, m.LayerStatusGauge)
-	assert.NotNil(t, m.LayerStateGauge)
-	assert.NotNil(t, m.LayersByStatus)
-	assert.NotNil(t, m.LayersByNamespace)
-	assert.NotNil(t, m.RepositoryStatusGauge)
-	assert.NotNil(t, m.RunsByAction)
-	assert.NotNil(t, m.RunsByStatus)
-	assert.NotNil(t, m.TotalLayers)
-	assert.NotNil(t, m.TotalRepositories)
-	assert.NotNil(t, m.TotalRuns)
-	assert.NotNil(t, m.TotalPullRequests)
-	assert.NotNil(t, m.ReconcileDuration)
-	assert.NotNil(t, m.ReconcileTotal)
-	assert.NotNil(t, m.ReconcileErrors)
-
-	// Verify we can gather metrics without error
-	_, err := registry.Gather()
-	assert.NoError(t, err)
-}
+		It("should gather metrics without error", func() {
+			_, err := registry.Gather()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+})
