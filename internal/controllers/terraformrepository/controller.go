@@ -104,7 +104,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to update repository status: %s", err)
 	}
 
-	// Update metrics for this repository
 	metrics.UpdateRepositoryMetrics(*repository)
 
 	log.Infof("finished reconciliation cycle for repository %s/%s", repository.Namespace, repository.Name)

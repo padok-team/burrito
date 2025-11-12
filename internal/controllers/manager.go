@@ -104,11 +104,9 @@ func (c *Controllers) Exec() {
 		log.Fatalf("unable to start manager: %s", err)
 	}
 
-	// Initialize Burrito custom metrics
+	// Initialize Burrito metrics
 	metrics.InitMetrics()
-	log.Info("Initialized Burrito custom metrics")
-
-	// Start metrics aggregator in background
+	log.Info("Initialized Burrito metrics")
 	aggregator := metrics.NewMetricsAggregator(mgr.GetClient(), metrics.AggregationInterval)
 	go func() {
 		aggregator.Start(context.Background())

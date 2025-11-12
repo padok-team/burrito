@@ -5,42 +5,33 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-// BurritoMetrics holds all custom Prometheus metrics for Burrito
 type BurritoMetrics struct {
-	// Individual layer metrics with layer and repository names
 	LayerStatusGauge *prometheus.GaugeVec
 	LayerStateGauge  *prometheus.GaugeVec
 
-	// Summary metrics for better scalability
 	LayersByStatus    *prometheus.GaugeVec
 	LayersByNamespace *prometheus.GaugeVec
 
-	// Repository metrics
 	RepositoryStatusGauge *prometheus.GaugeVec
 
-	// Run metrics (current state)
 	RunsByAction *prometheus.GaugeVec
 	RunsByStatus *prometheus.GaugeVec
 
-	// Run counters (cumulative)
 	RunsCreatedTotal   *prometheus.CounterVec
 	RunsCompletedTotal *prometheus.CounterVec
 	RunsFailedTotal    *prometheus.CounterVec
 
-	// High-level aggregate metrics
 	TotalLayers       prometheus.Gauge
 	TotalRepositories prometheus.Gauge
 	TotalRuns         prometheus.Gauge
 	TotalPullRequests prometheus.Gauge
 
-	// Reconciliation performance metrics
 	ReconcileDuration *prometheus.HistogramVec
 	ReconcileTotal    *prometheus.CounterVec
 	ReconcileErrors   *prometheus.CounterVec
 }
 
 var (
-	// Global metrics instance
 	Metrics *BurritoMetrics
 )
 
@@ -51,7 +42,6 @@ func InitMetrics() *BurritoMetrics {
 	}
 
 	m := &BurritoMetrics{
-		// Individual layer metrics with layer and repository names
 		LayerStatusGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "burrito_terraform_layer_status",
@@ -66,7 +56,6 @@ func InitMetrics() *BurritoMetrics {
 			[]string{"namespace", "layer_name", "repository_name", "state"},
 		),
 
-		// Summary metrics
 		LayersByStatus: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "burrito_layers_status_total",
@@ -83,7 +72,6 @@ func InitMetrics() *BurritoMetrics {
 			[]string{"namespace"},
 		),
 
-		// Repository metrics
 		RepositoryStatusGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "burrito_terraform_repository_status",
@@ -92,7 +80,6 @@ func InitMetrics() *BurritoMetrics {
 			[]string{"namespace", "repository_name", "url", "status"},
 		),
 
-		// Run metrics (current state - gauges because count can go up/down)
 		RunsByAction: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "burrito_runs_by_action",
@@ -109,7 +96,6 @@ func InitMetrics() *BurritoMetrics {
 			[]string{"status"},
 		),
 
-		// Run counters (cumulative - counters because they only increase)
 		RunsCreatedTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "burrito_runs_created_total",
@@ -215,7 +201,6 @@ func InitMetrics() *BurritoMetrics {
 	return m
 }
 
-// GetMetrics returns the global metrics instance
 func GetMetrics() *BurritoMetrics {
 	if Metrics == nil {
 		return InitMetrics()

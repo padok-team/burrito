@@ -147,7 +147,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("could not update run %s status: %s", run.Name, err)
 	}
 
-	// Update metrics for this run
 	metrics.UpdateRunMetrics(*run)
 
 	log.Infof("finished reconciliation cycle for run %s/%s", run.Namespace, run.Name)

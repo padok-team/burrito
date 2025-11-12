@@ -141,7 +141,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
 	}
 
-	// Update metrics for this layer
 	metrics.UpdateLayerMetrics(*layer)
 
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)

@@ -6,7 +6,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GetLayerUIStatus returns the UI status of a layer (same logic as original server implementation)
 func GetLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
 	state := "success"
 
@@ -23,7 +22,6 @@ func GetLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
 		state = "warning"
 	}
 
-	// Check for error conditions based on annotations
 	if layer.Annotations != nil {
 		if layer.Annotations[annotations.LastPlanSum] == "" {
 			state = "error"
@@ -33,7 +31,6 @@ func GetLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
 		}
 	}
 
-	// Check if layer is running
 	for _, condition := range layer.Status.Conditions {
 		if condition.Type == "IsRunning" && condition.Status == metav1.ConditionTrue {
 			state = "running"
@@ -44,7 +41,6 @@ func GetLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
 	return state
 }
 
-// GetRepositoryStatus returns the status of a repository based on conditions
 func GetRepositoryStatus(repo configv1alpha1.TerraformRepository) string {
 	status := "success" // default
 	if len(repo.Status.Conditions) > 0 {
@@ -58,7 +54,6 @@ func GetRepositoryStatus(repo configv1alpha1.TerraformRepository) string {
 	return status
 }
 
-// UpdateLayerMetrics updates all metrics related to a specific layer
 func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	m := GetMetrics()
 	if m == nil {
@@ -80,7 +75,6 @@ func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	m.LayerStateGauge.WithLabelValues(namespace, layerName, repositoryName, state).Set(1)
 }
 
-// DeleteLayerMetrics removes all metrics related to a specific layer
 func DeleteLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	m := GetMetrics()
 	if m == nil {
@@ -96,7 +90,6 @@ func DeleteLayerMetrics(layer configv1alpha1.TerraformLayer) {
 		state = "unknown"
 	}
 
-	// Delete individual layer metrics
 	m.LayerStatusGauge.DeleteLabelValues(namespace, layerName, repositoryName, status)
 	m.LayerStateGauge.DeleteLabelValues(namespace, layerName, repositoryName, state)
 }
@@ -113,11 +106,9 @@ func UpdateRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	url := repo.Spec.Repository.Url
 	status := GetRepositoryStatus(repo)
 
-	// Set to 1 to indicate this repository exists with this status (status is identified by label)
 	m.RepositoryStatusGauge.WithLabelValues(namespace, name, url, status).Set(1)
 }
 
-// DeleteRepositoryMetrics removes all metrics related to a specific repository
 func DeleteRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	m := GetMetrics()
 	if m == nil {
@@ -139,12 +130,8 @@ func UpdateRunMetrics(run configv1alpha1.TerraformRun) {
 	if m == nil {
 		return
 	}
-
-	// Run metrics are aggregate metrics calculated periodically
-	// Individual run updates don't need to do anything here
 }
 
-// RecordRunCreated increments the counter for created runs
 func RecordRunCreated(run configv1alpha1.TerraformRun) {
 	m := GetMetrics()
 	if m == nil {
@@ -157,7 +144,6 @@ func RecordRunCreated(run configv1alpha1.TerraformRun) {
 	m.RunsCreatedTotal.WithLabelValues(namespace, action).Inc()
 }
 
-// RecordRunCompleted increments the counter for completed runs
 func RecordRunCompleted(run configv1alpha1.TerraformRun) {
 	m := GetMetrics()
 	if m == nil {
@@ -170,7 +156,6 @@ func RecordRunCompleted(run configv1alpha1.TerraformRun) {
 	m.RunsCompletedTotal.WithLabelValues(namespace, action).Inc()
 }
 
-// RecordRunFailed increments the counter for failed runs
 func RecordRunFailed(run configv1alpha1.TerraformRun) {
 	m := GetMetrics()
 	if m == nil {

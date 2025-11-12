@@ -21,7 +21,6 @@ type MetricsAggregator struct {
 	interval time.Duration
 }
 
-// NewMetricsAggregator creates a new metrics aggregator
 func NewMetricsAggregator(client client.Client, interval time.Duration) *MetricsAggregator {
 	if interval == 0 {
 		interval = AggregationInterval
@@ -34,12 +33,10 @@ func NewMetricsAggregator(client client.Client, interval time.Duration) *Metrics
 	}
 }
 
-// Start begins periodic aggregation
 func (ma *MetricsAggregator) Start(ctx context.Context) {
 	ticker := time.NewTicker(ma.interval)
 	defer ticker.Stop()
 
-	// Initial aggregation
 	ma.aggregate(ctx)
 
 	for {
@@ -54,7 +51,6 @@ func (ma *MetricsAggregator) Start(ctx context.Context) {
 	}
 }
 
-// Stop stops the aggregator
 func (ma *MetricsAggregator) Stop() {
 	close(ma.stopCh)
 }
@@ -65,22 +61,18 @@ func (ma *MetricsAggregator) aggregate(ctx context.Context) {
 		return
 	}
 
-	// Aggregate layer metrics
 	if err := ma.aggregateLayers(ctx, m); err != nil {
 		log.Errorf("Failed to aggregate layer metrics: %v", err)
 	}
 
-	// Aggregate repository metrics
 	if err := ma.aggregateRepositories(ctx, m); err != nil {
 		log.Errorf("Failed to aggregate repository metrics: %v", err)
 	}
 
-	// Aggregate run metrics
 	if err := ma.aggregateRuns(ctx, m); err != nil {
 		log.Errorf("Failed to aggregate run metrics: %v", err)
 	}
 
-	// Aggregate pull request metrics
 	if err := ma.aggregatePullRequests(ctx, m); err != nil {
 		log.Errorf("Failed to aggregate pull request metrics: %v", err)
 	}
@@ -92,11 +84,9 @@ func (ma *MetricsAggregator) aggregateLayers(ctx context.Context, m *BurritoMetr
 		return err
 	}
 
-	// Reset aggregate metrics
 	m.LayersByStatus.Reset()
 	m.LayersByNamespace.Reset()
 
-	// Count by status and namespace
 	statusCounts := make(map[string]int)
 	namespaceCounts := make(map[string]int)
 
@@ -108,7 +98,6 @@ func (ma *MetricsAggregator) aggregateLayers(ctx context.Context, m *BurritoMetr
 		namespaceCounts[namespace]++
 	}
 
-	// Update metrics
 	m.TotalLayers.Set(float64(len(layers.Items)))
 
 	for status, count := range statusCounts {
@@ -138,11 +127,9 @@ func (ma *MetricsAggregator) aggregateRuns(ctx context.Context, m *BurritoMetric
 		return err
 	}
 
-	// Reset aggregate metrics
 	m.RunsByAction.Reset()
 	m.RunsByStatus.Reset()
 
-	// Count by action and status
 	actionCounts := make(map[string]int)
 	statusCounts := make(map[string]int)
 
@@ -157,7 +144,6 @@ func (ma *MetricsAggregator) aggregateRuns(ctx context.Context, m *BurritoMetric
 		statusCounts[state]++
 	}
 
-	// Update metrics
 	m.TotalRuns.Set(float64(len(runs.Items)))
 
 	for action, count := range actionCounts {
