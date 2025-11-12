@@ -36,6 +36,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	logrusr "github.com/bombsimon/logrusr/v4"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	"github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
@@ -102,6 +103,18 @@ func (c *Controllers) Exec() {
 	if err != nil {
 		log.Fatalf("unable to start manager: %s", err)
 	}
+
+	// Initialize Burrito custom metrics
+	metrics.InitMetrics()
+	log.Info("Initialized Burrito custom metrics")
+
+	// Start metrics aggregator in background
+	aggregator := metrics.NewMetricsAggregator(mgr.GetClient(), metrics.AggregationInterval)
+	go func() {
+		aggregator.Start(context.Background())
+	}()
+	log.Info("Started metrics aggregator")
+
 	datastoreClient := datastore.NewDefaultClient(c.config.Datastore)
 	credentialStore := credentials.NewCredentialStore(mgr.GetClient(), c.config.Controller.Timers.CredentialsTTL)
 	config, err := rest.InClusterConfig()

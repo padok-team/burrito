@@ -157,7 +157,6 @@ func (s *Server) Exec() {
 
 	api := e.Group("/api")
 	e.GET("/healthz", handleHealthz)
-	e.GET("/metrics", s.API.MetricsHandler)
 
 	// Exposed webhook route. Logging middleware is applied here to log unauthenticated requests.
 	api.POST("/webhook", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig)(s.Webhook.GetHttpHandler()))

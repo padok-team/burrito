@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	logClient "k8s.io/client-go/kubernetes"
 
@@ -145,6 +146,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", "Could not update run status")
 		log.Errorf("could not update run %s status: %s", run.Name, err)
 	}
+
+	// Update metrics for this run
+	metrics.UpdateRunMetrics(*run)
+
 	log.Infof("finished reconciliation cycle for run %s/%s", run.Namespace, run.Name)
 	return result, nil
 }

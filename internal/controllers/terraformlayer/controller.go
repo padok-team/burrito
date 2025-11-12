@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/lock"
 	corev1 "k8s.io/api/core/v1"
@@ -139,6 +140,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
 	}
+
+	// Update metrics for this layer
+	metrics.UpdateLayerMetrics(*layer)
+
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
 	return result, nil
 }

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -102,6 +103,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update repository status")
 		log.Errorf("failed to update repository status: %s", err)
 	}
+
+	// Update metrics for this repository
+	metrics.UpdateRepositoryMetrics(*repository)
+
 	log.Infof("finished reconciliation cycle for repository %s/%s", repository.Namespace, repository.Name)
 	return result, nil
 }
