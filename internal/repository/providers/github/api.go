@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/google/go-github/v76/github"
+	"github.com/google/go-github/v79/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
