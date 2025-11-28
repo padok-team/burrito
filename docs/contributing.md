@@ -61,8 +61,11 @@ Follow these steps to install a minimal working configuration of Burrito on a Ki
 1. **Install cert-manager on your cluster:**
 
     ```bash
-    helm repo add bitnami https://charts.bitnami.com/bitnami
-    helm upgrade --install -n cert-manager --create-namespace cert-manager bitnami/cert-manager --set installCRDs=true
+    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+        --version v1.19.1 \
+        --namespace cert-manager \
+        --create-namespace \
+        --set crds.enabled=true
     ```
 
 2. **Fork and clone this repository.**
