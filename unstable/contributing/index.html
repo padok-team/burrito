@@ -2183,8 +2183,11 @@
 <ol>
 <li>
 <p><strong>Install cert-manager on your cluster:</strong></p>
-<div class="highlight"><pre><span></span><code>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>bitnami<span class="w"> </span>https://charts.bitnami.com/bitnami
-helm<span class="w"> </span>upgrade<span class="w"> </span>--install<span class="w"> </span>-n<span class="w"> </span>cert-manager<span class="w"> </span>--create-namespace<span class="w"> </span>cert-manager<span class="w"> </span>bitnami/cert-manager<span class="w"> </span>--set<span class="w"> </span><span class="nv">installCRDs</span><span class="o">=</span><span class="nb">true</span>
+<div class="highlight"><pre><span></span><code>helm<span class="w"> </span>install<span class="w"> </span>cert-manager<span class="w"> </span>oci://quay.io/jetstack/charts/cert-manager<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--version<span class="w"> </span>v1.19.1<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--namespace<span class="w"> </span>cert-manager<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--create-namespace<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--set<span class="w"> </span>crds.enabled<span class="o">=</span><span class="nb">true</span>
 </code></pre></div>
 </li>
 <li>
