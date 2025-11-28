@@ -132,7 +132,7 @@ endef
 
 # Common function for kind upgrades
 define upgrade-kind-common
-	docker buildx build --tag burrito:$(NEW_VERSION) --build-arg VERSION=${NEW_VERSION} $(2) .
+	docker buildx build --tag burrito:$(NEW_VERSION) --build-arg VERSION=${NEW_VERSION} --load $(2) .
 	kind load docker-image burrito:$(NEW_VERSION)
 	yq e '.global.deployment.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/$(1)
 	yq e '.config.burrito.runner.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/$(1)
