@@ -28,6 +28,7 @@ const (
 	AdditionnalTriggerPaths string = "config.terraform.padok.cloud/additionnal-trigger-paths"
 
 	SyncNow        string = "api.terraform.padok.cloud/sync-now"
+	DestroyNow     string = "api.terraform.padok.cloud/destroy-now"
 	AllowedTenants string = "credentials.terraform.padok.cloud/allowed-tenants"
 )
 

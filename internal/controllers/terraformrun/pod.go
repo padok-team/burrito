@@ -19,8 +19,10 @@ import (
 type Action string
 
 const (
-	PlanAction  Action = "plan"
-	ApplyAction Action = "apply"
+	PlanAction         Action = "plan"
+	ApplyAction        Action = "apply"
+	PlanDestroyAction  Action = "plan-destroy"
+	ApplyDestroyAction Action = "apply-destroy"
 )
 
 func getDefaultLabels(run *configv1alpha1.TerraformRun) map[string]string {
@@ -158,6 +160,16 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
 			Name:  "BURRITO_RUNNER_ACTION",
 			Value: "apply",
+		})
+	case PlanDestroyAction:
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name:  "BURRITO_RUNNER_ACTION",
+			Value: "plan-destroy",
+		})
+	case ApplyDestroyAction:
+		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
+			Name:  "BURRITO_RUNNER_ACTION",
+			Value: "apply-destroy",
 		})
 	}
 

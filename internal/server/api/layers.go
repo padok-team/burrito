@@ -133,6 +133,9 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 	switch {
 	case len(layer.Status.Conditions) == 0:
 		state = "disabled"
+	case layer.Status.State == "DestroyNeeded" || layer.Status.State == "DestroyApplyNeeded":
+		// Destroy is pending or in progress - show as warning (out of sync)
+		state = "warning"
 	case layer.Status.State == "ApplyNeeded":
 		if layer.Status.LastResult == "Plan: 0 to create, 0 to update, 0 to delete" {
 			state = "success"
@@ -141,6 +144,10 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 		}
 	case layer.Status.State == "PlanNeeded":
 		state = "warning"
+	}
+	// Only show "deleted" when the destroy was actually successful
+	if layer.Status.LastResult == "Infrastructure destroyed" {
+		state = "deleted"
 	}
 	if layer.Annotations[annotations.LastPlanSum] == "" {
 		state = "error"
