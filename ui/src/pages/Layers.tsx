@@ -2,7 +2,7 @@ import React, { useState, useContext, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchLayers, syncLayer } from '@/clients/layers/client';
+import { fetchLayers, syncLayer, destroyLayer } from '@/clients/layers/client';
 import { reactQueryKeys } from '@/clients/reactQueryConfig';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
@@ -88,6 +88,7 @@ const Layers: React.FC = () => {
   );
 
   const [showRefreshPane, setShowRefreshPane] = useState(false);
+  const [showDestroyPane, setShowDestroyPane] = useState(false);
 
   const layersQuery = useQuery({
     queryKey: reactQueryKeys.layers,
@@ -134,6 +135,12 @@ const Layers: React.FC = () => {
     { name: string; namespace: string }[]
   >([]);
   const [syncProgressValue, setSyncProgressValue] = useState(0);
+
+  const [selectedLayersForDestroy, setSelectedLayersForDestroy] = useState<
+    { name: string; namespace: string }[]
+  >([]);
+  const [destroyProgressValue, setDestroyProgressValue] = useState(0);
+  const [destroyConfirmation, setDestroyConfirmation] = useState('');
   const syncSelectedLayers = async () => {
     const totalLayers = selectedLayersForSync.length;
     for (const layer of selectedLayersForSync) {
@@ -147,6 +154,29 @@ const Layers: React.FC = () => {
     setTimeout(() => {
       setSyncProgressValue(0);
       setShowRefreshPane(false);
+      layersQuery.refetch();
+    }, 1000);
+  };
+
+  const destroySelectedLayers = async () => {
+    if (!destroyConfirmation || destroyConfirmation.toLowerCase() !== 'destroy') {
+      alert('Please type "destroy" to confirm');
+      return;
+    }
+
+    const totalLayers = selectedLayersForDestroy.length;
+    for (const layer of selectedLayersForDestroy) {
+      try {
+        await destroyLayer(layer.namespace, layer.name);
+      } catch (error) {
+        console.error(`Failed to destroy layer ${layer.name}:`, error);
+      }
+      setDestroyProgressValue((prev) => prev + 100 / totalLayers);
+    }
+    setTimeout(() => {
+      setDestroyProgressValue(0);
+      setDestroyConfirmation('');
+      setShowDestroyPane(false);
       layersQuery.refetch();
     }, 1000);
   };
@@ -193,6 +223,98 @@ const Layers: React.FC = () => {
           </div>
         </div>
       </SlidingPane>
+      <SlidingPane
+        isOpen={showDestroyPane}
+        onClose={() => setShowDestroyPane(false)}
+        variant={theme}
+      >
+        <div className="relative h-full">
+          <div className="overflow-auto h-[calc(100%-150px)]">
+            <h2
+              className={`
+          text-lg
+          font-semibold
+          mb-4
+          ${theme === 'light' ? 'text-nuances-black' : 'text-nuances-50'}
+        `}
+            >
+              ⚠️ Destroy Infrastructure
+            </h2>
+            <div
+              className={`
+          p-4
+          mb-4
+          rounded-lg
+          bg-red-50
+          border-2
+          border-red-200
+          ${theme === 'light' ? 'text-red-900' : 'bg-red-900 text-white border-red-700'}
+        `}
+            >
+              <p className="font-bold mb-2">Warning: Destructive Action!</p>
+              <p>
+                This will permanently destroy all infrastructure managed by the
+                selected layers. This action cannot be undone!
+              </p>
+            </div>
+
+            {layersQuery.isSuccess && (
+              <LayerChecklist
+                layers={filteredLayers}
+                variant={theme}
+                onSelectionChange={(layers) => setSelectedLayersForDestroy(layers)}
+              />
+            )}
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-black">
+            <div className="mb-4">
+              <label
+                className={`
+                  block
+                  text-sm
+                  font-medium
+                  mb-2
+                  ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}
+                `}
+              >
+                Type "destroy" to confirm:
+              </label>
+              <input
+                type="text"
+                value={destroyConfirmation}
+                onChange={(e) => setDestroyConfirmation(e.target.value)}
+                className={`
+                  w-full
+                  px-3
+                  py-2
+                  border
+                  rounded-md
+                  ${
+                    theme === 'light'
+                      ? 'border-gray-300 bg-white text-black'
+                      : 'border-gray-600 bg-gray-900 text-white'
+                  }
+                `}
+                placeholder="Type destroy to confirm"
+              />
+            </div>
+            <Button
+              variant={'tertiary'}
+              className="w-full bg-red-600 text-white hover:bg-red-700"
+              disabled={
+                selectedLayersForDestroy.length === 0 ||
+                destroyConfirmation.toLowerCase() !== 'destroy'
+              }
+              onClick={() => {
+                destroySelectedLayers();
+              }}
+            >
+              Destroy Selected Layers
+            </Button>
+            <ProgressBar value={destroyProgressValue} className="mt-4" />
+          </div>
+        </div>
+      </SlidingPane>
       <div
         className={`
           h-full
@@ -231,6 +353,14 @@ const Layers: React.FC = () => {
                 }
               >
                 Run Sync
+              </Button>
+              <Button
+                theme={theme}
+                variant={'tertiary'}
+                onClick={() => setShowDestroyPane(true)}
+                className="text-red-600 hover:text-red-700"
+              >
+                Destroy Infrastructure
               </Button>
               <Button
                 variant={theme === 'light' ? 'primary' : 'secondary'}
