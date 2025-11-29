@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { Tooltip } from 'react-tooltip';
+import {
+  useFloating,
+  useDismiss,
+  useRole,
+  useInteractions
+} from '@floating-ui/react';
 
 import Running from '@/components/widgets/Running';
 import Tag from '@/components/widgets/Tag';
 import ModalLogsTerminal from '@/components/tools/ModalLogsTerminal';
+import ConfirmationModal from '@/components/modals/ConfirmationModal';
 import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
 import ChiliLight from '@/assets/illustrations/ChiliLight';
 import ChiliDark from '@/assets/illustrations/ChiliDark';
 
 import { Layer } from '@/clients/layers/types';
 import GenericIconButton from '../buttons/GenericIconButton';
-import { syncLayer } from '@/clients/layers/client';
+import { syncLayer, destroyLayer } from '@/clients/layers/client';
 import SyncIcon from '@/assets/icons/SyncIcon';
+import TrashIcon from '@/assets/icons/TrashIcon';
 
 export interface CardProps {
   className?: string;
@@ -85,6 +93,36 @@ const Card: React.FC<CardProps> = ({
     layer.manualSyncStatus === 'pending' ||
       layer.manualSyncStatus === 'annotated'
   );
+
+  const [isDestroyPending, setIsDestroyPending] = useState(false);
+  const [isDestroyModalOpen, setIsDestroyModalOpen] = useState(false);
+
+  // Floating UI setup for destroy confirmation modal
+  const { refs, context } = useFloating({
+    open: isDestroyModalOpen,
+    onOpenChange: setIsDestroyModalOpen
+  });
+
+  const role = useRole(context);
+  const dismiss = useDismiss(context, { outsidePressEvent: 'mousedown' });
+
+  const { getFloatingProps } = useInteractions([role, dismiss]);
+
+  const handleDestroyClick = () => {
+    setIsDestroyModalOpen(true);
+  };
+
+  const handleDestroyConfirm = async () => {
+    setIsDestroyModalOpen(false);
+    const destroy = await destroyLayer(layer.namespace, layer.name);
+    if (destroy.status === 200) {
+      setIsDestroyPending(true);
+    }
+  };
+
+  const handleDestroyCancel = () => {
+    setIsDestroyModalOpen(false);
+  };
 
   return (
     <div
@@ -185,11 +223,31 @@ const Card: React.FC<CardProps> = ({
           onClick={() => syncSelectedLayer(layer)}
           tooltip={isManualSyncPending ? 'Sync in progress...' : 'Sync now'}
         />
+        <GenericIconButton
+          variant={variant}
+          Icon={TrashIcon}
+          disabled={isDestroyPending}
+          onClick={handleDestroyClick}
+          tooltip={isDestroyPending ? 'Destroy in progress...' : 'Destroy infrastructure'}
+        />
       </div>
       <Tooltip
         opacity={1}
         id="card-tooltip"
         variant={variant === 'light' ? 'dark' : 'light'}
+      />
+      <ConfirmationModal
+        isOpen={isDestroyModalOpen}
+        onConfirm={handleDestroyConfirm}
+        onCancel={handleDestroyCancel}
+        title="Destroy Infrastructure"
+        message={`Are you sure you want to destroy the infrastructure for "${name}"? This action will run terraform destroy and cannot be undone.`}
+        confirmText="Destroy"
+        cancelText="Cancel"
+        variant={variant}
+        context={context}
+        refs={refs}
+        getFloatingProps={getFloatingProps}
       />
     </div>
   );

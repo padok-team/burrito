@@ -39,6 +39,16 @@ func (t *BaseTool) Plan(planArtifactPath string) error {
 	return nil
 }
 
+func (t *BaseTool) PlanDestroy(planArtifactPath string) error {
+	cmd := exec.Command(t.ExecPath, "plan", "-destroy", "-no-color", "-out", planArtifactPath)
+	c.Verbose(cmd)
+	cmd.Dir = t.WorkingDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (t *BaseTool) Apply(planArtifactPath string) error {
 	var cmd *exec.Cmd
 	if planArtifactPath != "" {

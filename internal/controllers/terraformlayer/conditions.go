@@ -269,6 +269,31 @@ func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.C
 	return condition, false
 }
 
+func (r *Reconciler) IsDestroyScheduled(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsDestroyScheduled",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	// check if annotations.DestroyNow is present
+	if _, ok := t.Annotations[annotations.DestroyNow]; ok {
+		condition.Reason = "DestroyScheduled"
+		condition.Message = "A destroy has been manually scheduled"
+		condition.Status = metav1.ConditionTrue
+		// Remove the annotation to avoid running the destroy again
+		err := annotations.Remove(context.Background(), r.Client, t, annotations.DestroyNow)
+		if err != nil {
+			log.Errorf("Failed to remove annotation %s from layer %s: %s", annotations.DestroyNow, t.Name, err)
+		}
+		return condition, true
+	}
+	condition.Reason = "NoDestroyScheduled"
+	condition.Message = "No destroy has been manually scheduled"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
+}
+
 func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {
 	if len(changedFiles) == 0 {
 		return true
@@ -294,6 +319,46 @@ func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 	}
 
 	return false
+}
+
+func (r *Reconciler) IsDestroyApplyNeeded(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsDestroyApplyNeeded",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+
+	// Check if the last run was a plan-destroy and it succeeded
+	if t.Status.LastRun.Action != "plan-destroy" {
+		condition.Reason = "NoDestroyPlanAvailable"
+		condition.Message = "No destroy plan is available"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	// Check if we have a plan sum (indicating successful plan)
+	planHash, ok := t.Annotations[annotations.LastPlanSum]
+	if !ok || planHash == "" {
+		condition.Reason = "DestroyPlanFailed"
+		condition.Message = "The destroy plan failed or has no sum"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	// Check if apply is already up to date with this destroy plan
+	applyHash, ok := t.Annotations[annotations.LastApplySum]
+	if ok && applyHash == planHash {
+		condition.Reason = "DestroyAlreadyApplied"
+		condition.Message = "The destroy has already been applied"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	condition.Reason = "DestroyApplyNeeded"
+	condition.Message = "Destroy plan is ready to be applied"
+	condition.Status = metav1.ConditionTrue
+	return condition, true
 }
 
 func ensureAbsPath(input string) string {

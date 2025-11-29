@@ -118,8 +118,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		lastResult, err = r.Datastore.GetPlan(layer.Namespace, layer.Name, layer.Status.LastRun.Name, "", "short")
 		if err != nil {
 			log.Errorf("failed to get plan for layer %s: %s", layer.Name, err)
-			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Failed to get last Result")
-			lastResult = []byte("Error getting last Result")
+			// Don't show error for destroy actions as they might not have plans
+			if layer.Status.LastRun.Action == "apply-destroy" {
+				lastResult = []byte("Infrastructure destroyed")
+			} else if layer.Status.LastRun.Action == "plan-destroy" {
+				lastResult = []byte("Destroy plan ready")
+			} else {
+				lastResult = []byte("Waiting for plan...")
+			}
 		}
 	}
 	result, run := state.getHandler()(ctx, r, layer, repository)
@@ -139,8 +145,42 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.Warningf("failed to cleanup runs for layer %s: %s", layer.Name, err)
 	}
+
+	// Check if layer should be deleted after a successful destroy
+	if r.shouldDeleteAfterDestroy(layer, repository) {
+		log.Infof("deleting layer %s/%s after successful destroy", layer.Namespace, layer.Name)
+		err = r.Client.Delete(ctx, layer)
+		if err != nil {
+			log.Errorf("failed to delete layer %s after destroy: %s", layer.Name, err)
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to delete layer after destroy")
+		} else {
+			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Deleted layer after successful destroy")
+			return ctrl.Result{}, nil
+		}
+	}
+
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
 	return result, nil
+}
+
+// shouldDeleteAfterDestroy checks if the layer should be automatically deleted after a successful destroy
+func (r *Reconciler) shouldDeleteAfterDestroy(layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) bool {
+	// Check if deleteAfterDestroy is enabled
+	if !configv1alpha1.GetDeleteAfterDestroyEnabled(repository, layer) {
+		return false
+	}
+
+	// Check if the last result indicates a successful destroy
+	if layer.Status.LastResult != "Infrastructure destroyed" {
+		return false
+	}
+
+	// Check if the last run was an apply-destroy
+	if layer.Status.LastRun.Action != "apply-destroy" {
+		return false
+	}
+
+	return true
 }
 
 func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {

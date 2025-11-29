@@ -42,4 +42,7 @@ env/
 venv/
 
 test-repo/
-TIltfile
+Test/
+Tiltfile
+scripts/
+ui/package-lock.json
