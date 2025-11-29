@@ -36,6 +36,16 @@ func (r *Runner) ExecAction() error {
 		ann[annotations.LastPlanSum] = sum
 		ann[annotations.LastPlanCommit] = r.Run.Spec.Layer.Revision
 
+	case "plan-destroy":
+		sum, err := r.execPlanDestroy()
+		if err != nil {
+			return err
+		}
+		ann[annotations.LastPlanDate] = time.Now().Format(time.UnixDate)
+		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.Run.Name, strconv.Itoa(r.Run.Status.Retries))
+		ann[annotations.LastPlanSum] = sum
+		ann[annotations.LastPlanCommit] = r.Run.Spec.Layer.Revision
+
 	case "apply":
 		sum, err := r.execApply()
 		if err != nil {
@@ -44,6 +54,16 @@ func (r *Runner) ExecAction() error {
 		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
 		ann[annotations.LastApplySum] = sum
 		ann[annotations.LastApplyCommit] = r.Run.Spec.Layer.Revision
+
+	case "apply-destroy":
+		sum, err := r.execApply()
+		if err != nil {
+			return err
+		}
+		ann[annotations.LastApplyDate] = time.Now().Format(time.UnixDate)
+		ann[annotations.LastApplySum] = sum
+		ann[annotations.LastApplyCommit] = r.Run.Spec.Layer.Revision
+
 	default:
 		return errors.New("unrecognized runner action, if this is happening there might be a version mismatch between the controller and runner")
 	}
@@ -131,6 +151,64 @@ func (r *Runner) execPlan() (string, error) {
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
 
+// Run the `plan` command with -destroy flag and save the plan artifact in the datastore
+// Returns the sha256 sum of the plan artifact
+func (r *Runner) execPlanDestroy() (string, error) {
+	log.Infof("running %s plan -destroy", r.exec.TenvName())
+	if r.exec == nil {
+		err := errors.New("terraform or terragrunt binary not installed")
+		return "", err
+	}
+	err := r.exec.PlanDestroy(PlanArtifact)
+	if err != nil {
+		log.Errorf("error executing %s plan -destroy: %s", r.exec.TenvName(), err)
+		return "", err
+	}
+	planJsonBytes, err := r.exec.Show(PlanArtifact, "json")
+	if err != nil {
+		log.Errorf("error getting %s plan json: %s", r.exec.TenvName(), err)
+		return "", err
+	}
+	prettyPlan, err := r.exec.Show(PlanArtifact, "pretty")
+	if err != nil {
+		log.Errorf("error getting %s pretty plan: %s", r.exec.TenvName(), err)
+		return "", err
+	}
+	log.Infof("sending destroy plan to datastore")
+	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "pretty", prettyPlan)
+	if err != nil {
+		log.Errorf("could not put pretty plan in datastore: %s", err)
+	}
+	plan := &tfjson.Plan{}
+	err = json.Unmarshal(planJsonBytes, plan)
+	if err != nil {
+		log.Errorf("error parsing %s json plan: %s", r.exec.TenvName(), err)
+		return "", err
+	}
+	_, shortDiff := runnerutils.GetDiff(plan)
+	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "json", planJsonBytes)
+	if err != nil {
+		log.Errorf("could not put json plan in datastore: %s", err)
+	}
+	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "short", []byte(shortDiff))
+	if err != nil {
+		log.Errorf("could not put short plan in datastore: %s", err)
+	}
+	planBin, err := os.ReadFile(PlanArtifact)
+	if err != nil {
+		log.Errorf("could not read plan output: %s", err)
+		return "", err
+	}
+	sum := sha256.Sum256(planBin)
+	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "bin", planBin)
+	if err != nil {
+		log.Errorf("could not put plan binary in cache: %s", err)
+		return "", err
+	}
+	log.Infof("%s plan -destroy ran successfully", r.exec.TenvName())
+	return b64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
 // Run the `apply` command, by default with the plan artifact from the previous plan run
 // Returns the sha256 sum of the plan artifact used
 func (r *Runner) execApply() (string, error) {
@@ -162,10 +240,18 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("error executing %s apply: %s", r.exec.TenvName(), err)
 		return "", err
 	}
-	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "short", []byte("Apply Successful"))
+	// Store appropriate message based on action type
+	resultMessage := "Apply Successful"
+	if r.Run.Spec.Action == "apply-destroy" {
+		resultMessage = "Infrastructure destroyed"
+	}
+	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "short", []byte(resultMessage))
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
 	log.Infof("%s apply ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
 }
+// rebuild trigger
+// Force rebuild at: Mon Sep 30 21:11:00 EAT 2025
+// Force rebuild at: Sat Nov 29 17:37:00 EAT 2025 - Testing Tilt auto-rebuild v2

@@ -33,5 +33,23 @@ func HandleUserInfo(c echo.Context) error {
 	id := c.Get("user_id")
 	picture := c.Get("user_picture")
 
-	return c.JSON(http.StatusOK, map[string]string{"email": userEmail.(string), "name": name.(string), "id": id.(string), "picture": picture.(string)})
+	// Handle nil values gracefully
+	emailStr := ""
+	if userEmail != nil {
+		emailStr = userEmail.(string)
+	}
+	nameStr := ""
+	if name != nil {
+		nameStr = name.(string)
+	}
+	idStr := ""
+	if id != nil {
+		idStr = id.(string)
+	}
+	pictureStr := ""
+	if picture != nil {
+		pictureStr = picture.(string)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"email": emailStr, "name": nameStr, "id": idStr, "picture": pictureStr})
 }
