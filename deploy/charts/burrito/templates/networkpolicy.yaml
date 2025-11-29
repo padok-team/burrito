@@ -5,20 +5,12 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-traffic-from-burrito-tenants
+  {{- with mergeOverwrite (deepCopy .Values.global.metadata) .Values.networkPolicy.metadata }}
   labels:
-    {{- with .Values.global.metadata.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.networkPolicy.metadata.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- toYaml .labels | nindent 4}}
   annotations:
-    {{- with .Values.global.metadata.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- with .Values.networkPolicy.metadata.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   podSelector: {}
   policyTypes:

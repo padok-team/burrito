@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/utils/syncwindow"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -64,7 +65,13 @@ func (s *PlanNeeded) getHandler() Handler {
 		if isActionBlocked(r, layer, repository, syncwindow.PlanAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
-		run := r.getRun(layer, repository, "plan")
+		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
+		if !ok {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Plan run not created")
+			log.Errorf("layer %s has no last relevant commit annotation, run not created", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		run := r.getRun(layer, revision, PlanAction)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Plan action")
@@ -90,7 +97,13 @@ func (s *ApplyNeeded) getHandler() Handler {
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
-		run := r.getRun(layer, repository, "apply")
+		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
+		if !ok {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Apply run not created")
+			log.Errorf("layer %s has no last relevant commit annotation, run not created", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		run := r.getRun(layer, revision, ApplyAction)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action")
@@ -111,10 +124,11 @@ func isActionBlocked(r *Reconciler, layer *configv1alpha1.TerraformLayer, reposi
 	defaultSyncWindows := r.Config.Controller.DefaultSyncWindows
 	syncBlocked, reason := syncwindow.IsSyncBlocked(append(repository.Spec.SyncWindows, defaultSyncWindows...), action, layer.Name)
 	if syncBlocked {
-		if reason == syncwindow.BlockReasonInsideDenyWindow {
+		switch reason {
+		case syncwindow.BlockReasonInsideDenyWindow:
 			log.Infof("layer %s is in a deny window, no %s action taken", layer.Name, string(action))
 			r.Recorder.Eventf(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is in a deny window, no %s action taken", string(action))
-		} else if reason == syncwindow.BlockReasonOutsideAllowWindow {
+		case syncwindow.BlockReasonOutsideAllowWindow:
 			log.Infof("layer %s is outside an allow window, no %s action taken", layer.Name, string(action))
 			r.Recorder.Eventf(layer, corev1.EventTypeNormal, "Reconciliation", "Layer is outside an allow window, no %s action taken", string(action))
 		}

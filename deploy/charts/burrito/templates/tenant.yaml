@@ -1,29 +1,36 @@
-{{- $metadataControllers := .Values.controllers.metadata }}
+{{- $metadataControllers := mergeOverwrite (deepCopy .Values.global.metadata) .Values.controllers.metadata }}
+{{- $metadataRbacRunners := mergeOverwrite (deepCopy .Values.global.metadata) .Values.runners.rbac.metadata }}
+{{- $metadataServer := mergeOverwrite (deepCopy .Values.global.metadata) .Values.server.metadata }}
 
 {{- range $tenant := .Values.tenants }}
+{{- $metadataTenant := mergeOverwrite (deepCopy $.Values.global.metadata) (default (dict) $tenant.metadata) }}
 {{- if $tenant.namespace.create }}
 apiVersion: v1
 kind: Namespace
 metadata:
-  labels:
-    {{- toYaml $tenant.namespace.labels | nindent 4 }}
-  annotations:
-    {{- toYaml $tenant.namespace.annotations | nindent 4 }}
   name: {{ $tenant.namespace.name }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) (default (dict) $tenant.namespace.metadata) }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 spec:
   finalizers:
-  - kubernetes
+    - kubernetes
 ---
 {{- end }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: burrito-controllers
-  labels:
-    {{- toYaml $metadataControllers.labels | nindent 4 }}
-  annotations:
-    {{- toYaml $metadataControllers.annotations | nindent 4 }}
   namespace: {{ $tenant.namespace.name }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataControllers }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -39,6 +46,12 @@ kind: ServiceAccount
 metadata:
   name: burrito-runner
   namespace: {{ $tenant.namespace.name }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataRbacRunners }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 ---
 # Role binding for the default service account
 apiVersion: rbac.authorization.k8s.io/v1
@@ -46,91 +59,120 @@ kind: RoleBinding
 metadata:
   name: burrito-runner
   namespace: {{ $tenant.namespace.name }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataRbacRunners }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: burrito-runner
 subjects:
-- kind: ServiceAccount
-  name: burrito-runner
-  namespace: {{ $tenant.namespace.name }}
+  - kind: ServiceAccount
+    name: burrito-runner
+    namespace: {{ $tenant.namespace.name }}
 ---
 # Role and RoleBinding for burrito-server to access this tenant's secrets (webhook secret)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: secret-access
+  namespace: {{ $tenant.namespace.name }}
+  {{- with $metadataTenant }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
   labels:
     {{- toYaml $metadataControllers.labels | nindent 4 }}
   annotations:
     {{- toYaml $metadataControllers.annotations | nindent 4 }}
-  namespace: {{ $tenant.namespace.name }}
 rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: burrito-server-secret-access
+  namespace: {{ $tenant.namespace.name }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataServer }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
   labels:
     {{- toYaml $metadataControllers.labels | nindent 4 }}
   annotations:
     {{- toYaml $metadataControllers.annotations | nindent 4 }}
-  namespace: {{ $tenant.namespace.name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: secret-access
 subjects:
-- kind: ServiceAccount
-  name: burrito-server
-  namespace: {{ $.Release.Namespace }}
+  - kind: ServiceAccount
+    name: burrito-server
+    namespace: {{ $.Release.Namespace }}
 ---
 {{- range $serviceAccount := .serviceAccounts }}
+{{- $metadataServiceAccount := mergeOverwrite (deepCopy $metadataTenant) (default (dict) $serviceAccount.metadata) }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ $serviceAccount.name }}
-  labels:
-    {{- toYaml $serviceAccount.labels | nindent 4 }}
-  annotations:
-    {{- toYaml $serviceAccount.annotations | nindent 4 }}
   namespace: {{ $tenant.namespace.name }}
+  {{- with $metadataServiceAccount }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ $serviceAccount.name }}-burrito-runner
-  labels:
-    {{- toYaml $serviceAccount.labels | nindent 4 }}
   namespace: {{ $tenant.namespace.name }}
+  {{- with mergeOverwrite (deepCopy $metadataServiceAccount) $metadataRbacRunners }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: burrito-runner
 subjects:
-- kind: ServiceAccount
-  name: {{ $serviceAccount.name }}
-  namespace: {{ $tenant.namespace.name }}
+  - kind: ServiceAccount
+    name: {{ $serviceAccount.name }}
+    namespace: {{ $tenant.namespace.name }}
 ---
 {{- range $additionalRoleBinding := $serviceAccount.additionalRoleBindings }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ $additionalRoleBinding.name }}
-  labels:
-    {{- toYaml $serviceAccount.labels | nindent 4 }}
   namespace: {{ $tenant.namespace.name }}
+  {{- with $metadataServiceAccount }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: {{ $additionalRoleBinding.role.kind }}
   name: {{ $additionalRoleBinding.role.name }}
 subjects:
-- kind: ServiceAccount
-  name: {{ $serviceAccount.name }}
-  namespace: {{ $tenant.namespace.name }}
+  - kind: ServiceAccount
+    name: {{ $serviceAccount.name }}
+    namespace: {{ $tenant.namespace.name }}
 ---
 {{- end }}
 {{- end }}

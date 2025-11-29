@@ -61,6 +61,10 @@ spec:
           spec:
             description: TerraformLayerSpec defines the desired state of TerraformLayer
             properties:
+              additionalTargetRefs:
+                items:
+                  type: string
+                type: array
               branch:
                 type: string
               opentofu:

@@ -1,11 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app.kubernetes.io/component: server
-    app.kubernetes.io/name: burrito-server
-    app.kubernetes.io/part-of: burrito
   name: burrito-server
+  {{- with mergeOverwrite (deepCopy .Values.global.metadata) .Values.server.metadata }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
 rules:
 - apiGroups:
   - config.terraform.padok.cloud
