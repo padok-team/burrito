@@ -28,11 +28,19 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	c4, HasLastPlanFailed := r.HasLastPlanFailed(layer)
 	c5, IsApplyUpToDate := r.IsApplyUpToDate(layer)
 	c6, IsSyncScheduled := r.IsSyncScheduled(layer)
-	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6}
+	c7, IsDestroyScheduled := r.IsDestroyScheduled(layer)
+	c8, IsDestroyApplyNeeded := r.IsDestroyApplyNeeded(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6, c7, c8}
 	switch {
 	case IsRunning:
 		log.Infof("layer %s is running, waiting for the run to finish", layer.Name)
 		return &Idle{}, conditions
+	case IsDestroyScheduled:
+		log.Infof("layer %s has a destroy scheduled, creating a destroy run", layer.Name)
+		return &DestroyNeeded{}, conditions
+	case IsDestroyApplyNeeded:
+		log.Infof("layer %s has a destroy plan ready, checking if apply is needed", layer.Name)
+		return &DestroyApplyNeeded{}, conditions
 	case IsLastPlanTooOld || !IsLastRelevantCommitPlanned:
 		log.Infof("layer %s has an outdated plan, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
@@ -118,6 +126,65 @@ func (s *ApplyNeeded) getHandler() Handler {
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), ".")
 	return t[len(t)-1]
+}
+
+type DestroyNeeded struct{}
+
+func (s *DestroyNeeded) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
+		log := log.WithContext(ctx)
+		// Check for sync windows that would block the destroy action
+		if isActionBlocked(r, layer, repository, syncwindow.PlanAction) {
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
+		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
+		if !ok {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Destroy Plan run not created")
+			log.Errorf("layer %s has no last relevant commit annotation, run not created", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		run := r.getRun(layer, revision, "plan-destroy")
+		err := r.Client.Create(ctx, &run)
+		if err != nil {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Destroy Plan action")
+			log.Errorf("failed to create TerraformRun for Destroy Plan action on layer %s: %s", layer.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Destroy Plan action")
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
+	}
+}
+
+type DestroyApplyNeeded struct{}
+
+func (s *DestroyApplyNeeded) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
+		log := log.WithContext(ctx)
+		autoDestroy := configv1alpha1.GetAutoDestroyEnabled(repository, layer)
+		if !autoDestroy {
+			log.Infof("autoDestroy is disabled for layer %s, no destroy apply action taken", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+		}
+		// Check for sync windows that would block the apply action
+		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
+		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
+		if !ok {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Destroy Apply run not created")
+			log.Errorf("layer %s has no last relevant commit annotation, run not created", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		run := r.getRun(layer, revision, "apply-destroy")
+		err := r.Client.Create(ctx, &run)
+		if err != nil {
+			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Destroy Apply action")
+			log.Errorf("failed to create TerraformRun for Destroy Apply action on layer %s: %s", layer.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		}
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Destroy Apply action")
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
+	}
 }
 
 func isActionBlocked(r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action syncwindow.Action) bool {

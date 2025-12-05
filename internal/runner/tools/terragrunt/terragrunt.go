@@ -92,6 +92,21 @@ func (t *Terragrunt) Plan(planArtifactPath string) error {
 	return nil
 }
 
+func (t *Terragrunt) PlanDestroy(planArtifactPath string) error {
+	options, err := t.getDefaultOptions("plan")
+	if err != nil {
+		return err
+	}
+	options = append(options, "-destroy", "-out", planArtifactPath)
+	cmd := exec.Command(t.ExecPath, options...)
+	c.Verbose(cmd)
+	cmd.Dir = t.WorkingDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (t *Terragrunt) Apply(planArtifactPath string) error {
 	options, err := t.getDefaultOptions("apply")
 	if err != nil {
