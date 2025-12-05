@@ -113,7 +113,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	if !bundleOk {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Bundle for revision %s not found in datastore", run.Spec.Layer.Revision))
-		log.Errorf("bundle for revision %s not found in datastore: %s", run.Spec.Layer.Revision, err)
+		log.Errorf("bundle for revision %s not found in datastore", run.Spec.Layer.Revision)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 	}
 
