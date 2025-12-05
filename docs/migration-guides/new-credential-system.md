@@ -1,8 +1,8 @@
-# Migrating to the New Credential System
+# 0.9.0 - Migrating to the New Credential System
 
 ## Overview
 
-Burrito has introduced a new credential system that provides more flexibility and security for managing Git authentication. This guide will help you migrate from the old repository secrets approach to the new credential system.
+Burrito has introduced in version 0.9.0 a new credential system that provides more flexibility and security for managing Git authentication. This guide will help you migrate from the old repository secrets approach to the new credential system.
 
 The new credential system introduces two types of credentials:
 
