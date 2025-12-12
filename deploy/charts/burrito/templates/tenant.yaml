@@ -80,7 +80,7 @@ kind: Role
 metadata:
   name: secret-access
   namespace: {{ $tenant.namespace.name }}
-  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataControllers }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataServer }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
@@ -96,7 +96,7 @@ kind: RoleBinding
 metadata:
   name: burrito-server-secret-access
   namespace: {{ $tenant.namespace.name }}
-  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataControllers }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataServer }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
