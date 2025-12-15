@@ -45,7 +45,7 @@ func GetProviderFromCredentials(RepositoryCredentials credentials.Credential) (t
 		return &github.Github{Config: RepositoryCredentials}, nil
 	case "gitlab":
 		return &gitlab.Gitlab{Config: RepositoryCredentials}, nil
-	case "git":
+	case "standard":
 		return &standard.Standard{Config: RepositoryCredentials}, nil
 	case "mock":
 		return &mock.Mock{}, nil
