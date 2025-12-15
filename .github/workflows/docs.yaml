@@ -36,7 +36,7 @@ jobs:
         run: pip install mkdocs-material mike
 
       - name: Lint Markdown files
-        uses: DavidAnson/markdownlint-cli2-action@v20
+        uses: DavidAnson/markdownlint-cli2-action@v21
         with:
           config: 'docs/.markdownlint.jsonc'
           globs: 'docs/**/*.md'
