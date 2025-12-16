@@ -75,25 +75,6 @@ func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	m.LayerStateGauge.WithLabelValues(namespace, layerName, repositoryName, state).Set(1)
 }
 
-func DeleteLayerMetrics(layer configv1alpha1.TerraformLayer) {
-	m := GetMetrics()
-	if m == nil {
-		return
-	}
-
-	namespace := layer.Namespace
-	layerName := layer.Name
-	repositoryName := layer.Spec.Repository.Name
-	status := GetLayerStatus(layer)
-	state := layer.Status.State
-	if state == "" {
-		state = "unknown"
-	}
-
-	m.LayerStatusGauge.DeleteLabelValues(namespace, layerName, repositoryName, status)
-	m.LayerStateGauge.DeleteLabelValues(namespace, layerName, repositoryName, state)
-}
-
 // UpdateRepositoryMetrics updates all metrics related to a specific repository
 func UpdateRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	m := GetMetrics()
@@ -107,20 +88,6 @@ func UpdateRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	status := GetRepositoryStatus(repo)
 
 	m.RepositoryStatusGauge.WithLabelValues(namespace, name, url, status).Set(1)
-}
-
-func DeleteRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
-	m := GetMetrics()
-	if m == nil {
-		return
-	}
-
-	namespace := repo.Namespace
-	name := repo.Name
-	url := repo.Spec.Repository.Url
-	status := GetRepositoryStatus(repo)
-
-	m.RepositoryStatusGauge.DeleteLabelValues(namespace, name, url, status)
 }
 
 // UpdateRunMetrics updates all metrics related to runs
