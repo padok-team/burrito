@@ -28,6 +28,7 @@ curl http://localhost:8080/metrics | grep controller_runtime
 ### Terraform Layer Metrics
 
 #### `burrito_terraform_layer_status`
+
 - **Type**: Gauge
 - **Description**: Status of individual Terraform layers
 - **Labels**: `namespace`, `layer_name`, `repository_name`, `status`
@@ -40,6 +41,7 @@ curl http://localhost:8080/metrics | grep controller_runtime
   - `running`: Layer is currently executing a run
 
 #### `burrito_terraform_layer_state`
+
 - **Type**: Gauge
 - **Description**: Current state of individual Terraform layers (controller state)
 - **Labels**: `namespace`, `layer_name`, `repository_name`, `state`
@@ -47,16 +49,19 @@ curl http://localhost:8080/metrics | grep controller_runtime
 - **States**: `Idle`, `PlanNeeded`, `ApplyNeeded`, `unknown`
 
 #### `burrito_terraform_layer_runs_total`
+
 - **Type**: Counter
 - **Description**: Total number of runs for Terraform layers
 - **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `action`
 
 #### `burrito_terraform_layer_last_run_timestamp`
+
 - **Type**: Gauge
 - **Description**: Unix timestamp of the last run for Terraform layers
 - **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `action`
 
 #### `burrito_terraform_layer_run_duration_seconds`
+
 - **Type**: Gauge
 - **Description**: Duration of the last run for Terraform layers in seconds
 - **Labels**: `namespace`, `name`, `repository`, `branch`, `path`, `action`, `status`
@@ -64,6 +69,7 @@ curl http://localhost:8080/metrics | grep controller_runtime
 ### Terraform Repository Metrics
 
 #### `burrito_terraform_repositories_total`
+
 - **Type**: Gauge
 - **Description**: Total number of Terraform repositories
 
@@ -72,12 +78,14 @@ curl http://localhost:8080/metrics | grep controller_runtime
 #### Current State Metrics (Gauges)
 
 #### `burrito_runs_by_action`
+
 - **Type**: Gauge
 - **Description**: Current number of runs by action type
 - **Labels**: `action`
 - **Use case**: Track how many plan/apply runs currently exist in the system
 
 #### `burrito_runs_by_status`
+
 - **Type**: Gauge
 - **Description**: Current number of runs by status
 - **Labels**: `status`
@@ -86,18 +94,21 @@ curl http://localhost:8080/metrics | grep controller_runtime
 #### Cumulative Metrics (Counters)
 
 #### `burrito_runs_created_total`
+
 - **Type**: Counter
 - **Description**: Total number of runs created since controller startup (cumulative)
 - **Labels**: `namespace`, `action`
 - **Use case**: Track run creation rate over time with `rate(burrito_runs_created_total[5m])`
 
 #### `burrito_runs_completed_total`
+
 - **Type**: Counter
 - **Description**: Total number of runs that completed successfully (cumulative)
 - **Labels**: `namespace`, `action`
 - **Use case**: Calculate success rate and completion trends
 
 #### `burrito_runs_failed_total`
+
 - **Type**: Counter
 - **Description**: Total number of runs that failed (cumulative)
 - **Labels**: `namespace`, `action`
@@ -106,46 +117,55 @@ curl http://localhost:8080/metrics | grep controller_runtime
 ### Aggregate Summary Metrics
 
 #### `burrito_layers_status_total`
+
 - **Type**: Gauge
 - **Description**: Total count of layers by status across all namespaces
 - **Labels**: `status`
 
 #### `burrito_layers_namespace_total`
+
 - **Type**: Gauge
 - **Description**: Total count of layers per namespace
 - **Labels**: `namespace`
 
 #### `burrito_layers_total`
+
 - **Type**: Gauge
 - **Description**: Total number of Terraform layers across all namespaces
 
 #### `burrito_repositories_total`
+
 - **Type**: Gauge
 - **Description**: Total number of Terraform repositories
 
 #### `burrito_runs_total`
+
 - **Type**: Gauge
 - **Description**: Current total number of Terraform run resources
 
 #### `burrito_pullrequests_total`
+
 - **Type**: Gauge
 - **Description**: Total number of Terraform pull requests
 
 ### Controller Performance Metrics
 
 #### `burrito_controller_reconcile_duration_seconds`
+
 - **Type**: Histogram
 - **Description**: Time spent in controller reconciliation (includes buckets for percentile calculations)
 - **Labels**: `controller`
 - **Use case**: Monitor reconciliation performance with `histogram_quantile(0.95, rate(burrito_controller_reconcile_duration_seconds_bucket[5m]))`
 
 #### `burrito_controller_reconcile_total`
+
 - **Type**: Counter
 - **Description**: Total number of reconciliations per controller
 - **Labels**: `controller`, `result`
 - **Use case**: Track reconciliation frequency with `rate(burrito_controller_reconcile_total[5m])`
 
 #### `burrito_controller_reconcile_errors_total`
+
 - **Type**: Counter
 - **Description**: Total reconciliation errors per controller
 - **Labels**: `controller`, `error_type`
@@ -171,6 +191,7 @@ scrape_configs:
 ### Example Queries
 
 #### Layers by Status
+
 ```promql
 # Count layers by status
 sum by (status) (burrito_terraform_layer_status)
@@ -189,6 +210,7 @@ count(burrito_terraform_layer_status)
 ```
 
 #### Layer States
+
 ```promql
 # Count layers by state
 sum by (state) (burrito_terraform_layer_state)
@@ -201,6 +223,7 @@ burrito_terraform_layer_status{namespace="production", layer_name="app-infrastru
 ```
 
 #### Run Metrics
+
 ```promql
 # Current number of runs by action
 sum by (action) (burrito_runs_by_action)
@@ -228,6 +251,7 @@ sum by (action) (increase(burrito_runs_failed_total{namespace="production"}[1h])
 ```
 
 #### Layer Detailed Analysis
+
 ```promql
 # Layers currently running
 burrito_terraform_layer_status{status="running"}
