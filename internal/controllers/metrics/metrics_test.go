@@ -58,7 +58,7 @@ var _ = Describe("Metrics", func() {
 						Conditions: []metav1.Condition{},
 					},
 				}
-				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("disabled"))
+				Expect(metrics.GetLayerStatus(layer)).To(Equal("disabled"))
 			})
 		})
 
@@ -78,7 +78,7 @@ var _ = Describe("Metrics", func() {
 						LastResult: "Plan: 0 to create, 0 to update, 0 to delete",
 					},
 				}
-				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("success"))
+				Expect(metrics.GetLayerStatus(layer)).To(Equal("success"))
 			})
 		})
 
@@ -98,7 +98,7 @@ var _ = Describe("Metrics", func() {
 						LastResult: "Plan: 1 to create, 0 to update, 0 to delete",
 					},
 				}
-				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("warning"))
+				Expect(metrics.GetLayerStatus(layer)).To(Equal("warning"))
 			})
 		})
 
@@ -117,7 +117,7 @@ var _ = Describe("Metrics", func() {
 						State: "PlanNeeded",
 					},
 				}
-				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("warning"))
+				Expect(metrics.GetLayerStatus(layer)).To(Equal("warning"))
 			})
 		})
 
@@ -136,7 +136,7 @@ var _ = Describe("Metrics", func() {
 						State: "PlanNeeded",
 					},
 				}
-				Expect(metrics.GetLayerUIStatus(layer)).To(Equal("running"))
+				Expect(metrics.GetLayerStatus(layer)).To(Equal("running"))
 			})
 		})
 	})

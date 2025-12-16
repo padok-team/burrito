@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetLayerUIStatus(layer configv1alpha1.TerraformLayer) string {
+func GetLayerStatus(layer configv1alpha1.TerraformLayer) string {
 	state := "success"
 
 	switch {
@@ -63,7 +63,7 @@ func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	namespace := layer.Namespace
 	layerName := layer.Name
 	repositoryName := layer.Spec.Repository.Name
-	status := GetLayerUIStatus(layer)
+	status := GetLayerStatus(layer)
 	state := layer.Status.State
 	if state == "" {
 		state = "unknown"
@@ -84,7 +84,7 @@ func DeleteLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	namespace := layer.Namespace
 	layerName := layer.Name
 	repositoryName := layer.Spec.Repository.Name
-	status := GetLayerUIStatus(layer)
+	status := GetLayerStatus(layer)
 	state := layer.Status.State
 	if state == "" {
 		state = "unknown"

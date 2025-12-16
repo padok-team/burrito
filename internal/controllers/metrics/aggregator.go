@@ -91,7 +91,7 @@ func (ma *MetricsAggregator) aggregateLayers(ctx context.Context, m *BurritoMetr
 	namespaceCounts := make(map[string]int)
 
 	for _, layer := range layers.Items {
-		status := GetLayerUIStatus(layer)
+		status := GetLayerStatus(layer)
 		namespace := layer.Namespace
 
 		statusCounts[status]++
