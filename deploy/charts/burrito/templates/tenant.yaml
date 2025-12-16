@@ -80,16 +80,12 @@ kind: Role
 metadata:
   name: secret-access
   namespace: {{ $tenant.namespace.name }}
-  {{- with $metadataTenant }}
+  {{- with mergeOverwrite (deepCopy $metadataTenant) $metadataServer }}
   labels:
     {{- toYaml .labels | nindent 4}}
   annotations:
     {{- toYaml .annotations | nindent 4}}
   {{- end }}
-  labels:
-    {{- toYaml $metadataControllers.labels | nindent 4 }}
-  annotations:
-    {{- toYaml $metadataControllers.annotations | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
@@ -106,10 +102,6 @@ metadata:
   annotations:
     {{- toYaml .annotations | nindent 4}}
   {{- end }}
-  labels:
-    {{- toYaml $metadataControllers.labels | nindent 4 }}
-  annotations:
-    {{- toYaml $metadataControllers.annotations | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
