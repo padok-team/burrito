@@ -186,7 +186,7 @@ spec:
               service:
                 name: burrito-controllers
                 port:
-                  name: metrics
+                  name: http
   tls:
     {{- toYaml .ingress.tls | nindent 4 }}
 {{- end }}
