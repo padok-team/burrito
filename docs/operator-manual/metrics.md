@@ -8,9 +8,31 @@ The metrics are available from the **controller component** at: `http://<burrito
 
 The metrics endpoint is part of the controller component (not the server), as the controllers have direct access to all Terraform resources through their reconciliation loops.
 
-## Quick Test
+## Exposing Metrics
 
-To quickly test the metrics endpoint:
+### Using Ingress (Recommended for Production)
+
+You can expose the metrics endpoint externally using an ingress controller. Enable the controllers ingress in your Helm values:
+
+```yaml
+controllers:
+  ingress:
+    enabled: true
+    host: burrito-controllers.example.com
+```
+
+Once configured, your metrics will be available at: `https://burrito-controllers.example.com/metrics`
+
+!!! warning "Security Considerations"
+    The metrics endpoint is exposed without authentication by default. When using ingress, consider:
+    
+    - Restricting access via ingress controller authentication (basic auth, OAuth, etc.)
+    - Using network policies to limit access to trusted IP ranges
+    - Being aware that metrics may expose layer names, namespaces, and repository information
+
+### Using Port-Forward (For Testing)
+
+To quickly test the metrics endpoint locally:
 
 ```bash
 # If running in Kubernetes (default controller metrics port is 8080)
@@ -182,6 +204,18 @@ scrape_configs:
   - job_name: 'burrito-controllers'
     static_configs:
       - targets: ['burrito-controllers:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+```
+
+If you're using the ingress approach, configure Prometheus to scrape via the ingress endpoint:
+
+```yaml
+scrape_configs:
+  - job_name: 'burrito-controllers'
+    static_configs:
+      - targets: ['burrito-controllers-metrics.example.com']
+    scheme: https
     metrics_path: '/metrics'
     scrape_interval: 30s
 ```
@@ -483,10 +517,50 @@ groups:
 3. **Namespace Filtering**: Add namespace filters to alerts if you have different SLAs per environment
 4. **Team Assignment**: Add custom labels like `team` or `service` to route alerts to the right owners
 
+## Accessing Metrics
+
+### Internal Access (Kubernetes Service)
+
+Access metrics through the Kubernetes service:
+
+```bash
+kubectl port-forward -n burrito-system svc/burrito-controllers 8080:8080
+curl http://localhost:8080/metrics
+```
+
+### External Access (Ingress)
+
+If you've configured the controllers ingress (see [Exposing Metrics](#exposing-metrics) section above), access metrics externally:
+
+```bash
+curl https://burrito-controllers-metrics.example.com/metrics
+```
+
 ## Security Considerations
 
-The metrics endpoint is exposed without authentication by default to allow Prometheus scraping. Consider:
+When exposing metrics externally via ingress:
 
-1. Restricting access to the `/metrics` endpoint via network policies
-2. Using service mesh/ingress controller authentication if needed
-3. Being aware that metrics may expose layer names, namespaces, and repository information
+1. **Authentication**: The metrics endpoint is exposed without authentication by default. Use ingress controller authentication (basic auth, OAuth, mTLS) to restrict access
+2. **Network Policies**: Implement Kubernetes network policies to limit access to trusted sources
+3. **Information Exposure**: Be aware that metrics contain layer names, namespaces, repository information, and operational data
+4. **TLS**: Always use HTTPS when exposing metrics externally to prevent data interception
+
+Example of securing with basic authentication via ingress annotations:
+
+```yaml
+controllers:
+  ingress:
+    enabled: true
+    metadata:
+      annotations:
+        nginx.ingress.kubernetes.io/auth-type: basic
+        nginx.ingress.kubernetes.io/auth-secret: metrics-basic-auth
+        nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Burrito Metrics'
+```
+
+Create the auth secret:
+
+```bash
+htpasswd -c auth prometheus
+kubectl create secret generic metrics-basic-auth --from-file=auth -n burrito-system
+```

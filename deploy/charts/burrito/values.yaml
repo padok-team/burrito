@@ -388,6 +388,19 @@ controllers:
     metadata:
       labels: {}
       annotations: {}
+  ingress:
+    # -- Enable/Disable ingress creation for the Burrito controller
+    enabled: false
+    # -- Metadata configuration for the Burrito controller ingress
+    metadata:
+      labels: {}
+      annotations: {}
+    # -- Ingress class name to use for the Burrito controller ingress
+    ingressClassName: nginx
+    # -- Hostname for the Burrito controller ingress
+    host: burrito-controllers.example.com
+    # -- TLS configuration for the Burrito controller ingress
+    tls: []
 
 server:
   # -- Metadata configuration for the Burrito server
