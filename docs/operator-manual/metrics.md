@@ -65,10 +65,15 @@ curl http://localhost:8080/metrics | grep controller_runtime
 #### `burrito_terraform_layer_state`
 
 - **Type**: Gauge
-- **Description**: Current state of individual Terraform layers (controller state)
+- **Description**: Computed status of individual Terraform layers (matches UI status, equivalent to `burrito_terraform_layer_status`)
 - **Labels**: `namespace`, `layer_name`, `repository_name`, `state`
-- **Values**: `1` when the layer is in the given state
-- **States**: `Idle`, `PlanNeeded`, `ApplyNeeded`, `unknown`
+- **Values**: `1` when the layer exists with the given status
+- **Status label values**:
+  - `disabled`: Layer has no conditions set
+  - `success`: Layer is in sync and working properly
+  - `warning`: Layer needs plan or apply action
+  - `error`: Layer has errors (missing annotations, plan failures, etc.)
+  - `running`: Layer is currently executing a run
 
 #### `burrito_terraform_layer_runs_total`
 
@@ -246,11 +251,11 @@ count(burrito_terraform_layer_status)
 #### Layer States
 
 ```promql
-# Count layers by state
+# Count layers by status
 sum by (state) (burrito_terraform_layer_state)
 
-# Get layers that need planning
-burrito_terraform_layer_state{state="PlanNeeded"}
+# Get layers that need attention (warning or error)
+burrito_terraform_layer_state{state=~"warning|error"}
 
 # Get specific layer status
 burrito_terraform_layer_status{namespace="production", layer_name="app-infrastructure"}

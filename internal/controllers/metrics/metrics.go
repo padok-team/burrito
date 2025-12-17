@@ -51,7 +51,7 @@ func InitMetrics() *BurritoMetrics {
 		), LayerStateGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "burrito_terraform_layer_state",
-				Help: "State of individual Terraform layers (1=active for the given state)",
+				Help: "Computed status of individual Terraform layers (1=active for the given status). This matches the UI status and is equivalent to burrito_terraform_layer_status.",
 			},
 			[]string{"namespace", "layer_name", "repository_name", "state"},
 		),

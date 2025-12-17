@@ -64,15 +64,12 @@ func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	layerName := layer.Name
 	repositoryName := layer.Spec.Repository.Name
 	status := GetLayerStatus(layer)
-	state := layer.Status.State
-	if state == "" {
-		state = "unknown"
-	}
 
 	// Update individual layer metrics
 	// Set to 1 to indicate this layer exists with this status (status is identified by label)
 	m.LayerStatusGauge.WithLabelValues(namespace, layerName, repositoryName, status).Set(1)
-	m.LayerStateGauge.WithLabelValues(namespace, layerName, repositoryName, state).Set(1)
+	// Use the computed status for LayerStateGauge as well to match the UI
+	m.LayerStateGauge.WithLabelValues(namespace, layerName, repositoryName, status).Set(1)
 }
 
 // UpdateRepositoryMetrics updates all metrics related to a specific repository
