@@ -7,7 +7,6 @@ import (
 
 type BurritoMetrics struct {
 	LayerStatusGauge *prometheus.GaugeVec
-	LayerStateGauge  *prometheus.GaugeVec
 
 	LayersByStatus    *prometheus.GaugeVec
 	LayersByNamespace *prometheus.GaugeVec
@@ -48,12 +47,6 @@ func InitMetrics() *BurritoMetrics {
 				Help: "Status of individual Terraform layers (1=layer exists with this status, status is identified by label)",
 			},
 			[]string{"namespace", "layer_name", "repository_name", "status"},
-		), LayerStateGauge: prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "burrito_terraform_layer_state",
-				Help: "Computed status of individual Terraform layers (1=active for the given status). This matches the UI status and is equivalent to burrito_terraform_layer_status.",
-			},
-			[]string{"namespace", "layer_name", "repository_name", "state"},
 		),
 
 		LayersByStatus: prometheus.NewGaugeVec(
@@ -179,7 +172,6 @@ func InitMetrics() *BurritoMetrics {
 	// Register all metrics with controller-runtime's default registry
 	metrics.Registry.MustRegister(
 		m.LayerStatusGauge,
-		m.LayerStateGauge,
 		m.LayersByStatus,
 		m.LayersByNamespace,
 		m.RepositoryStatusGauge,

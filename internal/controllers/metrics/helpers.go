@@ -42,16 +42,12 @@ func GetLayerStatus(layer configv1alpha1.TerraformLayer) string {
 }
 
 func GetRepositoryStatus(repo configv1alpha1.TerraformRepository) string {
-	status := "success" // default
-	if len(repo.Status.Conditions) > 0 {
-		// Check if any condition indicates an error
-		for _, condition := range repo.Status.Conditions {
-			if condition.Status == metav1.ConditionFalse && condition.Type != "Idle" {
-				return "error"
-			}
-		}
+	// Return the repository state which can be "Synced" or "SyncNeeded"
+	// This matches what kubectl shows in the State column
+	if repo.Status.State != "" {
+		return repo.Status.State
 	}
-	return status
+	return "Synced" // default
 }
 
 func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
@@ -65,11 +61,15 @@ func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	repositoryName := layer.Spec.Repository.Name
 	status := GetLayerStatus(layer)
 
+	// Clear all previous status metrics for this layer to avoid multiple statuses
+	possibleStatuses := []string{"success", "error", "warning", "running", "disabled"}
+	for _, s := range possibleStatuses {
+		m.LayerStatusGauge.DeleteLabelValues(namespace, layerName, repositoryName, s)
+	}
+
 	// Update individual layer metrics
 	// Set to 1 to indicate this layer exists with this status (status is identified by label)
 	m.LayerStatusGauge.WithLabelValues(namespace, layerName, repositoryName, status).Set(1)
-	// Use the computed status for LayerStateGauge as well to match the UI
-	m.LayerStateGauge.WithLabelValues(namespace, layerName, repositoryName, status).Set(1)
 }
 
 // UpdateRepositoryMetrics updates all metrics related to a specific repository
@@ -83,6 +83,12 @@ func UpdateRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	name := repo.Name
 	url := repo.Spec.Repository.Url
 	status := GetRepositoryStatus(repo)
+
+	// Clear all previous status metrics for this repository to avoid multiple statuses
+	possibleStatuses := []string{"Synced", "SyncNeeded"}
+	for _, s := range possibleStatuses {
+		m.RepositoryStatusGauge.DeleteLabelValues(namespace, name, url, s)
+	}
 
 	m.RepositoryStatusGauge.WithLabelValues(namespace, name, url, status).Set(1)
 }
