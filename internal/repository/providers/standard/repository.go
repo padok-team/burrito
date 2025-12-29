@@ -128,25 +128,39 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to checkout branch %s: %w", reference.Name(), err)
 	}
 
-	// Pull latest changes
-	pullOpts := &git.PullOptions{
+	// Fetch latest changes from remote (instead of Pull which has issues with go-git)
+	// See: https://github.com/go-git/go-git/issues/358
+	log.Infof("fetching latest changes for repo %s", p.RepoURL)
+	err = p.gitRepository.Fetch(&git.FetchOptions{
 		Auth:       p.AuthMethod,
 		RemoteName: remote,
+		Force:      true,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		log.Warnf("failed to fetch: %v", err)
 	}
 
-	log.Infof("pulling latest changes for repo %s on branch %s", p.RepoURL, reference.Name())
-	err = worktree.Pull(pullOpts)
+	// Get the latest remote ref and hard reset to it
+	remoteRefName := getRemoteReferenceName(ref)
+	remoteRef, err := p.gitRepository.Reference(remoteRefName, true)
 	if err != nil {
-		if err == git.NoErrAlreadyUpToDate {
-			log.Info("repository is already up-to-date")
-		} else {
-			log.Warnf("failed to pull latest changes for ref %s: %v, deleting local repository", reference.Name(), err)
-			p.gitRepository = nil
-			if removeErr := os.RemoveAll(p.repositoryPath); removeErr != nil {
-				return nil, fmt.Errorf("failed to remove repository at %s: %w", p.repositoryPath, removeErr)
-			}
-			return nil, fmt.Errorf("failed to pull latest changes for ref %s: %w, likely because of force-push, next run will re-clone", reference.Name(), err)
-		}
+		return nil, fmt.Errorf("failed to get remote reference %s: %w", remoteRefName, err)
+	}
+
+	log.Infof("resetting to remote ref %s (%s)", remoteRefName, remoteRef.Hash().String())
+	err = worktree.Reset(&git.ResetOptions{
+		Commit: remoteRef.Hash(),
+		Mode:   git.HardReset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to reset to remote ref %s: %w", remoteRefName, err)
+	}
+
+	// Update local branch reference to match remote
+	reference = plumbing.NewHashReference(localRefName, remoteRef.Hash())
+	err = p.gitRepository.Storer.SetReference(reference)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update local branch reference: %w", err)
 	}
 
 	// Create git bundle
