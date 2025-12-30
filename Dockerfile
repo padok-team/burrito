@@ -2,7 +2,7 @@
 
 # Build Burrito UI
 
-FROM docker.io/library/node:22.21.1@sha256:4ad2c2b350ab49fb637ab40a269ffe207c61818bb7eb3a4ea122001a0c605e1f AS builder-ui
+FROM docker.io/library/node:24.12.0@sha256:b52a8d1206132b36d60e51e413d9a81336e8a0206d3b648cabd6d5a49c4c0f54 AS builder-ui
 
 WORKDIR /workspace
 # Copy the node modules manifests
