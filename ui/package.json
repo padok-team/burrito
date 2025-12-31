@@ -24,7 +24,7 @@
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
-    "@eslint/compat": "^1.2.1",
+    "@eslint/compat": "^2.0.0",
     "@tailwindcss/vite": "^4.1.7",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
