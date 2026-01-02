@@ -35,6 +35,7 @@ func (r *Runner) ExecAction() error {
 		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.Run.Name, strconv.Itoa(r.Run.Status.Retries))
 		ann[annotations.LastPlanSum] = sum
 		ann[annotations.LastPlanCommit] = r.Run.Spec.Layer.Revision
+		ann[annotations.LastPlanApproved] = "false"
 
 	case "apply":
 		sum, err := r.execApply()

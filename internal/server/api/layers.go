@@ -139,6 +139,8 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 		} else {
 			state = "warning"
 		}
+	case layer.Status.State == "PlanApprovalNeeded":
+		state = "approvalneeded"
 	case layer.Status.State == "PlanNeeded":
 		state = "warning"
 	}

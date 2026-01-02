@@ -869,6 +869,81 @@ var _ = Describe("Layer", func() {
 				Expect(len(runs.Items)).To(Equal(0))
 			})
 		})
+		Describe("When a TerraformLayer requires plan approval", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "plan-approval-case-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should be in PlanApprovalNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanApprovalNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should not have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When a TerraformLayer that requires plan approval is approved", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "plan-approval-case-2",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should be in ApplyNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(1))
+				Expect(runs.Items[0].Spec.Action).To(Equal("apply"))
+			})
+		})
 	})
 })
 
