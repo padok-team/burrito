@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,6 +15,44 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+func (r *Reconciler) IsPlanApproved(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsPlanApproved",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+
+	_, ok := t.Annotations[annotations.LastPlanDate]
+	if !ok {
+		condition.Reason = "NoPlanHasRunYet"
+		condition.Message = "No plan has run on this layer yet"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	value, ok := t.Annotations[annotations.LastPlanApproved]
+	planApproved, err := strconv.ParseBool(value)
+	if err != nil {
+		condition.Reason = "InvalidPlanApprovedValue"
+		condition.Message = "plan-approved annotation value is invalid"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	if !ok || !planApproved {
+		condition.Reason = "LastPlanNotApproved"
+		condition.Message = "Last Plan has not been approved"
+		condition.Status = metav1.ConditionFalse
+		return condition, false
+	}
+
+	condition.Reason = "LastPlanApproved"
+	condition.Message = "Last Plan has been approved"
+	condition.Status = metav1.ConditionTrue
+	return condition, true
+}
 
 func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{

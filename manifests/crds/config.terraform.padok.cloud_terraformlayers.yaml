@@ -4852,6 +4852,8 @@ spec:
                       maxRetries:
                         type: integer
                     type: object
+                  planApprovalRequired:
+                    type: boolean
                 type: object
               repository:
                 properties:
