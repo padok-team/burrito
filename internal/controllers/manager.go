@@ -75,9 +75,10 @@ func init() {
 }
 
 func (c *Controllers) Exec() {
+	log.SetFormatter(&log.JSONFormatter{})
 	ctrl.SetLogger(logrusr.New(&log.Logger{
 		Out:       os.Stderr,
-		Formatter: new(logrus.TextFormatter),
+		Formatter: new(logrus.JSONFormatter),
 		Hooks:     make(logrus.LevelHooks),
 		Level:     logrus.DebugLevel,
 	}))
