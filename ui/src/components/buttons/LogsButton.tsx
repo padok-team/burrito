@@ -3,8 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 import WindowIcon from '@/assets/icons/WindowIcon';
 
-export interface LogsButtonProps
-  extends React.HTMLAttributes<HTMLButtonElement> {
+export interface LogsButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   className?: string;
   variant?: 'light' | 'dark';
 }

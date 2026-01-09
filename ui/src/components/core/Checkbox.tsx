@@ -4,8 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import CheckIcon from '@/assets/icons/CheckIcon';
 import MinusIcon from '@/assets/icons/MinusIcon';
 
-export interface CheckboxProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   variant?: 'light' | 'dark';
   label: string;
