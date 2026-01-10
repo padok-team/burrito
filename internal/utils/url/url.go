@@ -2,33 +2,64 @@ package url
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 )
 
-// Normalize a Github/Gitlab URL (SSH or HTTPS) to a HTTPS URL
-func NormalizeUrl(url string) string {
-	if strings.Contains(url, "https://") {
-		return removeGitExtension(url)
+func NormalizeUrl(inputURL string) string {
+	if strings.HasPrefix(inputURL, "https://") {
+		return removeGitExtension(inputURL)
 	}
-	if strings.Contains(url, "http://") {
-		return removeGitExtension("https://" + url[7:])
+	if strings.HasPrefix(inputURL, "http://") {
+		return removeGitExtension("https://" + inputURL[7:])
 	}
-	// All SSH URL from GitHub are like "git@padok.github.com:<owner>/<repo>.git"
-	// We split on ":" then remove ".git" by removing the last characters
-	// To handle enterprise GitHub, we dynamically get "padok.github.com"
-	// By removing "git@" at the beginning of the string
-	server, repo := splitSSHUrl(url)
+	if strings.HasPrefix(inputURL, "ssh://") {
+		return normalizeSSHProtocolURL(inputURL)
+	}
+	return normalizeScpStyleURL(inputURL)
+}
+
+func normalizeSSHProtocolURL(inputURL string) string {
+	parsedURL, err := url.Parse(inputURL)
+	if err != nil {
+		return normalizeScpStyleURL(inputURL)
+	}
+	server := parsedURL.Hostname()
+	path := strings.TrimPrefix(parsedURL.Path, "/")
+	return fmt.Sprintf("https://%s/%s", server, removeGitExtension(path))
+}
+
+func normalizeScpStyleURL(inputURL string) string {
+	server, repo := splitScpStyleURL(inputURL)
+	if repo == "" {
+		return fmt.Sprintf("https://%s", server)
+	}
 	return fmt.Sprintf("https://%s/%s", server, repo)
 }
 
-func splitSSHUrl(url string) (server string, repo string) {
-	split := strings.Split(url, ":")
-	return split[0][4:], removeGitExtension(split[1])
+func splitScpStyleURL(inputURL string) (server string, repo string) {
+	colonIndex := strings.Index(inputURL, ":")
+	if colonIndex == -1 {
+		server = inputURL
+		if strings.HasPrefix(server, "git@") {
+			server = server[4:]
+		}
+		return server, ""
+	}
+
+	server = inputURL[:colonIndex]
+	repo = inputURL[colonIndex+1:]
+
+	if strings.HasPrefix(server, "git@") {
+		server = server[4:]
+	}
+
+	return server, removeGitExtension(repo)
 }
 
-func removeGitExtension(url string) string {
-	if strings.HasSuffix(url, ".git") {
-		return url[:len(url)-4]
+func removeGitExtension(inputURL string) string {
+	if strings.HasSuffix(inputURL, ".git") {
+		return inputURL[:len(inputURL)-4]
 	}
-	return url
+	return inputURL
 }
