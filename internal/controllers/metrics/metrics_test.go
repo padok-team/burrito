@@ -30,7 +30,6 @@ var _ = Describe("Metrics", func() {
 
 			Expect(m).NotTo(BeNil())
 			Expect(m.LayerStatusGauge).NotTo(BeNil())
-			Expect(m.LayerStateGauge).NotTo(BeNil())
 			Expect(m.RepositoryStatusGauge).NotTo(BeNil())
 			Expect(m.TotalLayers).NotTo(BeNil())
 			Expect(m.TotalRepositories).NotTo(BeNil())
@@ -143,39 +142,41 @@ var _ = Describe("Metrics", func() {
 
 	Describe("GetRepositoryStatus", func() {
 		Context("when repository has no conditions", func() {
-			It("should return success", func() {
+			It("should return Synced", func() {
 				repo := configv1alpha1.TerraformRepository{
 					Status: configv1alpha1.TerraformRepositoryStatus{
 						Conditions: []metav1.Condition{},
 					},
 				}
-				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("success"))
+				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("Synced"))
 			})
 		})
 
-		Context("when repository has all conditions true", func() {
-			It("should return success", func() {
+		Context("when repository state is Synced", func() {
+			It("should return Synced", func() {
 				repo := configv1alpha1.TerraformRepository{
 					Status: configv1alpha1.TerraformRepositoryStatus{
+						State: "Synced",
 						Conditions: []metav1.Condition{
 							{Type: "Ready", Status: metav1.ConditionTrue},
 						},
 					},
 				}
-				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("success"))
+				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("Synced"))
 			})
 		})
 
-		Context("when repository has a false condition", func() {
-			It("should return error", func() {
+		Context("when repository state is SyncNeeded", func() {
+			It("should return SyncNeeded", func() {
 				repo := configv1alpha1.TerraformRepository{
 					Status: configv1alpha1.TerraformRepositoryStatus{
+						State: "SyncNeeded",
 						Conditions: []metav1.Condition{
 							{Type: "Ready", Status: metav1.ConditionFalse},
 						},
 					},
 				}
-				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("error"))
+				Expect(metrics.GetRepositoryStatus(repo)).To(Equal("SyncNeeded"))
 			})
 		})
 	})
@@ -260,7 +261,6 @@ var _ = Describe("Metrics", func() {
 
 		It("should have all metrics initialized", func() {
 			Expect(m.LayerStatusGauge).NotTo(BeNil())
-			Expect(m.LayerStateGauge).NotTo(BeNil())
 			Expect(m.LayersByStatus).NotTo(BeNil())
 			Expect(m.LayersByNamespace).NotTo(BeNil())
 			Expect(m.RepositoryStatusGauge).NotTo(BeNil())

@@ -25,7 +25,6 @@ Once configured, your metrics will be available at: `https://burrito-controllers
 
 !!! warning "Security Considerations"
     The metrics endpoint is exposed without authentication by default. When using ingress, consider:
-    
     - Restricting access via ingress controller authentication (basic auth, OAuth, etc.)
     - Using network policies to limit access to trusted IP ranges
     - Being aware that metrics may expose layer names, namespaces, and repository information
