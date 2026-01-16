@@ -341,6 +341,10 @@ controllers:
     command: ["burrito"]
     # -- Arguments to pass to the Burrito controller container
     args: ["controllers", "start"]
+    # -- Controller exposed ports
+    ports:
+    - name: http
+      containerPort: 8080
     # -- Controller liveness probe configuration
     livenessProbe:
       httpGet:
@@ -388,6 +392,23 @@ controllers:
     metadata:
       labels: {}
       annotations: {}
+    ports:
+      - name: http
+        port: 80
+        targetPort: http
+  ingress:
+    # -- Enable/Disable ingress creation for the Burrito controller
+    enabled: false
+    # -- Metadata configuration for the Burrito controller ingress
+    metadata:
+      labels: {}
+      annotations: {}
+    # -- Ingress class name to use for the Burrito controller ingress
+    ingressClassName: nginx
+    # -- Hostname for the Burrito controller ingress
+    host: burrito-controllers.example.com
+    # -- TLS configuration for the Burrito controller ingress
+    tls: []
 
 server:
   # -- Metadata configuration for the Burrito server

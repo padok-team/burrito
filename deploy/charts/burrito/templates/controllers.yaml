@@ -163,6 +163,33 @@ spec:
   selector:
     {{- toYaml .metadata.labels | nindent 4 }}
 {{- end }}
+{{- if .ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: burrito-controllers
+  {{- with mergeOverwrite (deepCopy .metadata) .ingress.metadata }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
+spec:
+  ingressClassName: {{ .ingress.ingressClassName }}
+  rules:
+    - host: {{ .ingress.host }}
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: burrito-controllers
+                port:
+                  name: http
+  tls:
+    {{- toYaml .ingress.tls | nindent 4 }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ServiceAccount

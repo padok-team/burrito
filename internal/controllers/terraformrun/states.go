@@ -7,6 +7,7 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	"github.com/padok-team/burrito/internal/lock"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -105,6 +106,9 @@ func (s *Initial) getHandler() Handler {
 			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for initial run", pod.Name))
+
+		metrics.RecordRunCreated(*run)
+
 		// Minimal time (1s) to transit from Initial state to Running state
 		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
 	}
@@ -186,6 +190,9 @@ func (s *Succeeded) getHandler() Handler {
 			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
+
+		metrics.RecordRunCompleted(*run)
+
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
 }
@@ -202,6 +209,9 @@ func (s *Failed) getHandler() Handler {
 			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
+
+		metrics.RecordRunFailed(*run)
+
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
 }
