@@ -20,15 +20,20 @@ type State interface {
 	getHandler() Handler
 }
 
-func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.TerraformLayer) (State, []metav1.Condition) {
+func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (State, []metav1.Condition) {
 	log := log.WithContext(ctx)
+
+	planApprovalRequired := configv1alpha1.GetPlanApprovalRequired(repository, layer)
+
 	c1, IsRunning := r.IsRunning(layer)
 	c2, IsLastPlanTooOld := r.IsLastPlanTooOld(layer)
 	c3, IsLastRelevantCommitPlanned := r.IsLastRelevantCommitPlanned(layer)
 	c4, HasLastPlanFailed := r.HasLastPlanFailed(layer)
 	c5, IsApplyUpToDate := r.IsApplyUpToDate(layer)
 	c6, IsSyncScheduled := r.IsSyncScheduled(layer)
-	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6}
+	c7, IsPlanApproved := r.IsPlanApproved(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6, c7}
+
 	switch {
 	case IsRunning:
 		log.Infof("layer %s is running, waiting for the run to finish", layer.Name)
@@ -40,8 +45,23 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 		log.Infof("layer %s has a sync scheduled, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
 	case !IsApplyUpToDate && !HasLastPlanFailed:
-		log.Infof("layer %s needs to be applied, creating a new run", layer.Name)
-		return &ApplyNeeded{}, conditions
+		if planApprovalRequired {
+			if IsPlanApproved {
+				// Approval required and granted, so apply plan
+				log.Infof("layer %s last plan is approved, creating a new run", layer.Name)
+				return &ApplyNeeded{}, conditions
+			}
+
+			// Plan not approved, so move to `PlanApprovalNeeded` state
+			log.Infof("layer %s needs to be approved before application", layer.Name)
+			return &PlanApprovalNeeded{}, conditions
+		} else {
+			log.Infof("layer %s needs to be applied, creating a new run", layer.Name)
+			return &ApplyNeeded{}, conditions
+		}
+	case IsApplyUpToDate:
+		log.Infof("layer %s has applied the latest plan", layer.Name)
+		return &Idle{}, conditions
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is not an intended behavior.", layer.Name)
 		return &Idle{}, conditions
@@ -83,20 +103,42 @@ func (s *PlanNeeded) getHandler() Handler {
 	}
 }
 
+type PlanApprovalNeeded struct{}
+
+func (s *PlanApprovalNeeded) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
+		log := log.WithContext(ctx)
+
+		// Check for sync windows that would block the apply action
+		if isActionBlocked(r, layer, repository, syncwindow.PlanAction) {
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
+
+		log.Infof("waiting for plan approval on layer %s", layer.Name)
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Waiting for plan approval")
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+	}
+}
+
 type ApplyNeeded struct{}
 
 func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
+
 		autoApply := configv1alpha1.GetAutoApplyEnabled(repository, layer)
-		if !autoApply {
-			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
+		planApprovalRequired := configv1alpha1.GetPlanApprovalRequired(repository, layer)
+
+		if !autoApply && !planApprovalRequired {
+			log.Infof("autoApply and planApprovalRequired is disabled for layer %s, no apply action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
+
 		// Check for sync windows that would block the apply action
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
+
 		revision, ok := layer.Annotations[annotations.LastRelevantCommit]
 		if !ok {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last relevant commit annotation, Apply run not created")
@@ -104,8 +146,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		run := r.getRun(layer, revision, ApplyAction)
-		err := r.Client.Create(ctx, &run)
-		if err != nil {
+		if err := r.Client.Create(ctx, &run); err != nil {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action")
 			log.Errorf("failed to create TerraformRun for Apply action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
