@@ -16,6 +16,7 @@ type StatusVariant =
   | 'warning'
   | 'error'
   | 'disabled'
+  | 'deleted'
   | 'apply-needed'
   | 'plan-needed'
   | 'running';
@@ -31,6 +32,7 @@ interface LayerCounts {
   total: number;
   ok: number;
   error: number;
+  deleted: number;
   running: number;
   applyNeeded: number;
   planNeeded: number;
@@ -49,6 +51,7 @@ const getVariantStyles = (
       theme === 'light'
         ? 'bg-nuances-200 text-nuances-400'
         : 'bg-nuances-400 text-nuances-50',
+    deleted: 'bg-purple-500 text-nuances-white',
     'apply-needed': 'bg-status-warning-default text-nuances-black',
     'plan-needed': 'bg-status-warning-default text-nuances-black',
     running: 'bg-blue-500 text-nuances-white'
@@ -69,6 +72,7 @@ const computeLayerCounts = (layers: Layer[]): LayerCounts => {
     total: layers.length,
     ok: 0,
     error: 0,
+    deleted: 0,
     running: 0,
     applyNeeded: 0,
     planNeeded: 0
@@ -85,6 +89,9 @@ const computeLayerCounts = (layers: Layer[]): LayerCounts => {
         break;
       case 'error':
         counts.error++;
+        break;
+      case 'deleted':
+        counts.deleted++;
         break;
       case 'warning':
         if (layer.lastResult?.toLowerCase().includes('apply')) {
@@ -110,7 +117,8 @@ const createCoreStatuses = (counts: LayerCounts): StatusItem[] => [
     count: counts.applyNeeded + counts.planNeeded,
     variant: 'warning'
   },
-  { label: 'Errors', count: counts.error, variant: 'error' }
+  { label: 'Errors', count: counts.error, variant: 'error' },
+  { label: 'Deleted', count: counts.deleted, variant: 'deleted' }
 ];
 
 const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {

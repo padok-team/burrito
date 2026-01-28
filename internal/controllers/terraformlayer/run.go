@@ -16,8 +16,9 @@ import (
 type Action string
 
 const (
-	PlanAction  Action = "plan"
-	ApplyAction Action = "apply"
+	PlanAction    Action = "plan"
+	ApplyAction   Action = "apply"
+	DestroyAction Action = "destroy"
 )
 
 func GetDefaultLabels(layer *configv1alpha1.TerraformLayer) map[string]string {
@@ -28,7 +29,7 @@ func GetDefaultLabels(layer *configv1alpha1.TerraformLayer) map[string]string {
 
 func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, revision string, action Action) configv1alpha1.TerraformRun {
 	artifact := configv1alpha1.Artifact{}
-	if action == ApplyAction {
+	if action == ApplyAction || action == "apply-destroy" {
 		run := strings.Split(layer.Annotations[annotations.LastPlanRun], "/")
 		artifact.Attempt = run[1]
 		artifact.Run = run[0]

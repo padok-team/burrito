@@ -44,6 +44,8 @@ type RunHistoryPolicy struct {
 
 type RemediationStrategy struct {
 	AutoApply                *bool                      `json:"autoApply,omitempty"`
+	AutoDestroy              *bool                      `json:"autoDestroy,omitempty"`
+	DeleteAfterDestroy       *bool                      `json:"deleteAfterDestroy,omitempty"`
 	ApplyWithoutPlanArtifact *bool                      `json:"applyWithoutPlanArtifact,omitempty"`
 	OnError                  OnErrorRemediationStrategy `json:"onError,omitempty"`
 }
@@ -136,6 +138,14 @@ func GetApplyWithoutPlanArtifactEnabled(repository *TerraformRepository, layer *
 
 func GetAutoApplyEnabled(repo *TerraformRepository, layer *TerraformLayer) bool {
 	return chooseBool(repo.Spec.RemediationStrategy.AutoApply, layer.Spec.RemediationStrategy.AutoApply, false)
+}
+
+func GetAutoDestroyEnabled(repo *TerraformRepository, layer *TerraformLayer) bool {
+	return chooseBool(repo.Spec.RemediationStrategy.AutoDestroy, layer.Spec.RemediationStrategy.AutoDestroy, false)
+}
+
+func GetDeleteAfterDestroyEnabled(repo *TerraformRepository, layer *TerraformLayer) bool {
+	return chooseBool(repo.Spec.RemediationStrategy.DeleteAfterDestroy, layer.Spec.RemediationStrategy.DeleteAfterDestroy, false)
 }
 
 func isEnabled(enabled *bool) bool {
