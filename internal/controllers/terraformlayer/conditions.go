@@ -329,8 +329,8 @@ func (r *Reconciler) IsDestroyApplyNeeded(t *configv1alpha1.TerraformLayer) (met
 		LastTransitionTime: metav1.NewTime(time.Now()),
 	}
 
-	// Check if the last run was a plan-destroy and it succeeded
-	if t.Status.LastRun.Action != "plan-destroy" {
+	// Check if the last run was a plan-destroy or a failed apply-destroy that needs retry
+	if t.Status.LastRun.Action != "plan-destroy" && t.Status.LastRun.Action != "apply-destroy" {
 		condition.Reason = "NoDestroyPlanAvailable"
 		condition.Message = "No destroy plan is available"
 		condition.Status = metav1.ConditionFalse

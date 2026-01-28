@@ -41,6 +41,9 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	case IsDestroyApplyNeeded:
 		log.Infof("layer %s has a destroy plan ready, checking if apply is needed", layer.Name)
 		return &DestroyApplyNeeded{}, conditions
+	case layer.Status.LastRun.Action == "plan-destroy" || layer.Status.LastRun.Action == "apply-destroy":
+		log.Infof("layer %s has an active destroy flow (last action: %s), waiting for destroy to complete", layer.Name, layer.Status.LastRun.Action)
+		return &Idle{}, conditions
 	case IsLastPlanTooOld || !IsLastRelevantCommitPlanned:
 		log.Infof("layer %s has an outdated plan, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
