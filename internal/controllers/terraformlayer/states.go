@@ -45,6 +45,9 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	case !IsApplyUpToDate && !HasLastPlanFailed && !LastApplyExhausted:
 		log.Infof("layer %s needs to be applied, creating a new run", layer.Name)
 		return &ApplyNeeded{}, conditions
+	case LastPlanExhausted || LastApplyExhausted:
+		log.Infof("layer %s has reached max retries for %s action, requires manual intervention", layer.Name, retryInfo.action)
+		return &MaxRetriesReached{}, conditions
 	default:
 		log.Infof("layer %s is in an unknown state, defaulting to idle. If this happens please file an issue, this is not an intended behavior.", layer.Name)
 		return &Idle{}, conditions
@@ -115,6 +118,16 @@ func (s *ApplyNeeded) getHandler() Handler {
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
+	}
+}
+
+type MaxRetriesReached struct{}
+
+func (s *MaxRetriesReached) getHandler() Handler {
+	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
+		// Layer has reached max retries and requires manual intervention
+		// Requeue with a longer interval since frequent checks won't help
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 	}
 }
 

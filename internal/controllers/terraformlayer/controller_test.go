@@ -613,8 +613,8 @@ var _ = Describe("Layer", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
-			It("should end in Idle state", func() {
-				Expect(layer.Status.State).To(Equal("Idle"))
+			It("should end in MaxRetriesReached state", func() {
+				Expect(layer.Status.State).To(Equal("MaxRetriesReached"))
 			})
 			It("should set RequeueAfter to DriftDetection", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
@@ -666,8 +666,8 @@ var _ = Describe("Layer", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
-			It("should end in Idle state", func() {
-				Expect(layer.Status.State).To(Equal("Idle"))
+			It("should end in MaxRetriesReached state", func() {
+				Expect(layer.Status.State).To(Equal("MaxRetriesReached"))
 			})
 			It("should set RequeueAfter to DriftDetection", func() {
 				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
