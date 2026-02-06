@@ -21,3 +21,48 @@ metadata:
   namespace: default
 status:
   state: "Running"
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-failed-exhausted-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: error-case-7
+    namespace: default
+    revision: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+status:
+  state: "Failed"
+  retries: 5
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-failed-exhausted-plan-old-rev
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: error-case-8
+    namespace: default
+    revision: old-revision-that-was-already-tried
+status:
+  state: "Failed"
+  retries: 5
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-failed-exhausted-apply
+  namespace: default
+spec:
+  action: apply
+  layer:
+    name: error-case-9
+    namespace: default
+    revision: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+status:
+  state: "Failed"
+  retries: 5

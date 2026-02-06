@@ -9,11 +9,17 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	terraformrun "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+type lastRunRetryInfo struct {
+	reachedLimit bool
+	action       string
+}
 
 func (r *Reconciler) IsRunning(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
 	condition := metav1.Condition{
@@ -267,6 +273,56 @@ func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.C
 	condition.Message = "No sync has been manually scheduled"
 	condition.Status = metav1.ConditionFalse
 	return condition, false
+}
+
+func (r *Reconciler) HasLastRunReachedRetryLimit(layer *configv1alpha1.TerraformLayer, repo *configv1alpha1.TerraformRepository) (metav1.Condition, lastRunRetryInfo) {
+	condition := metav1.Condition{
+		Type:               "HasLastRunReachedRetryLimit",
+		ObservedGeneration: layer.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	if layer.Status.LastRun.Name == "" {
+		condition.Reason = "NoRunYet"
+		condition.Message = "No run has been created for this layer yet"
+		condition.Status = metav1.ConditionFalse
+		return condition, lastRunRetryInfo{}
+	}
+	run := configv1alpha1.TerraformRun{}
+	err := r.Client.Get(context.TODO(), types.NamespacedName{
+		Namespace: layer.Namespace,
+		Name:      layer.Status.LastRun.Name,
+	}, &run)
+	if err != nil {
+		condition.Reason = "RunRetrievalError"
+		condition.Message = "Could not fetch the last run"
+		condition.Status = metav1.ConditionFalse
+		return condition, lastRunRetryInfo{}
+	}
+	if run.Status.State != "Failed" {
+		condition.Reason = "LastRunNotFailed"
+		condition.Message = "The last run has not failed"
+		condition.Status = metav1.ConditionFalse
+		return condition, lastRunRetryInfo{action: run.Spec.Action}
+	}
+	maxRetries := terraformrun.GetMaxRetries(r.Config.Controller.TerraformMaxRetries, repo, layer)
+	if run.Status.Retries < maxRetries {
+		condition.Reason = "RetryLimitNotReached"
+		condition.Message = "The last run has not reached the retry limit"
+		condition.Status = metav1.ConditionFalse
+		return condition, lastRunRetryInfo{action: run.Spec.Action}
+	}
+	currentRevision := layer.Annotations[annotations.LastRelevantCommit]
+	if currentRevision != "" && run.Spec.Layer.Revision != currentRevision {
+		condition.Reason = "NewRevisionAvailable"
+		condition.Message = "The last run reached retry limit but a new revision is available"
+		condition.Status = metav1.ConditionFalse
+		return condition, lastRunRetryInfo{action: run.Spec.Action}
+	}
+	condition.Reason = "HasReachedRetryLimit"
+	condition.Message = fmt.Sprintf("The last %s run has reached the retry limit (%d)", run.Spec.Action, maxRetries)
+	condition.Status = metav1.ConditionTrue
+	return condition, lastRunRetryInfo{reachedLimit: true, action: run.Spec.Action}
 }
 
 func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {

@@ -175,3 +175,84 @@ spec:
   terragrunt:
     enabled: true
     version: 0.45.4
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-7
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  7 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-sum: ""
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+spec:
+  branch: main
+  path: error-case-seven/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-failed-exhausted-plan
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-8
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  7 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-sum: ""
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+spec:
+  branch: main
+  path: error-case-eight/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-failed-exhausted-plan-old-rev
+    namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-9
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    runner.terraform.padok.cloud/plan-date: Mon May  8 11:15:53 UTC 2023
+    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+    runner.terraform.padok.cloud/apply-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    runner.terraform.padok.cloud/apply-date: Mon May  8 11:20:53 UTC 2023
+    runner.terraform.padok.cloud/apply-sum: ""
+    webhook.terraform.padok.cloud/relevant-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+spec:
+  branch: main
+  path: error-case-nine/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-failed-exhausted-apply
+    namespace: default
