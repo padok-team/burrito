@@ -265,18 +265,23 @@ func mergeResourceList(a, b corev1.ResourceList) map[corev1.ResourceName]resourc
 
 func mergeVolumeMounts(a, b []corev1.VolumeMount) []corev1.VolumeMount {
 	result := []corev1.VolumeMount{}
-	tempMap := map[string]corev1.VolumeMount{}
+	// Track which volume names are overridden by layer (b)
+	overriddenNames := make(map[string]bool)
 
-	for _, elt := range a {
-		tempMap[elt.Name] = elt
-	}
+	// Collect all volume names from layer (b)
 	for _, elt := range b {
-		tempMap[elt.Name] = elt
+		overriddenNames[elt.Name] = true
 	}
 
-	for _, v := range tempMap {
-		result = append(result, v)
+	// Add volume mounts from repo (a) that are not overridden
+	for _, elt := range a {
+		if !overriddenNames[elt.Name] {
+			result = append(result, elt)
+		}
 	}
+
+	// Add all volume mounts from layer (b)
+	result = append(result, b...)
 	return result
 }
 

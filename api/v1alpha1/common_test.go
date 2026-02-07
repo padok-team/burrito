@@ -1731,6 +1731,47 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			},
 		},
 		{
+			"MultipleVolumeMountsSameVolumeInLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						VolumeMounts: []corev1.VolumeMount{
+							{Name: "only-repo"},
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      "only-layer",
+								MountPath: "/layer/path1",
+							},
+							{
+								Name:      "only-layer",
+								MountPath: "/layer/path2",
+							},
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				VolumeMounts: []corev1.VolumeMount{
+					{Name: "only-repo"},
+					{
+						Name:      "only-layer",
+						MountPath: "/layer/path1",
+					},
+					{
+						Name:      "only-layer",
+						MountPath: "/layer/path2",
+					},
+				},
+			},
+		},
+		{
 			"MetadataOnlyInRepo",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
