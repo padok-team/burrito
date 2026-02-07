@@ -127,6 +127,7 @@ func (s *MaxRetriesReached) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		// Layer has reached max retries and requires manual intervention
 		// Requeue with a longer interval since frequent checks won't help
+		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has reached max retries for Plan or Apply action, check the status and logs of the last run")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 	}
 }
