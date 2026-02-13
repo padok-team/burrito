@@ -231,8 +231,9 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 ## Tool Versions
 KUSTOMIZE_VERSION ?= 5.7.1
 ## Update from https://github.com/kubernetes-sigs/controller-tools/releases
-CONTROLLER_TOOLS_VERSION ?= v0.19.0
-ENVTEST_VERSION ?= release-0.22
+CONTROLLER_TOOLS_VERSION ?= v0.20.0
+## Must follow the minor version of controller-runtime used in go.mod.
+ENVTEST_VERSION ?= release-0.23
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize

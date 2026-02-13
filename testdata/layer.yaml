@@ -1,0 +1,14 @@
+# terraform/main.tf
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: main-terraform
+  namespace: burrito-project
+spec:
+  branch: main
+  path: terraform/no-exist/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito-examples
+    namespace: burrito-project
