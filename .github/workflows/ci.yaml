@@ -14,6 +14,7 @@ on:
       - "go.mod"
       - "go.sum"
       - "Dockerfile"
+      - "internal/e2e/docker-compose.yml"
 
 permissions:
   packages: write

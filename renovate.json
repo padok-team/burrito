@@ -72,6 +72,20 @@
       ],
       "separateMajorMinor": false,
       "separateMultipleMajor": false
+    },
+    {
+      "groupName": "cloud storage libraries",
+      "groupSlug": "cloud-storage-libraries",
+      "matchDatasources": [
+        "go"
+      ],
+      "matchPackageNames": [
+        "cloud.google.com/go/**",
+        "github.com/aws/**",
+        "github.com/Azure/azure-sdk-for-go/**"
+      ],
+      "separateMajorMinor": false,
+      "separateMultipleMajor": false
     }
   ],
   "postUpdateOptions": [
