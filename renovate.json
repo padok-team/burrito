@@ -8,16 +8,16 @@
     ":automergeDigest",
     ":automergePatch"
   ],
+  "ignorePresets": [
+    ":semanticPrefixFixDepsChoreOthers"
+  ],
   "packageRules": [
     {
       "matchManagers": [
         "github-actions"
       ],
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch"
-      ],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
       "groupName": "GitHub Actions",
       "groupSlug": "github-actions",
       "labels": [
@@ -28,12 +28,8 @@
       "matchFileNames": [
         "internal/e2e/docker-compose.yml"
       ],
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch",
-        "digest"
-      ],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
       "groupName": "E2E Docker images",
       "groupSlug": "e2e-docker",
       "labels": [
@@ -44,12 +40,8 @@
       "matchManagers": [
         "dockerfile"
       ],
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch",
-        "digest"
-      ],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
       "pinDigests": true,
       "commitMessagePrefix": "chore(docker):",
       "groupName": "Docker images",
@@ -61,11 +53,6 @@
     {
       "matchFileNames": [
         "ui/**"
-      ],
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch"
       ],
       "groupName": "ui dependencies",
       "groupSlug": "ui-dependencies",
