@@ -2,8 +2,8 @@ apiVersion: v2
 name: burrito
 description: A Helm chart for handling a complete burrito deployment
 type: application
-version: 0.9.2
-appVersion: "v0.9.2"
+version: 0.10.0
+appVersion: "v0.10.0"
 home: https://docs.burrito.tf/
 icon: https://raw.githubusercontent.com/padok-team/burrito/refs/heads/main/docs/assets/icon/burrito.png
 sources:
