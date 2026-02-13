@@ -85,7 +85,8 @@
         "github.com/Azure/azure-sdk-for-go/**"
       ],
       "separateMajorMinor": false,
-      "separateMultipleMajor": false
+      "separateMultipleMajor": false,
+      "separateMinorPatch": false
     }
   ],
   "postUpdateOptions": [
