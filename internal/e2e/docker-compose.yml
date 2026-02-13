@@ -44,7 +44,7 @@ services:
       - ./scripts:/scripts
 
   burritotest-gcs:
-    image: fsouza/fake-gcs-server:1.52.3
+    image: fsouza/fake-gcs-server:1.53.1
     hostname: gcs    
     command:
       - -backend=memory
@@ -61,7 +61,7 @@ services:
       retries: 5
 
   burritotest-aws:
-    image: localstack/localstack:4.11.1
+    image: localstack/localstack:4.13.1
     hostname: localstack
     ports:
       - "4566:4566"
