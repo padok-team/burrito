@@ -15,7 +15,7 @@ type APIProvider struct {
 }
 
 func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {
-	id, err := strconv.Atoi(pr.Spec.ID)
+	id, err := strconv.ParseInt(pr.Spec.ID, 10, 64)
 	if err != nil {
 		log.Errorf("Error while parsing Gitlab merge request ID: %s", err)
 		return []string{}, err
@@ -49,7 +49,7 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 		log.Errorf("Error while generating comment: %s", err)
 		return err
 	}
-	id, err := strconv.Atoi(pr.Spec.ID)
+	id, err := strconv.ParseInt(pr.Spec.ID, 10, 64)
 	if err != nil {
 		log.Errorf("Error while parsing Gitlab merge request ID: %s", err)
 		return err
