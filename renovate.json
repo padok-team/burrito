@@ -4,33 +4,44 @@
     "config:recommended",
     ":label(renovate)",
     ":configMigration",
-    ":semanticPrefixFix",
-    ":separateMultipleMajorReleases",
+    ":semanticPrefixChore",
     ":automergeDigest",
     ":automergePatch"
   ],
   "packageRules": [
     {
-      "matchFileNames": [
-        "ui/**"
+      "matchManagers": [
+        "github-actions"
       ],
       "matchUpdateTypes": [
-        "*"
+        "major",
+        "minor",
+        "patch"
       ],
-      "groupName": "ui dependencies",
-      "groupSlug": "ui-dependencies",
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
       "labels": [
-        "ui"
+        "gha"
       ]
     },
     {
-      "matchUpdateTypes": [
-        "patch"
+      "matchFileNames": [
+        "internal/e2e/docker-compose.yml"
       ],
-      "groupName": "all patch dependencies",
-      "groupSlug": "all-patch",
-      "matchPackageNames": [
-        "*"
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "E2E Docker images",
+      "groupSlug": "e2e-docker",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "labels": [
+        "e2e"
       ]
     },
     {
@@ -38,13 +49,35 @@
         "dockerfile"
       ],
       "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
         "digest"
       ],
       "pinDigests": true,
       "commitMessagePrefix": "chore(docker):",
-      "commitMessageAction": "pin digests",
-      "groupName": "docker pin digests",
-      "groupSlug": "docker-all-digests"
+      "groupName": "Docker images",
+      "groupSlug": "docker-all",
+      "labels": [
+        "docker"
+      ]
+    },
+    {
+      "matchFileNames": [
+        "ui/**"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "groupName": "ui dependencies",
+      "groupSlug": "ui-dependencies",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "labels": [
+        "ui"
+      ]
     },
     {
       "groupName": "go github sdk",
