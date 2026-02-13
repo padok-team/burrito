@@ -21,7 +21,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/onsi/ginkgo/v2 v2.27.4
 	github.com/onsi/gomega v1.38.3
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	github.com/tofuutils/tenv/v4 v4.9.0
 	google.golang.org/api v0.257.0
