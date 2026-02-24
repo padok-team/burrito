@@ -83,6 +83,10 @@ func getRemoteReferenceName(ref string) plumbing.ReferenceName {
 }
 
 func (p *GitProvider) Bundle(ref string) ([]byte, error) {
+	return p.bundleWithRetry(ref, false)
+}
+
+func (p *GitProvider) bundleWithRetry(ref string, isRetry bool) ([]byte, error) {
 	// Clone repository if it doesn't exist
 	if p.gitRepository == nil {
 		if err := p.clone(); err != nil {
@@ -140,12 +144,15 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 		if err == git.NoErrAlreadyUpToDate {
 			log.Info("repository is already up-to-date")
 		} else {
-			log.Warnf("failed to pull latest changes for ref %s: %v, deleting local repository", reference.Name(), err)
+			if isRetry {
+				return nil, fmt.Errorf("failed to pull latest changes for ref %s after re-clone: %w", reference.Name(), err)
+			}
+			log.Warnf("failed to pull latest changes for ref %s: %v, deleting local repository and re-cloning", reference.Name(), err)
 			p.gitRepository = nil
 			if removeErr := os.RemoveAll(p.repositoryPath); removeErr != nil {
 				return nil, fmt.Errorf("failed to remove repository at %s: %w", p.repositoryPath, removeErr)
 			}
-			return nil, fmt.Errorf("failed to pull latest changes for ref %s: %w, likely because of force-push, next run will re-clone", reference.Name(), err)
+			return p.bundleWithRetry(ref, true)
 		}
 	}
 
