@@ -29,6 +29,8 @@ type layer struct {
 	IsPR             bool                   `json:"isPR"`
 	LatestRuns       []Run                  `json:"latestRuns"`
 	ManualSyncStatus utils.ManualSyncStatus `json:"manualSyncStatus"`
+	HasValidPlan     bool                   `json:"hasValidPlan"`
+	AutoApply        bool                   `json:"autoApply"`
 }
 
 type Run struct {
@@ -62,16 +64,31 @@ func (a *API) getLayersAndRuns() ([]configv1alpha1.TerraformLayer, map[string]co
 	return layers.Items, indexedRuns, err
 }
 
+func (a *API) getRepositories() (map[string]configv1alpha1.TerraformRepository, error) {
+	repositories := &configv1alpha1.TerraformRepositoryList{}
+	indexedRepositories := map[string]configv1alpha1.TerraformRepository{}
+	err := a.Client.List(context.Background(), repositories)
+	if err != nil {
+		log.Errorf("could not list TerraformRepositories: %s", err)
+		return nil, err
+	}
+	for _, repo := range repositories.Items {
+		indexedRepositories[fmt.Sprintf("%s/%s", repo.Namespace, repo.Name)] = repo
+	}
+	return indexedRepositories, nil
+}
+
 func (a *API) LayersHandler(c echo.Context) error {
 	layers, runs, err := a.getLayersAndRuns()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform layers or runs: %s", err))
 	}
+	repositories, err := a.getRepositories()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform repositories: %s", err))
+	}
 	results := []layer{}
 	for _, l := range layers {
-		if err != nil {
-			log.Errorf("could not get latest run for layer %s: %s", l.Name, err)
-		}
 		run, ok := runs[fmt.Sprintf("%s/%s", l.Namespace, l.Status.LastRun.Name)]
 		runAPI := Run{}
 		running := false
@@ -84,6 +101,15 @@ func (a *API) LayersHandler(c echo.Context) error {
 			}
 			running = runStillRunning(run)
 		}
+
+		// find repository for this layer to get AutoApply
+		repoKey := fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name)
+		repo, repoExists := repositories[repoKey]
+		autoApply := false
+		if repoExists {
+			autoApply = configv1alpha1.GetAutoApplyEnabled(&repo, &l)
+		}
+
 		results = append(results, layer{
 			UID:              string(l.UID),
 			Name:             l.Name,
@@ -99,7 +125,9 @@ func (a *API) LayersHandler(c echo.Context) error {
 			IsRunning:        running,
 			IsPR:             a.isLayerPR(l),
 			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
-			ManualSyncStatus: utils.GetManualSyncStatus(l),
+			ManualSyncStatus: getManualOperationStatus(l),
+			HasValidPlan:     hasValidPlan(l),
+			AutoApply:        autoApply,
 		})
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
@@ -156,4 +184,20 @@ func (a *API) isLayerPR(layer configv1alpha1.TerraformLayer) bool {
 		return false
 	}
 	return layer.OwnerReferences[0].Kind == "TerraformPullRequest"
+}
+
+func getManualOperationStatus(layer configv1alpha1.TerraformLayer) utils.ManualSyncStatus {
+	// Check apply status first, then sync status
+	applyStatus := utils.GetManualApplyStatus(layer)
+	if applyStatus != utils.ManualSyncNone {
+		return applyStatus
+	}
+	return utils.GetManualSyncStatus(layer)
+}
+
+func hasValidPlan(layer configv1alpha1.TerraformLayer) bool {
+	// A valid plan exists if LastPlanSum annotation exists and is not empty
+	// This matches the logic in HasLastPlanFailed condition
+	planSum, exists := layer.Annotations[annotations.LastPlanSum]
+	return exists && planSum != ""
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	utils "github.com/padok-team/burrito/internal/testing"
@@ -948,6 +949,53 @@ var _ = Describe("Layer", func() {
 				runs, err := getLinkedRuns(k8sClient, layer)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+		Describe("When a TerraformLayer has a manual apply scheduled with apply-now annotation", Ordered, func() {
+			var layer *configv1alpha1.TerraformLayer
+			var reconcileError error
+			var err error
+			var result reconcile.Result
+			var name types.NamespacedName
+
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "manual-apply-case-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+
+			It("should be in ApplyNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("ApplyNeeded"))
+			})
+
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+
+			It("should have created an apply TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(1))
+				Expect(runs.Items[0].Spec.Action).To(Equal("apply"))
+			})
+
+			It("should have removed the apply-now annotation", func() {
+				// The annotation should be removed by the IsApplyScheduled condition
+				updatedLayer := &configv1alpha1.TerraformLayer{}
+				err := k8sClient.Get(context.TODO(), name, updatedLayer)
+				Expect(err).NotTo(HaveOccurred())
+				_, exists := updatedLayer.Annotations[annotations.ApplyNow]
+				Expect(exists).To(BeFalse())
 			})
 		})
 	})

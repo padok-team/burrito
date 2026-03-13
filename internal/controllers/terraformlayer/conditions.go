@@ -10,7 +10,6 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	terraformrun "github.com/padok-team/burrito/internal/controllers/terraformrun"
-	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -262,11 +261,6 @@ func (r *Reconciler) IsSyncScheduled(t *configv1alpha1.TerraformLayer) (metav1.C
 		condition.Reason = "SyncScheduled"
 		condition.Message = "A sync has been manually scheduled"
 		condition.Status = metav1.ConditionTrue
-		// Remove the annotation to avoid running the sync again
-		err := annotations.Remove(context.Background(), r.Client, t, annotations.SyncNow)
-		if err != nil {
-			log.Errorf("Failed to remove annotation %s from layer %s: %s", annotations.SyncNow, t.Name, err)
-		}
 		return condition, true
 	}
 	condition.Reason = "NoSyncScheduled"
@@ -323,6 +317,26 @@ func (r *Reconciler) HasLastRunReachedRetryLimit(layer *configv1alpha1.Terraform
 	condition.Message = fmt.Sprintf("The last %s run has reached the retry limit (%d)", run.Spec.Action, maxRetries)
 	condition.Status = metav1.ConditionTrue
 	return condition, lastRunRetryInfo{reachedLimit: true, action: run.Spec.Action}
+}
+
+func (r *Reconciler) IsApplyScheduled(t *configv1alpha1.TerraformLayer) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsApplyScheduled",
+		ObservedGeneration: t.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	// check if annotations.ApplyNow is present
+	if _, ok := t.Annotations[annotations.ApplyNow]; ok {
+		condition.Reason = "ApplyScheduled"
+		condition.Message = "An apply has been manually scheduled"
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	condition.Reason = "NoApplyScheduled"
+	condition.Message = "No apply has been manually scheduled"
+	condition.Status = metav1.ConditionFalse
+	return condition, false
 }
 
 func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []string) bool {

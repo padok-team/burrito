@@ -29,7 +29,8 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 	c5, IsApplyUpToDate := r.IsApplyUpToDate(layer)
 	c6, IsSyncScheduled := r.IsSyncScheduled(layer)
 	c7, retryInfo := r.HasLastRunReachedRetryLimit(layer, repo)
-	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6, c7}
+	c8, IsApplyScheduled := r.IsApplyScheduled(layer)
+	conditions := []metav1.Condition{c1, c2, c3, c4, c5, c6, c7, c8}
 	LastPlanExhausted := retryInfo.reachedLimit && retryInfo.action == string(PlanAction)
 	LastApplyExhausted := retryInfo.reachedLimit && retryInfo.action == string(ApplyAction)
 	switch {
@@ -38,13 +39,24 @@ func (r *Reconciler) GetState(ctx context.Context, layer *configv1alpha1.Terrafo
 		return &Idle{}, conditions
 	case IsSyncScheduled:
 		log.Infof("layer %s has a sync scheduled, creating a new run", layer.Name)
+		// Remove annotation only when we actually act on it
+		if err := annotations.Remove(ctx, r.Client, layer, annotations.SyncNow); err != nil {
+			log.Errorf("failed to remove annotation %s from layer %s: %s", annotations.SyncNow, layer.Name, err)
+		}
 		return &PlanNeeded{}, conditions
+	case IsApplyScheduled:
+		log.Infof("layer %s has a manual apply scheduled, creating a new apply run", layer.Name)
+		// Remove annotation only when we actually act on it
+		if err := annotations.Remove(ctx, r.Client, layer, annotations.ApplyNow); err != nil {
+			log.Errorf("failed to remove annotation %s from layer %s: %s", annotations.ApplyNow, layer.Name, err)
+		}
+		return &ApplyNeeded{isManual: true}, conditions
 	case (IsLastPlanTooOld || !IsLastRelevantCommitPlanned) && !LastPlanExhausted:
 		log.Infof("layer %s has an outdated plan, creating a new run", layer.Name)
 		return &PlanNeeded{}, conditions
 	case !IsApplyUpToDate && !HasLastPlanFailed && !LastApplyExhausted:
 		log.Infof("layer %s needs to be applied, creating a new run", layer.Name)
-		return &ApplyNeeded{}, conditions
+		return &ApplyNeeded{isManual: false}, conditions
 	case LastPlanExhausted || LastApplyExhausted:
 		log.Infof("layer %s has reached max retries for %s action, requires manual intervention", layer.Name, retryInfo.action)
 		return &MaxRetriesReached{}, conditions
@@ -89,15 +101,20 @@ func (s *PlanNeeded) getHandler() Handler {
 	}
 }
 
-type ApplyNeeded struct{}
+type ApplyNeeded struct {
+	isManual bool
+}
 
 func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
-		autoApply := configv1alpha1.GetAutoApplyEnabled(repository, layer)
-		if !autoApply {
-			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+		// Check autoApply only for non-manual applies
+		if !s.isManual {
+			autoApply := configv1alpha1.GetAutoApplyEnabled(repository, layer)
+			if !autoApply {
+				log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
+				return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+			}
 		}
 		// Check for sync windows that would block the apply action
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
