@@ -13,10 +13,10 @@ If the field is specified for a given `TerraformLayer` it will take precedence o
 Available overrides are:
 
 |         Fields         |
-|:----------------------:|
+| :--------------------: |
 |       `Affinity`       |
 |         `Args`         |
-|       `Command`       |
+|       `Command`        |
 |   `ImagePullSecrets`   |
 |        `Image`         |
 |    `InitContainers`    |
