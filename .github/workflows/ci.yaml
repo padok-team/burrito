@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Setup mise
+        uses: jdx/mise-action@v3
       - name: Cache envtest binaries
         uses: actions/cache@v5
         with:
@@ -36,10 +38,8 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
-      - name: Install envtest
-        run: make envtest
       - name: Setup envtest
-        run: ./bin/setup-envtest use
+        run: setup-envtest use
       - name: Set up Docker Buildx for docker compose
         uses: docker/setup-buildx-action@v3
       - name: Run tests
@@ -55,6 +55,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Setup mise
+        uses: jdx/mise-action@v2
       - name: Setup Golang
         uses: actions/setup-go@v6
         with:

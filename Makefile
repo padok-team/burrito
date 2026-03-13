@@ -58,6 +58,14 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+# mise-exec wrapper for mise-managed tools
+CONTROLLER_GEN := mise exec controller-gen -- controller-gen
+HELM           := mise exec helm -- helm
+KIND           := mise exec kind -- kind
+KUBECTL        := mise exec kubectl -- kubectl
+KUSTOMIZE      := mise exec kustomize -- kustomize
+SETUP_ENVTEST  := mise exec setup-envtest -- setup-envtest
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
@@ -86,7 +94,7 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen kustomize ## Generate CustomResourceDefinition objects and plain manifest for installing Burrito. For generating Webhook and ClusterRole, add `rbac:roleName=manager-role crd` to the controller-gen command.
+manifests: ## Generate CustomResourceDefinition objects and plain manifest for installing Burrito. For generating Webhook and ClusterRole, add `rbac:roleName=manager-role crd` to the controller-gen command.
 	$(CONTROLLER_GEN) crd paths="./..." output:crd:dir=manifests/crds
 	echo "# This is an auto-generated file. DO NOT EDIT" > manifests/install.yaml
 	$(KUSTOMIZE) build manifests/cluster-install >> manifests/install.yaml
@@ -99,7 +107,7 @@ manifests: controller-gen kustomize ## Generate CustomResourceDefinition objects
 	done
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
@@ -119,21 +127,21 @@ clean-compose: ## Run docker-compose down.
 	docker compose -f internal/e2e/docker-compose.yml down --remove-orphans --volumes
 
 .PHONY: test
-test: manifests generate fmt vet envtest compose ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+test: manifests generate fmt vet compose ## Run tests.
+	KUBEBUILDER_ASSETS="$(shell $(SETUP_ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 	$(MAKE) clean-compose
 
 NEW_VERSION := $(shell date +%s)
 
 # Common function for helm upgrades
 define upgrade-helm-common
-	helm upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/$(1) -n burrito-system --create-namespace burrito-system deploy/charts/burrito
+	$(HELM) upgrade --install -f deploy/charts/burrito/values.yaml -f deploy/charts/burrito/$(1) -n burrito-system --create-namespace burrito-system deploy/charts/burrito
 endef
 
 # Common function for kind upgrades
 define upgrade-kind-common
 	docker buildx build --tag burrito:$(NEW_VERSION) --build-arg VERSION=${NEW_VERSION} --load $(2) .
-	kind load docker-image burrito:$(NEW_VERSION)
+	$(KIND) load docker-image burrito:$(NEW_VERSION)
 	yq e '.global.deployment.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/$(1)
 	yq e '.config.burrito.runner.image.tag = "$(NEW_VERSION)"' -i deploy/charts/burrito/$(1)
 	$(call upgrade-helm-common,$(1))
@@ -200,59 +208,32 @@ ifndef ignore-not-found
 endif
 
 .PHONY: install
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+install: manifests ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
 
 .PHONY: uninstall
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+uninstall: manifests ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Build Dependencies
 
-## Location to install dependencies to
+## Location to store setup-envtest Kubernetes binaries
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
-## Tool Binaries
-KUSTOMIZE ?= $(LOCALBIN)/kustomize
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-ENVTEST ?= $(LOCALBIN)/setup-envtest
-
-## Tool Versions
-KUSTOMIZE_VERSION ?= 5.7.1
-## Update from https://github.com/kubernetes-sigs/controller-tools/releases
-CONTROLLER_TOOLS_VERSION ?= v0.20.0
-## Must follow the minor version of controller-runtime used in go.mod.
-ENVTEST_VERSION ?= release-0.23
-
-KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
-.PHONY: kustomize
-kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
-$(KUSTOMIZE): $(LOCALBIN)
-	test -s $(LOCALBIN)/kustomize || { curl -Ss $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
-
-.PHONY: controller-gen
-controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
-$(CONTROLLER_GEN): $(LOCALBIN)
-	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
-
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)
 
 .PHONY: bundle
-bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
+bundle: manifests ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle $(BUNDLE_GEN_FLAGS)
