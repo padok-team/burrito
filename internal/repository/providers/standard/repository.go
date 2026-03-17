@@ -130,8 +130,9 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 
 	// Pull latest changes
 	pullOpts := &git.PullOptions{
-		Auth:       p.AuthMethod,
-		RemoteName: remote,
+		Auth:          p.AuthMethod,
+		RemoteName:    remote,
+		ReferenceName: reference.Name(),
 	}
 
 	log.Infof("pulling latest changes for repo %s on branch %s", p.RepoURL, reference.Name())
