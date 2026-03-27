@@ -1,0 +1,11 @@
+[tool_alias]
+controller-gen = 'github:kubernetes-sigs/controller-tools'
+setup-envtest = 'github:kubernetes-sigs/controller-runtime'
+
+[tools]
+controller-gen = "0.20.0"
+helm = "4.1.1"
+kind = "0.31.0"
+kubectl = "1.35.1"
+kustomize = "5.7.1"
+setup-envtest = "0.23.1"
