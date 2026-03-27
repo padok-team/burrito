@@ -19,17 +19,17 @@ jobs:
     name: Build UI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: "${{ env.NODE_VERSION }}"
       - name: Run install
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: install
           dir: ui
       - name: Run build
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: build
           dir: ui
@@ -38,22 +38,22 @@ jobs:
     name: Lint TS
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: "${{ env.NODE_VERSION }}"
       - name: Run install
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: install
           dir: ui
       - name: Run eslint
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: lint
           dir: ui
       - name: Run prettier
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: format-check
           dir: ui
