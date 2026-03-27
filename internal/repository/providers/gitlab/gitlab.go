@@ -16,7 +16,7 @@ import (
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 type Gitlab struct {
