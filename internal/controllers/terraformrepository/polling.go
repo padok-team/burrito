@@ -9,14 +9,14 @@ import (
 
 // Returns the list of layers that are managed by this repository
 func (r *Reconciler) retrieveManagedLayers(ctx context.Context, repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformLayer, error) {
-	// get all layers that depends on the repository (layer.spec.repository.name == repository.name)
+	// get all layers that depends on the repository (layer.spec.repository.name == repository.name && layer.spec.repository.namespace == repository.namespace)
 	layers := &configv1alpha1.TerraformLayerList{}
 	if err := r.List(ctx, layers); err != nil {
 		return nil, err
 	}
 	managedLayers := []configv1alpha1.TerraformLayer{}
 	for _, layer := range layers.Items {
-		if layer.Spec.Repository.Name == repository.Name {
+		if layer.Spec.Repository.Name == repository.Name && layer.Spec.Repository.Namespace == repository.Namespace {
 			managedLayers = append(managedLayers, layer)
 		}
 	}
