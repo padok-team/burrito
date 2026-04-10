@@ -19,7 +19,7 @@
       "pinDigests": true,
       "groupName": "GitHub Actions",
       "groupSlug": "github-actions",
-      "labels": [
+      "addLabels": [
         "gha"
       ]
     },
@@ -31,7 +31,7 @@
       "separateMinorPatch": false,
       "groupName": "E2E Docker images",
       "groupSlug": "e2e-docker",
-      "labels": [
+      "addLabels": [
         "e2e"
       ]
     },
@@ -45,7 +45,7 @@
       "commitMessagePrefix": "chore(docker):",
       "groupName": "Docker images",
       "groupSlug": "docker-all",
-      "labels": [
+      "addLabels": [
         "docker"
       ]
     },
@@ -55,7 +55,7 @@
       ],
       "groupName": "ui dependencies",
       "groupSlug": "ui-dependencies",
-      "labels": [
+      "addLabels": [
         "ui"
       ]
     },
