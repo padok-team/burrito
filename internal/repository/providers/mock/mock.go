@@ -40,7 +40,9 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 	if p.testfail() {
 		return nil, errors.New("mock provider: clone failed")
 	}
-	return make([]byte, 1), nil
+	// Return a unique bundle per namespace/repo/ref so tests can verify isolation
+	content := fmt.Sprintf("bundle:%s/%s/%s", p.repository.Namespace, p.repository.Name, ref)
+	return []byte(content), nil
 }
 
 func (p *GitProvider) GetChanges(previousCommit, currentCommit string) []string {

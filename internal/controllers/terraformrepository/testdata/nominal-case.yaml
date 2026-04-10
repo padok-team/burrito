@@ -310,3 +310,62 @@ spec:
   repository:
     name: repo-sync-now-old
     namespace: default
+---
+# Two repositories with the same name "provisioning" in different namespaces
+# Each has a layer that should only be managed by its own namespace's repo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-a
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: namespace-b
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: provisioning
+  namespace: namespace-a
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: provisioning
+  namespace: namespace-b
+spec:
+  repository:
+    url: https://github.com/padok-team/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-ns-a
+  namespace: namespace-a
+spec:
+  branch: main
+  path: layer/
+  repository:
+    name: provisioning
+    namespace: namespace-a
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: layer-ns-b
+  namespace: namespace-b
+spec:
+  branch: main
+  path: layer/
+  repository:
+    name: provisioning
+    namespace: namespace-b

@@ -838,6 +838,98 @@ var _ = Describe("Run", func() {
 			})
 		})
 	})
+	Describe("Namespace Isolation", func() {
+		Describe("When two repositories have the same name in different namespaces", Ordered, func() {
+			BeforeAll(func() {
+				// Reconcile repo in namespace-a
+				name = types.NamespacedName{
+					Name:      "provisioning",
+					Namespace: "namespace-a",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should annotate the layer in namespace-a", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "layer-ns-a",
+					Namespace: "namespace-a",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("main")))
+			})
+			It("should NOT annotate the layer in namespace-b", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "layer-ns-b",
+					Namespace: "namespace-b",
+				}, layer)).To(Succeed())
+				_, hasBranchCommit := layer.Annotations[annotations.LastBranchCommit]
+				Expect(hasBranchCommit).To(BeFalse(), "layer in namespace-b should not be annotated by repo in namespace-a")
+			})
+			It("should only store the bundle for namespace-a", func() {
+				check, err := reconciler.Datastore.CheckGitBundle("namespace-a", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeTrue(), "bundle should exist for namespace-a")
+
+				check, err = reconciler.Datastore.CheckGitBundle("namespace-b", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(check).To(BeFalse(), "bundle should NOT exist for namespace-b yet")
+			})
+			It("should be able to retrieve the bundle for namespace-a", func() {
+				bundle, err := reconciler.Datastore.GetGitBundle("namespace-a", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(bundle)).To(Equal("bundle:namespace-a/provisioning/main"))
+			})
+			It("should NOT be able to retrieve a bundle for namespace-b", func() {
+				_, err := reconciler.Datastore.GetGitBundle("namespace-b", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).To(HaveOccurred())
+			})
+		})
+		Describe("When reconciling the second repository in namespace-b", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "provisioning",
+					Namespace: "namespace-b",
+				}
+				result, repo, reconcileError, err = getResult(name)
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should annotate the layer in namespace-b", func() {
+				layer := &configv1alpha1.TerraformLayer{}
+				Expect(k8sClient.Get(context.TODO(), types.NamespacedName{
+					Name:      "layer-ns-b",
+					Namespace: "namespace-b",
+				}, layer)).To(Succeed())
+				Expect(layer.Annotations).To(HaveKeyWithValue(annotations.LastBranchCommit, mock.GetMockRevision("main")))
+			})
+			It("should now have bundles for both namespaces", func() {
+				checkA, err := reconciler.Datastore.CheckGitBundle("namespace-a", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(checkA).To(BeTrue())
+
+				checkB, err := reconciler.Datastore.CheckGitBundle("namespace-b", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(checkB).To(BeTrue())
+			})
+			It("should be able to retrieve bundles for both namespaces independently", func() {
+				bundleA, err := reconciler.Datastore.GetGitBundle("namespace-a", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(bundleA)).To(Equal("bundle:namespace-a/provisioning/main"))
+
+				bundleB, err := reconciler.Datastore.GetGitBundle("namespace-b", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(bundleB)).To(Equal("bundle:namespace-b/provisioning/main"))
+			})
+			It("should not return a bundle for a non-existent namespace", func() {
+				_, err := reconciler.Datastore.GetGitBundle("namespace-c", "provisioning", "main", mock.GetMockRevision("main"))
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
 })
 
 var _ = AfterSuite(func() {
