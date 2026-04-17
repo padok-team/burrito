@@ -5,7 +5,7 @@ import (
 	"html"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	repo "github.com/padok-team/burrito/internal/repository"
 	"github.com/padok-team/burrito/internal/repository/credentials"

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/labstack/gommon/log"
 )
 
