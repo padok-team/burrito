@@ -62,7 +62,7 @@ Follow these steps to install a minimal working configuration of Burrito on a Ki
 
     ```bash
     helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
-        --version v1.19.1 \
+        --version v1.20.2 \
         --namespace cert-manager \
         --create-namespace \
         --set crds.enabled=true
