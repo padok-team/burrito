@@ -4,12 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Mock struct{}
@@ -96,9 +99,37 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 	return allChangedFiles, nil
 }
 
-func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {
+func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {
 	log.Infof("Mock provider comment posted")
 	return nil
+}
+
+func (api *APIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
+	log.Infof("Mock provider listing open pull requests for %s/%s", repository.Namespace, repository.Name)
+	if !strings.Contains(repository.Spec.Repository.Url, "burrito-sync") {
+		return []configv1alpha1.TerraformPullRequest{}, nil
+	}
+
+	return []configv1alpha1.TerraformPullRequest{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fmt.Sprintf("%s-%s", repository.Name, "9001"),
+				Namespace: repository.Namespace,
+				Annotations: map[string]string{
+					annotations.LastBranchCommit: "mock-remote-commit",
+				},
+			},
+			Spec: configv1alpha1.TerraformPullRequestSpec{
+				Branch: "feature-sync",
+				Base:   "main",
+				ID:     "9001",
+				Repository: configv1alpha1.TerraformLayerRepository{
+					Name:      repository.Name,
+					Namespace: repository.Namespace,
+				},
+			},
+		},
+	}, nil
 }
 
 type WebhookProvider struct{}

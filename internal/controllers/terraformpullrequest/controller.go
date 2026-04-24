@@ -18,6 +18,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	logrus "github.com/sirupsen/logrus"
+
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 
@@ -41,29 +43,34 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.WithContext(ctx)
-	log.Infof("starting reconciliation for pull request %s/%s ...", req.Namespace, req.Name)
+	logger := logrus.WithContext(ctx)
+	logger.Infof("starting reconciliation for pull request %s/%s ...", req.Namespace, req.Name)
 	pr := &configv1alpha1.TerraformPullRequest{}
 	err := r.Client.Get(ctx, req.NamespacedName, pr)
 	if errors.IsNotFound(err) {
-		log.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
+		logger.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Errorf("failed to get TerraformPullRequest: %s", err)
+		logger.Errorf("failed to get TerraformPullRequest: %s", err)
 		return ctrl.Result{}, err
 	}
+	return r.reconcilePullRequest(ctx, pr)
+}
+
+func (r *Reconciler) reconcilePullRequest(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) (ctrl.Result, error) {
+	logger := logrus.WithContext(ctx)
 	repository := &configv1alpha1.TerraformRepository{}
-	err = r.Client.Get(ctx, types.NamespacedName{
+	err := r.Client.Get(ctx, types.NamespacedName{
 		Name:      pr.Spec.Repository.Name,
 		Namespace: pr.Spec.Repository.Namespace,
 	}, repository)
 	if errors.IsNotFound(err) {
-		log.Errorf("repository not found. object must not be configured correctly: %s", err)
+		logger.Errorf("repository not found. object must not be configured correctly: %s", err)
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Errorf("failed to get TerraformRepository: %s", err)
+		logger.Errorf("failed to get TerraformRepository: %s", err)
 		return ctrl.Result{}, err
 	}
 
@@ -73,9 +80,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	err = r.Client.Status().Update(ctx, pr)
 	if err != nil {
 		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Could not update pull request status")
-		log.Errorf("could not update pull request %s status: %s", pr.Name, err)
+		logger.Errorf("could not update pull request %s status: %s", pr.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
-	log.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)
+	logger.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)
 	return result, nil
 }
 

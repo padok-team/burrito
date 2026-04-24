@@ -2,6 +2,8 @@ package terraformpullrequest
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"slices"
 
@@ -15,6 +17,12 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	repo "github.com/padok-team/burrito/internal/repository"
+	logrus "github.com/sirupsen/logrus"
+)
+
+const (
+	managedByLabel              = "burrito/managed-by"
+	maxGenerateNamePrefixLength = 240
 )
 
 func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
@@ -71,7 +79,7 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 		new := configv1alpha1.TerraformLayer{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:    layer.ObjectMeta.Namespace,
-				GenerateName: fmt.Sprintf("%s-pr-%s-", layer.Name, pr.Spec.ID),
+				GenerateName: tempLayerGenerateName(layer.Name, pr),
 				Annotations: map[string]string{
 					annotations.LastBranchCommit:   pr.Annotations[annotations.LastBranchCommit],
 					annotations.LastRelevantCommit: pr.Annotations[annotations.LastBranchCommit],
@@ -85,7 +93,7 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 					},
 				},
 				Labels: map[string]string{
-					"burrito/managed-by": pr.Name,
+					managedByLabel: managedByLabelValue(pr),
 				},
 			},
 			Spec: configv1alpha1.TerraformLayerSpec{
@@ -108,8 +116,32 @@ func generateTempLayers(pr *configv1alpha1.TerraformPullRequest, layers []config
 }
 
 func GetLinkedLayers(cl client.Client, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
+	return getLinkedLayersForLabels(cl, pr, managedByLabelValue(pr), pr.Name)
+}
+
+func getLinkedLayersForLabels(cl client.Client, pr *configv1alpha1.TerraformPullRequest, labelValues ...string) ([]configv1alpha1.TerraformLayer, error) {
+	linkedLayers := []configv1alpha1.TerraformLayer{}
+	seen := map[string]struct{}{}
+	for _, labelValue := range labelValues {
+		layers, err := getLinkedLayersForLabel(cl, labelValue)
+		if err != nil {
+			return nil, err
+		}
+		for _, layer := range layers {
+			key := fmt.Sprintf("%s/%s", layer.Namespace, layer.Name)
+			if _, ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = struct{}{}
+			linkedLayers = append(linkedLayers, layer)
+		}
+	}
+	return linkedLayers, nil
+}
+
+func getLinkedLayersForLabel(cl client.Client, labelValue string) ([]configv1alpha1.TerraformLayer, error) {
 	layers := configv1alpha1.TerraformLayerList{}
-	requirement, err := labels.NewRequirement("burrito/managed-by", selection.Equals, []string{pr.Name})
+	requirement, err := labels.NewRequirement(managedByLabel, selection.Equals, []string{labelValue})
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +154,36 @@ func GetLinkedLayers(cl client.Client, pr *configv1alpha1.TerraformPullRequest) 
 }
 
 func (r *Reconciler) deleteTempLayers(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) error {
-	log.Infof("deleting temporary layers for pull request %s/%s", pr.Namespace, pr.Name)
+	logrus.Infof("deleting temporary layers for pull request %s/%s", pr.Namespace, pr.Name)
+	if err := r.deleteTempLayersByLabel(ctx, pr, managedByLabelValue(pr)); err != nil {
+		return err
+	}
+	// Keep deleting the legacy label value so upgrades clean up old temp layers.
+	return r.deleteTempLayersByLabel(ctx, pr, pr.Name)
+}
+
+func (r *Reconciler) deleteTempLayersByLabel(ctx context.Context, pr *configv1alpha1.TerraformPullRequest, labelValue string) error {
 	return r.Client.DeleteAllOf(
-		ctx, &configv1alpha1.TerraformLayer{}, client.InNamespace(pr.Namespace), client.MatchingLabels{"burrito/managed-by": pr.Name},
+		ctx, &configv1alpha1.TerraformLayer{}, client.InNamespace(pr.Namespace), client.MatchingLabels{managedByLabel: labelValue},
 	)
+}
+
+func tempLayerGenerateName(layerName string, pr *configv1alpha1.TerraformPullRequest) string {
+	hash := shortHash(fmt.Sprintf("%s/%s/%s", pr.Namespace, pr.Name, pr.Spec.ID))
+	prefix := fmt.Sprintf("%s-pr-%s-", layerName, hash)
+	if len(prefix) <= maxGenerateNamePrefixLength {
+		return prefix
+	}
+	return prefix[:maxGenerateNamePrefixLength]
+}
+
+func managedByLabelValue(pr *configv1alpha1.TerraformPullRequest) string {
+	// Kubernetes label values max out at 63 chars; a stable hash keeps long PR
+	// names valid while still linking generated layers back to the same PR.
+	return fmt.Sprintf("pr-%s", shortHash(fmt.Sprintf("%s/%s", pr.Namespace, pr.Name)))
+}
+
+func shortHash(value string) string {
+	sum := sha256.Sum256([]byte(value))
+	return hex.EncodeToString(sum[:])[:16]
 }
