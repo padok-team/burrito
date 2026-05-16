@@ -11,7 +11,6 @@ import (
 	layerCtrl "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	repo "github.com/padok-team/burrito/internal/repository"
 	"github.com/padok-team/burrito/internal/repository/types"
-	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
