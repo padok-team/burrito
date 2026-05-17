@@ -8,7 +8,6 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	repo "github.com/padok-team/burrito/internal/repository"
-	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
