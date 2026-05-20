@@ -80,7 +80,7 @@ func (s *PlanNeeded) getHandler() Handler {
 		run := r.getRun(layer, revision, PlanAction)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
-			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Plan action")
+			r.Recorder.Eventf(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Plan action: %s", err)
 			log.Errorf("failed to create TerraformRun for Plan action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
@@ -112,7 +112,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 		run := r.getRun(layer, revision, ApplyAction)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
-			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action")
+			r.Recorder.Eventf(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action: %s", err)
 			log.Errorf("failed to create TerraformRun for Apply action on layer %s: %s", layer.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
