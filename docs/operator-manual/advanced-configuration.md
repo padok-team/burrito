@@ -37,3 +37,36 @@ Currently, runners' configuration is not exposed.
 
 !!! info
     You can override some of the runner's pod spec. See [override the runner pod spec](../user-guide/override-runner.md) documentation.
+
+## Recommended environment variables for runner pods
+
+Burrito's runner pods use [`tenv`](https://github.com/tofuutils/tenv) to download Terraform, Terragrunt or OpenTofu binaries on demand. By default, `tenv` reaches GitHub's public API to discover versions, which is subject to a low unauthenticated rate limit (about 60 requests per hour per source IP).
+
+For production or high-scale deployments where many runner pods may launch in a short window, it is **strongly recommended** to set `TENV_GITHUB_TOKEN` on the runner pods so that `tenv` makes authenticated requests to GitHub and is subject to the much higher authenticated rate limit.
+
+Create a GitHub token with no specific permissions (a fine-grained personal access token with no repository or account access is sufficient — `tenv` only reads public release metadata), store it in a Kubernetes `Secret`, and reference it from the `overrideRunnerSpec` on your `TerraformRepository` (or `TerraformLayer`):
+
+```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repo
+  namespace: burrito
+spec:
+  repository:
+    url: https://github.com/<org>/<repo>
+  terraform:
+    enabled: true
+  overrideRunnerSpec:
+    env:
+      - name: TENV_GITHUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: tenv-github-token
+            key: token
+```
+
+The same variable is already documented for local development setups in [Contributing → Advanced Settings](../contributing.md#advanced-settings); the snippet above is the production-shaped equivalent (Secret reference rather than an inline value).
+
+!!! tip
+    Apply the override on the `TerraformRepository` so that every linked `TerraformLayer` inherits it, instead of repeating the setting on each layer. See [override the runner pod spec](../user-guide/override-runner.md) for the merge rules.

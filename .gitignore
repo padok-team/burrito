@@ -41,5 +41,13 @@ test.out/*
 env/
 venv/
 
+# secrets / credentials
+.env.*
+*.key
+*.pem
+secrets/
+credentials/
+.aws/
+
 test-repo/
 TIltfile
