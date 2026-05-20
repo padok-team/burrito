@@ -1075,6 +1075,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#recommended-environment-variables-for-runner-pods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended environment variables for runner pods
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1682,6 +1693,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#recommended-environment-variables-for-runner-pods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended environment variables for runner pods
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1813,6 +1835,33 @@ They can be set in the Helm chart <a href="https://github.com/padok-team/burrito
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>You can override some of the runner's pod spec. See <a href="../../user-guide/override-runner/">override the runner pod spec</a> documentation.</p>
+</div>
+<h2 id="recommended-environment-variables-for-runner-pods">Recommended environment variables for runner pods<a class="headerlink" href="#recommended-environment-variables-for-runner-pods" title="Permanent link">&para;</a></h2>
+<p>Burrito's runner pods use <a href="https://github.com/tofuutils/tenv"><code>tenv</code></a> to download Terraform, Terragrunt or OpenTofu binaries on demand. By default, <code>tenv</code> reaches GitHub's public API to discover versions, which is subject to a low unauthenticated rate limit (about 60 requests per hour per source IP).</p>
+<p>For production or high-scale deployments where many runner pods may launch in a short window, it is <strong>strongly recommended</strong> to set <code>TENV_GITHUB_TOKEN</code> on the runner pods so that <code>tenv</code> makes authenticated requests to GitHub and is subject to the much higher authenticated rate limit.</p>
+<p>Create a GitHub token with no specific permissions (a fine-grained personal access token with no repository or account access is sufficient — <code>tenv</code> only reads public release metadata), store it in a Kubernetes <code>Secret</code>, and reference it from the <code>overrideRunnerSpec</code> on your <code>TerraformRepository</code> (or <code>TerraformLayer</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repo</span>
+<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/&lt;org&gt;/&lt;repo&gt;</span>
+<span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">overrideRunnerSpec</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">env</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TENV_GITHUB_TOKEN</span>
+<span class="w">        </span><span class="nt">valueFrom</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">secretKeyRef</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenv-github-token</span>
+<span class="w">            </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">token</span>
+</code></pre></div>
+<p>The same variable is already documented for local development setups in <a href="../../contributing/#advanced-settings">Contributing → Advanced Settings</a>; the snippet above is the production-shaped equivalent (Secret reference rather than an inline value).</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Apply the override on the <code>TerraformRepository</code> so that every linked <code>TerraformLayer</code> inherits it, instead of repeating the setting on each layer. See <a href="../../user-guide/override-runner/">override the runner pod spec</a> for the merge rules.</p>
 </div>
 
 
