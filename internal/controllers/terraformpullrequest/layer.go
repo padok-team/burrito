@@ -15,7 +15,6 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	repo "github.com/padok-team/burrito/internal/repository"
-	log "github.com/sirupsen/logrus"
 )
 
 func (r *Reconciler) getAffectedLayers(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {

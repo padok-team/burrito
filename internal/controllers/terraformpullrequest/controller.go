@@ -18,8 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	log "github.com/sirupsen/logrus"
-
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
 

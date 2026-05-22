@@ -6,7 +6,6 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
