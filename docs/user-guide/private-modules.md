@@ -90,7 +90,7 @@ metadata:
   name: git-private-key-modules
   namespace: burrito
 type: Opaque
-stringSata:
+stringData:
   key: |
     -----BEGIN OPENSSH PRIVATE KEY-----
     ...
@@ -143,3 +143,76 @@ In this case, we added a new volume and a new environment variable to the runner
 
 - The volume is a secret volume that contains the SSH key we created earlier
 - The environment variable is used to tell git to use the SSH key we added to the runner pod
+
+## The layer uses a private Terraform provider registry
+
+If your Terraform code uses providers hosted on a private registry (e.g., JFrog Artifactory, GitLab, or a custom registry), you need to configure the runner with appropriate credentials.
+
+!!! warning
+    Do **not** enable [Hermitcrab](../operator-manual/provider-caching.md) (provider caching) when using a private provider registry. Hermitcrab overrides the `TF_CLI_CONFIG_FILE` environment variable in the runner, which will prevent your custom registry configuration from being used.
+
+### 1. Create a Secret containing your Terraform CLI configuration
+
+Create a Kubernetes Secret with a `.terraformrc` file that configures your private registry credentials:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: terraform-registry-credentials
+stringData:
+  .terraformrc: |
+    credentials "registry.example.com" {
+      token = "your-api-token"
+    }
+```
+
+For registries that use a `credentials.tfrc.json` file (e.g., JFrog Artifactory):
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: terraform-registry-credentials
+stringData:
+  credentials.tfrc.json: |
+    {
+      "credentials": {
+        "registry.example.com": {
+          "token": "your-api-token"
+        }
+      }
+    }
+```
+
+### 2. Mount the credentials in the runner configuration
+
+Mount the Secret as a file and set the `TF_CLI_CONFIG_FILE` environment variable to point to it:
+
+```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: my-layer-with-private-registry
+spec:
+  terraform:
+    version: "1.5.0"
+    enabled: true
+  path: "path/to/terraform/code"
+  branch: main
+  repository:
+    name: burrito
+    namespace: burrito
+  overrideRunnerSpec:
+    env:
+    - name: TF_CLI_CONFIG_FILE
+      value: /home/burrito/.terraform.d/.terraformrc
+    volumes:
+    - name: terraform-registry-credentials
+      secret:
+        secretName: terraform-registry-credentials
+    volumeMounts:
+    - name: terraform-registry-credentials
+      mountPath: /home/burrito/.terraform.d/.terraformrc
+      subPath: .terraformrc
+```
