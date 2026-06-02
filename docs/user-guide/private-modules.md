@@ -1,12 +1,12 @@
 # Configure the TerraformLayer to use private modules and providers
 
-If your stack use Terraform modules that are hosted on private repositories, you can configure the `TerraformLayer` to be able to use those private modules by [configuring the `overrideRunnerSpec` in your resource definition](./override-runner.md).
+If your stack uses Terraform modules that are hosted on private repositories, you can configure the `TerraformLayer` to be able to use those private modules by [configuring the `overrideRunnerSpec` in your resource definition](./override-runner.md).
 
 The same mechanism can also be used to provide Terraform CLI credentials for private provider registries.
 
 ## The layer uses a private module with HTTPS
 
-### 1. Create a secret containing a .git-credentilas file
+### 1. Create a secret containing a `.git-credentials` file
 
 Create a Kubernetes Secret which looks like the following:
 
@@ -92,7 +92,7 @@ metadata:
   name: git-private-key-modules
   namespace: burrito
 type: Opaque
-stringSata:
+stringData:
   key: |
     -----BEGIN OPENSSH PRIVATE KEY-----
     ...
@@ -100,11 +100,11 @@ stringSata:
 ```
 
 !!! info
-    You can update the Kubernetes ConfigmMap `burrito-ssh-known-hosts` to add others known hosts. See [Manage SSH known hosts](./ssh-known-hosts.md).
+    You can update the Kubernetes ConfigMap `burrito-ssh-known-hosts` to add other known hosts. See [Manage SSH known hosts](./ssh-known-hosts.md).
 
 ### 2. Mount this Secret in your runner spec
 
-You need to mount this Secret as a volume and add a `GIT_SSH_COMMAND` environements variables:
+You need to mount this Secret as a volume and add a `GIT_SSH_COMMAND` environment variable:
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
