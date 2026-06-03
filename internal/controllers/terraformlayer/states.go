@@ -3,6 +3,7 @@ package terraformlayer
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -90,12 +91,20 @@ func (s *PlanNeeded) getHandler() Handler {
 
 type ApplyNeeded struct{}
 
+var deleteChangesRegex = regexp.MustCompile(`\b[1-9][0-9]* to delete\b`)
+
 func (s *ApplyNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) (ctrl.Result, *configv1alpha1.TerraformRun) {
 		log := log.WithContext(ctx)
 		autoApply := configv1alpha1.GetAutoApplyEnabled(repository, layer)
 		if !autoApply {
 			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+		}
+		nonDestructiveApply := configv1alpha1.GetNonDestructiveApplyEnabled(repository, layer)
+		if nonDestructiveApply && hasDestructiveChanges(layer.Status.LastResult) {
+			log.Infof("nonDestructiveApply is enabled for layer %s and the plan contains delete actions, no apply action taken", layer.Name)
+			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "nonDestructiveApply is enabled and the plan contains delete actions, Apply run not created")
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
 		// Check for sync windows that would block the apply action
@@ -118,6 +127,10 @@ func (s *ApplyNeeded) getHandler() Handler {
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
+}
+
+func hasDestructiveChanges(lastResult string) bool {
+	return deleteChangesRegex.MatchString(lastResult)
 }
 
 type MaxRetriesReached struct{}
