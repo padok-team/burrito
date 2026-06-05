@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. v1.2.3)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,9 +14,17 @@ permissions:
   pull-requests: write
 
 jobs:
+  build-and-push:
+    uses: ./.github/workflows/build-and-push.yaml
+    with:
+      version: ${{ inputs.version }}
+    permissions:
+      packages: write
+
   version:
     runs-on: ubuntu-latest
     environment: production
+    needs: build-and-push
     env:
       CHART_PATH: ./deploy/charts/burrito
     steps:
@@ -24,28 +35,30 @@ jobs:
           ref: main
 
       - name: Bump VERSION file
-        run: |
-          echo ${{ github.ref_name }} > VERSION
+        run: echo "${{ inputs.version }}" > VERSION
 
       - name: Bump Helm Chart versions
         run: |
-          export CHART_VERSION=$(echo ${{ github.ref_name }} | sed 's/v//g')
-          export APP_VERSION=${{ github.ref_name }}
+          export CHART_VERSION=$(echo "${{ inputs.version }}" | sed 's/v//g')
+          export APP_VERSION="${{ inputs.version }}"
           yq -i '.version = env(CHART_VERSION)' $CHART_PATH/Chart.yaml
           yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
 
-      - name: Commit version to repository and open PR
+      - name: Pin image tag and digest in values.yaml
+        run: |
+          export IMAGE_TAG="${{ inputs.version }}@${{ needs.build-and-push.outputs.digest }}"
+          yq -i '.global.deployment.image.tag = env(IMAGE_TAG)' $CHART_PATH/values.yaml
+          yq -i '.config.burrito.runner.image.tag = env(IMAGE_TAG)' $CHART_PATH/values.yaml
+
+      - name: Commit and open PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          BRANCH_NAME="bump-version-${{ github.ref_name }}"
+          BRANCH_NAME="bump-version-${{ inputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git switch -c $BRANCH_NAME
-          git commit -m "chore(release): bump version to ${{ github.ref_name }}"
+          git commit -m "chore(release): bump version to ${{ inputs.version }}"
           git push origin $BRANCH_NAME
           gh pr create --fill --base main --head $BRANCH_NAME
-
-  build-and-push:
-    uses: ./.github/workflows/build-and-push.yaml

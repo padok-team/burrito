@@ -2,6 +2,15 @@ name: Build and Push
 
 on:
   workflow_call:
+    inputs:
+      version:
+        description: "Version tag for the image (e.g. v1.2.3)"
+        required: false
+        type: string
+    outputs:
+      digest:
+        description: "The published image manifest digest (sha256:...)"
+        value: ${{ jobs.merge.outputs.digest }}
 
 env:
   REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
@@ -33,7 +42,11 @@ jobs:
       - name: Get Build timestamp and branch name
         run: |
           echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-          echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+          if [[ -n "${{ inputs.version }}" ]]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+          fi
 
       - name: Docker tags & labels
         id: meta
@@ -94,6 +107,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
+    outputs:
+      digest: ${{ steps.inspect.outputs.digest }}
     steps:
       - name: Download digests
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -107,7 +122,11 @@ jobs:
 
       - name: Get branch name
         run: |
-          echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+          if [[ -n "${{ inputs.version }}" ]]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+          fi
 
       - name: Docker tags & labels
         id: meta
@@ -138,6 +157,9 @@ jobs:
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image
+        id: inspect
         if: env.REGISTRY_PUSH == 'true'
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }} | grep -m1 '^Digest:' | awk '{print $2}')
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT

@@ -1,0 +1,56 @@
+name: Tag on Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - VERSION
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  CHART_NAME: burrito
+  CHART_PATH: ./deploy/charts/burrito
+  CHART_REPO: ghcr.io/${{ github.repository_owner }}/charts
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+      already_exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Read version
+        id: version
+        run: echo "value=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Check tag does not already exist
+        id: check
+        run: |
+          if git ls-remote --tags origin "${{ steps.version.outputs.value }}" | grep -q "${{ steps.version.outputs.value }}"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.version.outputs.value }}"
+          git push origin "${{ steps.version.outputs.value }}"
+
+  helm-push:
+    uses: ./.github/workflows/helm.yaml
+    needs: tag
+
+  docs-deploy:
+    uses: ./.github/workflows/docs.yaml
+    needs: tag
