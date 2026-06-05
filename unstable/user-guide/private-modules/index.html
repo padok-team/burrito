@@ -23,7 +23,7 @@
     
     
       
-        <title>Configure the TerraformLayer to use private modules' repositories - Burrito</title>
+        <title>Configure the TerraformLayer to use private modules and providers - Burrito</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#configure-the-terraformlayer-to-use-private-modules-repositories" class="md-skip">
+        <a href="#configure-the-terraformlayer-to-use-private-modules-and-providers" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Configure the TerraformLayer to use private modules' repositories
+              Configure the TerraformLayer to use private modules and providers
             
           </span>
         </div>
@@ -1334,7 +1334,7 @@
   <span class="md-ellipsis">
     
   
-    Configure the TerraformLayer to use private modules' repositories
+    Configure the TerraformLayer to use private modules and providers
   
 
     
@@ -1352,7 +1352,7 @@
   <span class="md-ellipsis">
     
   
-    Configure the TerraformLayer to use private modules' repositories
+    Configure the TerraformLayer to use private modules and providers
   
 
     
@@ -1390,10 +1390,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-create-a-secret-containing-a-git-credentilas-file" class="md-nav__link">
+  <a href="#1-create-a-secret-containing-a-git-credentials-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Create a secret containing a .git-credentilas file
+        1. Create a secret containing a .git-credentials file
       
     </span>
   </a>
@@ -1455,6 +1455,56 @@
     <span class="md-ellipsis">
       
         2. Mount this Secret in your runner spec
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-layer-uses-providers-from-a-private-terraform-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The layer uses providers from a private Terraform registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The layer uses providers from a private Terraform registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-a-secret-containing-the-terraform-credentials-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Create a Secret containing the Terraform credentials file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-mount-the-credentials-file-in-the-runner-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Mount the credentials file in the runner configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-use-terraformrc-only-when-you-need-extra-cli-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Use .terraformrc only when you need extra CLI configuration
       
     </span>
   </a>
@@ -1718,10 +1768,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-create-a-secret-containing-a-git-credentilas-file" class="md-nav__link">
+  <a href="#1-create-a-secret-containing-a-git-credentials-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Create a secret containing a .git-credentilas file
+        1. Create a secret containing a .git-credentials file
       
     </span>
   </a>
@@ -1794,6 +1844,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-layer-uses-providers-from-a-private-terraform-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The layer uses providers from a private Terraform registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The layer uses providers from a private Terraform registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-a-secret-containing-the-terraform-credentials-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Create a Secret containing the Terraform credentials file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-mount-the-credentials-file-in-the-runner-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Mount the credentials file in the runner configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-use-terraformrc-only-when-you-need-extra-cli-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Use .terraformrc only when you need extra CLI configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1814,10 +1914,11 @@
   
 
 
-<h1 id="configure-the-terraformlayer-to-use-private-modules-repositories">Configure the TerraformLayer to use private modules' repositories<a class="headerlink" href="#configure-the-terraformlayer-to-use-private-modules-repositories" title="Permanent link">&para;</a></h1>
-<p>If your stack use Terraform modules that are hosted on private repositories, you can configure the <code>TerraformLayer</code> to be able to use those private modules by <a href="../override-runner/">configuring the <code>overrideRunnerSpec</code> in your resource definition</a>.</p>
+<h1 id="configure-the-terraformlayer-to-use-private-modules-and-providers">Configure the TerraformLayer to use private modules and providers<a class="headerlink" href="#configure-the-terraformlayer-to-use-private-modules-and-providers" title="Permanent link">&para;</a></h1>
+<p>If your stack uses Terraform modules that are hosted on private repositories, you can configure the <code>TerraformLayer</code> to be able to use those private modules by <a href="../override-runner/">configuring the <code>overrideRunnerSpec</code> in your resource definition</a>.</p>
+<p>The same mechanism can also be used to provide Terraform CLI credentials for private provider registries.</p>
 <h2 id="the-layer-uses-a-private-module-with-https">The layer uses a private module with HTTPS<a class="headerlink" href="#the-layer-uses-a-private-module-with-https" title="Permanent link">&para;</a></h2>
-<h3 id="1-create-a-secret-containing-a-git-credentilas-file">1. Create a secret containing a .git-credentilas file<a class="headerlink" href="#1-create-a-secret-containing-a-git-credentilas-file" title="Permanent link">&para;</a></h3>
+<h3 id="1-create-a-secret-containing-a-git-credentials-file">1. Create a secret containing a <code>.git-credentials</code> file<a class="headerlink" href="#1-create-a-secret-containing-a-git-credentials-file" title="Permanent link">&para;</a></h3>
 <p>Create a Kubernetes Secret which looks like the following:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
 <span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
@@ -1888,7 +1989,7 @@
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git-private-key-modules</span>
 <span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito</span>
 <span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-<span class="nt">stringSata</span><span class="p">:</span>
+<span class="nt">stringData</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
 <span class="w">    </span><span class="no">-----BEGIN OPENSSH PRIVATE KEY-----</span>
 <span class="w">    </span><span class="no">...</span>
@@ -1896,10 +1997,10 @@
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>You can update the Kubernetes ConfigmMap <code>burrito-ssh-known-hosts</code> to add others known hosts. See <a href="../ssh-known-hosts/">Manage SSH known hosts</a>.</p>
+<p>You can update the Kubernetes ConfigMap <code>burrito-ssh-known-hosts</code> to add other known hosts. See <a href="../ssh-known-hosts/">Manage SSH known hosts</a>.</p>
 </div>
 <h3 id="2-mount-this-secret-in-your-runner-spec">2. Mount this Secret in your runner spec<a class="headerlink" href="#2-mount-this-secret-in-your-runner-spec" title="Permanent link">&para;</a></h3>
-<p>You need to mount this Secret as a volume and add a <code>GIT_SSH_COMMAND</code> environements variables:</p>
+<p>You need to mount this Secret as a volume and add a <code>GIT_SSH_COMMAND</code> environment variable:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
 <span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformLayer</span>
 <span class="nt">metadata</span><span class="p">:</span>
@@ -1938,6 +2039,62 @@ In this case, we added a new volume and a new environment variable to the runner
 <li>The volume is a secret volume that contains the SSH key we created earlier</li>
 <li>The environment variable is used to tell git to use the SSH key we added to the runner pod</li>
 </ul>
+<h2 id="the-layer-uses-providers-from-a-private-terraform-registry">The layer uses providers from a private Terraform registry<a class="headerlink" href="#the-layer-uses-providers-from-a-private-terraform-registry" title="Permanent link">&para;</a></h2>
+<p>Terraform automatically reads credentials from <code>/home/burrito/.terraform.d/credentials.tfrc.json</code>.
+If you only need to authenticate to a private registry, mounting that file is usually simpler than setting <code>TF_CLI_CONFIG_FILE</code> yourself.</p>
+<h3 id="1-create-a-secret-containing-the-terraform-credentials-file">1. Create a Secret containing the Terraform credentials file<a class="headerlink" href="#1-create-a-secret-containing-the-terraform-credentials-file" title="Permanent link">&para;</a></h3>
+<p>Create a Kubernetes Secret which looks like the following:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform-registry-credentials</span>
+<span class="nt">stringData</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">credentials.tfrc.json</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">{</span>
+<span class="w">      </span><span class="no">&quot;credentials&quot;: {</span>
+<span class="w">        </span><span class="no">&quot;registry.example.com&quot;: {</span>
+<span class="w">          </span><span class="no">&quot;token&quot;: &quot;&lt;registry_token&gt;&quot;</span>
+<span class="w">        </span><span class="no">}</span>
+<span class="w">      </span><span class="no">}</span>
+<span class="w">    </span><span class="no">}</span>
+</code></pre></div>
+<h3 id="2-mount-the-credentials-file-in-the-runner-configuration">2. Mount the credentials file in the runner configuration<a class="headerlink" href="#2-mount-the-credentials-file-in-the-runner-configuration" title="Permanent link">&para;</a></h3>
+<p>Mount the Secret in <code>overrideRunnerSpec</code> so Terraform can read it from its default credentials path:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
+<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformLayer</span>
+<span class="nt">metadata</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terragrunt-private-provider</span>
+<span class="nt">spec</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.3.1&quot;</span>
+<span class="w">  </span><span class="nt">terragrunt</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0.45.4&quot;</span>
+<span class="w">  </span><span class="nt">remediationStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">autoApply</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;terragrunt/private-provider/test&quot;</span>
+<span class="w">  </span><span class="nt">branch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito</span>
+<span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito</span>
+<span class="w">  </span><span class="nt">overrideRunnerSpec</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform-registry-credentials</span>
+<span class="w">      </span><span class="nt">secret</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform-registry-credentials</span>
+<span class="w">    </span><span class="nt">volumeMounts</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform-registry-credentials</span>
+<span class="w">      </span><span class="nt">mountPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/burrito/.terraform.d/credentials.tfrc.json</span>
+<span class="w">      </span><span class="nt">subPath</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.tfrc.json</span>
+<span class="w">      </span><span class="nt">readOnly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<h3 id="3-use-terraformrc-only-when-you-need-extra-cli-configuration">3. Use <code>.terraformrc</code> only when you need extra CLI configuration<a class="headerlink" href="#3-use-terraformrc-only-when-you-need-extra-cli-configuration" title="Permanent link">&para;</a></h3>
+<p>If you also need custom Terraform CLI settings such as <code>provider_installation</code>, you can mount a <code>.terraformrc</code> file and point <code>TF_CLI_CONFIG_FILE</code> to it.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Burrito may already set <code>TF_CLI_CONFIG_FILE</code> when provider caching is enabled. If you need both a custom CLI config and Burrito's provider mirror configuration, merge both settings into the same file instead of setting two different config paths.</p>
+</div>
 
 
 
