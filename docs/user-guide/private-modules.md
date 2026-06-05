@@ -1,10 +1,12 @@
-# Configure the TerraformLayer to use private modules' repositories
+# Configure the TerraformLayer to use private modules and providers
 
-If your stack use Terraform modules that are hosted on private repositories, you can configure the `TerraformLayer` to be able to use those private modules by [configuring the `overrideRunnerSpec` in your resource definition](./override-runner.md).
+If your stack uses Terraform modules that are hosted on private repositories, you can configure the `TerraformLayer` to be able to use those private modules by [configuring the `overrideRunnerSpec` in your resource definition](./override-runner.md).
+
+The same mechanism can also be used to provide Terraform CLI credentials for private provider registries.
 
 ## The layer uses a private module with HTTPS
 
-### 1. Create a secret containing a .git-credentilas file
+### 1. Create a secret containing a `.git-credentials` file
 
 Create a Kubernetes Secret which looks like the following:
 
@@ -90,7 +92,7 @@ metadata:
   name: git-private-key-modules
   namespace: burrito
 type: Opaque
-stringSata:
+stringData:
   key: |
     -----BEGIN OPENSSH PRIVATE KEY-----
     ...
@@ -98,11 +100,11 @@ stringSata:
 ```
 
 !!! info
-    You can update the Kubernetes ConfigmMap `burrito-ssh-known-hosts` to add others known hosts. See [Manage SSH known hosts](./ssh-known-hosts.md).
+    You can update the Kubernetes ConfigMap `burrito-ssh-known-hosts` to add other known hosts. See [Manage SSH known hosts](./ssh-known-hosts.md).
 
 ### 2. Mount this Secret in your runner spec
 
-You need to mount this Secret as a volume and add a `GIT_SSH_COMMAND` environements variables:
+You need to mount this Secret as a volume and add a `GIT_SSH_COMMAND` environment variable:
 
 ```yaml
 apiVersion: config.terraform.padok.cloud/v1alpha1
@@ -143,3 +145,70 @@ In this case, we added a new volume and a new environment variable to the runner
 
 - The volume is a secret volume that contains the SSH key we created earlier
 - The environment variable is used to tell git to use the SSH key we added to the runner pod
+
+## The layer uses providers from a private Terraform registry
+
+Terraform automatically reads credentials from `/home/burrito/.terraform.d/credentials.tfrc.json`.
+If you only need to authenticate to a private registry, mounting that file is usually simpler than setting `TF_CLI_CONFIG_FILE` yourself.
+
+### 1. Create a Secret containing the Terraform credentials file
+
+Create a Kubernetes Secret which looks like the following:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: terraform-registry-credentials
+stringData:
+  credentials.tfrc.json: |
+    {
+      "credentials": {
+        "registry.example.com": {
+          "token": "<registry_token>"
+        }
+      }
+    }
+```
+
+### 2. Mount the credentials file in the runner configuration
+
+Mount the Secret in `overrideRunnerSpec` so Terraform can read it from its default credentials path:
+
+```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: terragrunt-private-provider
+spec:
+  terraform:
+    enabled: true
+    version: "1.3.1"
+  terragrunt:
+    enabled: true
+    version: "0.45.4"
+  remediationStrategy:
+    autoApply: true
+  path: "terragrunt/private-provider/test"
+  branch: main
+  repository:
+    name: burrito
+    namespace: burrito
+  overrideRunnerSpec:
+    volumes:
+    - name: terraform-registry-credentials
+      secret:
+        secretName: terraform-registry-credentials
+    volumeMounts:
+    - name: terraform-registry-credentials
+      mountPath: /home/burrito/.terraform.d/credentials.tfrc.json
+      subPath: credentials.tfrc.json
+      readOnly: true
+```
+
+### 3. Use `.terraformrc` only when you need extra CLI configuration
+
+If you also need custom Terraform CLI settings such as `provider_installation`, you can mount a `.terraformrc` file and point `TF_CLI_CONFIG_FILE` to it.
+
+!!! warning
+    Burrito may already set `TF_CLI_CONFIG_FILE` when provider caching is enabled. If you need both a custom CLI config and Burrito's provider mirror configuration, merge both settings into the same file instead of setting two different config paths.
