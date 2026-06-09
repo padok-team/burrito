@@ -30,6 +30,24 @@ The Helm chart already exposes `deployment.nodeSelector`, `deployment.toleration
 
 For example, `hermitcrab.deployment.topologySpreadConstraints` and `hermitcrab.deployment.affinity` can be used together to keep the provider cache available close to runner pods while avoiding a single-node concentration.
 
+### Prefer zone-local traffic with `trafficDistribution`
+
+The Helm chart exposes `service.trafficDistribution` for the `datastore`, `hermitcrab`, and `server` components. Setting this to `PreferClose` (or `Close` on Kubernetes 1.27+) instructs the Service to route traffic to endpoints in the same topological domain (zone, node, etc.) as the client, reducing cross-zone traffic latency and cost. This complements the pod-level scheduling controls above by shaping where established connections land.
+
+Example:
+
+```yaml
+hermitcrab:
+  service:
+    trafficDistribution: PreferClose
+datastore:
+  service:
+    trafficDistribution: PreferClose
+server:
+  service:
+    trafficDistribution: PreferClose
+```
+
 ## Isolate runner pods onto dedicated nodes
 
 Runner pods are usually the burstiest Burrito workload because they download code, contact providers, and execute Terraform plans or applies. If you want to keep that activity away from shared services, target a dedicated node pool for runners.
@@ -54,7 +72,7 @@ A common pattern is:
 Use different scheduling controls depending on what you are optimizing for:
 
 - **Cost control:** lower `maxConcurrentRunnerPods`, then place runners on cheaper or autoscaled nodes.
-- **Lower latency:** spread `datastore` and `hermitcrab` close to the zones where runners execute.
+- **Lower latency:** spread `datastore` and `hermitcrab` close to the zones where runners execute; set `trafficDistribution: PreferClose` on their Services.
 - **Isolation:** separate runners from controllers, server, and datastore with dedicated node pools.
 - **Resilience:** add topology spread constraints and anti-affinity for shared multi-replica components.
 
