@@ -1,0 +1,16 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "burrito",
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "draft": false,
+      "prerelease": false,
+      "include-v-in-tag": true,
+      "extra-files": []
+    }
+  },
+  "plugins": []
+}
