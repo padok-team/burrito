@@ -32,7 +32,7 @@ For example, `hermitcrab.deployment.topologySpreadConstraints` and `hermitcrab.d
 
 ### Prefer zone-local traffic with `trafficDistribution`
 
-The Helm chart exposes `service.trafficDistribution` for the `datastore`, `hermitcrab`, and `server` components. Setting this to `PreferClose` (or `Close` on Kubernetes 1.27+) instructs the Service to route traffic to endpoints in the same topological domain (zone, node, etc.) as the client, reducing cross-zone traffic latency and cost. This complements the pod-level scheduling controls above by shaping where established connections land.
+The Helm chart exposes `service.trafficDistribution` for the `datastore`, `hermitcrab`, and `server` components. This value maps to the Kubernetes Service spec field [`.spec.trafficDistribution`](https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution). Setting this to `PreferClose` (or `Close` on Kubernetes 1.27+) instructs the Service to route traffic to endpoints in the same topological domain (zone, node, etc.) as the client, reducing cross-zone traffic latency and cost. This complements the pod-level scheduling controls above by shaping where established connections land.
 
 Example:
 
