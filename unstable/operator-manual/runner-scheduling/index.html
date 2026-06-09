@@ -23,7 +23,7 @@
     
     
       
-        <title>Fine-tuning the scheduling of runner pods - Burrito</title>
+        <title>Fine-tuning the scheduling of Burrito pods - Burrito</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#fine-tuning-the-scheduling-of-runner-pods" class="md-skip">
+        <a href="#fine-tuning-the-scheduling-of-burrito-pods" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Fine-tuning the scheduling of runner pods
+              Fine-tuning the scheduling of Burrito pods
             
           </span>
         </div>
@@ -1111,7 +1111,7 @@
   <span class="md-ellipsis">
     
   
-    Fine-tuning the scheduling of runner pods
+    Fine-tuning the scheduling of Burrito pods
   
 
     
@@ -1129,7 +1129,7 @@
   <span class="md-ellipsis">
     
   
-    Fine-tuning the scheduling of runner pods
+    Fine-tuning the scheduling of Burrito pods
   
 
     
@@ -1159,6 +1159,56 @@
     <span class="md-ellipsis">
       
         Limit the number of runner pods in parallel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spread-shared-components-across-failure-domains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread shared components across failure domains
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spread shared components across failure domains">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prefer-zone-local-traffic-with-trafficdistribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prefer zone-local traffic with trafficDistribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#isolate-runner-pods-onto-dedicated-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Isolate runner pods onto dedicated nodes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-the-knob-that-matches-the-goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choose the knob that matches the goal
       
     </span>
   </a>
@@ -1638,6 +1688,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#spread-shared-components-across-failure-domains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spread shared components across failure domains
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spread shared components across failure domains">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prefer-zone-local-traffic-with-trafficdistribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prefer zone-local traffic with trafficDistribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#isolate-runner-pods-onto-dedicated-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Isolate runner pods onto dedicated nodes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choose-the-knob-that-matches-the-goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choose the knob that matches the goal
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1658,14 +1758,66 @@
   
 
 
-<h1 id="fine-tuning-the-scheduling-of-runner-pods">Fine-tuning the scheduling of runner pods<a class="headerlink" href="#fine-tuning-the-scheduling-of-runner-pods" title="Permanent link">&para;</a></h1>
-<p>Burrito creates runner pods to execute plans and apply changes on your infrastructure. The scheduling of these pods can be fine-tuned to better fit your needs. (e.g. to avoid running too many pods at the same time, or to reduce the cost of your underlying infrastructure).</p>
+<h1 id="fine-tuning-the-scheduling-of-burrito-pods">Fine-tuning the scheduling of Burrito pods<a class="headerlink" href="#fine-tuning-the-scheduling-of-burrito-pods" title="Permanent link">&para;</a></h1>
+<p>Burrito creates runner pods to execute plans and apply changes on your infrastructure, and it also runs shared components such as the controller, the datastore, and optionally Hermitcrab. Scheduling those workloads carefully can reduce inter-zone traffic, isolate noisy jobs, and keep costs under control.</p>
 <h2 id="limit-the-number-of-runner-pods-in-parallel">Limit the number of runner pods in parallel<a class="headerlink" href="#limit-the-number-of-runner-pods-in-parallel" title="Permanent link">&para;</a></h2>
 <p>By default, Burrito does not limit the number of runner pods that can run in parallel. This can lead to a high number of pods running at the same time, which can be costly or can overload your infrastructure.</p>
 <p>It is possible to limit the number of runner pods that can run in parallel by setting the <code>BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS</code> environment variable in the controller, or by setting the <code>config.burrito.controller.maxConcurrentRunnerPods</code> value in the <a href="https://github.com/padok-team/burrito/blob/main/deploy/charts/burrito/values.yaml">Helm chart values file</a>.</p>
 <p>You can also set this value in the TerraformRepository CRD by setting the <code>spec.maxConcurrentRunnerPods</code> field.</p>
 <p>If the value of this parameter is set to <code>0</code>, there is no limit to the number of runner pods that can run in parallel.</p>
 <p>When Burrito creates a pod, if the setting is both set in the controller and in the TerraformRepository, the TerraformRepository value will take precedence.</p>
+<h2 id="spread-shared-components-across-failure-domains">Spread shared components across failure domains<a class="headerlink" href="#spread-shared-components-across-failure-domains" title="Permanent link">&para;</a></h2>
+<p>When you run Burrito across multiple availability zones, spread the shared components that serve every reconciliation path:</p>
+<ul>
+<li><code>datastore</code></li>
+<li><code>hermitcrab</code> when provider caching is enabled</li>
+<li>the Burrito server or controllers when you run multiple replicas</li>
+</ul>
+<p>The Helm chart already exposes <code>deployment.nodeSelector</code>, <code>deployment.tolerations</code>, <code>deployment.affinity</code>, and <code>deployment.topologySpreadConstraints</code> for these components. A practical baseline is:</p>
+<ul>
+<li>use <code>topologySpreadConstraints</code> to keep replicas distributed across zones or nodes</li>
+<li>use anti-affinity to avoid placing every replica on the same node</li>
+<li>keep at least one <code>datastore</code> and <code>hermitcrab</code> pod per zone when cross-zone traffic is expensive</li>
+</ul>
+<p>For example, <code>hermitcrab.deployment.topologySpreadConstraints</code> and <code>hermitcrab.deployment.affinity</code> can be used together to keep the provider cache available close to runner pods while avoiding a single-node concentration.</p>
+<h3 id="prefer-zone-local-traffic-with-trafficdistribution">Prefer zone-local traffic with <code>trafficDistribution</code><a class="headerlink" href="#prefer-zone-local-traffic-with-trafficdistribution" title="Permanent link">&para;</a></h3>
+<p>The Helm chart exposes <code>service.trafficDistribution</code> for the <code>datastore</code>, <code>hermitcrab</code>, and <code>server</code> components. This value maps to the Kubernetes Service spec field <a href="https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution"><code>.spec.trafficDistribution</code></a>. Setting this to <code>PreferSameZone</code> instructs the Service to route traffic to endpoints in the same zone as the client, reducing cross-zone traffic latency and cost. This complements the pod-level scheduling controls above by shaping where established connections land.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">hermitcrab</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">service</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">trafficDistribution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PreferSameZone</span>
+<span class="nt">datastore</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">service</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">trafficDistribution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PreferSameZone</span>
+<span class="nt">server</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">service</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">trafficDistribution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PreferSameZone</span>
+</code></pre></div>
+<h2 id="isolate-runner-pods-onto-dedicated-nodes">Isolate runner pods onto dedicated nodes<a class="headerlink" href="#isolate-runner-pods-onto-dedicated-nodes" title="Permanent link">&para;</a></h2>
+<p>Runner pods are usually the burstiest Burrito workload because they download code, contact providers, and execute Terraform plans or applies. If you want to keep that activity away from shared services, target a dedicated node pool for runners.</p>
+<p>The recommended approach is to configure <code>spec.overrideRunnerSpec</code> with scheduling fields such as:</p>
+<ul>
+<li><code>nodeSelector</code></li>
+<li><code>tolerations</code></li>
+<li><code>affinity</code></li>
+</ul>
+<p>That lets you direct runners to nodes reserved for infrastructure jobs while keeping the control plane components on a different pool. The full override mechanism is documented in <a href="../../user-guide/override-runner/">Override the runner pod spec</a>.</p>
+<p>A common pattern is:</p>
+<ul>
+<li>label a dedicated node pool for Burrito runners</li>
+<li>taint those nodes so only runner pods land there</li>
+<li>add matching <code>nodeSelector</code> and <code>tolerations</code> in <code>overrideRunnerSpec</code></li>
+<li>optionally add pod anti-affinity if you want to avoid stacking too many heavy runs on the same node</li>
+</ul>
+<h2 id="choose-the-knob-that-matches-the-goal">Choose the knob that matches the goal<a class="headerlink" href="#choose-the-knob-that-matches-the-goal" title="Permanent link">&para;</a></h2>
+<p>Use different scheduling controls depending on what you are optimizing for:</p>
+<ul>
+<li><strong>Cost control:</strong> lower <code>maxConcurrentRunnerPods</code>, then place runners on cheaper or autoscaled nodes.</li>
+<li><strong>Lower latency:</strong> spread <code>datastore</code> and <code>hermitcrab</code> close to the zones where runners execute; set <code>trafficDistribution: PreferSameZone</code> on their Services.</li>
+<li><strong>Isolation:</strong> separate runners from controllers, server, and datastore with dedicated node pools.</li>
+<li><strong>Resilience:</strong> add topology spread constraints and anti-affinity for shared multi-replica components.</li>
+</ul>
+<p>Start with a simple policy, observe runner throughput and inter-zone traffic, then tighten the scheduling rules only where they solve a concrete bottleneck.</p>
 
 
 
