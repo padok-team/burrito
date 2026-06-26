@@ -59,6 +59,7 @@ jobs:
           # - type=sha,format=long,prefix= -> commit sha
           tags: |
             type=raw,${{ env.VERSION }}
+            type=raw,latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=tag
             type=sha,format=long,prefix=
 
@@ -139,6 +140,7 @@ jobs:
           # - type=sha,format=long,prefix= -> commit sha
           tags: |
             type=raw,${{ env.VERSION }}
+            type=raw,latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=tag
             type=sha,format=long,prefix=
 
