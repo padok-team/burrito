@@ -180,3 +180,39 @@ func TestAPIProvider_Comment_ReturnsErrorWhenListingNotesFails(t *testing.T) {
 	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
 	require.Error(t, err)
 }
+
+func TestAPIProvider_GetMergeCommit_ReturnsMergeCommitSHA(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42", func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		fmt.Fprint(w, `{"iid": 42, "merge_commit_sha": "merge-sha-123"}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	commit, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.NoError(t, err)
+	assert.Equal(t, "merge-sha-123", commit)
+}
+
+func TestAPIProvider_GetMergeCommit_FallsBackToSquashCommitSHA(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"iid": 42, "merge_commit_sha": "", "squash_commit_sha": "squash-sha-456"}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	commit, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.NoError(t, err)
+	assert.Equal(t, "squash-sha-456", commit)
+}
+
+func TestAPIProvider_GetMergeCommit_ReturnsErrorWhenGetFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	_, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.Error(t, err)
+}

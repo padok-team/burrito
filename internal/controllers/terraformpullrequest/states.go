@@ -7,6 +7,8 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	logrus "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,10 +16,12 @@ import (
 )
 
 const (
-	DiscoveryNeeded string = "DiscoveryNeeded"
-	Planning        string = "Planning"
-	CommentNeeded   string = "CommentNeeded"
-	Idle            string = "Idle"
+	DiscoveryNeeded    string = "DiscoveryNeeded"
+	Planning           string = "Planning"
+	CommentNeeded      string = "CommentNeeded"
+	Idle               string = "Idle"
+	WaitingForApply    string = "WaitingForApply"
+	ApplyCommentNeeded string = "ApplyCommentNeeded"
 )
 
 type State struct {
@@ -32,6 +36,34 @@ func (s *State) Handler(ctx context.Context, r *Reconciler, repository *configv1
 func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) State {
 	var state State
 	logger := logrus.WithContext(ctx)
+
+	// Check merge state first — bypasses the open-PR lifecycle entirely.
+	cMerged, isMerged := r.IsMerged(pr)
+	if isMerged {
+		mainLayers, err := r.getMainBranchLayers(ctx, pr)
+		if err != nil {
+			logger.Errorf("failed to get main branch layers for merged pull request %s: %s", pr.Name, err)
+		}
+		cApplied, areLayersApplied, applyResults := r.AreLayersApplied(ctx, pr, mainLayers)
+		state = State{
+			Status: configv1alpha1.TerraformPullRequestStatus{
+				Conditions:           []metav1.Condition{cMerged, cApplied},
+				LastDiscoveredCommit: pr.Status.LastDiscoveredCommit,
+				LastCommentedCommit:  pr.Status.LastCommentedCommit,
+			},
+		}
+		if areLayersApplied {
+			logger.Infof("merged pull request %s layers have applied, posting apply comment", pr.Name)
+			state.handler = makeApplyCommentNeededHandler(applyResults)
+			state.Status.State = ApplyCommentNeeded
+		} else {
+			logger.Infof("merged pull request %s is waiting for layers to apply", pr.Name)
+			state.handler = waitingForApplyHandler
+			state.Status.State = WaitingForApply
+		}
+		return state
+	}
+
 	c1, isLastCommitDiscovered := r.IsLastCommitDiscovered(pr)
 	c2, areLayersStillPlanning := r.AreLayersStillPlanning(pr)
 	c3, isCommentUpToDate := r.IsCommentUpToDate(pr)
@@ -68,6 +100,42 @@ func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformP
 	return state
 }
 
+// setStatusSilently posts a commit status via the repository API provider, logging any error without failing the reconciliation.
+func (r *Reconciler) setStatusSilently(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) {
+	provider, err := r.getAPIProvider(repository)
+	if err != nil {
+		logrus.Warnf("could not get API provider to set commit status on pull request %s: %s", pr.Name, err)
+		return
+	}
+	if err := provider.SetStatus(repository, pr, s); err != nil {
+		logrus.Warnf("could not set commit status on pull request %s: %s", pr.Name, err)
+	}
+}
+
+// resolveMergeCommit returns the commit that actually landed on the target branch once pr
+// was merged (merge commit, or squash commit for squash merges) — distinct from the
+// LastBranchCommit annotation, which only tracks the last commit on the source branch and
+// may not exist on the target branch after a squash or rebase merge. The result is cached
+// as an annotation so the provider is only queried once per pull request.
+func (r *Reconciler) resolveMergeCommit(ctx context.Context, provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) string {
+	if commit := pr.Annotations[annotations.MergeCommit]; commit != "" {
+		return commit
+	}
+	commit, err := provider.GetMergeCommit(repository, pr)
+	if err != nil || commit == "" {
+		logrus.Warnf("could not resolve merge commit for pull request %s, falling back to branch commit: %v", pr.Name, err)
+		return ""
+	}
+	if err := annotations.Add(ctx, r.Client, pr, map[string]string{annotations.MergeCommit: commit}); err != nil {
+		logrus.Warnf("could not cache merge commit annotation for pull request %s: %s", pr.Name, err)
+	}
+	if pr.Annotations == nil {
+		pr.Annotations = map[string]string{}
+	}
+	pr.Annotations[annotations.MergeCommit] = commit
+	return commit
+}
+
 func idleHandler(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
 	return ctrl.Result{}
 }
@@ -99,6 +167,13 @@ func discoveryNeededHandler(ctx context.Context, r *Reconciler, repository *conf
 		r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", fmt.Sprintf("Created layer %s", layer.Name))
 	}
 	state.Status.LastDiscoveredCommit = pr.Annotations[annotations.LastBranchCommit]
+	if len(newLayers) > 0 {
+		r.setStatusSilently(repository, pr, status.CommitStatus{
+			Phase:       status.PhasePlan,
+			State:       status.StatePending,
+			Description: "Burrito is planning the changes...",
+		})
+	}
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 }
 
@@ -117,8 +192,8 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 	}
 
-	comment := comment.NewDefaultComment(layers, r.Datastore)
-	err = provider.Comment(repository, pr, comment)
+	c := comment.NewDefaultComment(layers, r.Datastore)
+	err = provider.Comment(repository, pr, c)
 	if err != nil {
 		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Failed to comment pull request")
 		logrus.Errorf("failed to comment pull request: %s", err)
@@ -126,5 +201,83 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 	}
 	r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Commented pull request")
 	state.Status.LastCommentedCommit = pr.Annotations[annotations.LastBranchCommit]
+
+	planStatus := status.CommitStatus{Phase: status.PhasePlan, State: status.StateSuccess, Description: "Burrito plan succeeded"}
+	for _, layer := range layers {
+		if layer.Annotations[annotations.LastPlanSum] == "" {
+			planStatus.State = status.StateFailure
+			planStatus.Description = "Burrito plan failed"
+			break
+		}
+	}
+	if err := provider.SetStatus(repository, pr, planStatus); err != nil {
+		logrus.Warnf("could not set plan commit status on pull request %s: %s", pr.Name, err)
+	}
+
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+}
+
+func waitingForApplyHandler(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
+	provider, err := r.getAPIProvider(repository)
+	if err != nil {
+		logrus.Warnf("could not get API provider to set apply commit status on pull request %s: %s", pr.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+	}
+	mergeCommit := r.resolveMergeCommit(ctx, provider, repository, pr)
+	if err := provider.SetStatus(repository, pr, status.CommitStatus{
+		Phase:       status.PhaseApply,
+		State:       status.StatePending,
+		Description: "Burrito is applying the changes...",
+		Commit:      mergeCommit,
+	}); err != nil {
+		logrus.Warnf("could not set commit status on pull request %s: %s", pr.Name, err)
+	}
+	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+}
+
+func makeApplyCommentNeededHandler(applyResults []LayerApplyResult) func(context.Context, *Reconciler, *configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest, *State) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
+		provider, err := r.getAPIProvider(repository)
+		if err != nil {
+			logrus.Errorf("failed to get API provider for merged PR %s. Requeuing: %s", pr.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+		}
+
+		reportedLayers := make([]comment.ApplyReportedLayer, 0, len(applyResults))
+		for _, res := range applyResults {
+			reportedLayers = append(reportedLayers, comment.ApplyReportedLayer{
+				Path:      res.Layer.Spec.Path,
+				Succeeded: res.Succeeded,
+			})
+		}
+
+		applyComment := comment.NewApplyComment(reportedLayers)
+		err = provider.Comment(repository, pr, applyComment)
+		if err != nil {
+			r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Failed to post apply comment on merged pull request")
+			logrus.Errorf("an error occurred while posting apply comment on merged pull request %s: %s", pr.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+		}
+		r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Posted apply comment on merged pull request")
+
+		applyStatus := status.CommitStatus{Phase: status.PhaseApply, State: status.StateSuccess, Description: "Burrito apply succeeded"}
+		for _, res := range applyResults {
+			if !res.Succeeded {
+				applyStatus.State = status.StateFailure
+				applyStatus.Description = "Burrito apply failed"
+				break
+			}
+		}
+		applyStatus.Commit = r.resolveMergeCommit(ctx, provider, repository, pr)
+		if err := provider.SetStatus(repository, pr, applyStatus); err != nil {
+			logrus.Warnf("could not set apply commit status on pull request %s: %s", pr.Name, err)
+		}
+
+		// Delete the TerraformPullRequest resource now that we're done with it.
+		if err := r.Client.Delete(ctx, pr); err != nil {
+			logrus.Errorf("failed to delete TerraformPullRequest %s after apply comment: %s", pr.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+		}
+		return ctrl.Result{}
+	}
 }

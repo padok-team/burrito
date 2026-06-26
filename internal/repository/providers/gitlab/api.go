@@ -7,6 +7,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	log "github.com/sirupsen/logrus"
 	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,6 +44,53 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 		listOpts.Page = resp.NextPage
 	}
 	return changes, nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	commit := s.Commit
+	if commit == "" {
+		commit = pr.Annotations[annotations.LastBranchCommit]
+	}
+	name := "burrito/" + string(s.Phase)
+	description := s.Description
+	state := toGitlabBuildState(s.State)
+	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, &gitlab.SetCommitStatusOptions{
+		State:       state,
+		Name:        &name,
+		Description: &description,
+	})
+	if err != nil {
+		log.Errorf("Error while setting commit status on GitLab: %s", err)
+	}
+	return err
+}
+
+func toGitlabBuildState(s status.State) gitlab.BuildStateValue {
+	switch s {
+	case status.StateSuccess:
+		return gitlab.Success
+	case status.StateFailure:
+		return gitlab.Failed
+	default:
+		return gitlab.Pending
+	}
+}
+
+func (api *APIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
+	id, err := strconv.ParseInt(pr.Spec.ID, 10, 64)
+	if err != nil {
+		log.Errorf("Error while parsing Gitlab merge request ID: %s", err)
+		return "", err
+	}
+	mergeRequest, _, err := api.client.MergeRequests.GetMergeRequest(getGitlabNamespacedName(repository.Spec.Repository.Url), id, nil)
+	if err != nil {
+		return "", err
+	}
+	if mergeRequest.MergeCommitSHA != "" {
+		return mergeRequest.MergeCommitSHA, nil
+	}
+	// Squashed merge requests only get a squash_commit_sha, not a merge_commit_sha.
+	return mergeRequest.SquashCommitSHA, nil
 }
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {

@@ -201,3 +201,29 @@ func TestAPIProvider_Comment_ReturnsErrorWhenListingCommentsFails(t *testing.T) 
 	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
 	require.Error(t, err)
 }
+
+func TestAPIProvider_GetMergeCommit_ReturnsMergeCommitSHA(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/pulls/42", func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		_ = json.NewEncoder(w).Encode(&github.PullRequest{
+			MergeCommitSHA: github.Ptr("merge-sha-123"),
+		})
+	})
+
+	api := newTestAPIProvider(t, mux)
+	commit, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.NoError(t, err)
+	assert.Equal(t, "merge-sha-123", commit)
+}
+
+func TestAPIProvider_GetMergeCommit_ReturnsErrorWhenGetFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/pulls/42", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	_, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.Error(t, err)
+}

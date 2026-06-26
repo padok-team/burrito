@@ -9,6 +9,7 @@ import (
 
 const PullRequestOpened = "opened"
 const PullRequestClosed = "closed"
+const PullRequestMerged = "merged"
 
 type ChangeInfo struct {
 	ShaBefore string
