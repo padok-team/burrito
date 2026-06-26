@@ -6,6 +6,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	log "github.com/sirupsen/logrus"
 	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
@@ -41,6 +42,33 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 		listOpts.Page = resp.NextPage
 	}
 	return changes, nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	commit := pr.Annotations[annotations.LastBranchCommit]
+	name := "burrito/" + string(s.Phase)
+	description := s.Description
+	state := toGitlabBuildState(s.State)
+	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, &gitlab.SetCommitStatusOptions{
+		State:       state,
+		Name:        &name,
+		Description: &description,
+	})
+	if err != nil {
+		log.Errorf("Error while setting commit status on GitLab: %s", err)
+	}
+	return err
+}
+
+func toGitlabBuildState(s status.State) gitlab.BuildStateValue {
+	switch s {
+	case status.StateSuccess:
+		return gitlab.Success
+	case status.StateFailure:
+		return gitlab.Failed
+	default:
+		return gitlab.Pending
+	}
 }
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {

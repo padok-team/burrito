@@ -7,6 +7,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
@@ -98,6 +99,11 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {
 	log.Infof("Mock provider comment posted")
+	return nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	log.Infof("Mock provider status set: phase=%s state=%s", s.Phase, s.State)
 	return nil
 }
 

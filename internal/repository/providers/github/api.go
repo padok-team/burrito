@@ -8,6 +8,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,6 +45,23 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 		opts.Page = resp.NextPage
 	}
 	return allChangedFiles, nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	commit := pr.Annotations[annotations.LastBranchCommit]
+	ctx := "burrito/" + string(s.Phase)
+	state := string(s.State)
+	description := s.Description
+	_, _, err := api.client.Repositories.CreateStatus(context.TODO(), owner, repoName, commit, github.RepoStatus{
+		State:       &state,
+		Context:     &ctx,
+		Description: &description,
+	})
+	if err != nil {
+		log.Errorf("Error while setting commit status on GitHub: %s", err)
+	}
+	return err
 }
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, comment comment.Comment) error {

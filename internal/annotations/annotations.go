@@ -18,6 +18,7 @@ const (
 	LastPlanRun    string = "runner.terraform.padok.cloud/plan-run"
 	Lock           string = "runner.terraform.padok.cloud/lock"
 
+	MergedAt               string = "webhook.terraform.padok.cloud/merged-at"
 	LastBranchCommit       string = "webhook.terraform.padok.cloud/branch-commit"
 	LastBranchCommitDate   string = "webhook.terraform.padok.cloud/branch-commit-date"
 	LastRelevantCommit     string = "webhook.terraform.padok.cloud/relevant-commit"
