@@ -123,5 +123,5 @@ func TestGitlab_GetEventFromWebhookPayload_MergeRequestEvent(t *testing.T) {
 	testWithGivenAction("open", event.PullRequestOpened)
 	testWithGivenAction("reopen", event.PullRequestOpened)
 	testWithGivenAction("close", event.PullRequestClosed)
-	testWithGivenAction("merge", event.PullRequestClosed)
+	testWithGivenAction("merge", event.PullRequestMerged)
 }

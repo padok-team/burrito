@@ -3,7 +3,7 @@ config:
     runner:
       image:
         repository: burrito
-        tag: "1783089222"
+        tag: "1783690876"
         pullPolicy: Never
     datastore:
       storage:
@@ -16,7 +16,7 @@ global:
   deployment:
     image:
       repository: burrito
-      tag: "1783089222"
+      tag: "1783690876"
       pullPolicy: Never
 tenants:
   - namespace:

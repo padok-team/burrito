@@ -1,6 +1,7 @@
 package terraformpullrequest
 
 import (
+	"context"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -105,6 +106,68 @@ func (r *Reconciler) AreLayersStillPlanning(pr *configv1alpha1.TerraformPullRequ
 	condition.Message = "Linked layers are not planning."
 	condition.Status = metav1.ConditionFalse
 	return condition, false
+}
+
+func (r *Reconciler) IsMerged(pr *configv1alpha1.TerraformPullRequest) (metav1.Condition, bool) {
+	condition := metav1.Condition{
+		Type:               "IsMerged",
+		ObservedGeneration: pr.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+	_, ok := pr.Annotations[annotations.MergedAt]
+	if ok {
+		condition.Reason = "PullRequestMerged"
+		condition.Message = "Pull request has been merged."
+		condition.Status = metav1.ConditionTrue
+		return condition, true
+	}
+	condition.Reason = "PullRequestNotMerged"
+	condition.Message = "Pull request has not been merged yet."
+	condition.Status = metav1.ConditionFalse
+	return condition, false
+}
+
+func (r *Reconciler) AreLayersApplied(ctx context.Context, pr *configv1alpha1.TerraformPullRequest, mainLayers []configv1alpha1.TerraformLayer) (metav1.Condition, bool, []LayerApplyResult) {
+	condition := metav1.Condition{
+		Type:               "AreLayersApplied",
+		ObservedGeneration: pr.GetObjectMeta().GetGeneration(),
+		Status:             metav1.ConditionUnknown,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+
+	mergedAtStr := pr.Annotations[annotations.MergedAt]
+	mergedAt, err := time.Parse(time.RFC3339, mergedAtStr)
+	if err != nil {
+		condition.Reason = "InvalidMergedAt"
+		condition.Message = "Could not parse merged-at annotation, this is likely a bug."
+		condition.Status = metav1.ConditionFalse
+		return condition, false, nil
+	}
+
+	if len(mainLayers) == 0 {
+		condition.Reason = "NoAffectedLayers"
+		condition.Message = "No layers are affected by this pull request."
+		condition.Status = metav1.ConditionTrue
+		return condition, true, nil
+	}
+
+	results := make([]LayerApplyResult, 0, len(mainLayers))
+	for _, layer := range mainLayers {
+		res := r.getLayerApplyResult(ctx, layer, mergedAt)
+		results = append(results, res)
+		if !res.Applied {
+			condition.Reason = "LayerNotApplied"
+			condition.Message = "At least one layer has not applied since merge."
+			condition.Status = metav1.ConditionFalse
+			return condition, false, results
+		}
+	}
+
+	condition.Reason = "AllLayersApplied"
+	condition.Message = "All affected layers have applied since merge."
+	condition.Status = metav1.ConditionTrue
+	return condition, true, results
 }
 
 func (r *Reconciler) IsCommentUpToDate(pr *configv1alpha1.TerraformPullRequest) (metav1.Condition, bool) {

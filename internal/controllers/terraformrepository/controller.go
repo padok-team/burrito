@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -102,7 +103,24 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	log.Infof("repository %s/%s is in state %s", repository.Namespace, repository.Name, stateString)
 	result, branchStates := state.getHandler()(ctx, r, repository)
 	repository.Status.Branches = branchStates
-	if err := r.Status().Update(ctx, repository); err != nil {
+
+	// Retry on conflict: another actor (e.g. a webhook annotating this repository) may have
+	// updated it concurrently, bumping its resourceVersion since we fetched it above. Re-fetch
+	// the latest version and reapply the status computed by this reconciliation cycle.
+	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		latest := &configv1alpha1.TerraformRepository{}
+		if err := r.Get(ctx, req.NamespacedName, latest); err != nil {
+			return err
+		}
+		latest.Status.Conditions = conditions
+		latest.Status.State = stateString
+		latest.Status.Branches = branchStates
+		if err := r.Status().Update(ctx, latest); err != nil {
+			return err
+		}
+		repository = latest
+		return nil
+	}); err != nil {
 		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update repository status")
 		log.Errorf("failed to update repository status: %s", err)
 	}
