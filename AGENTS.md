@@ -1,99 +1,49 @@
-# AGENTS.md
+# AGENTS.md — Burrito
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+Monorepo for **Burrito**: a Kubernetes operator that automates Terraform (TACoS).
+This file is the canonical guidance for AI agents. `CLAUDE.md` is a symlink to it.
+Nested `AGENTS.md` files add directory-specific rules — read them when working in their scope.
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+## Working Principles
 
-## 1. Think Before Coding
+- **Think first.** State assumptions; if multiple interpretations exist, surface them instead of picking silently. If something is unclear, ask.
+- **Simplicity.** Minimum code that solves the problem. No speculative features, abstractions, or config that wasn't requested.
+- **Surgical changes.** Touch only what the task requires. Match existing style. Don't refactor or reformat unrelated code; flag dead code rather than deleting it.
+- **Verify.** Turn tasks into checkable goals and run the relevant build/test/lint command before claiming done.
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+## Monorepo Map
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+- `api/v1alpha1/` — CRD Go types (see nested AGENTS.md). **Codegen-sensitive.**
+- `internal/controllers/` — reconciliation logic, one package per resource (see nested AGENTS.md).
+- `ui/` — React/Vite/TS dashboard (see nested AGENTS.md).
+- `deploy/charts/burrito/` — Helm chart (see nested AGENTS.md).
+- `cmd/` — binary entrypoints. `hack/` — dev/build scripts. `manifests/` & `config/crd/bases/` — generated manifests. `testdata/` — fixtures. `docs/` — documentation.
 
-## 2. Simplicity First
+## Never Touch (generated / vendored)
 
-**Minimum code that solves the problem. Nothing speculative.**
+Do not read, edit, or use as reference:
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+- `*zz_generated.deepcopy.go` (produced by `controller-gen`).
+- Lock files: `go.sum`, `ui/yarn.lock`.
+- Generated manifests in `config/crd/bases/` and `manifests/`.
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+To change CRDs: edit `api/v1alpha1/*_types.go`, then run `make manifests` (and `make generate`).
 
-## 3. Surgical Changes
+## Build & Validation
 
-**Touch only what you must. Clean up only your own mess.**
+- **Go:** `make build` · `make test` (spins up envtest + docker-compose — heavy) · `make vet`
+- **Lint (Go):** `golangci-lint run ./...` — there is no `make` target; it runs in CI ([.github/workflows/ci.yaml](.github/workflows/ci.yaml)).
+- **After API changes:** `make manifests && make generate`
+- **UI:** `yarn --cwd ui lint` · `yarn --cwd ui build` · `yarn --cwd ui format-check`
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+## Go Style
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+- Always check errors explicitly. Never `_ = err` or silently ignored returns.
+- No `panic()` in reconcilers — see `internal/controllers/AGENTS.md`.
 
-The test: Every changed line should trace directly to the user's request.
+## Commits — Conventional Commits
 
-## 4. Goal-Driven Execution
+Format: `<type>(<scope>): <description>`.
 
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
----
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- ALWAYS read graphify-out/GRAPH_REPORT.md before reading any source files, running grep/glob searches, or answering codebase questions. The graph is your primary map of the codebase.
-- IF graphify-out/wiki/index.md EXISTS, navigate it instead of reading raw files
-- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
-
----
-
-**These guidelines are project specific**
-
-## 📜 Guidelines & Constraints
-### Go & Kubernetes Operator
-1. **Kubebuilder Conventions:** Adhere to the standard architecture generated by Kubebuilder. Never block the reconciliation loop (use exponential backoff for retries).
-2. **Logging:** Always use the configured logging system (e.g., `logr`) with the appropriate level (`Info`, `Error`, `V`) to facilitate distributed debugging.
-3. **Concurrency:** Be highly cautious with application state. Properly manage Contexts (`ctx`) and timeouts when calling external APIs (GitHub, GitLab, Terraform).
-
-### Web UI (TypeScript)
-1. **Strict Typing:** Explicit or implicit use of `any` is strictly forbidden. Object interfaces (like the state of a `TerraformLayer`) must exactly match the backend CRDs.
-2. **UI Performance:** The interface must be able to render complex and lengthy Terraform plan logs without freezing the browser.
-
-### Domain (Terraform / IaC)
-1. **IaC Agnostic:** The code must dynamically support Terraform, Terragrunt, and OpenTofu.
-2. **Security:** Never log secrets (GitHub/GitLab tokens, cloud credentials) handled by the "Runners" or the "CredentialStore".
-
-## 🚫 Out of Bounds
-- Do not directly modify auto-generated manifests in `/config` without using Kubebuilder's `make` commands (e.g., `make manifests`).
-- Never hardcode Cloud environment variables (AWS, GCP, Azure): Burrito manages IaC in an agnostic way.
-- Do not introduce major new dependencies without prior discussion in a Pull Request or Issue.
+- **Types:** `feat`, `fix`, `chore`, `docs`, `test`, `refactor`.
+- **Scopes** (use the closest fit): `controller`, `api`, `ui`, `helm`, `ci`, `deps`, `docker`. Scope is optional when none applies.
