@@ -222,7 +222,11 @@ spec:
             value: /
       backendRefs:
         - name: burrito-controllers
-          port: {{ (index .service.ports 0).port }}
+          {{- range .service.ports }}
+          {{- if eq .name "metrics" }}
+          port: {{ .port }}
+          {{- end }}
+          {{- end }}
     {{- end }}
 {{- end }}
 ---

@@ -199,7 +199,11 @@ spec:
             value: /
       backendRefs:
         - name: burrito-server
-          port: {{ (index .service.ports 0).port }}
+          {{- range .service.ports }}
+          {{- if eq .name "http" }}
+          port: {{ .port }}
+          {{- end }}
+          {{- end }}
     {{- end }}
 {{- end }}
 ---
