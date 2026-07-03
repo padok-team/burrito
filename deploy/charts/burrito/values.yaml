@@ -409,6 +409,24 @@ controllers:
     host: burrito-controllers.example.com
     # -- TLS configuration for the Burrito controller metrics ingress
     tls: []
+  metricsHttproute:
+    # -- Enable/Disable Gateway API HTTPRoute creation for the Burrito controller metrics endpoint (requires the Gateway API CRDs and controllers.service enabled)
+    enabled: false
+    # -- Metadata configuration for the Burrito controller metrics HTTPRoute
+    metadata:
+      labels: {}
+      annotations: {}
+    # -- Gateway API version to use for the Burrito controller metrics HTTPRoute
+    apiVersion: gateway.networking.k8s.io/v1
+    # -- Gateways the HTTPRoute attaches to (required when metricsHttproute is enabled). Each entry follows the Gateway API parentRef schema (name, optionally namespace/sectionName)
+    parentRefs: []
+    # - name: my-gateway
+    #   namespace: gateway-system
+    #   sectionName: https
+    # -- Hostnames the HTTPRoute matches. Defaults to the controller metrics ingress host when left empty
+    hostnames: []
+    # -- HTTPRoute rules. Defaults to a single rule routing "/" (PathPrefix) to the burrito-controllers service when left empty
+    rules: []
 
 server:
   # -- Metadata configuration for the Burrito server
@@ -498,6 +516,24 @@ server:
     host: burrito.example.com
     # -- TLS configuration for the Burrito server ingress
     tls: []
+  httproute:
+    # -- Enable/Disable Gateway API HTTPRoute creation for the Burrito server (requires the Gateway API CRDs and server.service enabled)
+    enabled: false
+    # -- Metadata configuration for the Burrito server HTTPRoute
+    metadata:
+      labels: {}
+      annotations: {}
+    # -- Gateway API version to use for the Burrito server HTTPRoute
+    apiVersion: gateway.networking.k8s.io/v1
+    # -- Gateways the HTTPRoute attaches to (required when httproute is enabled). Each entry follows the Gateway API parentRef schema (name, optionally namespace/sectionName)
+    parentRefs: []
+    # - name: my-gateway
+    #   namespace: gateway-system
+    #   sectionName: https
+    # -- Hostnames the HTTPRoute matches. Defaults to the server ingress host when left empty
+    hostnames: []
+    # -- HTTPRoute rules. Defaults to a single rule routing "/" (PathPrefix) to the burrito-server service when left empty
+    rules: []
 
 datastore:
   # -- Metadata configuration for the Burrito datastore

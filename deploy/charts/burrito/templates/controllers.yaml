@@ -190,6 +190,45 @@ spec:
   tls:
     {{- toYaml .metricsIngress.tls | nindent 4 }}
 {{- end }}
+{{- if .metricsHttproute.enabled }}
+{{- if not .metricsHttproute.parentRefs }}
+{{- fail "controllers.metricsHttproute.enabled is set but controllers.metricsHttproute.parentRefs is empty: at least one parentRef (Gateway) is required" }}
+{{- end }}
+---
+apiVersion: {{ .metricsHttproute.apiVersion | default "gateway.networking.k8s.io/v1" }}
+kind: HTTPRoute
+metadata:
+  name: burrito-controllers-metrics
+  {{- with mergeOverwrite (deepCopy .metadata) .metricsHttproute.metadata }}
+  labels:
+    {{- toYaml .labels | nindent 4}}
+  annotations:
+    {{- toYaml .annotations | nindent 4}}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- toYaml .metricsHttproute.parentRefs | nindent 4 }}
+  {{- with .metricsHttproute.hostnames | default (list .metricsIngress.host) }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- with .metricsHttproute.rules }}
+    {{- toYaml . | nindent 4 }}
+    {{- else }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: burrito-controllers
+          {{- range .service.ports }}
+          {{- if eq .name "metrics" }}
+          port: {{ .port }}
+          {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
