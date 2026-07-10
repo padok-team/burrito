@@ -212,7 +212,15 @@ It is strongly recommended to create a GitHub token with no specific rights to b
 
 ### Building the Documentation Locally
 
-The documentation site is built with [MkDocs](https://www.mkdocs.org/). To preview your changes, you need Python 3:
+The documentation site is built with [MkDocs](https://www.mkdocs.org/).
+
+If you use [mise](#using-mise-recommended), the toolchain (`uv`) is already available and a task is provided:
+
+```bash
+mise run mkdocs-serve   # installs deps into .venv, then serves at http://127.0.0.1:8000
+```
+
+Otherwise, with Python 3 directly:
 
 ```bash
 pip install -r requirements.txt   # mkdocs + material theme + plugins
