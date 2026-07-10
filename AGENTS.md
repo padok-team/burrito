@@ -41,6 +41,7 @@ To change CRDs: edit `api/v1alpha1/*_types.go`, then run `make manifests` (and `
 
 - Always check errors explicitly. Never `_ = err` or silently ignored returns.
 - No `panic()` in reconcilers — see `internal/controllers/AGENTS.md`.
+- **Tests:** add new cases to the existing test suite for the package rather than creating a new suite from scratch. Controllers use BDD (ginkgo/gomega) — see `internal/controllers/AGENTS.md`.
 
 ## Commits — Conventional Commits
 
