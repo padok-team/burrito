@@ -26,29 +26,15 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0  # Fetch all branches to include 'gh-pages' branch
-<<<<<<< HEAD
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: "0.11.19"
           python-version: "3.14"
-          activate-environment: true
-      - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
-        with:
-          key: mkdocs-material-${{ github.ref }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-
-      - name: Install dependencies
-        run: uv sync
-=======
-      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
-        with:
           enable-cache: true
+          activate-environment: true
 
       - name: Install dependencies
         run: uv sync --frozen
->>>>>>> origin/main
 
       - name: Lint Markdown files
         uses: DavidAnson/markdownlint-cli2-action@ce4853d43830c74c1753b39f3cf40f71c2031eb9 # v23
