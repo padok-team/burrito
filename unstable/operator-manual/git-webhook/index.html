@@ -1832,11 +1832,10 @@
 
 <h1 id="setup-a-git-webhook">Setup a Git Webhook<a class="headerlink" href="#setup-a-git-webhook" title="Permanent link">&para;</a></h1>
 <p>Using the webhook feature, Burrito can automatically trigger actions based on events in your Git repository, such as pull requests or pushes. This allows for real-time updates and interactions with your infrastructure as code.</p>
-<p>Otherwise, Burrito will poll repositories for changes, which may not be as efficient or timely as using webhooks.</p>
+<p>Otherwise, Burrito will poll repositories for changes, which may not be as efficient or timely as using webhooks. Burrito also polls open Pull Requests and Merge Requests to keep <code>TerraformPullRequest</code> resources in sync.</p>
 <div class="admonition warning">
 <p class="admonition-title">Burrito polling limitations</p>
-<p>Burrito's automatic polling of repositories only works for changes on referenced branches in TerraformLayers.
-<strong>Automatic polling of Pull Requests is not implemented yet.</strong></p>
+<p>Burrito's automatic polling of repositories only works for changes on referenced branches in TerraformLayers.</p>
 </div>
 <h2 id="expose-burrito-server-to-the-internet">Expose Burrito server to the internet<a class="headerlink" href="#expose-burrito-server-to-the-internet" title="Permanent link">&para;</a></h2>
 <p>Expose the <code>burrito-server</code> service to the internet using the method of your choice. (e.g. ingress, port-forward &amp; ngrok for local testing...). Accessing the URL on the browser should display the Burrito UI.</p>
