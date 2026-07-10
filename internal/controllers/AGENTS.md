@@ -15,4 +15,3 @@ custom resource: `terraformlayer/`, `terraformrun/`, `terraformrepository/`,
 - Use structured logging via the `logr.Logger` carried in `ctx` (`log.FromContext(ctx)`).
 - Propagate `ctx` and set timeouts on every external call (GitHub, GitLab, Terraform).
 - CRD shapes live in `api/v1alpha1`; never edit generated deepcopy code. After API changes run `make manifests && make generate`.
-- **Tests are BDD.** Each reconciler's `controller_test.go` is a ginkgo/gomega suite written as behaviour specs (`Describe("When X …")` → `It("should Y …")`, run via `RunSpecs`). Add new cases to this existing suite rather than starting a new one from scratch.
