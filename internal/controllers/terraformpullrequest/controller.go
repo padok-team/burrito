@@ -6,7 +6,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	repo "github.com/padok-team/burrito/internal/repository"
 	"github.com/padok-team/burrito/internal/repository/credentials"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,6 +19,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	logrus "github.com/sirupsen/logrus"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 )
@@ -29,6 +33,16 @@ type Reconciler struct {
 	Credentials *credentials.CredentialStore
 	Recorder    record.EventRecorder
 	Datastore   datastore.Client
+	// APIProviderFactory overrides how the API provider is resolved for a repository.
+	// Only used in tests; production code always uses repository.GetAPIProviderFromRepository.
+	APIProviderFactory func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error)
+}
+
+func (r *Reconciler) getAPIProvider(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+	if r.APIProviderFactory != nil {
+		return r.APIProviderFactory(repository)
+	}
+	return repo.GetAPIProviderFromRepository(r.Credentials, repository)
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformpullrequests,verbs=get;list;watch;create;update;patch;delete
@@ -41,29 +55,34 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.WithContext(ctx)
-	log.Infof("starting reconciliation for pull request %s/%s ...", req.Namespace, req.Name)
+	logger := logrus.WithContext(ctx)
+	logger.Infof("starting reconciliation for pull request %s/%s ...", req.Namespace, req.Name)
 	pr := &configv1alpha1.TerraformPullRequest{}
 	err := r.Client.Get(ctx, req.NamespacedName, pr)
 	if errors.IsNotFound(err) {
-		log.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
+		logger.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Errorf("failed to get TerraformPullRequest: %s", err)
+		logger.Errorf("failed to get TerraformPullRequest: %s", err)
 		return ctrl.Result{}, err
 	}
+	return r.reconcilePullRequest(ctx, pr)
+}
+
+func (r *Reconciler) reconcilePullRequest(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) (ctrl.Result, error) {
+	logger := logrus.WithContext(ctx)
 	repository := &configv1alpha1.TerraformRepository{}
-	err = r.Client.Get(ctx, types.NamespacedName{
+	err := r.Client.Get(ctx, types.NamespacedName{
 		Name:      pr.Spec.Repository.Name,
 		Namespace: pr.Spec.Repository.Namespace,
 	}, repository)
 	if errors.IsNotFound(err) {
-		log.Errorf("repository not found. object must not be configured correctly: %s", err)
+		logger.Errorf("repository not found. object must not be configured correctly: %s", err)
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Errorf("failed to get TerraformRepository: %s", err)
+		logger.Errorf("failed to get TerraformRepository: %s", err)
 		return ctrl.Result{}, err
 	}
 
@@ -73,9 +92,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	err = r.Client.Status().Update(ctx, pr)
 	if err != nil {
 		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Could not update pull request status")
-		log.Errorf("could not update pull request %s status: %s", pr.Name, err)
+		logger.Errorf("could not update pull request %s status: %s", pr.Name, err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
-	log.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)
+	logger.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)
 	return result, nil
 }
 

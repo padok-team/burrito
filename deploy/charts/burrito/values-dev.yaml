@@ -3,16 +3,20 @@ config:
     runner:
       image:
         repository: burrito
-        tag: DEV_TAG
+        tag: "1783089222"
         pullPolicy: Never
     datastore:
       storage:
         mock: true
+    controller:
+      timers:
+        driftDetection: 10m
+        repositorySync: 2m
 global:
   deployment:
     image:
       repository: burrito
-      tag: DEV_TAG
+      tag: "1783089222"
       pullPolicy: Never
 tenants:
   - namespace:
