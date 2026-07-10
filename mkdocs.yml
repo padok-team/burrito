@@ -9,6 +9,9 @@ theme:
 extra:
   version:
     provider: mike
+plugins:
+  - search
+  - mermaid2
 markdown_extensions:
   - codehilite
   - admonition
