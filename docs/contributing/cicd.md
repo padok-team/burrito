@@ -9,10 +9,10 @@ This page describes the GitHub Actions workflows that power Burrito's CI/CD pipe
 | `ci.yaml` | Push / PR on `main` | Run Go unit & integration tests |
 | `ci-frontend.yaml` | Push / PR on `main` | Lint and build the UI |
 | `conventional-commits.yaml` | PR on `main` | Enforce Conventional Commits format |
-| `build-and-push.yaml` | Reusable (called by others) | Build multi-arch Docker images and push to GHCR |
+| `build-and-push.yaml` | Reusable (called by others) | Build multi-arch Docker images, push to GHCR, and sign the manifest with cosign |
 | `release.yaml` | `workflow_dispatch` | Orchestrate a full release |
 | `tag-on-release.yaml` | Push to `main` (VERSION changed) | Create git tag, push Helm chart, deploy docs |
-| `helm.yaml` | Reusable (called by others) | Package and push the Helm chart to GHCR |
+| `helm.yaml` | Reusable (called by others) | Package, push, and sign the Helm chart on GHCR |
 | `docs.yaml` | Reusable (called by others) | Deploy documentation with `mike` |
 | `trivy.yaml` | Scheduled / push | Container image vulnerability scanning |
 
@@ -24,7 +24,7 @@ Releases are triggered **manually** via the `release.yaml` workflow with a versi
 
 1. **Trigger** — A maintainer runs the `release` workflow from GitHub Actions, providing the target version (must follow [SemVer](https://semver.org/), prefixed with `v`).
 
-2. **Build Docker images** — The `build-and-push.yaml` reusable workflow builds platform-specific images for `linux/amd64` and `linux/arm64` in parallel, then merges them into a single multi-arch manifest pushed to `ghcr.io/padok-team/burrito:<version>`.
+2. **Build Docker images** — The `build-and-push.yaml` reusable workflow builds platform-specific images for `linux/amd64` and `linux/arm64` in parallel, then merges them into a single multi-arch manifest pushed to `ghcr.io/padok-team/burrito:<version>`. The manifest is then signed with `cosign` (see [Signing](#signing)).
 
 3. **Version bump PR** — Once the images are published, the release workflow:
     - Updates the `VERSION` file with the new version.
@@ -36,7 +36,7 @@ Releases are triggered **manually** via the `release.yaml` workflow with a versi
 
 5. **Tag creation** — Merging the PR changes the `VERSION` file on `main`, which automatically triggers `tag-on-release.yaml`. This workflow reads the new version and creates a matching git tag (e.g. `v1.2.3`).
 
-6. **Helm chart release** — The `helm.yaml` workflow packages the Burrito Helm chart and pushes it to `ghcr.io/padok-team/charts`.
+6. **Helm chart release** — The `helm.yaml` workflow packages the Burrito Helm chart, pushes it to `ghcr.io/padok-team/charts`, and signs it with `cosign`.
 
 7. **Documentation release** — The `docs.yaml` workflow runs `mike deploy <version> latest` to publish the versioned documentation to GitHub Pages.
 
@@ -48,7 +48,8 @@ flowchart TD
 
     subgraph release ["release.yaml (workflow_dispatch)"]
         B[Build Docker images\namd64 + arm64] --> C
-        C[Merge multi-arch manifest\nPush to GHCR with version tag] --> D
+        C[Merge multi-arch manifest\nPush to GHCR with version tag] --> C2
+        C2[Sign manifest with cosign] --> D
         D[Bump VERSION, Chart.yaml\nPin image digest in values.yaml] --> E
         E[Open PR: bump-version-vX.Y.Z]
     end
@@ -65,7 +66,8 @@ flowchart TD
     H --> I & J
 
     subgraph helm ["helm.yaml"]
-        I[Package Helm chart\nPush to ghcr.io/padok-team/charts]
+        I[Package Helm chart\nPush to ghcr.io/padok-team/charts] --> I2
+        I2[Sign chart with cosign]
     end
 
     subgraph docsw ["docs.yaml"]
@@ -82,3 +84,23 @@ Each published Docker image receives the following tags:
 - `latest` — only updated when merging to `main`
 
 The image digest is also pinned in `values.yaml` to guarantee reproducible installs.
+
+## Signing
+
+Every Docker image and Helm chart pushed to GHCR is signed with [cosign](https://docs.sigstore.dev/cosign/overview/) using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.
+
+Signing happens right after the artifact is pushed, by digest, in `build-and-push.yaml` (job `merge`) and `helm.yaml` (job `helm-push`). It requires the `id-token: write` permission, which every workflow calling these reusable workflows must grant.
+
+To verify a signature:
+
+```bash
+# Docker image
+cosign verify ghcr.io/padok-team/burrito:<version> \
+  --certificate-identity-regexp 'https://github.com/padok-team/burrito/.github/workflows/.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# Helm chart
+cosign verify ghcr.io/padok-team/charts/burrito:<chart-version> \
+  --certificate-identity-regexp 'https://github.com/padok-team/burrito/.github/workflows/.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```

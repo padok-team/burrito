@@ -18,6 +18,7 @@ env:
 
 permissions:
   packages: write
+  id-token: write # Required for keyless cosign signing
 
 jobs:
   build:
@@ -165,3 +166,11 @@ jobs:
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
           DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }} | grep -m1 '^Digest:' | awk '{print $2}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Install Cosign
+        if: env.REGISTRY_PUSH == 'true'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign image
+        if: env.REGISTRY_PUSH == 'true'
+        run: cosign sign --yes ${{ env.REGISTRY_IMAGE }}@${{ steps.inspect.outputs.digest }}

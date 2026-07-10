@@ -12,6 +12,7 @@ permissions:
   contents: write
   packages: write
   pull-requests: write
+  id-token: write # Required by build-and-push.yaml for keyless cosign signing
 
 jobs:
   build-and-push:
@@ -20,6 +21,7 @@ jobs:
       version: ${{ inputs.version }}
     permissions:
       packages: write
+      id-token: write
 
   version:
     runs-on: ubuntu-latest

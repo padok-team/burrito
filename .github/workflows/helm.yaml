@@ -16,6 +16,11 @@ on:
     paths:
       - ".github/workflows/helm.yaml"
       - "deploy/charts/**"
+
+permissions:
+  packages: write
+  id-token: write # Required for keyless cosign signing
+
 env:
   CHART_NAME: burrito
   CHART_PATH: ./deploy/charts/burrito
@@ -62,4 +67,13 @@ jobs:
         run: helm package ${{ env.CHART_PATH }} -u --version ${{ env.VERSION }} --app-version ${{ env.APP_VERSION }}
 
       - name: Helm Push
-        run: helm push ./${{ env.CHART_NAME }}-${{ env.VERSION }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+        id: push
+        run: |
+          helm push ./${{ env.CHART_NAME }}-${{ env.VERSION }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts 2>&1 | tee push.log
+          echo "digest=$(grep -oP '(?<=Digest: ).*' push.log)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign Helm chart
+        run: cosign sign --yes ${{ env.CHART_REPO }}/${{ env.CHART_NAME }}@${{ steps.push.outputs.digest }}
