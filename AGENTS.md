@@ -15,6 +15,7 @@ Nested `AGENTS.md` files add directory-specific rules — read them when working
 
 - `api/v1alpha1/` — CRD Go types (see nested AGENTS.md). **Codegen-sensitive.**
 - `internal/controllers/` — reconciliation logic, one package per resource (see nested AGENTS.md).
+- `internal/repository/` — git provider access (see nested AGENTS.md). `internal/runner/` — the Terraform runner binary (see nested AGENTS.md). `internal/datastore/` — artifact storage service (see nested AGENTS.md). `internal/server/` — dashboard server + API (see nested AGENTS.md). `internal/webhook/` — VCS webhook receiver (see nested AGENTS.md).
 - `ui/` — React/Vite/TS dashboard (see nested AGENTS.md).
 - `deploy/charts/burrito/` — Helm chart (see nested AGENTS.md).
 - `cmd/` — binary entrypoints. `hack/` — dev/build scripts. `manifests/` & `config/crd/bases/` — generated manifests. `testdata/` — fixtures. `docs/` — documentation.
@@ -46,4 +47,5 @@ To change CRDs: edit `api/v1alpha1/*_types.go`, then run `make manifests` (and `
 Format: `<type>(<scope>): <description>`.
 
 - **Types:** `feat`, `fix`, `chore`, `docs`, `test`, `refactor`.
-- **Scopes** (use the closest fit): `controller`, `api`, `ui`, `helm`, `ci`, `deps`, `docker`. Scope is optional when none applies.
+- **Scopes** — suggested, not enforced. Prefer the closest fit (`controller`, `api`, `ui`, `helm`, `ci`, `deps`, `docker`); otherwise use another short, relevant scope or omit it.
+- CI gates each commit with commitlint (`@commitlint/config-conventional`) — self-check a message with `npx commitlint`.
