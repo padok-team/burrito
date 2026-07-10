@@ -50,7 +50,11 @@ jobs:
   helm-push:
     uses: ./.github/workflows/helm.yaml
     needs: tag
+    with:
+      version: ${{ needs.tag.outputs.version }}
 
   docs-deploy:
     uses: ./.github/workflows/docs.yaml
     needs: tag
+    with:
+      version: ${{ needs.tag.outputs.version }}

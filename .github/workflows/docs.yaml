@@ -1,6 +1,11 @@
 name: Documentation
 on:
   workflow_call:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g. v1.2.3)'
+        type: string
+        required: true
   push:
     branches:
       - main
@@ -55,5 +60,5 @@ jobs:
       - name: Deploy pages (new release)
         if: github.event_name == 'workflow_call'
         run: |
-          mike deploy --push --update-aliases ${{ github.ref_name }} latest
-          echo "Deployed version ${{ github.ref_name }} to GitHub Pages"
+          mike deploy --push --update-aliases ${{ inputs.version }} latest
+          echo "Deployed version ${{ inputs.version }} to GitHub Pages"

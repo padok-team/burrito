@@ -2,7 +2,20 @@ name: Helm CI/CD
 
 on:
   workflow_call:
-
+    inputs:
+      version:
+        description: 'Version to deploy (e.g. v1.2.3)'
+        type: string
+        required: true
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/helm.yaml"
+      - "deploy/charts/**"
 env:
   CHART_NAME: burrito
   CHART_PATH: ./deploy/charts/burrito
@@ -37,9 +50,9 @@ jobs:
           if [[ ${{ github.event_name }} == 'pull_request' || ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'branch' ]]; then
             echo "VERSION=$(echo $CURRENT_VERSION-${{ github.sha }})" >> $GITHUB_ENV
             echo "APP_VERSION=${{ github.sha }}" >> $GITHUB_ENV
-          elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'tag' ]]; then
-            echo "VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')" >> $GITHUB_ENV
-            echo "APP_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ ${{ github.event_name }} == 'workflow_call' ]]; then
+            echo "VERSION=$(echo ${{ inputs.version }} | sed 's/v//')" >> $GITHUB_ENV
+            echo "APP_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
           else
             echo "Unsupported event type"
             exit 1
