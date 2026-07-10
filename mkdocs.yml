@@ -38,7 +38,6 @@ nav:
   - Operator Manual:
       - operator-manual/index.md
       - operator-manual/architecture.md
-      - operator-manual/state-machines.md
       - operator-manual/user-authentication.md
       - operator-manual/repository-controller.md
       - Git Authentication:
