@@ -57,45 +57,12 @@ The CLI used to start the different components is implemented using [`cobra`](ht
 
 For more details on how the repository controller works with Git bundles and revisions, see the [Repository Controller documentation](./repository-controller.md).
 
-### The TerraformLayer Controller
+### Controller state machines
 
-The status of a `TerraformLayer` is defined using the [conditions standards defined by the community](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties).
-
-3 conditions are defined for a layer:
-
-- `IsPlanArtifactUpToDate`. This condition is used for drift detection. The evaluation is made by compraing the timestamp of the last `terraform plan` which ran and the current date. The timestamp of the last plan is "stored" using an annotation.
-- `IsApplyUpToDate`. This condition is used to check if an `apply` needs to run after the last `plan`. Comparison is made by comparing a checksum of the last planned binary and a checksum last applied binary stored in the annotations.
-- `IsLastRelevantCommitPlanned`. This condition is used to check if a new commit has been made to the layer and need to be applied. It is evaluated by comparing the commit used for the last `plan`, the last commit which intoduced changes to the layer and the last commit made to the same branch of the repository. Those commits are "stored" as annotations.
-
-With those 3 conditions, we defined 3 states:
-
-- `Idle`. This is the state of a layer if no runner needs be started
-- `PlanNeeded`. This is the state of a layer if burrito needs to start a `plan` runner
-- `ApplyNeeded`. This is the state of a layer if burrito needs to start an `apply` runner
-
-!!! info
-    If you use [`dry` remediation strategy](../user-guide/remediation-strategy.md) and an apply is needed, the layer will stay in the `ApplyNeeded` as long as it does not need to enter the `PlanNeeded`.
-
-### The TerraformRun Controller
-
-The status of a `TerraformRun` is also defined using the same [conditions standards defined by the community](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties).
-
-5 conditions are defined for a run:
-
-- `HasStatus`. This condition is used to check if a `TerraformRun` has already been reconciled by the controller.
-- `HasReachedRetryLimit`. Used to check if a `TerraformRun` has reached the maximum number of retries.
-- `HasSucceeded`. Used to check if a `TerraformRun` has already succeeded (runner pod exited successfully).
-- `IsRunning`. Used to check if a `TerraformRun` is currently running by checking the current phase of its associated pod.
-- `IsInfailureGracePeriod`. This condition is used to check if a Terraform workflow has already failed. If so, we use an exponential backoff strategy before restarting a runner on the given layer.
-
-With those 5 conditions, we defined 6 states:
-
-- `Initial`. This is the state of a run when it has just been created and has launched its first runner pod.
-- `Running`. This is the state of a run if a runner pod is currently running.
-- `FailureGracePeriod`. This is the state of a layer if a `plan` or `apply` runner has failed
-- `Retrying`. This is an intermediate state of a run if a runner pod has failed and is being restarted (not in failure grace period anymore).
-- `Succeeded`. This is one of the two final states a run can have. It means that the runner pod has exited successfully.
-- `Failed`. This is the other final state a run can have. It means that the run has failed multiple times and has reached the maximum number of retries.
+Each controller drives its resource through a state machine whose status is
+expressed using the [conditions standards defined by the community](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties).
+For the full state machines of each CRD, the conditions that drive them, and how
+the resources interact, see [CRD State Machines](./state-machines.md).
 
 The `TerraformRun` controller also creates and deletes the [Kubernetes leases](https://kubernetes.io/docs/concepts/architecture/leases/) to avoid concurrent use of Terraform on the same layer.
 

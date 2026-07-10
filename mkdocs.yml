@@ -12,7 +12,12 @@ extra:
 markdown_extensions:
   - codehilite
   - admonition
-  - pymdownx.superfences
+  - pymdownx.superfences:
+    # make exceptions to highlighting of code:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
   - toc:
       permalink: true
 nav:
@@ -30,6 +35,7 @@ nav:
   - Operator Manual:
       - operator-manual/index.md
       - operator-manual/architecture.md
+      - operator-manual/state-machines.md
       - operator-manual/user-authentication.md
       - operator-manual/repository-controller.md
       - Git Authentication:
