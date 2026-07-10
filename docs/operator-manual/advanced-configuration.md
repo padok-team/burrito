@@ -66,7 +66,7 @@ spec:
             key: token
 ```
 
-The same variable is already documented for local development setups in [Contributing → Advanced Settings](../contributing.md#advanced-settings); the snippet above is the production-shaped equivalent (Secret reference rather than an inline value).
+The same variable is already documented for local development setups in [Contributing → Advanced Settings](../contributing/index.md#advanced-settings); the snippet above is the production-shaped equivalent (Secret reference rather than an inline value).
 
 !!! tip
     Apply the override on the `TerraformRepository` so that every linked `TerraformLayer` inherits it, instead of repeating the setting on each layer. See [override the runner pod spec](../user-guide/override-runner.md) for the merge rules.

@@ -9,6 +9,7 @@
   "ignorePresets": [
     ":semanticPrefixFixDepsChoreOthers"
   ],
+  "commitMessageLowerCase": "auto",
   "packageRules": [
     {
       "matchManagers": [

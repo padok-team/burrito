@@ -1,4 +1,5 @@
 [project]
+<<<<<<< HEAD
 name = "burrito"
 version = "0.1.0"
 description = "Add your description here"
@@ -8,4 +9,12 @@ dependencies = [
     "mike>=2.2.0",
     "mkdocs-material>=9.7.6",
     "mkdocs-mermaid2-plugin>=1.2.3",
+=======
+name = "burrito-docs"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "mkdocs-material",
+    "mike",
+>>>>>>> origin/main
 ]

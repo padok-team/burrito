@@ -64,7 +64,9 @@ nav:
       - user-guide/sync-windows.md
   - Migration Guides:
       - migration-guides/new-credential-system.md
-  - Contributing: contributing.md
+  - Contributing:
+      - contributing/index.md
+      - contributing/cicd.md
 # - Reference:
 #   - reference/index.md
 #   - reference/api.md

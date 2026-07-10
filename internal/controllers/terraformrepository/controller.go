@@ -39,6 +39,7 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
 
 type Clock interface {
@@ -60,6 +61,9 @@ type Reconciler struct {
 	Credentials *credentials.CredentialStore
 	Datastore   datastore.Client
 	Clock
+	// APIProviderFactory overrides how the API provider is resolved for a repository.
+	// Only used in tests; production code always uses repository.GetAPIProviderFromRepository.
+	APIProviderFactory func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error)
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformrepositories,verbs=get;list;watch;create;update;patch;delete
