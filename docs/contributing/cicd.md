@@ -5,7 +5,7 @@ This page describes the GitHub Actions workflows that power Burrito's CI/CD pipe
 ## Workflows Overview
 
 | Workflow | Trigger | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `ci.yaml` | Push / PR on `main` | Run Go unit & integration tests |
 | `ci-frontend.yaml` | Push / PR on `main` | Lint and build the UI |
 | `conventional-commits.yaml` | PR on `main` | Enforce Conventional Commits format |
