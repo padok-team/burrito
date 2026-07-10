@@ -348,15 +348,15 @@ If you want to use Vscode to debug the app, you'll need to get the [Go extension
 
 Browse your code to set breakpoints by clicking on the left side of your line.
 
-![Vscode breakpoint](assets/demo/vscode-breakpoint.png)
+![Vscode breakpoint](../assets/demo/vscode-breakpoint.png)
 
 Open the `Run and Debug` pane, select your debugging configuration and hit `F5` to connect to the remove `dlv`.
 
-![Vscode debug configuration](assets/demo/vscode-debug.png)
+![Vscode debug configuration](../assets/demo/vscode-debug.png)
 
 Once your line is reached, vscode will show you the variables, current stack, etc
 
-![Vscode debug variables](assets/demo/vscode-debug-variables.png)
+![Vscode debug variables](../assets/demo/vscode-debug-variables.png)
 
 #### With `dlv`
 
