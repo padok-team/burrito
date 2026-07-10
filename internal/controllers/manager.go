@@ -167,6 +167,7 @@ func (c *Controllers) Exec() {
 				Config:       c.config,
 				Datastore:    datastoreClient,
 				K8SLogClient: clientset,
+				Credentials:  credentialStore,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create run controller: %s", err)
 			}

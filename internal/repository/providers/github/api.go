@@ -56,6 +56,9 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 		commit = pr.Annotations[annotations.LastBranchCommit]
 	}
 	ctx := "burrito/" + string(s.Phase)
+	if s.Context != "" {
+		ctx = s.Context
+	}
 	state := string(s.State)
 	description := s.Description
 	_, _, err := api.client.Repositories.CreateStatus(context.TODO(), owner, repoName, commit, github.RepoStatus{

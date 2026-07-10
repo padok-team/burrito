@@ -8,6 +8,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/metrics"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/padok-team/burrito/internal/lock"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -190,6 +191,8 @@ func (s *Succeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
 
+		r.setCommitStatusForDirectPush(ctx, run, layer, repo, status.StateSuccess)
+
 		metrics.RecordRunCompleted(*run)
 
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
@@ -208,6 +211,8 @@ func (s *Failed) getHandler() Handler {
 			log.Errorf("could not delete lock for run %s: %s", run.Name, err)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
+
+		r.setCommitStatusForDirectPush(ctx, run, layer, repo, status.StateFailure)
 
 		metrics.RecordRunFailed(*run)
 

@@ -43,6 +43,9 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/credentials"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
 
 type Clock interface {
@@ -61,9 +64,20 @@ type Reconciler struct {
 	K8SLogClient *logClient.Clientset
 	Scheme       *runtime.Scheme
 	Config       *config.Config
+	Credentials  *credentials.CredentialStore
 	Recorder     record.EventRecorder
 	Datastore    datastore.Client
 	Clock
+	// APIProviderFactory overrides how the API provider is resolved for a repository.
+	// Only used in tests; production code always uses repository.GetAPIProviderFromRepository.
+	APIProviderFactory func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error)
+}
+
+func (r *Reconciler) getAPIProvider(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+	if r.APIProviderFactory != nil {
+		return r.APIProviderFactory(repository)
+	}
+	return repo.GetAPIProviderFromRepository(r.Credentials, repository)
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformruns,verbs=get;list;watch;create;update;patch;delete
