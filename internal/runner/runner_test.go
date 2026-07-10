@@ -31,9 +31,26 @@ const binaryPath string = "bin/tenv-binaries"
 const repositoryPath string = "test.out/runner-repository"
 
 func TestRunner(t *testing.T) {
+	if !envtestAssetsConfigured() {
+		t.Skip("envtest binaries are not configured; run make test or set KUBEBUILDER_ASSETS")
+	}
+
 	RegisterFailHandler(Fail)
 
 	RunSpecs(t, "Runner Suite")
+}
+
+func envtestAssetsConfigured() bool {
+	if os.Getenv("KUBEBUILDER_ASSETS") != "" {
+		return true
+	}
+
+	for _, binary := range []string{"etcd", "kube-apiserver", "kubectl"} {
+		if _, err := os.Stat(filepath.Join("/usr/local/kubebuilder/bin", binary)); err != nil {
+			return false
+		}
+	}
+	return true
 }
 
 var _ = BeforeSuite(func() {

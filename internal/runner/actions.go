@@ -60,15 +60,30 @@ func (r *Runner) ExecAction() error {
 
 // Run the `init` command
 func (r *Runner) ExecInit() error {
-	log.Infof("launching %s init in %s", r.exec.TenvName(), r.workingDir)
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
 		return err
 	}
+	tenvName := r.exec.TenvName()
+	log.Infof("launching %s init in %s", tenvName, r.workingDir)
 	err := r.exec.Init(r.workingDir)
 	if err != nil {
-		log.Errorf("error executing %s init: %s", r.exec.TenvName(), err)
-		return err
+		if !r.config.Hermitcrab.Enabled {
+			log.Errorf("error executing %s init: %s", tenvName, err)
+			return err
+		}
+		log.Warnf("error executing %s init through Hermitcrab network mirror: %s", tenvName, err)
+		log.Warnf("Hermitcrab network mirror may be stale or unreachable, removing mirror configuration and retrying %s init directly", tenvName)
+		removeErr := r.DisableHermitcrab()
+		if removeErr != nil {
+			return fmt.Errorf("could not remove Hermitcrab network mirror configuration: %w", removeErr)
+		}
+		log.Infof("retrying %s init without Hermitcrab network mirror", tenvName)
+		err = r.exec.Init(r.workingDir)
+		if err != nil {
+			log.Errorf("error executing %s init without Hermitcrab network mirror: %s", tenvName, err)
+			return err
+		}
 	}
 	return nil
 }
