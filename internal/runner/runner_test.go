@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -32,7 +33,7 @@ const repositoryPath string = "test.out/runner-repository"
 
 func TestRunner(t *testing.T) {
 	if !envtestAssetsConfigured() {
-		t.Skip("envtest binaries are not configured; run make test or set KUBEBUILDER_ASSETS")
+		t.Skip("envtest is not configured; run make test or set USE_EXISTING_CLUSTER, KUBEBUILDER_ASSETS, or TEST_ASSET_*")
 	}
 
 	RegisterFailHandler(Fail)
@@ -41,11 +42,22 @@ func TestRunner(t *testing.T) {
 }
 
 func envtestAssetsConfigured() bool {
+	if strings.EqualFold(os.Getenv("USE_EXISTING_CLUSTER"), "true") {
+		return true
+	}
+
 	if os.Getenv("KUBEBUILDER_ASSETS") != "" {
 		return true
 	}
 
-	for _, binary := range []string{"etcd", "kube-apiserver", "kubectl"} {
+	for binary, assetEnv := range map[string]string{
+		"etcd":           "TEST_ASSET_ETCD",
+		"kube-apiserver": "TEST_ASSET_KUBE_APISERVER",
+		"kubectl":        "TEST_ASSET_KUBECTL",
+	} {
+		if os.Getenv(assetEnv) != "" {
+			continue
+		}
 		if _, err := os.Stat(filepath.Join("/usr/local/kubebuilder/bin", binary)); err != nil {
 			return false
 		}
