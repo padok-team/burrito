@@ -113,3 +113,20 @@ type TerraformRepositoryList struct {
 func init() {
 	SchemeBuilder.Register(&TerraformRepository{}, &TerraformRepositoryList{})
 }
+
+// Workaround needed for envtest which does not populate the TypeMeta structure
+// See https://github.com/kubernetes-sigs/controller-runtime/issues/1870
+func (repository *TerraformRepository) GetAPIVersion() string {
+	if repository.APIVersion == "" {
+		return "config.terraform.padok.cloud/v1alpha1"
+	}
+	return repository.APIVersion
+}
+
+// Same as above
+func (repository *TerraformRepository) GetKind() string {
+	if repository.Kind == "" {
+		return "TerraformRepository"
+	}
+	return repository.Kind
+}

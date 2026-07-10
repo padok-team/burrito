@@ -48,6 +48,14 @@ func (s *SyncNeeded) getHandler() Handler {
 	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository) (ctrl.Result, []configv1alpha1.BranchState) {
 		log := log.WithContext(ctx)
 		branchStates := repository.Status.Branches
+
+		// Keep TerraformPullRequest resources in sync with open remote pull/merge requests.
+		// Best-effort: a failure here must not block the branch synchronization below.
+		if err := r.syncPullRequests(ctx, repository); err != nil {
+			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to synchronize pull requests: %s", err))
+			log.Errorf("failed to synchronize pull requests for repository %s/%s: %s", repository.Namespace, repository.Name, err)
+		}
+
 		gitProvider, err := repo.GetGitProviderFromRepository(r.Credentials, repository)
 		if err != nil {
 			r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Failed to get git provider: %s", err))

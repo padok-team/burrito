@@ -7,6 +7,6 @@ This is the home of the Burrito documentation. Here you will find all the inform
 - [Guides](./guides/index.md) provides detailed tutorials to help you understand how to use Burrito.
 - [Operator Manual](./operator-manual/index.md) is a detailed guide to help you understand how to install and configure Burrito.
 - [User Guide](./user-guide/index.md) is a detailed guide to help you understand how to setup and use Burrito resources.
-- [Contributing](./contributing.md) provides information on how to contribute to the Burrito project.
+- [Contributing](./contributing/index.md) provides information on how to contribute to the Burrito project.
 <!-- - [Reference](./reference/) provides detailed information about the Burrito CRDs and their specifications.
 - [FAQ](./faq.md) answers some of the most frequently asked questions about Burrito. -->

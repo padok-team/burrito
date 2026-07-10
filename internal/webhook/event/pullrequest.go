@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	utils "github.com/padok-team/burrito/internal/utils/url"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	utils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/hashicorp/go-multierror"
@@ -60,8 +61,26 @@ func (e *PullRequestEvent) Handle(c client.Client) error {
 func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
-		log.Infof("creating TerraformPullRequest %s/%s", pr.Namespace, pr.Name)
-		err := c.Create(ctx, &pr)
+		current := &configv1alpha1.TerraformPullRequest{}
+		err := c.Get(ctx, types.NamespacedName{Name: pr.Name, Namespace: pr.Namespace}, current)
+		if apierrors.IsNotFound(err) {
+			log.Infof("creating TerraformPullRequest %s/%s", pr.Namespace, pr.Name)
+			err = c.Create(ctx, &pr)
+			if apierrors.IsAlreadyExists(err) {
+				log.Infof("updating TerraformPullRequest %s/%s after create race", pr.Namespace, pr.Name)
+				err = c.Get(ctx, types.NamespacedName{Name: pr.Name, Namespace: pr.Namespace}, current)
+				if err == nil {
+					current.Spec = pr.Spec
+					mergePullRequestEventAnnotations(current, &pr)
+					err = c.Update(ctx, current)
+				}
+			}
+		} else if err == nil {
+			log.Infof("updating TerraformPullRequest %s/%s", pr.Namespace, pr.Name)
+			current.Spec = pr.Spec
+			mergePullRequestEventAnnotations(current, &pr)
+			err = c.Update(ctx, current)
+		}
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
 		}
@@ -69,11 +88,25 @@ func batchCreatePullRequests(ctx context.Context, c client.Client, prs []configv
 	return errResult
 }
 
+func mergePullRequestEventAnnotations(current *configv1alpha1.TerraformPullRequest, desired *configv1alpha1.TerraformPullRequest) {
+	// PR/MR events only own the remote commit annotations; keep anything added
+	// by users, polling, or other controllers on the existing object.
+	if current.Annotations == nil {
+		current.Annotations = map[string]string{}
+	}
+	for key, value := range desired.Annotations {
+		current.Annotations[key] = value
+	}
+}
+
 func batchDeletePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
 	var errResult error
 	for _, pr := range prs {
 		log.Infof("deleting TerraformPullRequest %s/%s", pr.Namespace, pr.Name)
 		err := c.Delete(ctx, &pr)
+		if apierrors.IsNotFound(err) {
+			continue
+		}
 		if err != nil {
 			errResult = multierror.Append(errResult, err)
 		}

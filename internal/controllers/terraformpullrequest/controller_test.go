@@ -437,8 +437,8 @@ var _ = Describe("TerraformPullRequest controller", func() {
 				It("should end in Idle state", func() {
 					Expect(pr.Status.State).To(Equal("Idle"))
 				})
-				It("should set RequeueAfter to WaitAction", func() {
-					Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+				It("should not set RequeueAfter", func() {
+					Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 				})
 			})
 			Describe("When a TerraformPullRequest with no relevant changes is created", Ordered, func() {
