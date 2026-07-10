@@ -1,0 +1,11 @@
+[project]
+name = "burrito"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "mike>=2.2.0",
+    "mkdocs-material>=9.7.6",
+    "mkdocs-mermaid2-plugin>=1.2.3",
+]
