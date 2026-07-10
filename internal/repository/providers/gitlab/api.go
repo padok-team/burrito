@@ -52,6 +52,9 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 		commit = pr.Annotations[annotations.LastBranchCommit]
 	}
 	name := "burrito/" + string(s.Phase)
+	if s.Context != "" {
+		name = s.Context
+	}
 	description := s.Description
 	state := toGitlabBuildState(s.State)
 	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, &gitlab.SetCommitStatusOptions{
