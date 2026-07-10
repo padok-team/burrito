@@ -1,18 +1,18 @@
 [tools]
-# Language runtimes — pinned to match go.mod, the Dockerfile and CI
-go = "1.26"      # go.mod
-node = "24"      # Dockerfile (node:24.16.0) / ci-frontend NODE_VERSION
-yarn = "1"       # classic, matches ui/yarn.lock
+# Language runtimes — matched to the Dockerfile build images so dev == build
+go = "1.26.3"      # Dockerfile golang builder (>= go.mod 1.26.0)
+node = "24.16.0"   # Dockerfile node builder / ci-frontend NODE_VERSION
+yarn = "1.22.22"   # classic, matches ui/yarn.lock
 
-# Kubernetes & dev CLIs (float like CI; pinned exactly via mise.lock)
-kubectl = "latest"
-helm = "latest"
-kind = "latest"
-yq = "latest"
-golangci-lint = "latest"
+# Kubernetes & dev CLIs — pinned for a reproducible environment
+kubectl = "1.36.2"      # aligns with ENVTEST_K8S_VERSION (1.36.0)
+helm = "4.2.0"
+kind = "0.32.0"
+yq = "4.53.3"           # mikefarah
+golangci-lint = "2.12.2"
 
 # Docs toolchain
-uv = "latest"
+uv = "0.11.19"
 
 # Not managed here (system-level): docker + buildx/compose, make, git.
 
