@@ -1,6 +1,15 @@
 name: Documentation
 on:
   workflow_call:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/docs.yaml"
+      - "docs/**"
 
 permissions:
   contents: write
@@ -44,7 +53,7 @@ jobs:
         run: mike deploy --push --update-aliases unstable
 
       - name: Deploy pages (new release)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'workflow_call'
         run: |
           mike deploy --push --update-aliases ${{ github.ref_name }} latest
           echo "Deployed version ${{ github.ref_name }} to GitHub Pages"
