@@ -47,6 +47,23 @@ We welcome suggestions for improvements. Please use the issue tracker to submit 
 
 For UI development you also need [Node.js 24](https://nodejs.org/) and Yarn (classic) — see [`ui/AGENTS.md`](https://github.com/padok-team/burrito/blob/main/ui/AGENTS.md) for the UI workflow.
 
+#### Using mise (recommended)
+
+This repository ships a [`mise.toml`](https://github.com/padok-team/burrito/blob/main/mise.toml) that pins the exact versions of the tools above with [mise](https://mise.jdx.dev/), so every contributor gets an identical environment. After [installing mise](https://mise.jdx.dev/getting-started.html), run from the repository root:
+
+```bash
+mise install        # install all pinned tools (Go, Node, Yarn, kubectl, helm, kind, yq, golangci-lint, uv)
+```
+
+Docker (with Buildx and Compose), `make` and Git are system-level tools and are **not** managed by mise — install them yourself.
+
+`mise.toml` also defines a few tasks:
+
+```bash
+mise run lint          # golangci-lint run ./...
+mise run mkdocs-serve  # live docs preview (see "Building the Documentation Locally")
+```
+
 To run an instance of Burrito, you will need a Kubernetes cluster. This tutorial uses Kind as a local development Kubernetes cluster.
 
 Follow [Kind's quick start tutorial](https://kind.sigs.k8s.io/docs/user/quick-start) to set up a local cluster.
