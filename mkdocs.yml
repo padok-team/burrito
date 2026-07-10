@@ -6,22 +6,15 @@ theme:
   logo: assets/icon/burrito.png
   features:
     - navigation.indexes
-plugins:
-    - search
-    - mermaid2
 extra:
   version:
     provider: mike
 markdown_extensions:
   - codehilite
   - admonition
+  - pymdownx.superfences
   - toc:
       permalink: true
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:mermaid2.fence_mermaid_custom
 nav:
   - Home: index.md
   - Overview: overview.md
