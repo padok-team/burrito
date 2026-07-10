@@ -33,13 +33,19 @@ We welcome suggestions for improvements. Please use the issue tracker to submit 
 
 ### Prerequisites
 
-- A container runtime (docker, podman, etc.)
+- [Go 1.26+](https://go.dev/dl/) (matches `go.mod`/CI) — required for `make build`, `make test`, `make vet`, `golangci-lint`, and `go install` of tools such as `dlv`
+- Docker with [Buildx](https://docs.docker.com/build/buildx/) and Compose — the `make upgrade-*-kind` and `make test` targets are docker-specific (`docker buildx build --load`, `kind load docker-image`, `docker compose`)
 - Git
 - [Kind](https://kind.sigs.k8s.io/)
 - [Helm](https://helm.sh/)
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/#kubectl)
 - [`yq`](https://github.com/mikefarah/yq)
 - `make`
+- [`golangci-lint`](https://golangci-lint.run/) (optional, recommended) — has no `make` target; run `golangci-lint run ./...` before pushing (CI enforces it)
+
+`controller-gen`, `kustomize`, and `setup-envtest` are installed automatically into `./bin` by the relevant `make` targets — no manual install needed.
+
+For UI development you also need [Node.js 24](https://nodejs.org/) and Yarn (classic) — see [`ui/AGENTS.md`](https://github.com/padok-team/burrito/blob/main/ui/AGENTS.md) for the UI workflow.
 
 To run an instance of Burrito, you will need a Kubernetes cluster. This tutorial uses Kind as a local development Kubernetes cluster.
 
@@ -186,6 +192,18 @@ It is strongly recommended to create a GitHub token with no specific rights to b
 
 - Please follow the convention described by [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 - If you don't, the CI pipeline will fail.
+
+### Building the Documentation Locally
+
+The documentation site is built with [MkDocs](https://www.mkdocs.org/). To preview your changes, you need Python 3:
+
+```bash
+pip install -r requirements.txt   # mkdocs + material theme + plugins
+mkdocs serve                      # live preview at http://127.0.0.1:8000
+mkdocs build --strict             # what CI runs; fails on broken links
+```
+
+CI also lints Markdown with `markdownlint-cli2` using `docs/.markdownlint.jsonc`.
 
 ## Additional Resources
 
