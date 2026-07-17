@@ -15,3 +15,4 @@ custom resource: `terraformlayer/`, `terraformrun/`, `terraformrepository/`,
 - Use structured logging via the `logr.Logger` carried in `ctx` (`log.FromContext(ctx)`).
 - Propagate `ctx` and set timeouts on every external call (GitHub, GitLab, Terraform).
 - CRD shapes live in `api/v1alpha1`; never edit generated deepcopy code. After API changes run `make manifests && make generate`.
+- **State machines are documented.** When you change a reconciler's states or transitions (its `states.go` — the `GetState` switch, state structs, or the conditions in `conditions.go` that drive them), update the matching Mermaid diagram in the "Controller state machines" section of [`docs/operator-manual/architecture.md`](../../docs/operator-manual/architecture.md) so it stays in sync.
