@@ -5,6 +5,7 @@
 - Installed [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) command-line tool
 - Installed [helm](https://helm.sh/docs/intro/install/) command-line tool **(version v3.8.0 and further)**
 - Have access to a Kubernetes cluster
+- (Optional) Installed [cosign](https://github.com/sigstore/cosign) command-line tool to verify image and chart signatures
 
 ## 1. Basic installation
 
@@ -57,3 +58,23 @@ tenants:
 
 !!! info
     Learn more about these values in the chart's [README file](https://github.com/padok-team/burrito/tree/main/deploy/charts/burrito/README.md) and [Multi-tenant architecture](../operator-manual/multi-tenant-architecture.md).
+
+## 3. (Optional) Verify image and chart signatures
+
+Every Docker image and Helm chart pushed to GHCR is signed with [cosign](https://docs.sigstore.dev/cosign/overview/) using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.
+
+Signing happens right after the artifact is pushed, by digest, in `build-and-push.yaml` (job `merge`) and `helm.yaml` (job `helm-push`). It requires the `id-token: write` permission, which every workflow calling these reusable workflows must grant.
+
+To verify a signature:
+
+```bash
+# Docker image
+cosign verify ghcr.io/padok-team/burrito:<version> \
+  --certificate-identity-regexp 'https://github.com/padok-team/burrito/.github/workflows/.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# Helm chart
+cosign verify ghcr.io/padok-team/charts/burrito:<chart-version> \
+  --certificate-identity-regexp 'https://github.com/padok-team/burrito/.github/workflows/.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
