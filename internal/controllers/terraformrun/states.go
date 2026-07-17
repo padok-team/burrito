@@ -7,6 +7,7 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/commitstatus"
 	"github.com/padok-team/burrito/internal/controllers/metrics"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/padok-team/burrito/internal/lock"
@@ -106,6 +107,7 @@ func (s *Initial) getHandler() Handler {
 			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for initial run", pod.Name))
+		r.postCommitStatus(ctx, run, layer, repo, status.StatePending, commitstatus.InProgress)
 
 		metrics.RecordRunCreated(*run)
 
@@ -173,6 +175,7 @@ func (s *Retrying) getHandler() Handler {
 			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for retry run", pod.Name))
+		r.postCommitStatus(ctx, run, layer, repo, status.StatePending, commitstatus.InProgress)
 		// Minimal time (1s) to transit from Retrying state to Running state
 		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
 	}
@@ -191,7 +194,7 @@ func (s *Succeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
 
-		r.setCommitStatusForDirectPush(ctx, run, layer, repo, status.StateSuccess)
+		r.postCommitStatus(ctx, run, layer, repo, status.StateSuccess, commitstatus.Succeeded)
 
 		metrics.RecordRunCompleted(*run)
 
@@ -212,7 +215,7 @@ func (s *Failed) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, getRunInfo(run)
 		}
 
-		r.setCommitStatusForDirectPush(ctx, run, layer, repo, status.StateFailure)
+		r.postCommitStatus(ctx, run, layer, repo, status.StateFailure, commitstatus.Failed)
 
 		metrics.RecordRunFailed(*run)
 

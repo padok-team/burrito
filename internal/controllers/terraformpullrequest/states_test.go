@@ -7,7 +7,6 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
@@ -15,6 +14,7 @@ import (
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -28,10 +28,6 @@ type fakeAPIProvider struct {
 	commentErr      error
 	pullRequests    []configv1alpha1.TerraformPullRequest
 	pullRequestsErr error
-	mergeCommit      string
-	mergeCommitErr   error
-	mergeCommitCalls int
-	setStatusCalls   []status.CommitStatus
 }
 
 func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
@@ -50,18 +46,10 @@ func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformR
 }
 
 func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
-	p.setStatusCalls = append(p.setStatusCalls, s)
 	return nil
 }
 
 func (p *fakeAPIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
-	p.mergeCommitCalls++
-	if p.mergeCommitErr != nil {
-		return "", p.mergeCommitErr
-	}
-	if p.mergeCommit != "" {
-		return p.mergeCommit, nil
-	}
 	return "fake-merge-commit", nil
 }
 
@@ -207,83 +195,23 @@ func TestCommentNeededHandlerReturnsOnErrorWhenCommentFails(t *testing.T) {
 	}
 }
 
-func TestResolveMergeCommitCachesAnnotationAfterFirstLookup(t *testing.T) {
-	scheme := newTerraformPullRequestTestScheme(t)
-	pr := terraformPullRequest("default", "repo-1", "1", "feature", "sha")
-	cl := fake.NewClientBuilder().WithScheme(scheme).WithObjects(pr).Build()
-	reconciler := &Reconciler{Client: cl}
-	provider := &fakeAPIProvider{mergeCommit: "merge-sha-abc"}
-
-	first := reconciler.resolveMergeCommit(context.Background(), provider, terraformRepository("default", "repo"), pr)
-	if first != "merge-sha-abc" {
-		t.Fatalf("expected resolved merge commit %q, got %q", "merge-sha-abc", first)
-	}
-	if provider.mergeCommitCalls != 1 {
-		t.Fatalf("expected provider to be queried once, got %d calls", provider.mergeCommitCalls)
-	}
-
-	updated := &configv1alpha1.TerraformPullRequest{}
-	if err := cl.Get(context.Background(), kclient.ObjectKeyFromObject(pr), updated); err != nil {
-		t.Fatalf("failed to get pull request: %v", err)
-	}
-	if updated.Annotations[annotations.MergeCommit] != "merge-sha-abc" {
-		t.Fatalf("expected merge commit annotation to be persisted, got %q", updated.Annotations[annotations.MergeCommit])
-	}
-
-	second := reconciler.resolveMergeCommit(context.Background(), provider, terraformRepository("default", "repo"), pr)
-	if second != "merge-sha-abc" {
-		t.Fatalf("expected cached merge commit %q, got %q", "merge-sha-abc", second)
-	}
-	if provider.mergeCommitCalls != 1 {
-		t.Fatalf("expected provider not to be queried again once cached, got %d calls", provider.mergeCommitCalls)
-	}
-}
-
-func TestResolveMergeCommitReturnsEmptyWhenProviderErrors(t *testing.T) {
-	scheme := newTerraformPullRequestTestScheme(t)
-	pr := terraformPullRequest("default", "repo-1", "1", "feature", "sha")
-	cl := fake.NewClientBuilder().WithScheme(scheme).WithObjects(pr).Build()
-	reconciler := &Reconciler{Client: cl}
-	provider := &fakeAPIProvider{mergeCommitErr: errors.New("lookup failed")}
-
-	commit := reconciler.resolveMergeCommit(context.Background(), provider, terraformRepository("default", "repo"), pr)
-	if commit != "" {
-		t.Fatalf("expected empty commit when provider errors, got %q", commit)
-	}
-}
-
-func TestWaitingForApplyHandlerSetsMergeCommitOnStatus(t *testing.T) {
-	scheme := newTerraformPullRequestTestScheme(t)
+func TestWaitingForApplyHandlerRequeuesWithWaitAction(t *testing.T) {
 	repository := terraformRepository("default", "repo")
 	pr := terraformPullRequest("default", "repo-1", "1", "feature", "sha")
-	cl := fake.NewClientBuilder().WithScheme(scheme).WithObjects(pr).Build()
-	provider := &fakeAPIProvider{mergeCommit: "merge-sha-abc"}
-	reconciler := &Reconciler{
-		Client: cl,
-		Config: config.TestConfig(),
-		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
-			return provider, nil
-		},
-	}
+	reconciler := &Reconciler{Config: config.TestConfig()}
 
 	result := waitingForApplyHandler(context.Background(), reconciler, repository, pr, &State{})
 	if result.RequeueAfter != reconciler.Config.Controller.Timers.WaitAction {
 		t.Fatalf("expected wait requeue, got %s", result.RequeueAfter)
 	}
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly one SetStatus call, got %d", len(provider.setStatusCalls))
-	}
-	if provider.setStatusCalls[0].Commit != "merge-sha-abc" {
-		t.Fatalf("expected status to target the merge commit, got %q", provider.setStatusCalls[0].Commit)
-	}
 }
 
-func TestMakeApplyCommentNeededHandlerSetsMergeCommitOnStatus(t *testing.T) {
+func TestMakeApplyCommentNeededHandlerPostsCommentAndDeletesPullRequest(t *testing.T) {
 	scheme := newTerraformPullRequestTestScheme(t)
 	repository := terraformRepository("default", "repo")
 	pr := terraformPullRequest("default", "repo-1", "1", "feature", "sha")
 	cl := fake.NewClientBuilder().WithScheme(scheme).WithObjects(pr).Build()
-	provider := &fakeAPIProvider{mergeCommit: "merge-sha-abc"}
+	provider := &fakeAPIProvider{}
 	reconciler := &Reconciler{
 		Client:   cl,
 		Config:   config.TestConfig(),
@@ -298,14 +226,11 @@ func TestMakeApplyCommentNeededHandlerSetsMergeCommitOnStatus(t *testing.T) {
 	if !result.IsZero() {
 		t.Fatalf("expected empty result after deleting the pull request, got %+v", result)
 	}
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly one SetStatus call, got %d", len(provider.setStatusCalls))
-	}
-	if provider.setStatusCalls[0].Commit != "merge-sha-abc" {
-		t.Fatalf("expected status to target the merge commit, got %q", provider.setStatusCalls[0].Commit)
-	}
-	if provider.setStatusCalls[0].State != status.StateSuccess {
-		t.Fatalf("expected success state with no failed layers, got %q", provider.setStatusCalls[0].State)
+
+	deleted := &configv1alpha1.TerraformPullRequest{}
+	err := cl.Get(context.Background(), kclient.ObjectKeyFromObject(pr), deleted)
+	if !apierrors.IsNotFound(err) {
+		t.Fatalf("expected pull request to be deleted, got err %v", err)
 	}
 }
 
