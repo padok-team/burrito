@@ -25,3 +25,16 @@ func GetManualSyncStatus(layer configv1alpha1.TerraformLayer) ManualSyncStatus {
 	}
 	return ManualSyncNone
 }
+
+func GetManualApplyStatus(layer configv1alpha1.TerraformLayer) ManualSyncStatus {
+	if layer.Annotations[annotations.ApplyNow] == "true" {
+		return ManualSyncAnnotated
+	}
+	// check the IsApplyScheduled condition on layer
+	for _, c := range layer.Status.Conditions {
+		if c.Type == "IsApplyScheduled" && c.Status == "True" {
+			return ManualSyncPending
+		}
+	}
+	return ManualSyncNone
+}
