@@ -36,7 +36,7 @@ func TestPlanNeededEventIncludesCreateError(t *testing.T) {
 			Name:      "infra-s3-buckets-logistics-toolings-dc1-nl-prd-defect-tracker-prd-nl1",
 			Namespace: "default",
 			Annotations: map[string]string{
-				annotations.LastRelevantCommit: "abc123",
+				annotations.LastBranchCommit: "abc123",
 			},
 		},
 	}
@@ -66,8 +66,8 @@ func TestApplyNeededEventIncludesCreateError(t *testing.T) {
 			Name:      "infra-s3-buckets-logistics-toolings-dc1-nl-prd-defect-tracker-prd-nl1",
 			Namespace: "default",
 			Annotations: map[string]string{
-				annotations.LastRelevantCommit: "abc123",
-				annotations.LastPlanRun:        "plan-run/0",
+				annotations.LastBranchCommit: "abc123",
+				annotations.LastPlanRun:      "plan-run/0",
 			},
 		},
 	}
