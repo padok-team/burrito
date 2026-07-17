@@ -18,7 +18,7 @@ on:
 
 permissions:
   packages: write
-  id-token: write # Required for Codecov
+  id-token: write # Required for Codecov and keyless cosign signing (build-and-push.yaml)
 
 jobs:
   unit-tests:

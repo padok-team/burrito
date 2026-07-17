@@ -10,6 +10,7 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write # Required by helm.yaml for keyless cosign signing
 
 env:
   CHART_NAME: burrito

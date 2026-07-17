@@ -45,6 +45,7 @@ nav:
       - operator-manual/provider-caching.md
       - operator-manual/runner-scheduling.md
       - operator-manual/encrypt-endpoint.md
+      - operator-manual/metrics.md
   - User Guide:
       - user-guide/index.md
       - user-guide/override-runner.md
