@@ -119,6 +119,16 @@ func (r *Runner) EnableHermitcrab() error {
 	return err
 }
 
+// Disable Hermitcrab network mirror configuration.
+func (r *Runner) DisableHermitcrab() error {
+	log.Infof("removing Hermitcrab network mirror configuration...")
+	err := runnerutils.RemoveNetworkMirrorConfig(r.config.Runner.RepositoryPath)
+	if err != nil {
+		log.Errorf("error removing network mirror configuration: %s", err)
+	}
+	return err
+}
+
 // Retrieve linked resources (layer, run, repository) from the Kubernetes API.
 func (r *Runner) GetResources() error {
 	layer := &configv1alpha1.TerraformLayer{}
