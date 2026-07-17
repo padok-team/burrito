@@ -7,8 +7,6 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
-	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	logrus "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -100,42 +98,6 @@ func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformP
 	return state
 }
 
-// setStatusSilently posts a commit status via the repository API provider, logging any error without failing the reconciliation.
-func (r *Reconciler) setStatusSilently(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) {
-	provider, err := r.getAPIProvider(repository)
-	if err != nil {
-		logrus.Warnf("could not get API provider to set commit status on pull request %s: %s", pr.Name, err)
-		return
-	}
-	if err := provider.SetStatus(repository, pr, s); err != nil {
-		logrus.Warnf("could not set commit status on pull request %s: %s", pr.Name, err)
-	}
-}
-
-// resolveMergeCommit returns the commit that actually landed on the target branch once pr
-// was merged (merge commit, or squash commit for squash merges) — distinct from the
-// LastBranchCommit annotation, which only tracks the last commit on the source branch and
-// may not exist on the target branch after a squash or rebase merge. The result is cached
-// as an annotation so the provider is only queried once per pull request.
-func (r *Reconciler) resolveMergeCommit(ctx context.Context, provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) string {
-	if commit := pr.Annotations[annotations.MergeCommit]; commit != "" {
-		return commit
-	}
-	commit, err := provider.GetMergeCommit(repository, pr)
-	if err != nil || commit == "" {
-		logrus.Warnf("could not resolve merge commit for pull request %s, falling back to branch commit: %v", pr.Name, err)
-		return ""
-	}
-	if err := annotations.Add(ctx, r.Client, pr, map[string]string{annotations.MergeCommit: commit}); err != nil {
-		logrus.Warnf("could not cache merge commit annotation for pull request %s: %s", pr.Name, err)
-	}
-	if pr.Annotations == nil {
-		pr.Annotations = map[string]string{}
-	}
-	pr.Annotations[annotations.MergeCommit] = commit
-	return commit
-}
-
 func idleHandler(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
 	return ctrl.Result{}
 }
@@ -167,13 +129,6 @@ func discoveryNeededHandler(ctx context.Context, r *Reconciler, repository *conf
 		r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", fmt.Sprintf("Created layer %s", layer.Name))
 	}
 	state.Status.LastDiscoveredCommit = pr.Annotations[annotations.LastBranchCommit]
-	if len(newLayers) > 0 {
-		r.setStatusSilently(repository, pr, status.CommitStatus{
-			Phase:       status.PhasePlan,
-			State:       status.StatePending,
-			Description: "Burrito is planning the changes...",
-		})
-	}
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 }
 
@@ -202,36 +157,12 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 	r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Commented pull request")
 	state.Status.LastCommentedCommit = pr.Annotations[annotations.LastBranchCommit]
 
-	planStatus := status.CommitStatus{Phase: status.PhasePlan, State: status.StateSuccess, Description: "Burrito plan succeeded"}
-	for _, layer := range layers {
-		if layer.Annotations[annotations.LastPlanSum] == "" {
-			planStatus.State = status.StateFailure
-			planStatus.Description = "Burrito plan failed"
-			break
-		}
-	}
-	if err := provider.SetStatus(repository, pr, planStatus); err != nil {
-		logrus.Warnf("could not set plan commit status on pull request %s: %s", pr.Name, err)
-	}
-
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 }
 
+// waitingForApplyHandler just waits: each affected layer's own TerraformRun already posts
+// its own plan/apply commit status (see internal/controllers/terraformrun).
 func waitingForApplyHandler(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
-	provider, err := r.getAPIProvider(repository)
-	if err != nil {
-		logrus.Warnf("could not get API provider to set apply commit status on pull request %s: %s", pr.Name, err)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
-	}
-	mergeCommit := r.resolveMergeCommit(ctx, provider, repository, pr)
-	if err := provider.SetStatus(repository, pr, status.CommitStatus{
-		Phase:       status.PhaseApply,
-		State:       status.StatePending,
-		Description: "Burrito is applying the changes...",
-		Commit:      mergeCommit,
-	}); err != nil {
-		logrus.Warnf("could not set commit status on pull request %s: %s", pr.Name, err)
-	}
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 }
 
@@ -259,19 +190,6 @@ func makeApplyCommentNeededHandler(applyResults []LayerApplyResult) func(context
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
 		}
 		r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Posted apply comment on merged pull request")
-
-		applyStatus := status.CommitStatus{Phase: status.PhaseApply, State: status.StateSuccess, Description: "Burrito apply succeeded"}
-		for _, res := range applyResults {
-			if !res.Succeeded {
-				applyStatus.State = status.StateFailure
-				applyStatus.Description = "Burrito apply failed"
-				break
-			}
-		}
-		applyStatus.Commit = r.resolveMergeCommit(ctx, provider, repository, pr)
-		if err := provider.SetStatus(repository, pr, applyStatus); err != nil {
-			logrus.Warnf("could not set apply commit status on pull request %s: %s", pr.Name, err)
-		}
 
 		// Delete the TerraformPullRequest resource now that we're done with it.
 		if err := r.Client.Delete(ctx, pr); err != nil {

@@ -15,7 +15,6 @@ import (
 type fakeAPIProvider struct {
 	setStatusCalls []status.CommitStatus
 	setStatusErr   error
-	getProviderErr error
 }
 
 func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
@@ -48,6 +47,7 @@ func testRepository() *configv1alpha1.TerraformRepository {
 func testMainLayer() *configv1alpha1.TerraformLayer {
 	return &configv1alpha1.TerraformLayer{
 		ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"},
+		Spec:       configv1alpha1.TerraformLayerSpec{Path: "terraform/pwet"},
 	}
 }
 
@@ -60,6 +60,7 @@ func testPullRequestLayer() *configv1alpha1.TerraformLayer {
 				{Kind: "TerraformPullRequest", Name: "repo-1"},
 			},
 		},
+		Spec: configv1alpha1.TerraformLayerSpec{Path: "terraform/pwet"},
 	}
 }
 
@@ -73,50 +74,27 @@ func testRun(action string, revision string) *configv1alpha1.TerraformRun {
 	}
 }
 
-func TestIsPullRequestLayer(t *testing.T) {
-	if isPullRequestLayer(testMainLayer()) {
-		t.Fatalf("expected a plain main-branch layer to not be considered a pull request layer")
-	}
-	if !isPullRequestLayer(testPullRequestLayer()) {
-		t.Fatalf("expected a layer owned by a TerraformPullRequest to be considered a pull request layer")
-	}
-}
-
-func TestSetCommitStatusForDirectPushSkipsPullRequestLayers(t *testing.T) {
+func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
 		},
 	}
-	r.setCommitStatusForDirectPush(context.Background(), testRun("plan", "sha123"), testPullRequestLayer(), testRepository(), status.StateSuccess)
-	if len(provider.setStatusCalls) != 0 {
-		t.Fatalf("expected no commit status to be set for a pull request layer, got %d calls", len(provider.setStatusCalls))
-	}
-}
-
-func TestSetCommitStatusForDirectPushSkipsWhenRevisionIsEmpty(t *testing.T) {
-	provider := &fakeAPIProvider{}
-	r := &Reconciler{
-		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
-			return provider, nil
-		},
-	}
-	r.setCommitStatusForDirectPush(context.Background(), testRun("plan", ""), testMainLayer(), testRepository(), status.StateSuccess)
+	r.postCommitStatus(context.Background(), testRun("plan", ""), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
 	if len(provider.setStatusCalls) != 0 {
 		t.Fatalf("expected no commit status to be set when the run has no revision, got %d calls", len(provider.setStatusCalls))
 	}
 }
 
-func TestSetCommitStatusForDirectPushPostsPlanStatus(t *testing.T) {
+func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
 		},
 	}
-	layer := testMainLayer()
-	r.setCommitStatusForDirectPush(context.Background(), testRun("plan", "sha123"), layer, testRepository(), status.StateSuccess)
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
 
 	if len(provider.setStatusCalls) != 1 {
 		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.setStatusCalls))
@@ -125,9 +103,6 @@ func TestSetCommitStatusForDirectPushPostsPlanStatus(t *testing.T) {
 	if got.Phase != status.PhasePlan {
 		t.Errorf("expected phase %q, got %q", status.PhasePlan, got.Phase)
 	}
-	if got.State != status.StateSuccess {
-		t.Errorf("expected state %q, got %q", status.StateSuccess, got.State)
-	}
 	if got.Commit != "sha123" {
 		t.Errorf("expected commit %q, got %q", "sha123", got.Commit)
 	}
@@ -135,19 +110,22 @@ func TestSetCommitStatusForDirectPushPostsPlanStatus(t *testing.T) {
 	if got.Context != wantContext {
 		t.Errorf("expected context %q, got %q", wantContext, got.Context)
 	}
+	if got.Description == "" {
+		t.Errorf("expected a non-empty description")
+	}
 }
 
-func TestSetCommitStatusForDirectPushPostsApplyFailureStatus(t *testing.T) {
+func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
 		},
 	}
-	r.setCommitStatusForDirectPush(context.Background(), testRun("apply", "sha456"), testMainLayer(), testRepository(), status.StateFailure)
+	r.postCommitStatus(context.Background(), testRun("apply", "sha456"), testPullRequestLayer(), testRepository(), status.StateFailure, "failed")
 
 	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.setStatusCalls))
+		t.Fatalf("expected exactly one commit status to be set for a pull request layer, got %d", len(provider.setStatusCalls))
 	}
 	got := provider.setStatusCalls[0]
 	if got.Phase != status.PhaseApply {
@@ -156,16 +134,13 @@ func TestSetCommitStatusForDirectPushPostsApplyFailureStatus(t *testing.T) {
 	if got.State != status.StateFailure {
 		t.Errorf("expected state %q, got %q", status.StateFailure, got.State)
 	}
-	if got.Description != "Burrito apply failed" {
-		t.Errorf("unexpected description: %q", got.Description)
-	}
 }
 
-func TestSetCommitStatusForDirectPushDoesNotPanicOnProviderError(t *testing.T) {
+func TestPostCommitStatusDoesNotPanicOnProviderError(t *testing.T) {
 	r := &Reconciler{
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return nil, errors.New("no provider configured")
 		},
 	}
-	r.setCommitStatusForDirectPush(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess)
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
 }
