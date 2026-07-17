@@ -209,84 +209,84 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	assert.Equal(t, expected, cfg)
 }
 
-// TODO: make that test pass
-// func TestConfig_FlagOverrides(t *testing.T) {
-// 	// Read the test configuration file
-// 	configFile, err := os.ReadFile("testdata/test-config-1.yaml")
-// 	if err != nil {
-// 		t.Fatalf("failed to read test configuration file: %v", err)
-// 	}
+func TestConfig_FlagOverridesFile(t *testing.T) {
+	configFile, err := os.ReadFile("testdata/test-config-1.yaml")
+	if err != nil {
+		t.Fatalf("failed to read test configuration file: %v", err)
+	}
 
-// 	err = os.WriteFile("config.yaml", configFile, 0644)
-// 	if err != nil {
-// 		t.Fatalf("failed to create test configuration file: %v", err)
-// 	}
-// 	defer os.Remove("config.yaml")
+	err = os.WriteFile("config.yaml", configFile, 0644)
+	if err != nil {
+		t.Fatalf("failed to create test configuration file: %v", err)
+	}
+	defer os.Remove("config.yaml")
 
-// 	// Create an empty test flag set
-// 	flags := pflag.NewFlagSet("controllers", pflag.ContinueOnError)
-// 	flags.String("drift-detection-period", "1m", "drift-detection-period")
+	cfg := &config.Config{}
+	flags := pflag.NewFlagSet("server", pflag.ContinueOnError)
+	flags.StringVar(&cfg.Server.Addr, "addr", ":8080", "server address")
+	if err := flags.Set("addr", ":8081"); err != nil {
+		t.Fatalf("failed to set flag: %v", err)
+	}
 
-// 	// Create a test config instance
-// 	cfg := &config.Config{}
+	if err := cfg.Load(flags); err != nil {
+		t.Fatalf("failed to load configuration: %v", err)
+	}
 
-// 	// Load the configuration
-// 	err = cfg.Load(flags)
-// 	if err != nil {
-// 		t.Fatalf("failed to load configuration: %v", err)
-// 	}
+	assert.Equal(t, ":8081", cfg.Server.Addr)
+}
 
-// 	// Assert the loaded values
-// 	expected := &config.Config{
-// 		Runner: config.RunnerConfig{
-// 			Action: "apply",
-// 			Layer: config.Layer{
-// 				Name:      "test",
-// 				Namespace: "default",
-// 			},
-// 			Repository: config.RepositoryConfig{
-// 				SSHPrivateKey: "private-key",
-// 				Username:      "test",
-// 				Password:      "password",
-// 			},
-// 			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
-// 		},
-// 		Controller: config.ControllerConfig{
-// 			Namespaces: []string{"default", "burrito"},
-// 			Timers: config.ControllerTimers{
-// 				DriftDetection:     1 * time.Minute,
-// 				OnError:            1 * time.Minute,
-// 				WaitAction:         1 * time.Minute,
-// 				FailureGracePeriod: 15 * time.Second,
-// 			},
-// 			Types: []string{"layer", "repository", "pullrequest"},
-// 			LeaderElection: config.LeaderElectionConfig{
-// 				Enabled: true,
-// 				ID:      "6d185457.terraform.padok.cloud",
-// 			},
-// 			MetricsBindAddress:     ":8080",
-// 			HealthProbeBindAddress: ":8081",
-// 			KubernetesWebhookPort:  9443,
-// 			GithubConfig: config.GithubConfig{
-// 				APIToken: "github-token",
-// 			},
-// 			GitlabConfig: config.GitlabConfig{
-// 				APIToken: "gitlab-token",
-// 				URL:      "https://gitlab.example.com",
-// 			},
-// 		},
-// 		Server: config.ServerConfig{
-// 			Addr: ":8080",
-// 			Webhook: config.WebhookConfig{
-// 				Github: config.WebhookGithubConfig{
-// 					Secret: "github-secret",
-// 				},
-// 				Gitlab: config.WebhookGitlabConfig{
-// 					Secret: "gitlab-secret",
-// 				},
-// 			},
-// 		},
-// 	}
+func TestConfig_EnvVarOverridesFlag(t *testing.T) {
+	configFile, err := os.ReadFile("testdata/test-config-1.yaml")
+	if err != nil {
+		t.Fatalf("failed to read test configuration file: %v", err)
+	}
 
-// 	assert.Equal(t, expected, cfg)
-// }
+	err = os.WriteFile("config.yaml", configFile, 0644)
+	if err != nil {
+		t.Fatalf("failed to create test configuration file: %v", err)
+	}
+	defer os.Remove("config.yaml")
+
+	t.Setenv("BURRITO_SERVER_ADDR", ":8082")
+
+	cfg := &config.Config{}
+	flags := pflag.NewFlagSet("server", pflag.ContinueOnError)
+	flags.StringVar(&cfg.Server.Addr, "addr", ":8080", "server address")
+	if err := flags.Set("addr", ":8081"); err != nil {
+		t.Fatalf("failed to set flag: %v", err)
+	}
+
+	if err := cfg.Load(flags); err != nil {
+		t.Fatalf("failed to load configuration: %v", err)
+	}
+
+	assert.Equal(t, ":8082", cfg.Server.Addr)
+}
+
+func TestConfig_EmptyEnvVarDoesNotOverrideFlag(t *testing.T) {
+	configFile, err := os.ReadFile("testdata/test-config-1.yaml")
+	if err != nil {
+		t.Fatalf("failed to read test configuration file: %v", err)
+	}
+
+	err = os.WriteFile("config.yaml", configFile, 0644)
+	if err != nil {
+		t.Fatalf("failed to create test configuration file: %v", err)
+	}
+	defer os.Remove("config.yaml")
+
+	t.Setenv("BURRITO_SERVER_ADDR", "")
+
+	cfg := &config.Config{}
+	flags := pflag.NewFlagSet("server", pflag.ContinueOnError)
+	flags.StringVar(&cfg.Server.Addr, "addr", ":8080", "server address")
+	if err := flags.Set("addr", ":8081"); err != nil {
+		t.Fatalf("failed to set flag: %v", err)
+	}
+
+	if err := cfg.Load(flags); err != nil {
+		t.Fatalf("failed to load configuration: %v", err)
+	}
+
+	assert.Equal(t, ":8081", cfg.Server.Addr)
+}
