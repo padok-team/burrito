@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../encrypt-endpoint/">
+      
+      
+        <link rel="next" href="../../user-guide/">
       
       
         
@@ -571,6 +575,8 @@
       
   
   
+    
+  
   
   
     
@@ -604,15 +610,17 @@
       
         
       
+        
+      
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -640,7 +648,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1133,6 +1141,653 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Burrito Metrics Endpoint
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Burrito Metrics Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exposing-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exposing Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exposing Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-ingress-recommended-for-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Ingress (Recommended for Production)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-port-forward-for-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Port-Forward (For Testing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Available Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#terraform-layer-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terraform Layer Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Layer Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#burrito_terraform_layer_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_terraform_layer_status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_terraform_layer_state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_terraform_layer_state
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_terraform_layer_runs_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_terraform_layer_runs_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_terraform_layer_last_run_timestamp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_terraform_layer_last_run_timestamp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_terraform_layer_run_duration_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_terraform_layer_run_duration_seconds
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-repository-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terraform Repository Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Repository Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#burrito_terraform_repositories_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_terraform_repositories_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-run-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terraform Run Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Terraform Run Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-state-metrics-gauges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State Metrics (Gauges)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_runs_by_action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_runs_by_action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_runs_by_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_runs_by_status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cumulative-metrics-counters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cumulative Metrics (Counters)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_runs_created_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_runs_created_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_runs_completed_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_runs_completed_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_runs_failed_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_runs_failed_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregate-summary-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggregate Summary Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aggregate Summary Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#burrito_layers_status_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_layers_status_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_layers_namespace_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_layers_namespace_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_layers_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_layers_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_repositories_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_repositories_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_runs_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_runs_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_pullrequests_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_pullrequests_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controller-performance-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Performance Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Controller Performance Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#burrito_controller_reconcile_duration_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_controller_reconcile_duration_seconds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_controller_reconcile_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_controller_reconcile_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#burrito_controller_reconcile_errors_total" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        burrito_controller_reconcile_errors_total
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prometheus-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prometheus Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Queries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Queries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layers-by-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layers by Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer States
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-detailed-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Detailed Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alerting-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alerting Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alerting Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alert-severity-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alert Severity Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customization-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customization Tips
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessing Metrics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accessing Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-access-kubernetes-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal Access (Kubernetes Service)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#external-access-ingress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Access (Ingress)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 

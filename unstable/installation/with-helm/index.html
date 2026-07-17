@@ -609,6 +609,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#3-optional-verify-image-and-chart-signatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. (Optional) Verify image and chart signatures
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -664,6 +675,8 @@
       
         
           
+        
+      
         
       
         
@@ -1224,6 +1237,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operator-manual/metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Burrito Metrics Endpoint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1754,6 +1795,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#3-optional-verify-image-and-chart-signatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. (Optional) Verify image and chart signatures
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1780,6 +1832,7 @@
 <li>Installed <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/">kubectl</a> command-line tool</li>
 <li>Installed <a href="https://helm.sh/docs/intro/install/">helm</a> command-line tool <strong>(version v3.8.0 and further)</strong></li>
 <li>Have access to a Kubernetes cluster</li>
+<li>(Optional) Installed <a href="https://github.com/sigstore/cosign">cosign</a> command-line tool to verify image and chart signatures</li>
 </ul>
 <h2 id="1-basic-installation">1. Basic installation<a class="headerlink" href="#1-basic-installation" title="Permanent link">&para;</a></h2>
 <div class="admonition info">
@@ -1821,6 +1874,20 @@
 <p class="admonition-title">Info</p>
 <p>Learn more about these values in the chart's <a href="https://github.com/padok-team/burrito/tree/main/deploy/charts/burrito/README.md">README file</a> and <a href="../../operator-manual/multi-tenant-architecture/">Multi-tenant architecture</a>.</p>
 </div>
+<h2 id="3-optional-verify-image-and-chart-signatures">3. (Optional) Verify image and chart signatures<a class="headerlink" href="#3-optional-verify-image-and-chart-signatures" title="Permanent link">&para;</a></h2>
+<p>Every Docker image and Helm chart pushed to GHCR is signed with <a href="https://docs.sigstore.dev/cosign/overview/">cosign</a> using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.</p>
+<p>Signing happens right after the artifact is pushed, by digest, in <code>build-and-push.yaml</code> (job <code>merge</code>) and <code>helm.yaml</code> (job <code>helm-push</code>). It requires the <code>id-token: write</code> permission, which every workflow calling these reusable workflows must grant.</p>
+<p>To verify a signature:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Docker image</span>
+cosign<span class="w"> </span>verify<span class="w"> </span>ghcr.io/padok-team/burrito:&lt;version&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--certificate-identity-regexp<span class="w"> </span><span class="s1">&#39;https://github.com/padok-team/burrito/.github/workflows/.*&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--certificate-oidc-issuer<span class="w"> </span>https://token.actions.githubusercontent.com
+
+<span class="c1"># Helm chart</span>
+cosign<span class="w"> </span>verify<span class="w"> </span>ghcr.io/padok-team/charts/burrito:&lt;chart-version&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--certificate-identity-regexp<span class="w"> </span><span class="s1">&#39;https://github.com/padok-team/burrito/.github/workflows/.*&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--certificate-oidc-issuer<span class="w"> </span>https://token.actions.githubusercontent.com
+</code></pre></div>
 
 
 
