@@ -19,7 +19,12 @@ export type Layer = {
   isPR: boolean;
 };
 
-export type LayerState = 'success' | 'warning' | 'error' | 'disabled';
+export type LayerState =
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'disabled'
+  | 'retriesExhausted';
 export type ManualSyncStatus = 'none' | 'annotated' | 'pending';
 
 export type Run = {
