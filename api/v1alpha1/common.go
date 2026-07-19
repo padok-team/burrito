@@ -177,70 +177,29 @@ func chooseInt(a, b *int, d int) *int {
 }
 
 func ChooseSlice(a, b []string) []string {
-	if len(b) > 0 {
+	if b != nil {
 		return b
 	}
 	return a
 }
 
 func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObjectReference {
-	result := []corev1.LocalObjectReference{}
-	temp := map[string]string{}
+	result := b
 
-	for _, elt := range a {
-		temp[elt.Name] = ""
-	}
-	for _, elt := range b {
-		temp[elt.Name] = ""
+	if result == nil {
+		result = a
 	}
 
-	for k := range temp {
-		result = append(result, corev1.LocalObjectReference{Name: k})
-	}
 	return result
 }
 
 func mergeEnvFrom(a, b []corev1.EnvFromSource) []corev1.EnvFromSource {
-	result := []corev1.EnvFromSource{}
-	tempSecret := map[string]string{}
-	tempConfigMap := map[string]string{}
+	result := b
 
-	for _, elt := range a {
-		if elt.ConfigMapRef != nil {
-			tempConfigMap[elt.ConfigMapRef.LocalObjectReference.Name] = elt.Prefix
-		} else {
-			tempSecret[elt.SecretRef.LocalObjectReference.Name] = elt.Prefix
-		}
-	}
-	for _, elt := range b {
-		if elt.ConfigMapRef != nil {
-			tempConfigMap[elt.ConfigMapRef.LocalObjectReference.Name] = elt.Prefix
-		} else {
-			tempSecret[elt.SecretRef.LocalObjectReference.Name] = elt.Prefix
-		}
+	if result == nil {
+		result = a
 	}
 
-	for k, v := range tempConfigMap {
-		result = append(result, corev1.EnvFromSource{
-			Prefix: v,
-			ConfigMapRef: &corev1.ConfigMapEnvSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: k,
-				},
-			},
-		})
-	}
-
-	for k, v := range tempSecret {
-		result = append(result, corev1.EnvFromSource{
-			Prefix: v,
-			SecretRef: &corev1.SecretEnvSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: k,
-				},
-			},
-		})
-	}
 	return result
 }
 
@@ -264,48 +223,29 @@ func mergeResourceList(a, b corev1.ResourceList) map[corev1.ResourceName]resourc
 }
 
 func mergeVolumeMounts(a, b []corev1.VolumeMount) []corev1.VolumeMount {
-	result := []corev1.VolumeMount{}
-	// Track which volume names are overridden by layer (b)
-	overriddenNames := make(map[string]bool)
+	result := b
 
-	// Collect all volume names from layer (b)
-	for _, elt := range b {
-		overriddenNames[elt.Name] = true
+	if result == nil {
+		result = a
 	}
 
-	// Add volume mounts from repo (a) that are not overridden
-	for _, elt := range a {
-		if !overriddenNames[elt.Name] {
-			result = append(result, elt)
-		}
-	}
-
-	// Add all volume mounts from layer (b)
-	result = append(result, b...)
 	return result
 }
 
 func mergeVolumes(a, b []corev1.Volume) []corev1.Volume {
-	result := []corev1.Volume{}
-	tempMap := map[string]corev1.Volume{}
+	result := b
 
-	for _, elt := range a {
-		tempMap[elt.Name] = elt
-	}
-	for _, elt := range b {
-		tempMap[elt.Name] = elt
+	if result == nil {
+		result = a
 	}
 
-	for _, v := range tempMap {
-		result = append(result, v)
-	}
 	return result
 }
 
 func overrideTolerations(a, b []corev1.Toleration) []corev1.Toleration {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -322,7 +262,7 @@ func overrideAffinity(repoAffinity, layerAffinity *corev1.Affinity) *corev1.Affi
 func mergeEnvVars(a, b []corev1.EnvVar) []corev1.EnvVar {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -343,7 +283,7 @@ func mergeMaps(a, b map[string]string) map[string]string {
 func overrideExtraArgs(a, b ExtraArgs) ExtraArgs {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -351,18 +291,11 @@ func overrideExtraArgs(a, b ExtraArgs) ExtraArgs {
 }
 
 func MergeInitContainers(a, b []corev1.Container) []corev1.Container {
-	result := []corev1.Container{}
-	tempMap := map[string]corev1.Container{}
+	result := b
 
-	for _, elt := range a {
-		tempMap[elt.Name] = elt
-	}
-	for _, elt := range b {
-		tempMap[elt.Name] = elt
+	if result == nil {
+		result = a
 	}
 
-	for _, v := range tempMap {
-		result = append(result, v)
-	}
 	return result
 }
