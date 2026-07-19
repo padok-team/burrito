@@ -177,7 +177,7 @@ func chooseInt(a, b *int, d int) *int {
 }
 
 func ChooseSlice(a, b []string) []string {
-	if len(b) > 0 {
+	if b != nil {
 		return b
 	}
 	return a
@@ -186,7 +186,7 @@ func ChooseSlice(a, b []string) []string {
 func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObjectReference {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -196,7 +196,7 @@ func mergeImagePullSecrets(a, b []corev1.LocalObjectReference) []corev1.LocalObj
 func mergeEnvFrom(a, b []corev1.EnvFromSource) []corev1.EnvFromSource {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -225,7 +225,7 @@ func mergeResourceList(a, b corev1.ResourceList) map[corev1.ResourceName]resourc
 func mergeVolumeMounts(a, b []corev1.VolumeMount) []corev1.VolumeMount {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -235,7 +235,7 @@ func mergeVolumeMounts(a, b []corev1.VolumeMount) []corev1.VolumeMount {
 func mergeVolumes(a, b []corev1.Volume) []corev1.Volume {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -245,7 +245,7 @@ func mergeVolumes(a, b []corev1.Volume) []corev1.Volume {
 func overrideTolerations(a, b []corev1.Toleration) []corev1.Toleration {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -262,7 +262,7 @@ func overrideAffinity(repoAffinity, layerAffinity *corev1.Affinity) *corev1.Affi
 func mergeEnvVars(a, b []corev1.EnvVar) []corev1.EnvVar {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -283,7 +283,7 @@ func mergeMaps(a, b map[string]string) map[string]string {
 func overrideExtraArgs(a, b ExtraArgs) ExtraArgs {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 
@@ -293,7 +293,7 @@ func overrideExtraArgs(a, b ExtraArgs) ExtraArgs {
 func MergeInitContainers(a, b []corev1.Container) []corev1.Container {
 	result := b
 
-	if len(result) == 0 {
+	if result == nil {
 		result = a
 	}
 

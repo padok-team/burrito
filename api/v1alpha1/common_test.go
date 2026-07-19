@@ -882,6 +882,46 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			configv1alpha1.OverrideRunnerSpec{},
 		},
 		{
+			"ExplicitEmptyLayerListsClearRepositoryLists",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						ImagePullSecrets: []corev1.LocalObjectReference{{Name: "repo-secret"}},
+						Tolerations:      []corev1.Toleration{{Key: "repo-toleration"}},
+						Env:              []corev1.EnvVar{{Name: "REPO_ENV"}},
+						EnvFrom:          []corev1.EnvFromSource{{Prefix: "REPO_"}},
+						Volumes:          []corev1.Volume{{Name: "repo-volume"}},
+						VolumeMounts:     []corev1.VolumeMount{{Name: "repo-volume"}},
+						InitContainers:   []corev1.Container{{Name: "repo-init"}},
+						Command:          []string{"repo-command"},
+						Args:             []string{"repo-arg"},
+						ExtraInitArgs:    configv1alpha1.ExtraArgs{"repo-init-arg"},
+						ExtraPlanArgs:    configv1alpha1.ExtraArgs{"repo-plan-arg"},
+						ExtraApplyArgs:   configv1alpha1.ExtraArgs{"repo-apply-arg"},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						ImagePullSecrets: []corev1.LocalObjectReference{},
+						Tolerations:      []corev1.Toleration{},
+						Env:              []corev1.EnvVar{},
+						EnvFrom:          []corev1.EnvFromSource{},
+						Volumes:          []corev1.Volume{},
+						VolumeMounts:     []corev1.VolumeMount{},
+						InitContainers:   []corev1.Container{},
+						Command:          []string{},
+						Args:             []string{},
+						ExtraInitArgs:    configv1alpha1.ExtraArgs{},
+						ExtraPlanArgs:    configv1alpha1.ExtraArgs{},
+						ExtraApplyArgs:   configv1alpha1.ExtraArgs{},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{},
+		},
+		{
 			"ChooseRepositoryImage",
 			&configv1alpha1.TerraformRepository{
 				Spec: configv1alpha1.TerraformRepositorySpec{
@@ -2129,7 +2169,7 @@ func TestMergeInitContainers(t *testing.T) {
 					Command: []string{"echo", "from-repo"},
 				},
 			},
-			[]corev1.Container{},
+			nil,
 			[]corev1.Container{
 				{
 					Name:    "repo-container",
@@ -2289,7 +2329,7 @@ func TestChooseSlice(t *testing.T) {
 		{
 			"OnlySliceA",
 			[]string{"value1", "value2"},
-			[]string{},
+			nil,
 			[]string{"value1", "value2"},
 		},
 		{
@@ -2305,10 +2345,10 @@ func TestChooseSlice(t *testing.T) {
 			[]string{"value3", "value4"},
 		},
 		{
-			"SliceAWithValues_SliceBEmpty",
+			"ExplicitEmptySliceB",
 			[]string{"value1", "value2"},
 			[]string{},
-			[]string{"value1", "value2"},
+			[]string{},
 		},
 		{
 			"SliceAEmpty_SliceBWithValues",
