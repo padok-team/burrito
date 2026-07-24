@@ -100,10 +100,10 @@ func TestLogsURL(t *testing.T) {
 	if got := LogsURL("", layer, "run-1"); got != "" {
 		t.Errorf("expected an empty URL when publicURL is unset, got %q", got)
 	}
-	if got, want := LogsURL("https://burrito.example.com", layer, ""), "https://burrito.example.com/logs/default/pwet"; got != want {
+	if got, want := LogsURL("https://burrito.example.com", layer, ""), "https://burrito.example.com/logs/default/pwet?hidepr=false"; got != want {
 		t.Errorf("expected %q, got %q", want, got)
 	}
-	if got, want := LogsURL("https://burrito.example.com/", layer, "run-1"), "https://burrito.example.com/logs/default/pwet/run-1"; got != want {
+	if got, want := LogsURL("https://burrito.example.com/", layer, "run-1"), "https://burrito.example.com/logs/default/pwet/run-1?hidepr=false"; got != want {
 		t.Errorf("expected %q, got %q", want, got)
 	}
 }
