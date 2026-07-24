@@ -61,11 +61,15 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 	}
 	state := string(s.State)
 	description := s.Description
-	_, _, err := api.client.Repositories.CreateStatus(context.TODO(), owner, repoName, commit, github.RepoStatus{
+	repoStatus := github.RepoStatus{
 		State:       &state,
 		Context:     &ctx,
 		Description: &description,
-	})
+	}
+	if s.TargetURL != "" {
+		repoStatus.TargetURL = &s.TargetURL
+	}
+	_, _, err := api.client.Repositories.CreateStatus(context.TODO(), owner, repoName, commit, repoStatus)
 	if err != nil {
 		log.Errorf("Error while setting commit status on GitHub: %s", err)
 	}

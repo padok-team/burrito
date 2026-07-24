@@ -144,7 +144,8 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1
 		logrus.Warnf("could not get API provider to set commit status for layer %s: %s", layer.Name, err)
 		return
 	}
-	if err := commitstatus.Post(provider, repository, layer, phase, state, commit, layer.Status.LastResult); err != nil {
+	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, "")
+	if err := commitstatus.Post(provider, repository, layer, phase, state, commit, layer.Status.LastResult, targetURL); err != nil {
 		logrus.Warnf("could not set %s commit status for layer %s: %s", phase, layer.Name, err)
 	}
 }

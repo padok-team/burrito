@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/commitstatus"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
@@ -92,6 +93,7 @@ func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
+		Config:    &config.Config{},
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
@@ -118,6 +120,7 @@ func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
+		Config:    &config.Config{},
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
@@ -139,6 +142,7 @@ func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 
 func TestPostCommitStatusDoesNotPanicOnProviderError(t *testing.T) {
 	r := &Reconciler{
+		Config:    &config.Config{},
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return nil, errors.New("no provider configured")
