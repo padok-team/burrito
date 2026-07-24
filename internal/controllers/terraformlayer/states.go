@@ -87,7 +87,7 @@ func (s *PlanNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Plan action")
-		r.postCommitStatus(ctx, layer, repository, status.PhasePlan, status.StatePending, commitstatus.Needed, revision)
+		r.postCommitStatus(ctx, layer, repository, status.PhasePlan, status.StatePending, revision)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -120,7 +120,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
-		r.postCommitStatus(ctx, layer, repository, status.PhaseApply, status.StatePending, commitstatus.Needed, revision)
+		r.postCommitStatus(ctx, layer, repository, status.PhaseApply, status.StatePending, revision)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -138,13 +138,13 @@ func (s *MaxRetriesReached) getHandler() Handler {
 
 // postCommitStatus posts a plan/apply commit status scoped to layer, best-effort: a
 // failure here must not block the reconciliation.
-func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase status.Phase, state status.State, outcome string, commit string) {
+func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase status.Phase, state status.State, commit string) {
 	provider, err := r.getAPIProvider(repository)
 	if err != nil {
 		logrus.Warnf("could not get API provider to set commit status for layer %s: %s", layer.Name, err)
 		return
 	}
-	if err := commitstatus.Post(provider, repository, layer, phase, state, outcome, commit); err != nil {
+	if err := commitstatus.Post(provider, repository, layer, phase, state, commit, layer.Status.LastResult); err != nil {
 		logrus.Warnf("could not set %s commit status for layer %s: %s", phase, layer.Name, err)
 	}
 }
