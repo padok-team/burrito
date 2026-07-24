@@ -6,6 +6,7 @@ package commitstatus
 
 import (
 	"fmt"
+	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
@@ -13,19 +14,47 @@ import (
 )
 
 const (
-	Needed     = "needed"
-	InProgress = "in progress"
-	Succeeded  = "succeeded"
-	Failed     = "failed"
+	Needed     = "Pending"
+	InProgress = "In progress"
+	Succeeded  = "Success"
+	Failed     = "Failure"
+
+	// GitHub's Statuses API rejects descriptions over 140 characters with a 422.
+	maxDescriptionLength = 140
 )
 
-// Post sets a commit status for layer's phase (plan or apply), on the given commit.
-func Post(provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer, phase status.Phase, state status.State, outcome string, commit string) error {
+// Post sets a commit status for layer's phase (plan or apply), on the given commit. The
+// pending/success/failure state is carried by GitHub/GitLab's own native status field, shown
+// next to the context — so message (which mirrors the layer's "Last Result" field: the short
+// plan/apply summary, or a placeholder like "Layer has never been planned") doesn't need to
+// repeat it. It is truncated as needed since it's the only part with unbounded length.
+//
+// No emoji prefix here: GitHub's Statuses API rejects any 4-byte UTF-8 character (which
+// covers almost every modern emoji, e.g. 🌯) in the description with a 422.
+func Post(provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer, phase status.Phase, state status.State, commit string, message string) error {
 	return provider.SetStatus(repository, nil, status.CommitStatus{
 		Phase:       phase,
 		State:       state,
-		Description: fmt.Sprintf("%s/%s %s %s", layer.Namespace, layer.Name, phase, outcome),
+		Description: truncate(message, maxDescriptionLength),
 		Commit:      commit,
-		Context:     fmt.Sprintf("burrito/%s/%s", phase, layer.Name),
+		Context:     fmt.Sprintf("Burrito ▶ %s %s/%s", capitalize(string(phase)), layer.Namespace, layer.Name),
 	})
+}
+
+func capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+func truncate(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	if max <= 1 {
+		return string(r[:max])
+	}
+	return string(r[:max-1]) + "…"
 }

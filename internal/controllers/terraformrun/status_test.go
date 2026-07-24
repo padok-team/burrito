@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/commitstatus"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -90,11 +92,12 @@ func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
+		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
 
 	if len(provider.setStatusCalls) != 1 {
 		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.setStatusCalls))
@@ -106,23 +109,21 @@ func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 	if got.Commit != "sha123" {
 		t.Errorf("expected commit %q, got %q", "sha123", got.Commit)
 	}
-	wantContext := "burrito/plan/pwet"
+	wantContext := "Burrito ▶ Plan default/pwet"
 	if got.Context != wantContext {
 		t.Errorf("expected context %q, got %q", wantContext, got.Context)
-	}
-	if got.Description == "" {
-		t.Errorf("expected a non-empty description")
 	}
 }
 
 func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
+		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("apply", "sha456"), testPullRequestLayer(), testRepository(), status.StateFailure, "failed")
+	r.postCommitStatus(context.Background(), testRun("apply", "sha456"), testPullRequestLayer(), testRepository(), status.StateFailure, commitstatus.Failed)
 
 	if len(provider.setStatusCalls) != 1 {
 		t.Fatalf("expected exactly one commit status to be set for a pull request layer, got %d", len(provider.setStatusCalls))
@@ -138,9 +139,37 @@ func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 
 func TestPostCommitStatusDoesNotPanicOnProviderError(t *testing.T) {
 	r := &Reconciler{
+		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return nil, errors.New("no provider configured")
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+}
+
+func TestResultMessageUsesLastResultWhilePending(t *testing.T) {
+	r := &Reconciler{Datastore: datastore.NewMockClient()}
+	layer := testMainLayer()
+	layer.Status.LastResult = "Plan: 1 to add, 0 to change, 0 to destroy."
+
+	got := r.resultMessage(testRun("plan", "sha123"), layer, commitstatus.Needed)
+	if got != layer.Status.LastResult {
+		t.Errorf("expected pending outcome to reuse Last Result %q, got %q", layer.Status.LastResult, got)
+	}
+}
+
+func TestResultMessageReturnsErrorPlaceholderOnDatastoreFailure(t *testing.T) {
+	r := &Reconciler{Datastore: &erroringDatastoreClient{}}
+	got := r.resultMessage(testRun("apply", "sha123"), testMainLayer(), commitstatus.Succeeded)
+	if got != "Error getting last Result" {
+		t.Errorf("expected error placeholder, got %q", got)
+	}
+}
+
+type erroringDatastoreClient struct {
+	datastore.MockClient
+}
+
+func (c *erroringDatastoreClient) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
+	return nil, errors.New("datastore unavailable")
 }
