@@ -138,11 +138,12 @@ func (c *Controllers) Exec() {
 		switch ctrlType {
 		case "layer":
 			if err = (&terraformlayer.Reconciler{
-				Client:    mgr.GetClient(),
-				Scheme:    mgr.GetScheme(),
-				Config:    c.config,
-				Recorder:  mgr.GetEventRecorderFor("Burrito"),
-				Datastore: datastoreClient,
+				Client:      mgr.GetClient(),
+				Scheme:      mgr.GetScheme(),
+				Config:      c.config,
+				Recorder:    mgr.GetEventRecorderFor("Burrito"),
+				Datastore:   datastoreClient,
+				Credentials: credentialStore,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create layer controller: %s", err)
 			}
@@ -167,6 +168,7 @@ func (c *Controllers) Exec() {
 				Config:       c.config,
 				Datastore:    datastoreClient,
 				K8SLogClient: clientset,
+				Credentials:  credentialStore,
 			}).SetupWithManager(mgr); err != nil {
 				log.Fatalf("unable to create run controller: %s", err)
 			}

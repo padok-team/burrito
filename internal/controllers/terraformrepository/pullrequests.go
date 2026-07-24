@@ -2,6 +2,7 @@ package terraformrepository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -9,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/repository"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
@@ -48,12 +50,34 @@ func (r *Reconciler) syncPullRequests(ctx context.Context, repositoryObj *config
 		if _, ok := desiredPullRequests[current.Name]; ok {
 			continue
 		}
+		// Already known to be merged: its resource must survive until the post-merge apply
+		// flow finishes tracking it and deletes it itself (see makeApplyCommentNeededHandler).
+		if _, isMerged := current.Annotations[annotations.MergedAt]; isMerged {
+			continue
+		}
+		// The pull/merge request is no longer open remotely, but that alone doesn't tell us
+		// whether it was merged or just closed — without a webhook, polling is the only signal
+		// we get. A merge commit only exists once the remote pull/merge request has been
+		// merged, so use it to tell the two cases apart before deleting anything.
+		if mergeCommit, err := provider.GetMergeCommit(repositoryObj, current); err == nil && mergeCommit != "" {
+			if err := r.markPullRequestMerged(ctx, current, mergeCommit); err != nil {
+				return err
+			}
+			continue
+		}
 		if err := r.deleteRemotePullRequest(ctx, current); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (r *Reconciler) markPullRequestMerged(ctx context.Context, pr *configv1alpha1.TerraformPullRequest, mergeCommit string) error {
+	return annotations.Add(ctx, r.Client, pr, map[string]string{
+		annotations.MergedAt:    time.Now().UTC().Format(time.RFC3339),
+		annotations.MergeCommit: mergeCommit,
+	})
 }
 
 func (r *Reconciler) getAPIProvider(repositoryObj *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {

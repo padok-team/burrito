@@ -15,6 +15,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,6 +79,7 @@ var _ = BeforeSuite(func() {
 		Clock:        &MockClock{},
 		Datastore:    datastore.NewMockClient(),
 		K8SLogClient: logClient,
+		Credentials:  credentials.NewCredentialStore(k8sClient, config.TestConfig().Controller.Timers.CredentialsTTL),
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
@@ -93,6 +95,7 @@ var _ = BeforeSuite(func() {
 		Clock:        &MockClock{},
 		Datastore:    datastore.NewMockClient(),
 		K8SLogClient: logClient,
+		Credentials:  credentials.NewCredentialStore(k8sClient, configMaxConcurrent.Controller.Timers.CredentialsTTL),
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
