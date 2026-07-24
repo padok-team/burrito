@@ -93,6 +93,9 @@ func isRetryable(err error) bool {
 // LogsURL builds a link to layer's logs page on the Burrito dashboard at publicURL, scoped
 // to runName when known. Returns "" when publicURL is unset (links are opt-in), leaving the
 // status without a "Details" link.
+//
+// hidepr=false is appended because the dashboard's "hide PR layers" filter defaults to on:
+// without it, following the link can land on a filtered-out, empty layer list.
 func LogsURL(publicURL string, layer *configv1alpha1.TerraformLayer, runName string) string {
 	if publicURL == "" {
 		return ""
@@ -101,7 +104,7 @@ func LogsURL(publicURL string, layer *configv1alpha1.TerraformLayer, runName str
 	if runName != "" {
 		url += "/" + runName
 	}
-	return url
+	return url + "?hidepr=false"
 }
 
 func capitalize(s string) string {
