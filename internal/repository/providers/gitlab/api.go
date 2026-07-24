@@ -57,11 +57,15 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 	}
 	description := s.Description
 	state := toGitlabBuildState(s.State)
-	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, &gitlab.SetCommitStatusOptions{
+	opts := &gitlab.SetCommitStatusOptions{
 		State:       state,
 		Name:        &name,
 		Description: &description,
-	})
+	}
+	if s.TargetURL != "" {
+		opts.TargetURL = &s.TargetURL
+	}
+	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, opts)
 	if err != nil {
 		log.Errorf("Error while setting commit status on GitLab: %s", err)
 	}

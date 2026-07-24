@@ -40,6 +40,7 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.runner.args | list | `["runner", "start"]` | Override the default args for the runner container |
 | config.burrito.runner.command | list | `["burrito"]` | Override the default command for the runner container |
 | config.burrito.server.addr | string | `":8080"` | Server exposed port |
+| config.burrito.server.publicUrl | string | `""` | Externally-reachable URL of the Burrito dashboard, used to build "Details" links on commit statuses. Leave empty to disable those links (ex: https://burrito.example.com) |
 | config.burrito.server.webhook.github.secret | string | `""` | Secret to validate webhook payload, prefer override with the BURRITO_SERVER_WEBHOOK_GITHUB_SECRET environment variable |
 | config.burrito.server.webhook.gitlab.secret | string | `""` | Secret to validate webhook payload, Prefer override with the BURRITO_SERVER_WEBHOOK_GITLAB_SECRET environment variable |
 | config.create | bool | `true` | Create ConfigMap with Burrito configuration |

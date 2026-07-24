@@ -123,6 +123,9 @@ type ServerConfig struct {
 	OIDC      OIDCConfig      `mapstructure:"oidc"`
 	BasicAuth BasicAuthConfig `mapstructure:"basicAuth"`
 	Session   SessionConfig   `mapstructure:"session"`
+	// PublicURL is the externally-reachable URL of the Burrito dashboard, used to build
+	// links (e.g. commit status "Details" links) back to it. Empty disables those links.
+	PublicURL string `mapstructure:"publicUrl"`
 }
 
 type OIDCConfig struct {

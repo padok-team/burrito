@@ -76,6 +76,9 @@ config:
     server:
       # -- Server exposed port
       addr: ":8080"
+      # -- Externally-reachable URL of the Burrito dashboard, used to build "Details" links
+      # on commit statuses. Leave empty to disable those links (ex: https://burrito.example.com)
+      publicUrl: ""
       basicAuth:
         # -- Enable/Disable Basic Authentication for the Burrito server. If both Basic Auth and OIDC are disabled, the server will be publicly accessible.
         enabled: true

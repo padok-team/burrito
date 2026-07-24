@@ -27,4 +27,6 @@ type CommitStatus struct {
 	// per layer for commits pushed directly to the base branch, where there is no pull
 	// request to aggregate them under a single context.
 	Context string
+	// TargetURL, if set, becomes the status's "Details" link.
+	TargetURL string
 }
