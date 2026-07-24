@@ -146,7 +146,8 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1
 	}
 	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, "")
 	if err := commitstatus.Post(provider, repository, layer, phase, state, commit, layer.Status.LastResult, targetURL); err != nil {
-		logrus.Warnf("could not set %s commit status for layer %s: %s", phase, layer.Name, err)
+		// Already logged inside Post with more specific context; best-effort, nothing more to do.
+		return
 	}
 }
 

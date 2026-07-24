@@ -65,10 +65,9 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 	if s.TargetURL != "" {
 		opts.TargetURL = &s.TargetURL
 	}
+	// Errors are logged by the caller (commitstatus.Post), which has the context to tell a
+	// permanent failure from a transient one worth retrying.
 	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, opts)
-	if err != nil {
-		log.Errorf("Error while setting commit status on GitLab: %s", err)
-	}
 	return err
 }
 
