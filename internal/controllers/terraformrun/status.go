@@ -28,7 +28,8 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.T
 	}
 	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, run.Name)
 	if err := commitstatus.Post(provider, repository, layer, phase, state, run.Spec.Layer.Revision, r.resultMessage(run, layer, outcome), targetURL); err != nil {
-		logrus.Warnf("could not set %s commit status for run %s: %s", phase, run.Name, err)
+		// Already logged inside Post with more specific context; best-effort, nothing more to do.
+		return
 	}
 }
 
