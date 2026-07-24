@@ -4,8 +4,8 @@ import (
 	"context"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/controllers/commitstatus"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	logrus "github.com/sirupsen/logrus"
 )
 

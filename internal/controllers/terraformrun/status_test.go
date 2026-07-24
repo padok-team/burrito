@@ -7,10 +7,10 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/controllers/commitstatus"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
