@@ -74,6 +74,8 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 
 func toGitlabBuildState(s status.State) gitlab.BuildStateValue {
 	switch s {
+	case status.StateRunning:
+		return gitlab.Running
 	case status.StateSuccess:
 		return gitlab.Success
 	case status.StateFailure:
