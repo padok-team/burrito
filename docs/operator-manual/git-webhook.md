@@ -23,7 +23,10 @@ Only `application/json` content type is supported.
 
 ## Configure the webhook secret in credentials
 
-Add the webhook secret to the repository or shared credentials used to authenticate to the repository. The webhook secret is used to validate the authenticity of webhook payloads from your Git provider.
+Add the webhook secret to the repository or shared credentials used to authenticate to the repository. The webhook secret is used to validate the authenticity of webhook payloads from your Git provider and prevents attackers from forging webhook requests to Burrito.
+
+!!! warning "The webhook secret must be non-empty"
+    Burrito requires a **non-empty** `webhookSecret` to verify payloads. Without it, webhook events are rejected. Make sure it matches the secret set on your Git provider's webhook.
 
 ### Using repository-specific credentials
 
