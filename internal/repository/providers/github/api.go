@@ -59,7 +59,7 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 	if s.Context != "" {
 		ctx = s.Context
 	}
-	state := string(s.State)
+	state := toGithubState(s.State)
 	description := s.Description
 	repoStatus := github.RepoStatus{
 		State:       &state,
@@ -74,6 +74,15 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 		log.Errorf("Error while setting commit status on GitHub: %s", err)
 	}
 	return err
+}
+
+// toGithubState maps our internal status.State to a GitHub-accepted value. GitHub only
+// accepts error/failure/pending/success, with no notion of "running": fold it into pending.
+func toGithubState(s status.State) string {
+	if s == status.StateRunning {
+		return string(status.StatePending)
+	}
+	return string(s)
 }
 
 func (api *APIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {

@@ -107,7 +107,7 @@ func (s *Initial) getHandler() Handler {
 			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for initial run", pod.Name))
-		r.postCommitStatus(ctx, run, layer, repo, status.StatePending, commitstatus.InProgress)
+		r.postCommitStatus(ctx, run, layer, repo, status.StateRunning, commitstatus.InProgress)
 
 		metrics.RecordRunCreated(*run)
 
@@ -175,7 +175,7 @@ func (s *Retrying) getHandler() Handler {
 			NewPod:    true,
 		}
 		r.Recorder.Event(run, corev1.EventTypeNormal, "Run", fmt.Sprintf("Successfully created pod %s for retry run", pod.Name))
-		r.postCommitStatus(ctx, run, layer, repo, status.StatePending, commitstatus.InProgress)
+		r.postCommitStatus(ctx, run, layer, repo, status.StateRunning, commitstatus.InProgress)
 		// Minimal time (1s) to transit from Retrying state to Running state
 		return ctrl.Result{RequeueAfter: time.Duration(1 * time.Second)}, runInfo
 	}

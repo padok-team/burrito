@@ -11,6 +11,12 @@ type State string
 
 const (
 	StatePending State = "pending"
+	// StateRunning marks a status as actively in progress, distinct from StatePending. GitLab's
+	// commit status is a real state machine (pending -> running -> success/failed) and rejects
+	// posting "pending" twice in a row (e.g. once when a run is decided, again once its pod
+	// starts) with a 400 ("Cannot transition status via :enqueue from :pending"). GitHub has no
+	// such restriction and no "running" state, so its provider maps this back to "pending".
+	StateRunning State = "running"
 	StateSuccess State = "success"
 	StateFailure State = "failure"
 )

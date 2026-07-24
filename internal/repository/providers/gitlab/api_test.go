@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
@@ -215,4 +217,33 @@ func TestAPIProvider_GetMergeCommit_ReturnsErrorWhenGetFails(t *testing.T) {
 	api := newTestAPIProvider(t, mux)
 	_, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
 	require.Error(t, err)
+}
+
+func TestAPIProvider_SetStatus_PostsRunningState(t *testing.T) {
+	var gotState string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/statuses/sha123", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			State string `json:"state"`
+		}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		gotState = body.State
+		fmt.Fprint(w, `{}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	err := api.SetStatus(testRepository(), testPullRequest("42"), status.CommitStatus{
+		Phase:  status.PhasePlan,
+		State:  status.StateRunning,
+		Commit: "sha123",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "running", gotState)
+}
+
+func TestToGitlabBuildState(t *testing.T) {
+	assert.Equal(t, gitlab.Running, toGitlabBuildState(status.StateRunning))
+	assert.Equal(t, gitlab.Pending, toGitlabBuildState(status.StatePending))
+	assert.Equal(t, gitlab.Success, toGitlabBuildState(status.StateSuccess))
+	assert.Equal(t, gitlab.Failed, toGitlabBuildState(status.StateFailure))
 }
