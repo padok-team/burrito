@@ -21,10 +21,13 @@ export default [
     plugins: {
       'react-hooks': hooksPlugin,
     },
-    rules: hooksPlugin.configs.recommended.rules,
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
   },
-    eslint.configs.recommended,
-    ...tseslint.configs.recommended,
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     ignores: ['**/dist'],
   },
