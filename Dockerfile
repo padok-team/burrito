@@ -72,7 +72,7 @@ FROM docker.io/library/alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0b
 WORKDIR /home/burrito
 
 # Install required packages
-RUN apk add --update --no-cache git bash openssh
+RUN apk add --update --no-cache bash git libc6-compat openssh
 
 ENV UID=65532
 ENV GID=65532
