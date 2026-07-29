@@ -1876,7 +1876,11 @@ Only <code>application/json</code> content type is supported.</p>
 <p><strong>GitHub triggers:</strong> The webhook should be triggered on <code>push</code> and <code>pull_request</code> events.</p>
 <p><strong>GitLab triggers:</strong> The webhook should be triggered on <code>Push events</code> from all branches and <code>Merge request events</code>.</p>
 <h2 id="configure-the-webhook-secret-in-credentials">Configure the webhook secret in credentials<a class="headerlink" href="#configure-the-webhook-secret-in-credentials" title="Permanent link">&para;</a></h2>
-<p>Add the webhook secret to the repository or shared credentials used to authenticate to the repository. The webhook secret is used to validate the authenticity of webhook payloads from your Git provider.</p>
+<p>Add the webhook secret to the repository or shared credentials used to authenticate to the repository. The webhook secret is used to validate the authenticity of webhook payloads from your Git provider and prevents attackers from forging webhook requests to Burrito.</p>
+<div class="admonition warning">
+<p class="admonition-title">The webhook secret must be non-empty</p>
+<p>Burrito requires a <strong>non-empty</strong> <code>webhookSecret</code> to verify payloads. Without it, webhook events are rejected. Make sure it matches the secret set on your Git provider's webhook.</p>
+</div>
 <h3 id="using-repository-specific-credentials">Using repository-specific credentials<a class="headerlink" href="#using-repository-specific-credentials" title="Permanent link">&para;</a></h3>
 <p>Create a credential secret in the same namespace as the <code>TerraformRepository</code> using the type <code>credentials.burrito.tf/repository</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
