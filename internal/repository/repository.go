@@ -40,18 +40,55 @@ func GetAPIProviderFromRepository(store *credentials.CredentialStore, repo *conf
 }
 
 func GetProviderFromCredentials(RepositoryCredentials credentials.Credential) (types.Provider, error) {
+	var provider types.Provider
 	switch RepositoryCredentials.Provider {
 	case "github":
-		return &github.Github{Config: RepositoryCredentials}, nil
+		provider = &github.Github{Config: RepositoryCredentials}
 	case "gitlab":
-		return &gitlab.Gitlab{Config: RepositoryCredentials}, nil
+		provider = &gitlab.Gitlab{Config: RepositoryCredentials}
 	case "standard":
-		return &standard.Standard{Config: RepositoryCredentials}, nil
+		provider = &standard.Standard{Config: RepositoryCredentials}
 	case "mock":
-		return &mock.Mock{}, nil
+		provider = &mock.Mock{}
 	default:
 		return nil, fmt.Errorf("unknown provider: %s", RepositoryCredentials.Provider)
 	}
+	// Wrap every provider so the webhook-secret invariant is enforced centrally,
+	// in the single code path all providers are constructed through, rather than
+	// relying on each provider (present or future) to remember it. See
+	// webhookSecretEnforcer for details.
+	return &webhookSecretEnforcer{Provider: provider, credential: RepositoryCredentials}, nil
+}
+
+// webhookSecretEnforcer wraps a types.Provider to guarantee that a webhook
+// provider is never handed out when the credential has no webhook secret.
+//
+// This exists for security reasons. An empty webhook secret makes the
+// underlying go-playground/webhooks parser skip signature/token verification
+// entirely (`if len(hook.secret) > 0`), which would let anyone POST forged,
+// unsigned events to /api/webhook and drive real Terraform plans under the
+// operator's own credentials. Because GetProviderFromCredentials is the single
+// choke point every provider is built through, enforcing the check here makes
+// it structurally impossible for any provider — including ones added in the
+// future — to serve webhooks without a configured secret. Providers therefore
+// do not (and must not) need to re-implement this guard themselves.
+type webhookSecretEnforcer struct {
+	types.Provider
+	credential credentials.Credential
+}
+
+// GetWebhookProvider delegates to the wrapped provider first (so providers that
+// do not support webhooks keep returning their own error), then refuses to hand
+// back a working webhook provider unless a non-empty webhook secret is set.
+func (w *webhookSecretEnforcer) GetWebhookProvider() (types.WebhookProvider, error) {
+	inner, err := w.Provider.GetWebhookProvider()
+	if err != nil {
+		return nil, err
+	}
+	if w.credential.WebhookSecret == "" {
+		return nil, fmt.Errorf("webhook secret is required but not configured for this repository: refusing to serve webhooks without signature verification")
+	}
+	return inner, nil
 }
 
 func getStandardGitNoAuth(URL string) types.GitProvider {
