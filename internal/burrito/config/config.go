@@ -68,6 +68,7 @@ type ControllerConfig struct {
 	RunParallelism          int                         `mapstructure:"runParallelism"`
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
+	EnableValidatingWebhook  bool                       `mapstructure:"enableValidatingWebhook"`
 }
 
 type LeaderElectionConfig struct {
