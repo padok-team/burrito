@@ -5,6 +5,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"
+	"github.com/padok-team/burrito/internal/repository/providers/bitbucket"
 	"github.com/padok-team/burrito/internal/repository/providers/github"
 	"github.com/padok-team/burrito/internal/repository/providers/gitlab"
 	"github.com/padok-team/burrito/internal/repository/providers/mock"
@@ -46,6 +47,8 @@ func GetProviderFromCredentials(RepositoryCredentials credentials.Credential) (t
 		provider = &github.Github{Config: RepositoryCredentials}
 	case "gitlab":
 		provider = &gitlab.Gitlab{Config: RepositoryCredentials}
+	case "bitbucket":
+		provider = &bitbucket.Bitbucket{Config: RepositoryCredentials}
 	case "standard":
 		provider = &standard.Standard{Config: RepositoryCredentials}
 	case "mock":

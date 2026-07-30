@@ -148,8 +148,9 @@ type Credential struct {
 	GitHubAppInstallationID string `json:"githubAppInstallationID,omitempty"`
 	GitHubAppPrivateKey     string `json:"githubAppPrivateKey,omitempty"`
 	// Token auth
-	GitHubToken string `json:"githubToken,omitempty"`
-	GitLabToken string `json:"gitlabToken,omitempty"`
+	GitHubToken      string `json:"githubToken,omitempty"`
+	GitLabToken      string `json:"gitlabToken,omitempty"`
+	BitbucketToken   string `json:"bitbucketToken,omitempty"`
 	// Repository URL
 	URL string `json:"url,omitempty"`
 	// Secret for webhook handling
