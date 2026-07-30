@@ -24,7 +24,7 @@ const (
 
 type CredentialStore struct {
 	TTL time.Duration
-	mu  sync.Mutex
+	mu  sync.RWMutex
 	client.Client
 	sharedCredentials     []*SharedCredential
 	repositoryCredentials []*RepositoryCredential
@@ -40,23 +40,40 @@ func NewCredentialStore(client client.Client, ttl time.Duration) *CredentialStor
 }
 
 func (s *CredentialStore) GetAllCredentials() ([]*SharedCredential, []*RepositoryCredential) {
-	if time.Since(s.lastUpdate) >= s.TTL {
-		err := s.updateCredentials()
-		if err != nil {
-			log.Errorf("Failed to update credentials: %v", err)
-		}
-	}
+	s.updateCredentialsIfNeeded()
+
+	// Keep reads synchronized with refresh writes while allowing concurrent readers.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.sharedCredentials, s.repositoryCredentials
+}
+
+func (s *CredentialStore) updateCredentialsIfNeeded() {
+	s.mu.RLock()
+	needsUpdate := time.Since(s.lastUpdate) >= s.TTL
+	s.mu.RUnlock()
+
+	if !needsUpdate {
+		return
+	}
+
+	// updateCredentials locks again and re-checks the TTL, so concurrent callers do not all refresh.
+	err := s.updateCredentials()
+	if err != nil {
+		log.Errorf("failed to update credentials: %v", err)
+	}
 }
 
 func (s *CredentialStore) updateCredentials() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// Skip if the last update was less than the TTL
-	if time.Since(s.lastUpdate) < s.TTL {
-		return nil
+	if time.Since(s.lastUpdate) >= s.TTL {
+		return s.refreshCredentials()
 	}
+	return nil
+}
 
+func (s *CredentialStore) refreshCredentials() error {
 	sharedSecrets := &corev1.SecretList{}
 	err := s.List(context.Background(), sharedSecrets, client.MatchingFields{"type": SharedCredentialsType})
 	if err != nil {
@@ -99,12 +116,11 @@ func (s *CredentialStore) updateCredentials() error {
 // Returns the credentials for a given repository. If a specific repository credential is found, it will be returned.
 // If not, the most specific shared credential that matches the repository will be returned.
 func (s *CredentialStore) GetCredentials(repository *configv1alpha1.TerraformRepository) (*Credential, error) {
-	if time.Since(s.lastUpdate) >= s.TTL {
-		err := s.updateCredentials()
-		if err != nil {
-			log.Errorf("failed to update credentials: %v", err)
-		}
-	}
+	s.updateCredentialsIfNeeded()
+
+	// Keep iteration synchronized with refresh writes while allowing concurrent readers.
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	for _, repositoryCredentials := range s.repositoryCredentials {
 		if repositoryCredentials.Matches(repository) {
 			return &repositoryCredentials.Credential, nil
