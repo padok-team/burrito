@@ -151,6 +151,33 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("could not write plan artifact to disk: %s", err)
 		return "", err
 	}
+
+	// Check for resources to destroy if prevent-destroy is enabled
+	if r.config.Runner.PreventDestroy {
+		planJSON, err := r.Datastore.GetPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Spec.Artifact.Run, r.Run.Spec.Artifact.Attempt, "json")
+		if err != nil {
+			log.Warnf("could not get plan JSON for prevent-destroy check: %s", err)
+		} else {
+			planObj := &tfjson.Plan{}
+			if err := json.Unmarshal(planJSON, planObj); err == nil {
+				destroyCount := 0
+				for _, rc := range planObj.ResourceChanges {
+					if rc.Change != nil && rc.Change.Actions.Delete() {
+						destroyCount++
+					}
+				}
+				if destroyCount > 0 {
+					err := fmt.Errorf("preventDestroy is enabled: plan would destroy %d resource(s). Aborting apply", destroyCount)
+					log.Errorf("%s", err)
+					return "", err
+				}
+				log.Infof("prevent-destroy check passed: 0 resources to destroy")
+			} else {
+				log.Warnf("could not parse plan JSON for prevent-destroy check: %s", err)
+			}
+		}
+	}
+
 	log.Infof("launching %s apply", r.exec.TenvName())
 	if configv1alpha1.GetApplyWithoutPlanArtifactEnabled(r.Repository, r.Layer) {
 		log.Infof("applying without reusing plan artifact from previous plan run")

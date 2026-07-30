@@ -94,6 +94,7 @@ type RunnerConfig struct {
 	RepositoryPath             string      `mapstructure:"repositoryPath"`
 	Args                       []string    `mapstructure:"args"`
 	Command                    []string    `mapstructure:"command"`
+	PreventDestroy             bool        `mapstructure:"preventDestroy"`
 }
 
 type ImageConfig struct {
@@ -238,6 +239,7 @@ func TestConfig() *Config {
 		Runner: RunnerConfig{
 			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
 			Layer:                      Layer{},
+			PreventDestroy:             false,
 		},
 	}
 }
