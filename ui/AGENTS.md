@@ -3,7 +3,7 @@
 ## Stack
 
 - Vite 7 + React 19 + TypeScript + **Tailwind CSS v4** (via `@tailwindcss/vite` — config lives in CSS, there is no `tailwind.config.js`).
-- Data fetching / server state: **`@tanstack/react-query`** over `axios`. Tables: `@tanstack/react-table`. Routing: `react-router-dom` v7.
+- Data fetching / server state: **`@tanstack/react-query`** over `axios`. Tables: `@tanstack/react-table`. Routing: `react-router` v8.
 - Package manager: **yarn** (classic). No new dependencies without explicit approval.
 
 ## Rules

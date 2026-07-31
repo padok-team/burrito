@@ -1,6 +1,6 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 
 import ProfilePicture from '@/components/misc/ProfilePicture';
 import Burrito from '@/assets/illustrations/Burrito';

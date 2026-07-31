@@ -1,9 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate
-} from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router';
 
 import ThemeProvider from '@/contexts/ThemeContext';
 

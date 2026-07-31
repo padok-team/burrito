@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';

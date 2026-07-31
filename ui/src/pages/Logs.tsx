@@ -1,6 +1,6 @@
 import React, { useContext, useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router';
 
 import { fetchLayers } from '@/clients/layers/client';
 import { reactQueryKeys } from '@/clients/reactQueryConfig';
