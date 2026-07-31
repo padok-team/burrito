@@ -9,7 +9,7 @@ import {
   FloatingOverlay,
   FloatingPortal
 } from '@floating-ui/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import LogsButton from '@/components/buttons/LogsButton';
 import LogsTerminal from '@/components/tools/LogsTerminal';
