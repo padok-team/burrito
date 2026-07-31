@@ -4,9 +4,15 @@ on:
   workflow_call:
     inputs:
       version:
-        description: 'Version to deploy (e.g. v1.2.3)'
+        description: "Version to deploy (e.g. v1.2.3)"
         type: string
         required: true
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. v1.2.3)"
+        required: true
+        type: string
   push:
     branches:
       - main
@@ -55,8 +61,8 @@ jobs:
           if [[ ${{ github.event_name }} == 'pull_request' || ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'branch' ]]; then
             echo "VERSION=$(echo $CURRENT_VERSION-${{ github.sha }})" >> $GITHUB_ENV
             echo "APP_VERSION=${{ github.sha }}" >> $GITHUB_ENV
-          elif [[ ${{ github.event_name }} == 'workflow_call' ]]; then
-            echo "VERSION=$(echo ${{ inputs.version }} | sed 's/v//')" >> $GITHUB_ENV
+          elif [[ ${{ github.event_name }} == 'workflow_call' || ${{ github.event_name }} == 'workflow_dispatch' ]]; then
+            echo "VERSION=$(echo ${{ inputs.version }} | sed 's/^v//')" >> $GITHUB_ENV
             echo "APP_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
           else
             echo "Unsupported event type"
