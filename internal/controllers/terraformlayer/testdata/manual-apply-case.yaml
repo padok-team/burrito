@@ -1,0 +1,26 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: manual-apply-case-1
+  namespace: default
+  annotations:
+    api.terraform.padok.cloud/apply-now: "true"
+    webhook.terraform.padok.cloud/relevant-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  8 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-run: run-succeeded/0
+    runner.terraform.padok.cloud/plan-sum: AuP6pMNxWsbSZKnxZvxD842wy0qaF9JCX8HW1nFeL1I=
+spec:
+  branch: main
+  path: manual-apply-case/
+  remediationStrategy:
+    autoApply: false
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+  terragrunt:
+    enabled: true
+    version: 0.45.4
