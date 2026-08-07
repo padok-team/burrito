@@ -268,6 +268,11 @@ func (in *RemediationStrategy) DeepCopyInto(out *RemediationStrategy) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.NonDestructiveApply != nil {
+		in, out := &in.NonDestructiveApply, &out.NonDestructiveApply
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ApplyWithoutPlanArtifact != nil {
 		in, out := &in.ApplyWithoutPlanArtifact, &out.ApplyWithoutPlanArtifact
 		*out = new(bool)

@@ -4866,6 +4866,8 @@ spec:
                     type: boolean
                   autoApply:
                     type: boolean
+                  nonDestructiveApply:
+                    type: boolean
                   onError:
                     properties:
                       maxRetries:
@@ -10005,6 +10007,8 @@ spec:
                   applyWithoutPlanArtifact:
                     type: boolean
                   autoApply:
+                    type: boolean
+                  nonDestructiveApply:
                     type: boolean
                   onError:
                     properties:
