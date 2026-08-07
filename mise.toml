@@ -1,0 +1,34 @@
+[tools]
+# Language runtimes — matched to the Dockerfile build images so dev == build
+go = "1.26.3"      # Dockerfile golang builder (>= go.mod 1.26.0)
+node = "24.16.0"   # Dockerfile node builder / ci-frontend NODE_VERSION
+yarn = "1.22.22"   # classic, matches ui/yarn.lock
+
+# Kubernetes & dev CLIs — pinned for a reproducible environment
+kubectl = "1.36.2"      # aligns with ENVTEST_K8S_VERSION (1.36.0)
+helm = "4.2.0"
+kind = "0.32.0"
+yq = "4.53.3"           # mikefarah
+golangci-lint = "2.12.2"
+
+# Docs toolchain
+uv = "0.11.19"
+
+# Not managed here (system-level): docker + buildx/compose, make, git.
+
+[env]
+# Automatic virtualenv activation for the docs toolchain
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.install]
+description = "Install documentation dependencies"
+run = "uv pip install -r requirements.txt"
+
+[tasks.mkdocs-serve]
+depends = "install"
+description = "Serve MkDocs documentation locally"
+run = "uv run mkdocs serve"
+
+[tasks.lint]
+description = "Run golangci-lint (no make target exists for it)"
+run = "golangci-lint run ./..."
