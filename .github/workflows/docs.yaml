@@ -40,7 +40,7 @@ jobs:
           globs: 'docs/**/*.md'
 
       - name: Build pages
-        run: uv run mkdocs build --strict
+        run: uv run zensical build --strict
 
       - name: Configure Git user
         run: |
