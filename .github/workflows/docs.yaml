@@ -22,6 +22,11 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # The release push runs this workflow twice, standalone and through
+    # tag-on-release.yaml. Both 'mike deploy --push' to gh-pages, so serialize them.
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -52,7 +57,9 @@ jobs:
         run: uv run mike deploy --push --update-aliases unstable
 
       - name: Deploy pages (new release)
-        if: github.event_name == 'workflow_call'
+        # A reusable workflow inherits the event of its caller, so github.event_name is
+        # never 'workflow_call'. The release input is the only reliable signal here.
+        if: inputs.version != ''
         run: |
           uv run mike deploy --push --update-aliases ${{ inputs.version }} latest
           echo "Deployed version ${{ inputs.version }} to GitHub Pages"

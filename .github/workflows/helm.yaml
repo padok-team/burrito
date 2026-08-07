@@ -7,12 +7,6 @@ on:
         description: "Version to deploy (e.g. v1.2.3)"
         type: string
         required: true
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to release (e.g. v1.2.3)"
-        required: true
-        type: string
   push:
     branches:
       - main
@@ -56,16 +50,20 @@ jobs:
 
       - name: Compute versions
         shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
         run: |
           CURRENT_VERSION=$(yq $CHART_PATH/Chart.yaml --expression .version)
-          if [[ ${{ github.event_name }} == 'pull_request' || ${{ github.event_name }} == 'push' && ${{ github.ref_type }} == 'branch' ]]; then
-            echo "VERSION=$(echo $CURRENT_VERSION-${{ github.sha }})" >> $GITHUB_ENV
-            echo "APP_VERSION=${{ github.sha }}" >> $GITHUB_ENV
-          elif [[ ${{ github.event_name }} == 'workflow_call' || ${{ github.event_name }} == 'workflow_dispatch' ]]; then
-            echo "VERSION=$(echo ${{ inputs.version }} | sed 's/^v//')" >> $GITHUB_ENV
-            echo "APP_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          # A reusable workflow inherits the event of its caller, so github.event_name is
+          # never 'workflow_call'. The release input is the only reliable signal here.
+          if [[ -n "$RELEASE_VERSION" ]]; then
+            echo "VERSION=${RELEASE_VERSION#v}" >> $GITHUB_ENV
+            echo "APP_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+          elif [[ "$GITHUB_EVENT_NAME" == 'pull_request' || "$GITHUB_EVENT_NAME" == 'push' ]]; then
+            echo "VERSION=$CURRENT_VERSION-$GITHUB_SHA" >> $GITHUB_ENV
+            echo "APP_VERSION=$GITHUB_SHA" >> $GITHUB_ENV
           else
-            echo "Unsupported event type"
+            echo "Unsupported event type: $GITHUB_EVENT_NAME"
             exit 1
           fi
 
