@@ -4,3 +4,5 @@ rules:
   artipacked:
     ignore:
       - docs.yaml
+      - release.yaml
+      - tag-on-release.yaml
