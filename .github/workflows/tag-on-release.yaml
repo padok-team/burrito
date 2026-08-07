@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0 # Required to diff against the commit the image was built from
 
       - name: Read version
         id: version
@@ -40,13 +42,58 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Verify the release commit matches the built image source
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          SOURCE_SHA=$(git log -1 --format=%B | sed -n 's/.*Source-SHA:[[:space:]]*\([0-9a-f]\{40\}\).*/\1/p' | head -1)
+          if [[ -z "$SOURCE_SHA" ]]; then
+            echo "No Source-SHA trailer found on the release commit."
+            echo "VERSION is only meant to be bumped by the Release workflow, which records"
+            echo "the commit the signed image was built from."
+            exit 1
+          fi
+
+          # main may have moved between the build and the merge of the bump PR: the
+          # signed image would then no longer match the source about to be tagged.
+          UNEXPECTED=$(git diff --name-only "$SOURCE_SHA" HEAD \
+            | grep -vxE "VERSION|${CHART_PATH#./}/Chart.yaml|${CHART_PATH#./}/values.yaml" || true)
+          if [[ -n "$UNEXPECTED" ]]; then
+            echo "The release commit diverges from $SOURCE_SHA outside of the release files:"
+            echo "$UNEXPECTED"
+            echo "Re-run the Release workflow to rebuild and re-sign from the current main."
+            exit 1
+          fi
+          echo "Release commit matches the image built from $SOURCE_SHA."
+
       - name: Create and push tag
         if: steps.check.outputs.exists == 'false'
+        env:
+          TAG: ${{ steps.version.outputs.value }}
+          MAX_ATTEMPTS: 45
+          RETRY_DELAY: 60
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${{ steps.version.outputs.value }}"
-          git push origin "${{ steps.version.outputs.value }}"
+          git tag "$TAG"
+
+          # The 'releases' tag ruleset requires the status checks of this very commit to
+          # be green. They are triggered by the same push as this workflow, so the first
+          # attempts are expected to be rejected until they finish.
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            if output=$(git push origin "$TAG" 2>&1); then
+              echo "$output"
+              exit 0
+            fi
+            echo "$output"
+            if ! grep -q "GH013" <<< "$output"; then
+              echo "Push rejected for a reason unrelated to the tag ruleset, aborting."
+              exit 1
+            fi
+            echo "Required status checks are not green yet, retrying in ${RETRY_DELAY}s ($attempt/$MAX_ATTEMPTS)"
+            sleep "$RETRY_DELAY"
+          done
+          echo "Timed out waiting for the required status checks of $GITHUB_SHA to succeed."
+          exit 1
 
   helm-push:
     uses: ./.github/workflows/helm.yaml

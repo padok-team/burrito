@@ -15,7 +15,37 @@ permissions:
   id-token: write # Required by build-and-push.yaml for keyless cosign signing
 
 jobs:
+  guard:
+    name: Check release prerequisites
+    runs-on: ubuntu-latest
+    steps:
+      # workflow_dispatch is open to anyone with write access, which includes the
+      # burrito-developers team. Cutting a release publishes a signed image, so it is
+      # restricted to the roles the burrito-maintainers team holds on this repository.
+      - name: Ensure the actor is a maintainer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ROLE=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$GITHUB_ACTOR/permission" --jq .role_name)
+          case "$ROLE" in
+            admin | maintain)
+              echo "$GITHUB_ACTOR holds the '$ROLE' role on this repository."
+              ;;
+            *)
+              echo "Only maintainers can cut a release, $GITHUB_ACTOR holds the '$ROLE' role."
+              exit 1
+              ;;
+          esac
+
+      - name: Ensure the workflow was dispatched on main
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Releases must be dispatched on main, got $GITHUB_REF."
+            exit 1
+          fi
+
   build-and-push:
+    needs: guard
     uses: ./.github/workflows/build-and-push.yaml
     with:
       version: ${{ inputs.version }}
@@ -34,7 +64,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ github.sha }} # The exact commit the image was built from, main may have moved since
 
       - name: Bump VERSION file
         run: echo "${{ inputs.version }}" > VERSION
@@ -55,12 +85,23 @@ jobs:
       - name: Commit and open PR
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
         run: |
-          BRANCH_NAME="bump-version-${{ inputs.version }}"
+          BRANCH_NAME="bump-version-$VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          git switch -c $BRANCH_NAME
-          git commit -m "chore(release): bump version to ${{ inputs.version }}"
-          git push origin $BRANCH_NAME
-          gh pr create --fill --base main --head $BRANCH_NAME
+          git switch -c "$BRANCH_NAME"
+          # The Source-SHA trailer ties the release commit to the source the signed
+          # image was built from. tag-on-release.yaml refuses to tag without it.
+          git commit -m "chore(release): bump version to $VERSION" -m "Source-SHA: $GITHUB_SHA"
+          git push origin "$BRANCH_NAME"
+          PR_URL=$(gh pr create --fill --base main --head "$BRANCH_NAME")
+
+          # Auto-merge still honours the branch ruleset (CODEOWNER review + commitlint),
+          # it only removes the wait. The squash message is set explicitly so the
+          # trailer survives the merge whatever the repository default is.
+          gh pr merge "$PR_URL" --auto --squash \
+            --subject "chore(release): bump version to $VERSION (#${PR_URL##*/})" \
+            --body "Source-SHA: $GITHUB_SHA" \
+            || echo "::warning::Could not enable auto-merge, is it allowed on the repository? Merge $PR_URL manually."
