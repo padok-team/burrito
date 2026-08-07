@@ -81,7 +81,7 @@ spec:
 
 ## The layer uses a private module with SSH
 
-### 1. Create a Secret with a SSH private key which can pull the modules' repositories
+### 1. Create a Secret with an SSH private key which can pull the modules' repositories
 
 Create a Kubernetes Secret which looks like the following:
 
