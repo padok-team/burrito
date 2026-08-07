@@ -3,6 +3,7 @@ package event
 import (
 	"context"
 	"fmt"
+	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
@@ -52,6 +53,8 @@ func (e *PullRequestEvent) Handle(c client.Client) error {
 			}
 		}
 		return batchDeletePullRequests(context.TODO(), c, prs)
+	case PullRequestMerged:
+		return batchMergePullRequests(context.TODO(), c, prs)
 	default:
 		log.Infof("action %s not supported", e.Action)
 	}
@@ -97,6 +100,26 @@ func mergePullRequestEventAnnotations(current *configv1alpha1.TerraformPullReque
 	for key, value := range desired.Annotations {
 		current.Annotations[key] = value
 	}
+}
+
+func batchMergePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {
+	var errResult error
+	for _, pr := range prs {
+		log.Infof("marking TerraformPullRequest %s/%s as merged", pr.Namespace, pr.Name)
+		existing := &configv1alpha1.TerraformPullRequest{}
+		err := c.Get(ctx, client.ObjectKey{Name: pr.Name, Namespace: pr.Namespace}, existing)
+		if err != nil {
+			errResult = multierror.Append(errResult, err)
+			continue
+		}
+		err = annotations.Add(ctx, c, existing, map[string]string{
+			annotations.MergedAt: time.Now().UTC().Format(time.RFC3339),
+		})
+		if err != nil {
+			errResult = multierror.Append(errResult, err)
+		}
+	}
+	return errResult
 }
 
 func batchDeletePullRequests(ctx context.Context, c client.Client, prs []configv1alpha1.TerraformPullRequest) error {

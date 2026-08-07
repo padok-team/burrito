@@ -97,8 +97,10 @@ func getNormalizedAction(action string) string {
 	switch action {
 	case "open", "reopen":
 		return event.PullRequestOpened
-	case "close", "merge":
+	case "close":
 		return event.PullRequestClosed
+	case "merge":
+		return event.PullRequestMerged
 	default:
 		return action
 	}

@@ -9,10 +9,12 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -21,10 +23,10 @@ import (
 )
 
 type fakeAPIProvider struct {
-	changes       []string
-	changesErr    error
-	commentErr    error
-	pullRequests  []configv1alpha1.TerraformPullRequest
+	changes         []string
+	changesErr      error
+	commentErr      error
+	pullRequests    []configv1alpha1.TerraformPullRequest
 	pullRequestsErr error
 }
 
@@ -41,6 +43,14 @@ func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository
 
 func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	return p.pullRequests, p.pullRequestsErr
+}
+
+func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	return nil
+}
+
+func (p *fakeAPIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
+	return "fake-merge-commit", nil
 }
 
 func TestDiscoveryNeededHandlerReturnsOnErrorWhenLayerCreationFails(t *testing.T) {
@@ -182,6 +192,45 @@ func TestCommentNeededHandlerReturnsOnErrorWhenCommentFails(t *testing.T) {
 	result := commentNeededHandler(context.Background(), reconciler, repository, pr, state)
 	if result.RequeueAfter != reconciler.Config.Controller.Timers.OnError {
 		t.Fatalf("expected OnError requeue when Comment fails, got %s", result.RequeueAfter)
+	}
+}
+
+func TestWaitingForApplyHandlerRequeuesWithWaitAction(t *testing.T) {
+	repository := terraformRepository("default", "repo")
+	pr := terraformPullRequest("default", "repo-1", "1", "feature", "sha")
+	reconciler := &Reconciler{Config: config.TestConfig()}
+
+	result := waitingForApplyHandler(context.Background(), reconciler, repository, pr, &State{})
+	if result.RequeueAfter != reconciler.Config.Controller.Timers.WaitAction {
+		t.Fatalf("expected wait requeue, got %s", result.RequeueAfter)
+	}
+}
+
+func TestMakeApplyCommentNeededHandlerPostsCommentAndDeletesPullRequest(t *testing.T) {
+	scheme := newTerraformPullRequestTestScheme(t)
+	repository := terraformRepository("default", "repo")
+	pr := terraformPullRequest("default", "repo-1", "1", "feature", "sha")
+	cl := fake.NewClientBuilder().WithScheme(scheme).WithObjects(pr).Build()
+	provider := &fakeAPIProvider{}
+	reconciler := &Reconciler{
+		Client:   cl,
+		Config:   config.TestConfig(),
+		Recorder: record.NewFakeRecorder(10),
+		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+			return provider, nil
+		},
+	}
+
+	handler := makeApplyCommentNeededHandler(nil)
+	result := handler(context.Background(), reconciler, repository, pr, &State{})
+	if !result.IsZero() {
+		t.Fatalf("expected empty result after deleting the pull request, got %+v", result)
+	}
+
+	deleted := &configv1alpha1.TerraformPullRequest{}
+	err := cl.Get(context.Background(), kclient.ObjectKeyFromObject(pr), deleted)
+	if !apierrors.IsNotFound(err) {
+		t.Fatalf("expected pull request to be deleted, got err %v", err)
 	}
 }
 

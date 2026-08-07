@@ -14,10 +14,12 @@ import (
 )
 
 const (
-	DiscoveryNeeded string = "DiscoveryNeeded"
-	Planning        string = "Planning"
-	CommentNeeded   string = "CommentNeeded"
-	Idle            string = "Idle"
+	DiscoveryNeeded    string = "DiscoveryNeeded"
+	Planning           string = "Planning"
+	CommentNeeded      string = "CommentNeeded"
+	Idle               string = "Idle"
+	WaitingForApply    string = "WaitingForApply"
+	ApplyCommentNeeded string = "ApplyCommentNeeded"
 )
 
 type State struct {
@@ -32,6 +34,34 @@ func (s *State) Handler(ctx context.Context, r *Reconciler, repository *configv1
 func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) State {
 	var state State
 	logger := logrus.WithContext(ctx)
+
+	// Check merge state first — bypasses the open-PR lifecycle entirely.
+	cMerged, isMerged := r.IsMerged(pr)
+	if isMerged {
+		mainLayers, err := r.getMainBranchLayers(ctx, pr)
+		if err != nil {
+			logger.Errorf("failed to get main branch layers for merged pull request %s: %s", pr.Name, err)
+		}
+		cApplied, areLayersApplied, applyResults := r.AreLayersApplied(ctx, pr, mainLayers)
+		state = State{
+			Status: configv1alpha1.TerraformPullRequestStatus{
+				Conditions:           []metav1.Condition{cMerged, cApplied},
+				LastDiscoveredCommit: pr.Status.LastDiscoveredCommit,
+				LastCommentedCommit:  pr.Status.LastCommentedCommit,
+			},
+		}
+		if areLayersApplied {
+			logger.Infof("merged pull request %s layers have applied, posting apply comment", pr.Name)
+			state.handler = makeApplyCommentNeededHandler(applyResults)
+			state.Status.State = ApplyCommentNeeded
+		} else {
+			logger.Infof("merged pull request %s is waiting for layers to apply", pr.Name)
+			state.handler = waitingForApplyHandler
+			state.Status.State = WaitingForApply
+		}
+		return state
+	}
+
 	c1, isLastCommitDiscovered := r.IsLastCommitDiscovered(pr)
 	c2, areLayersStillPlanning := r.AreLayersStillPlanning(pr)
 	c3, isCommentUpToDate := r.IsCommentUpToDate(pr)
@@ -117,8 +147,8 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 	}
 
-	comment := comment.NewDefaultComment(layers, r.Datastore)
-	err = provider.Comment(repository, pr, comment)
+	c := comment.NewDefaultComment(layers, r.Datastore)
+	err = provider.Comment(repository, pr, c)
 	if err != nil {
 		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Failed to comment pull request")
 		logrus.Errorf("failed to comment pull request: %s", err)
@@ -126,5 +156,46 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 	}
 	r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Commented pull request")
 	state.Status.LastCommentedCommit = pr.Annotations[annotations.LastBranchCommit]
+
 	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+}
+
+// waitingForApplyHandler just waits: each affected layer's own TerraformRun already posts
+// its own plan/apply commit status (see internal/controllers/terraformrun).
+func waitingForApplyHandler(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
+	return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+}
+
+func makeApplyCommentNeededHandler(applyResults []LayerApplyResult) func(context.Context, *Reconciler, *configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest, *State) ctrl.Result {
+	return func(ctx context.Context, r *Reconciler, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) ctrl.Result {
+		provider, err := r.getAPIProvider(repository)
+		if err != nil {
+			logrus.Errorf("failed to get API provider for merged PR %s. Requeuing: %s", pr.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
+		}
+
+		reportedLayers := make([]comment.ApplyReportedLayer, 0, len(applyResults))
+		for _, res := range applyResults {
+			reportedLayers = append(reportedLayers, comment.ApplyReportedLayer{
+				Path:      res.Layer.Spec.Path,
+				Succeeded: res.Succeeded,
+			})
+		}
+
+		applyComment := comment.NewApplyComment(reportedLayers)
+		err = provider.Comment(repository, pr, applyComment)
+		if err != nil {
+			r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Failed to post apply comment on merged pull request")
+			logrus.Errorf("an error occurred while posting apply comment on merged pull request %s: %s", pr.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+		}
+		r.Recorder.Event(pr, corev1.EventTypeNormal, "Reconciliation", "Posted apply comment on merged pull request")
+
+		// Delete the TerraformPullRequest resource now that we're done with it.
+		if err := r.Client.Delete(ctx, pr); err != nil {
+			logrus.Errorf("failed to delete TerraformPullRequest %s after apply comment: %s", pr.Name, err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}
+		}
+		return ctrl.Result{}
+	}
 }

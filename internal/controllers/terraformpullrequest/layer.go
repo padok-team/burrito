@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"slices"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -169,7 +170,6 @@ func (r *Reconciler) deleteTempLayersByLabel(ctx context.Context, pr *configv1al
 		ctx, &configv1alpha1.TerraformLayer{}, client.InNamespace(pr.Namespace), client.MatchingLabels{managedByLabel: labelValue},
 	)
 }
-
 func tempLayerGenerateName(layerName string, pr *configv1alpha1.TerraformPullRequest) string {
 	hash := shortHash(fmt.Sprintf("%s/%s/%s", pr.Namespace, pr.Name, pr.Spec.ID))
 	prefix := fmt.Sprintf("%s-pr-%s-", layerName, hash)
@@ -188,4 +188,85 @@ func managedByLabelValue(pr *configv1alpha1.TerraformPullRequest) string {
 func shortHash(value string) string {
 	sum := sha256.Sum256([]byte(value))
 	return hex.EncodeToString(sum[:])[:16]
+}
+
+// getMainBranchLayers returns the main-branch layers that correspond to the
+// temp layers linked to this PR (same path + repository, on the base branch).
+func (r *Reconciler) getMainBranchLayers(ctx context.Context, pr *configv1alpha1.TerraformPullRequest) ([]configv1alpha1.TerraformLayer, error) {
+	tempLayers, err := GetLinkedLayers(r.Client, pr)
+	if err != nil {
+		return nil, err
+	}
+
+	allLayers := &configv1alpha1.TerraformLayerList{}
+	if err := r.Client.List(ctx, allLayers); err != nil {
+		return nil, err
+	}
+
+	result := []configv1alpha1.TerraformLayer{}
+	for _, layer := range allLayers.Items {
+		if layer.Spec.Branch != pr.Spec.Base {
+			continue
+		}
+		if layer.Spec.Repository.Name != pr.Spec.Repository.Name ||
+			layer.Spec.Repository.Namespace != pr.Spec.Repository.Namespace {
+			continue
+		}
+		for _, temp := range tempLayers {
+			if layer.Spec.Path == temp.Spec.Path {
+				result = append(result, layer)
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
+type LayerApplyResult struct {
+	Layer     configv1alpha1.TerraformLayer
+	Applied   bool
+	Succeeded bool
+}
+
+// getLayerApplyResult determines whether a layer has applied after mergedAt.
+// It checks:
+//   - success: LastApplyDate annotation is set and after mergedAt
+//   - failure: a TerraformRun with action=apply exists, was created after mergedAt,
+//     and is in Failed state
+func (r *Reconciler) getLayerApplyResult(ctx context.Context, layer configv1alpha1.TerraformLayer, mergedAt time.Time) LayerApplyResult {
+	result := LayerApplyResult{Layer: layer}
+
+	// Check success via annotation (only updated when apply succeeds)
+	lastApplyDateStr := layer.Annotations[annotations.LastApplyDate]
+	if lastApplyDateStr != "" {
+		lastApplyDate, err := time.Parse(time.UnixDate, lastApplyDateStr)
+		if err == nil && lastApplyDate.After(mergedAt) {
+			result.Applied = true
+			result.Succeeded = true
+			return result
+		}
+	}
+
+	// Check failure by looking for a Failed TerraformRun with action=apply after mergedAt
+	runs := &configv1alpha1.TerraformRunList{}
+	requirement, err := labels.NewRequirement(managedByLabel, selection.Equals, []string{layer.Name})
+	if err != nil {
+		return result
+	}
+	selector := labels.NewSelector().Add(*requirement)
+	if err := r.Client.List(ctx, runs, client.MatchingLabelsSelector{Selector: selector}, client.InNamespace(layer.Namespace)); err != nil {
+		return result
+	}
+	for _, run := range runs.Items {
+		if run.Spec.Action != "apply" {
+			continue
+		}
+		if run.CreationTimestamp.After(mergedAt) && run.Status.State == "Failed" {
+			result.Applied = true
+			result.Succeeded = false
+			return result
+		}
+	}
+
+	return result
 }

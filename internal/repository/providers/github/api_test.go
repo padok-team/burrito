@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/v84/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,4 +201,59 @@ func TestAPIProvider_Comment_ReturnsErrorWhenListingCommentsFails(t *testing.T) 
 	api := newTestAPIProvider(t, mux)
 	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
 	require.Error(t, err)
+}
+
+func TestAPIProvider_GetMergeCommit_ReturnsMergeCommitSHA(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/pulls/42", func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		_ = json.NewEncoder(w).Encode(&github.PullRequest{
+			MergeCommitSHA: github.Ptr("merge-sha-123"),
+		})
+	})
+
+	api := newTestAPIProvider(t, mux)
+	commit, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.NoError(t, err)
+	assert.Equal(t, "merge-sha-123", commit)
+}
+
+func TestAPIProvider_GetMergeCommit_ReturnsErrorWhenGetFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/pulls/42", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	_, err := api.GetMergeCommit(testRepository(), testPullRequest("42"))
+	require.Error(t, err)
+}
+
+func TestAPIProvider_SetStatus_MapsRunningToPending(t *testing.T) {
+	var gotState string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/statuses/sha123", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			State string `json:"state"`
+		}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		gotState = body.State
+		fmt.Fprint(w, `{}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	err := api.SetStatus(testRepository(), testPullRequest("42"), status.CommitStatus{
+		Phase:  status.PhasePlan,
+		State:  status.StateRunning,
+		Commit: "sha123",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "pending", gotState)
+}
+
+func TestToGithubState(t *testing.T) {
+	assert.Equal(t, "pending", toGithubState(status.StateRunning))
+	assert.Equal(t, "pending", toGithubState(status.StatePending))
+	assert.Equal(t, "success", toGithubState(status.StateSuccess))
+	assert.Equal(t, "failure", toGithubState(status.StateFailure))
 }

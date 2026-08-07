@@ -9,6 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,6 +47,55 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 		opts.Page = resp.NextPage
 	}
 	return allChangedFiles, nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	commit := s.Commit
+	if commit == "" {
+		commit = pr.Annotations[annotations.LastBranchCommit]
+	}
+	ctx := "burrito/" + string(s.Phase)
+	if s.Context != "" {
+		ctx = s.Context
+	}
+	state := toGithubState(s.State)
+	description := s.Description
+	repoStatus := github.RepoStatus{
+		State:       &state,
+		Context:     &ctx,
+		Description: &description,
+	}
+	if s.TargetURL != "" {
+		repoStatus.TargetURL = &s.TargetURL
+	}
+	// Errors are logged by the caller (commitstatus.Post), which has the context to tell a
+	// permanent failure from a transient one worth retrying.
+	_, _, err := api.client.Repositories.CreateStatus(context.TODO(), owner, repoName, commit, repoStatus)
+	return err
+}
+
+// toGithubState maps our internal status.State to a GitHub-accepted value. GitHub only
+// accepts error/failure/pending/success, with no notion of "running": fold it into pending.
+func toGithubState(s status.State) string {
+	if s == status.StateRunning {
+		return string(status.StatePending)
+	}
+	return string(s)
+}
+
+func (api *APIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	id, err := strconv.Atoi(pr.Spec.ID)
+	if err != nil {
+		log.Errorf("Error while parsing Github pull request ID: %s", err)
+		return "", err
+	}
+	pullRequest, _, err := api.client.PullRequests.Get(context.TODO(), owner, repoName, id)
+	if err != nil {
+		return "", err
+	}
+	return pullRequest.GetMergeCommitSHA(), nil
 }
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {
