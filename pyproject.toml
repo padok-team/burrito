@@ -3,6 +3,9 @@ name = "burrito-docs"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "mkdocs-material",
     "mike",
+    "zensical==0.0.54",
 ]
+
+[tool.uv.sources]
+mike = { git = "https://github.com/squidfunk/mike.git", rev = "2d4ad799442f4592db8ad53b179bfb33db8c69ac" }
