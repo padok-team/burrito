@@ -8,12 +8,6 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: write
-  packages: write
-  pull-requests: write
-  id-token: write # Required by build-and-push.yaml for keyless cosign signing
-
 jobs:
   build-and-push:
     uses: ./.github/workflows/build-and-push.yaml
@@ -21,7 +15,7 @@ jobs:
       version: ${{ inputs.version }}
     permissions:
       packages: write
-      id-token: write
+      id-token: write # Required by build-and-push.yaml for keyless cosign signing
 
   version:
     runs-on: ubuntu-latest
@@ -29,6 +23,10 @@ jobs:
     needs: build-and-push
     env:
       CHART_PATH: ./deploy/charts/burrito
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

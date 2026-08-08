@@ -12,15 +12,13 @@ on:
   schedule:
     - cron: "0 8 * * *" # Every day at 08:00 UTC
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   scan:
     name: Vulnerability Scan
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       security-events: write # Required to upload SARIF to the GitHub Security tab
     steps:
       - name: Checkout
