@@ -35,6 +35,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          persist-credentials: false
 
       - name: Bump VERSION file
         run: echo "${{ inputs.version }}" > VERSION
