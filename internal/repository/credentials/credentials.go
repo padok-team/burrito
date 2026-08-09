@@ -40,13 +40,23 @@ func NewCredentialStore(client client.Client, ttl time.Duration) *CredentialStor
 }
 
 func (s *CredentialStore) GetAllCredentials() ([]*SharedCredential, []*RepositoryCredential) {
-	if time.Since(s.lastUpdate) >= s.TTL {
+	if s.isStale() {
 		err := s.updateCredentials()
 		if err != nil {
 			log.Errorf("Failed to update credentials: %v", err)
 		}
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return s.sharedCredentials, s.repositoryCredentials
+}
+
+// isStale reports whether the cached credentials are older than the TTL. It
+// takes the lock itself so callers must not hold s.mu when calling it.
+func (s *CredentialStore) isStale() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return time.Since(s.lastUpdate) >= s.TTL
 }
 
 func (s *CredentialStore) updateCredentials() error {
@@ -99,19 +109,24 @@ func (s *CredentialStore) updateCredentials() error {
 // Returns the credentials for a given repository. If a specific repository credential is found, it will be returned.
 // If not, the most specific shared credential that matches the repository will be returned.
 func (s *CredentialStore) GetCredentials(repository *configv1alpha1.TerraformRepository) (*Credential, error) {
-	if time.Since(s.lastUpdate) >= s.TTL {
+	if s.isStale() {
 		err := s.updateCredentials()
 		if err != nil {
 			log.Errorf("failed to update credentials: %v", err)
 		}
 	}
-	for _, repositoryCredentials := range s.repositoryCredentials {
-		if repositoryCredentials.Matches(repository) {
-			return &repositoryCredentials.Credential, nil
+	s.mu.Lock()
+	repositoryCredentials := s.repositoryCredentials
+	sharedCredentials := s.sharedCredentials
+	s.mu.Unlock()
+
+	for _, repositoryCredential := range repositoryCredentials {
+		if repositoryCredential.Matches(repository) {
+			return &repositoryCredential.Credential, nil
 		}
 	}
 	var sharedCredential *SharedCredential
-	for _, tmp := range s.sharedCredentials {
+	for _, tmp := range sharedCredentials {
 		isAllowed := tmp.IsAllowed(repository)
 		matches := tmp.Matches(repository)
 		if isAllowed && matches {
