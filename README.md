@@ -76,3 +76,16 @@ Former maintainers:
 © 2025 [Theodo Cloud](https://cloud.theodo.com/en/)
 
 Licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), Version 2.0 ([LICENSE](./LICENSE))
+
+
+## 🚀 Enhanced by Bounty Hunter
+
+### Quick Start
+```bash
+git clone https://github.com/padok-team/burrito.git
+cd burrito
+# Follow instructions above
+```
+
+### CI Status
+Automated testing and linting configured via GitHub Actions.
