@@ -1,0 +1,19 @@
+{
+  "name": "burrito",
+  "version": "1.0.0",
+  "type": "module",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "26"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.20.0"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.1",
+    "@commitlint/config-conventional": "21.2.0"
+  }
+}

@@ -7,10 +7,7 @@ on:
     paths:
       - VERSION
 
-permissions:
-  contents: write
-  packages: write
-  id-token: write # Required by helm.yaml for keyless cosign signing
+permissions: {}
 
 env:
   CHART_NAME: burrito
@@ -23,9 +20,13 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.value }}
       already_exists: ${{ steps.check.outputs.exists }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Read version
         id: version
@@ -51,11 +52,17 @@ jobs:
   helm-push:
     uses: ./.github/workflows/helm.yaml
     needs: tag
+    permissions:
+      contents: write
+      packages: write
+      id-token: write # Required by helm.yaml for keyless cosign signing
     with:
       version: ${{ needs.tag.outputs.version }}
 
   docs-deploy:
     uses: ./.github/workflows/docs.yaml
     needs: tag
+    permissions:
+      contents: write
     with:
       version: ${{ needs.tag.outputs.version }}
