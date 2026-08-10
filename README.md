@@ -76,3 +76,20 @@ Former maintainers:
 © 2025 [Theodo Cloud](https://cloud.theodo.com/en/)
 
 Licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), Version 2.0 ([LICENSE](./LICENSE))
+
+## Development Guide
+
+### Quick Start
+1. Install Go 1.22+
+2. Run `go mod download`
+3. Build: `go build ./...`
+4. Test: `go test ./...`
+
+### CI Pipeline
+See `.github/workflows/boost-quality.yml` for automated Go CI.
+
+### Contributing
+Run `go vet ./...` before committing. Add tests for new functionality.
+
+### License
+See LICENSE file.
