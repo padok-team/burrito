@@ -76,3 +76,10 @@ Former maintainers:
 © 2025 [Theodo Cloud](https://cloud.theodo.com/en/)
 
 Licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), Version 2.0 ([LICENSE](./LICENSE))
+
+
+---
+
+## 📚 Documentation & CI
+
+> Automated doc/CI boost — ensuring reliable builds and up-to-date docs.
