@@ -25,7 +25,7 @@ Nested `AGENTS.md` files add directory-specific rules — read them when working
 Do not read, edit, or use as reference:
 
 - `*zz_generated.deepcopy.go` (produced by `controller-gen`).
-- Lock files: `go.sum`, `ui/yarn.lock`.
+- Lock files: `go.sum`, `ui/pnpm-lock.yaml`.
 - Generated manifests in `config/crd/bases/` and `manifests/`.
 
 To change CRDs: edit `api/v1alpha1/*_types.go`, then run `make manifests` (and `make generate`).
@@ -35,7 +35,7 @@ To change CRDs: edit `api/v1alpha1/*_types.go`, then run `make manifests` (and `
 - **Go:** `make build` · `make test` (spins up envtest + docker-compose — heavy) · `make vet`
 - **Lint (Go):** `golangci-lint run ./...` — there is no `make` target; it runs in CI ([.github/workflows/ci.yaml](.github/workflows/ci.yaml)).
 - **After API changes:** `make manifests && make generate`
-- **UI:** `yarn --cwd ui lint` · `yarn --cwd ui build` · `yarn --cwd ui format-check`
+- **UI:** `pnpm --dir ui lint` · `pnpm --dir ui build` · `pnpm --dir ui format-check`
 
 ## Go Style
 

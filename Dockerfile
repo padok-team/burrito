@@ -2,19 +2,19 @@
 
 # Build Burrito UI
 
-FROM docker.io/library/node:24.19.0@sha256:934240a162082fd8b8a2f90cd5114446443f1eba1c5378f6687167ca405e6584 AS builder-ui
+FROM ghcr.io/pnpm/pnpm:11.21.0@sha256:ff1b4619e8299734f35afb21bd2be18f51b7b6e49cd30fb14300fadeafe871da AS builder-ui
 
 WORKDIR /workspace
 # Copy the node modules manifests
-COPY ui/package.json ui/yarn.lock ./
+COPY ui/package.json ui/pnpm-lock.yaml ui/pnpm-workspace.yaml ./
 # Install build dependencies
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy the UI source
 COPY ui .
 # Set the API base URL
 ENV VITE_API_BASE_URL=/api
-RUN yarn build
+RUN pnpm run build
 
 # Build the manager binary
 FROM docker.io/library/golang:1.26.6-alpine@sha256:af8d6740070b8906d12eae1c3e3ea0957fb63f492051ea05e354c38ef9fe88df AS builder

@@ -11,9 +11,6 @@ on:
       - ".github/workflows/ci-frontend.yaml"
       - "ui/**"
 
-env:
-  NODE_VERSION: 24
-
 permissions: {}
 
 jobs:
@@ -22,44 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: "${{ env.NODE_VERSION }}"
-      - name: Run install
-        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
-        with:
-          cmd: install
-          dir: ui
+          cache: true
       - name: Run build
-        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
-        with:
-          cmd: build
-          dir: ui
+        run: pnpm --dir ui run build
 
   lint:
     name: Lint TS
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: "${{ env.NODE_VERSION }}"
-      - name: Run install
-        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
-        with:
-          cmd: install
-          dir: ui
+          cache: true
       - name: Run eslint
-        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
-        with:
-          cmd: lint
-          dir: ui
+        run: pnpm --dir ui run lint
       - name: Run prettier
-        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
-        with:
-          cmd: format-check
-          dir: ui
+        run: pnpm --dir ui run format-check

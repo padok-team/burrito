@@ -3,7 +3,7 @@
     "deny": [
       "Read(**/zz_generated.deepcopy.go)",
       "Read(**/zz_generated.register.go)",
-      "Read(**/yarn.lock)",
+      "Read(**/pnpm-lock.yaml)",
       "Read(**/go.sum)",
       "Read(config/crd/bases/**)",
       "Read(config/webhook/**)",

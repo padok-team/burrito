@@ -6,7 +6,7 @@ Serves the `ui/` dashboard and its JSON API. Echo v4 (`server.go`), one binary
 ## Rules & Gotchas
 
 - The UI is embedded with `//go:embed all:dist` — the `ui/` build output must exist
-  (`yarn --cwd ui build`) before the server binary is built, or the embed fails.
+  (`pnpm --dir ui build`) before the server binary is built, or the embed fails.
 - `/api/*` handlers in `api/` are the contract the `ui/` TypeScript consumes (`/layers`,
   `/repositories`, `/logs/...`, `/run/.../attempts`, sync). Treat their response shapes like
   the CRD↔UI contract: **flag breaking changes** and update `ui/` in step.
@@ -20,5 +20,5 @@ Serves the `ui/` dashboard and its JSON API. Echo v4 (`server.go`), one binary
 
 ## Validate
 
-`make test`, `make vet`, `golangci-lint run ./...`. Build needs the UI: `yarn --cwd ui build`
+`make test`, `make vet`, `golangci-lint run ./...`. Build needs the UI: `pnpm --dir ui build`
 then `make build`.
