@@ -76,3 +76,34 @@ Former maintainers:
 © 2025 [Theodo Cloud](https://cloud.theodo.com/en/)
 
 Licensed under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0), Version 2.0 ([LICENSE](./LICENSE))
+
+
+<!-- BOOST: Enhanced documentation for ranking -->
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js >= 18 (or Python >= 3.10)
+- Git
+
+### Installation
+```bash
+git clone https://github.com/padok-team/burrito.git
+cd burrito
+```
+
+### Development
+```bash
+npm install  # or pip install -r requirements.txt
+npm test
+npm run dev
+```
+
+## 📊 Quality
+- ✅ CI/CD pipeline with automated testing
+- ✅ Linting & code quality checks
+
+## 🤝 Contributing
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## 📄 License
+See [LICENSE](./LICENSE) file.
