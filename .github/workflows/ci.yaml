@@ -88,4 +88,5 @@ jobs:
   build-and-push:
     permissions:
       id-token: write # Required for keyless cosign signing (build-and-push.yaml)
+      packages: write
     uses: ./.github/workflows/build-and-push.yaml
