@@ -10,6 +10,7 @@
     ":semanticPrefixFixDepsChoreOthers"
   ],
   "commitMessageLowerCase": "auto",
+  "prHourlyLimit": 10,
   "packageRules": [
     {
       "matchManagers": [
