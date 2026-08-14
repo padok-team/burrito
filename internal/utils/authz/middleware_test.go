@@ -92,7 +92,7 @@ var _ = Describe("Authz", func() {
 	Describe("Nominal Case", Ordered, func() {
 		var req *http.Request
 		var rec *httptest.ResponseRecorder
-		var context echo.Context
+		var context *echo.Context
 		var token string
 		BeforeAll(func() {
 			req = httptest.NewRequest(http.MethodGet, "/", nil)
@@ -133,7 +133,7 @@ var _ = Describe("Authz", func() {
 	})
 })
 
-func debugHandler(c echo.Context) error {
+func debugHandler(c *echo.Context) error {
 	return nil
 }
 

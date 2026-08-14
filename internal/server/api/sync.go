@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *API) SyncLayerHandler(c echo.Context) error {
+func (a *API) SyncLayerHandler(c *echo.Context) error {
 	layer := &configv1alpha1.TerraformLayer{}
 	err := a.Client.Get(context.Background(), client.ObjectKey{
 		Namespace: c.Param("namespace"),

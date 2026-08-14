@@ -7,7 +7,7 @@ import (
 
 	"crypto/rand"
 
-	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo-contrib/v5/session"
 	"github.com/labstack/echo/v5"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/server/utils"
@@ -69,7 +69,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 	}, nil
 }
 
-func (b *BasicAuthHandlers) HandleLogin(c echo.Context) error {
+func (b *BasicAuthHandlers) HandleLogin(c *echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	if username == b.Username && password == b.Password {
@@ -103,7 +103,7 @@ func (b *BasicAuthHandlers) GetLoginHTTPMethod() string {
 	return b.LoginHTTPMethod
 }
 
-func (b *BasicAuthHandlers) HandleCallback(c echo.Context) error {
+func (b *BasicAuthHandlers) HandleCallback(c *echo.Context) error {
 	// Basic auth does not require a callback, so we can just redirect to the home page
 	return c.Redirect(http.StatusFound, "/")
 }

@@ -33,8 +33,8 @@ func New(config *config.Config, client client.Client) *Webhook {
 	}
 }
 
-func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
-	return func(c echo.Context) error {
+func (w *Webhook) GetHttpHandler() func(c *echo.Context) error {
+	return func(c *echo.Context) error {
 		log.Infof("webhook event received...")
 		r := c.Request()
 		event, err := w.tryGetEventFromPayload(r)

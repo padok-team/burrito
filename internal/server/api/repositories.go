@@ -18,7 +18,7 @@ type repositoriesResponse struct {
 	Results []repository `json:"results"`
 }
 
-func (a *API) RepositoriesHandler(c echo.Context) error {
+func (a *API) RepositoriesHandler(c *echo.Context) error {
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := a.Client.List(context.Background(), repositories)
 	if err != nil {

@@ -16,10 +16,9 @@ var LoggerMiddlewareConfig = middleware.RequestLoggerConfig{
 	LogMethod:        true,
 	LogURI:           true,
 	LogStatus:        true,
-	LogError:         true,
 	LogResponseSize:  true,
 	LogContentLength: true,
-	LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+	LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 		email := "unauthenticated"
 		if e := c.Get("user_email"); e != nil {
 			email, _ = e.(string)

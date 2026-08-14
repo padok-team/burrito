@@ -12,7 +12,7 @@ type GetLogsResponse struct {
 	Results []string `json:"results"`
 }
 
-func getLogsArgs(c echo.Context) (string, string, string, string, error) {
+func getLogsArgs(c *echo.Context) (string, string, string, string, error) {
 	namespace := c.Param("namespace")
 	layer := c.Param("layer")
 	run := c.Param("run")
@@ -24,7 +24,7 @@ func getLogsArgs(c echo.Context) (string, string, string, string, error) {
 }
 
 // logs/${namespace}/${layer}/${runId}/${attemptId}
-func (a *API) GetLogsHandler(c echo.Context) error {
+func (a *API) GetLogsHandler(c *echo.Context) error {
 	namespace, layer, run, attempt, err := getLogsArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -38,7 +38,7 @@ func (a *API) GetLogsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &response)
 }
 
-func (a *API) DownloadLogsHandler(c echo.Context) error {
+func (a *API) DownloadLogsHandler(c *echo.Context) error {
 	namespace, layer, run, attempt, err := getLogsArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())

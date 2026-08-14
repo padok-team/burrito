@@ -9,7 +9,7 @@ import (
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
-func getPlanArgs(c echo.Context) (string, string, string, string, string, error) {
+func getPlanArgs(c *echo.Context) (string, string, string, string, string, error) {
 	namespace := c.QueryParam("namespace")
 	layer := c.QueryParam("layer")
 	run := c.QueryParam("run")
@@ -24,7 +24,7 @@ func getPlanArgs(c echo.Context) (string, string, string, string, string, error)
 	return namespace, layer, run, attempt, format, nil
 }
 
-func (a *API) GetPlanHandler(c echo.Context) error {
+func (a *API) GetPlanHandler(c *echo.Context) error {
 	var err error
 	var content []byte
 	namespace, layer, run, attempt, format, err := getPlanArgs(c)
@@ -40,13 +40,13 @@ func (a *API) GetPlanHandler(c echo.Context) error {
 		return c.String(http.StatusNotFound, "No plan for this attempt")
 	}
 	if err != nil {
-		c.Logger().Errorf("Could not get plan, there's an issue with the storage backend : %s", err)
+		c.Logger().Error(fmt.Sprintf("Could not get plan, there's an issue with the storage backend : %s", err))
 		return c.String(http.StatusInternalServerError, "could not get plan, there's an issue with the storage backend")
 	}
 	return c.Blob(http.StatusOK, "application/octet-stream", content)
 }
 
-func (a *API) PutPlanHandler(c echo.Context) error {
+func (a *API) PutPlanHandler(c *echo.Context) error {
 	var err error
 	namespace, layer, run, attempt, format, err := getPlanArgs(c)
 	if err != nil {

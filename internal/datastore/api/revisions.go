@@ -9,7 +9,7 @@ import (
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
-func getRevisionArgs(c echo.Context) (string, string, string, error) {
+func getRevisionArgs(c *echo.Context) (string, string, string, error) {
 	namespace := c.QueryParam("namespace")
 	name := c.QueryParam("name")
 	ref := c.QueryParam("ref")
@@ -19,7 +19,7 @@ func getRevisionArgs(c echo.Context) (string, string, string, error) {
 	return namespace, name, ref, nil
 }
 
-func (a *API) PutGitBundleHandler(c echo.Context) error {
+func (a *API) PutGitBundleHandler(c *echo.Context) error {
 	namespace, name, ref, err := getRevisionArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -37,14 +37,14 @@ func (a *API) PutGitBundleHandler(c echo.Context) error {
 
 	err = a.Storage.PutGitBundle(namespace, name, ref, revision, content)
 	if err != nil {
-		c.Logger().Errorf("Could not store revision, there's an issue with the storage backend: %s", err)
+		c.Logger().Error(fmt.Sprintf("Could not store revision, there's an issue with the storage backend: %s", err))
 		return c.String(http.StatusInternalServerError, "could not store revision, there's an issue with the storage backend")
 	}
 
 	return c.NoContent(http.StatusOK)
 }
 
-func (a *API) HeadGitBundleHandler(c echo.Context) error {
+func (a *API) HeadGitBundleHandler(c *echo.Context) error {
 	namespace, name, ref, err := getRevisionArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -58,14 +58,14 @@ func (a *API) HeadGitBundleHandler(c echo.Context) error {
 		if storageerrors.NotFound(err) {
 			return c.String(http.StatusNotFound, "No bundle found for this revision")
 		}
-		c.Logger().Errorf("Could not get bundle for revision, there's an issue with the storage backend: %s", err)
+		c.Logger().Error(fmt.Sprintf("Could not get bundle for revision, there's an issue with the storage backend: %s", err))
 		return c.String(http.StatusInternalServerError, "could not get bundle for revision, there's an issue with the storage backend")
 	}
 
 	return c.String(http.StatusOK, string(checksum))
 }
 
-func (a *API) GetGitBundleHandler(c echo.Context) error {
+func (a *API) GetGitBundleHandler(c *echo.Context) error {
 	namespace, name, ref, err := getRevisionArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
@@ -79,7 +79,7 @@ func (a *API) GetGitBundleHandler(c echo.Context) error {
 		if storageerrors.NotFound(err) {
 			return c.String(http.StatusNotFound, "No bundle found for this revision")
 		}
-		c.Logger().Errorf("Could not get bundle for revision, there's an issue with the storage backend: %s", err)
+		c.Logger().Error(fmt.Sprintf("Could not get bundle for revision, there's an issue with the storage backend: %s", err))
 		return c.String(http.StatusInternalServerError, "could not get bundle for revision, there's an issue with the storage backend")
 	}
 
