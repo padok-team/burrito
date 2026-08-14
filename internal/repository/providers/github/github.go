@@ -125,13 +125,16 @@ func buildGithubClient(config credentials.Credential, clientType string) (*githu
 		return nil, fmt.Errorf("unsupported GitHub client type: %s, secret may be malformed, check controller errors", clientType)
 	}
 	if subscription == GitHubEnterprise {
-		client, err = github.NewClient(httpClient).WithEnterpriseURLs(apiUrl, apiUrl)
+		client, err = github.NewClient(github.WithHTTPClient(httpClient), github.WithEnterpriseURLs(apiUrl, apiUrl))
 		if err != nil {
 			return nil, fmt.Errorf("error creating GitHub Enterprise client: %w", err)
 		}
 		return client, nil
 	}
-	client = github.NewClient(httpClient)
+	client, err = github.NewClient(github.WithHTTPClient(httpClient))
+	if err != nil {
+		return nil, fmt.Errorf("error creating GitHub client: %w", err)
+	}
 	return client, nil
 }
 
