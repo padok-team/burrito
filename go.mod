@@ -20,7 +20,7 @@ require (
 	github.com/hashicorp/terraform-json v0.28.0
 	github.com/labstack/gommon v0.5.0
 	github.com/onsi/ginkgo/v2 v2.32.1
-	github.com/onsi/gomega v1.40.0
+	github.com/onsi/gomega v1.42.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	github.com/tofuutils/tenv/v4 v4.15.1
