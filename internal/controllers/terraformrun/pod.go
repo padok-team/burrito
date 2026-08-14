@@ -7,11 +7,13 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/utils"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -22,24 +24,53 @@ const (
 	ApplyAction Action = "apply"
 )
 
+const managedByLabel = "burrito/managed-by"
+
 func getDefaultLabels(run *configv1alpha1.TerraformRun) map[string]string {
 	return map[string]string{
-		"burrito/component":  "runner",
-		"burrito/managed-by": run.Name,
-		"burrito/action":     string(run.Spec.Action),
+		"burrito/component": "runner",
+		managedByLabel:      managedByLabelValue(run),
+		"burrito/action":    string(run.Spec.Action),
 	}
+}
+
+func managedByLabelValue(run *configv1alpha1.TerraformRun) string {
+	// Kubernetes label values max out at 63 bytes; a stable hash keeps long
+	// run names valid while still linking created pods back to the run.
+	return fmt.Sprintf("run-%s", utils.ShortHash(fmt.Sprintf("%s/%s", run.Namespace, run.Name)))
+}
+
+// managedByLabelSelectorValues returns every "burrito/managed-by" value a pod
+// belonging to this run may carry: the current hash-based value, plus the
+// legacy raw run name for pods created before that hashing was introduced.
+// The legacy value is only included when it's a valid label value, since a
+// run name that isn't (the case this hashing fixes) could never have been
+// used as a label before either.
+func managedByLabelSelectorValues(run *configv1alpha1.TerraformRun) []string {
+	values := []string{managedByLabelValue(run)}
+	if len(validation.IsValidLabelValue(run.Name)) == 0 {
+		values = append(values, run.Name)
+	}
+	return values
 }
 
 func getLabelSelector(run *configv1alpha1.TerraformRun) labels.Selector {
 	selector := labels.NewSelector()
-	for key, value := range getDefaultLabels(run) {
+	for key, value := range map[string]string{
+		"burrito/component": "runner",
+		"burrito/action":    string(run.Spec.Action),
+	} {
 		requirement, err := labels.NewRequirement(key, selection.Equals, []string{value})
 		if err != nil {
 			return selector
 		}
 		selector = selector.Add(*requirement)
 	}
-	return selector
+	managedByRequirement, err := labels.NewRequirement(managedByLabel, selection.In, managedByLabelSelectorValues(run))
+	if err != nil {
+		return selector
+	}
+	return selector.Add(*managedByRequirement)
 }
 
 func (r *Reconciler) GetLinkedPods(run *configv1alpha1.TerraformRun) (*corev1.PodList, error) {
