@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	terraformrun "github.com/padok-team/burrito/internal/controllers/terraformrun"
@@ -329,26 +330,54 @@ func LayerFilesHaveChanged(layer configv1alpha1.TerraformLayer, changedFiles []s
 		return true
 	}
 
-	// At last one changed file must be under refresh path
+	patterns := additionalTriggerPaths(layer)
+
+	// At least one changed file must be under refresh path
 	for _, f := range changedFiles {
 		f = ensureAbsPath(f)
 		if strings.Contains(f, layer.Spec.Path) {
 			return true
 		}
-		// Check if the file is under an additionnal trigger path
-		if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
-			for _, p := range strings.Split(val, ",") {
-				p = ensureAbsPath(p)
-				// Handle relative parent paths (like "../")
-				p = filepath.Clean(filepath.Join(layer.Spec.Path, p))
-				if strings.Contains(f, p) {
-					return true
-				}
+		// Check if the file is under an additional trigger path
+		for _, p := range patterns {
+			if matchesTriggerPath(layer.Spec.Path, p, f) {
+				return true
 			}
 		}
 	}
 
 	return false
+}
+
+// additionalTriggerPaths returns the trigger path patterns to check in addition to
+// the layer's path. spec.additionalTriggerPaths takes precedence over the deprecated
+// annotation: when the spec field is set, the annotation is ignored entirely.
+func additionalTriggerPaths(layer configv1alpha1.TerraformLayer) []string {
+	if len(layer.Spec.AdditionalTriggerPaths) > 0 {
+		return layer.Spec.AdditionalTriggerPaths
+	}
+	if val, ok := layer.Annotations[annotations.AdditionnalTriggerPaths]; ok {
+		log.Warnf("DEPRECATED: layer %s/%s uses annotation %s, use spec.additionalTriggerPaths instead", layer.Namespace, layer.Name, annotations.AdditionnalTriggerPaths)
+		return strings.Split(val, ",")
+	}
+	return nil
+}
+
+// matchesTriggerPath resolves pattern relative to layerPath (supporting "../" to escape
+// it) and checks whether changedFile matches. Patterns containing glob characters are
+// matched recursively (e.g. "../**/*.yaml"); plain patterns keep the historical substring match.
+func matchesTriggerPath(layerPath string, pattern string, changedFile string) bool {
+	pattern = ensureAbsPath(pattern)
+	// Handle relative parent paths (like "../")
+	pattern = filepath.Clean(filepath.Join(layerPath, pattern))
+
+	if strings.ContainsAny(pattern, "*?[") {
+		sep := string(filepath.Separator)
+		matched, err := doublestar.Match(strings.TrimPrefix(pattern, sep), strings.TrimPrefix(changedFile, sep))
+		return err == nil && matched
+	}
+
+	return strings.Contains(changedFile, pattern)
 }
 
 func ensureAbsPath(input string) string {

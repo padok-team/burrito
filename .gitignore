@@ -35,6 +35,9 @@ test.out/*
 *.swo
 *~
 
+# macOS
+.DS_Store
+
 # Python virtual environment (for mkdocs)
 .env
 .venv

@@ -52,7 +52,7 @@ nav:
       - user-guide/remediation-strategy.md
       - user-guide/terraform-version.md
       - user-guide/private-modules.md
-      - user-guide/additionnal-trigger-path.md
+      - user-guide/additional-trigger-path.md
       - user-guide/ssh-known-hosts.md
       - user-guide/sync-windows.md
   - Migration Guides:

@@ -449,6 +449,11 @@ func (in *TerraformLayerSpec) DeepCopyInto(out *TerraformLayerSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.AdditionalTriggerPaths != nil {
+		in, out := &in.AdditionalTriggerPaths, &out.AdditionalTriggerPaths
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	in.TerraformConfig.DeepCopyInto(&out.TerraformConfig)
 	in.OpenTofuConfig.DeepCopyInto(&out.OpenTofuConfig)
 	in.TerragruntConfig.DeepCopyInto(&out.TerragruntConfig)

@@ -65,6 +65,10 @@ spec:
                 items:
                   type: string
                 type: array
+              additionalTriggerPaths:
+                items:
+                  type: string
+                type: array
               branch:
                 type: string
               opentofu:
