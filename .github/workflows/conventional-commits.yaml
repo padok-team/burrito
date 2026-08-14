@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Install pnpm and Node.js
-        uses: pnpm/setup@4700d737c3d7a2e7199f3d42a920f0bf7f34e411 # v2.0.1
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
       - name: Generate commitlint configuration
