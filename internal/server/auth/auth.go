@@ -5,7 +5,7 @@ import (
 
 	"github.com/padok-team/burrito/internal/server/utils"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type AuthHandlers interface {
