@@ -44,7 +44,7 @@
       "separateMajorMinor": false,
       "separateMinorPatch": false,
       "pinDigests": true,
-      "commitMessagePrefix": "chore(docker):",
+      "semanticCommitScope": "docker",
       "groupName": "Docker images",
       "groupSlug": "docker-all",
       "addLabels": [
