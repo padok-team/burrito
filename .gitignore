@@ -35,7 +35,7 @@ test.out/*
 *.swo
 *~
 
-# Python virtual environment (for mkdocs)
+# Python virtual environment (for zensical)
 .env
 .venv
 env/
@@ -53,3 +53,6 @@ test-repo/
 TIltfile
 
 node_modules/
+# Documentation artefacts
+site/
+.cache/
