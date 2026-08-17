@@ -45,6 +45,8 @@ config:
       healthProbeBindAddress: ":8081"
       # -- Port used to handle the Kubernetes webhook
       kubernetesWebhookPort: 9443
+      # -- Log format for the controller, either "text" or "json"
+      logFormat: text
 
     # -- Provider cache custom configuration
     hermitcrab: {}

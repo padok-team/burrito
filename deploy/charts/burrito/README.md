@@ -19,6 +19,7 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.controller.kubernetesWebhookPort | int | `9443` | Port used to handle the Kubernetes webhook |
 | config.burrito.controller.leaderElection.enabled | bool | `true` | Enable/Disable leader election |
 | config.burrito.controller.leaderElection.id | string | `"6d185457.terraform.padok.cloud"` | Leader election lock name |
+| config.burrito.controller.logFormat | string | `"text"` | Log format for the controller, either "text" or "json" |
 | config.burrito.controller.maxConcurrentReconciles | int | `1` | Maximum number of concurrent reconciles for the controller, increse this value if you have a lot of resources to reconcile |
 | config.burrito.controller.metricsBindAddress | string | `":8080"` | Adress to bind the controller metrics |
 | config.burrito.controller.namespaces | list | `[]` | By default, the controller will only watch the tenants namespaces |

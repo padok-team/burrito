@@ -68,6 +68,7 @@ type ControllerConfig struct {
 	RunParallelism          int                         `mapstructure:"runParallelism"`
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
+	LogFormat               string                      `mapstructure:"logFormat"`
 }
 
 type LeaderElectionConfig struct {
