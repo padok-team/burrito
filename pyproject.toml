@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "mike",
-    "zensical==0.0.54",
+    "zensical==0.0.55",
 ]
 
 [tool.uv.sources]
