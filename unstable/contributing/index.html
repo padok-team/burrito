@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/icon/burrito.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -1923,96 +1923,97 @@
 <ol>
 <li>
 <p><strong>Install cert-manager on your cluster:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>helm<span class="w"> </span>install<span class="w"> </span>cert-manager<span class="w"> </span>oci://quay.io/jetstack/charts/cert-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--version<span class="w"> </span>v1.20.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--namespace<span class="w"> </span>cert-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--create-namespace<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span>--set<span class="w"> </span>crds.enabled<span class="o">=</span><span class="nb">true</span>
-</span></code></pre></div>
+<p><code>bash
+helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+    --version v1.20.2 \
+    --namespace cert-manager \
+    --create-namespace \
+    --set crds.enabled=true</code></p>
 </li>
 <li>
 <p><strong>Fork and clone this repository.</strong></p>
 </li>
 <li>
 <p><strong>Run the following command to build a local image of Burrito, load it into your Kind cluster, and install Burrito with development Helm values:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>make<span class="w"> </span>upgrade-dev-kind
-</span></code></pre></div>
+<p><code>bash
+make upgrade-dev-kind</code></p>
 </li>
 <li>
 <p><strong>Check that Burrito is running in the <code>burrito-system</code> namespace:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-system
-</span></code></pre></div>
+<p><code>bash
+kubectl get pods -n burrito-system</code></p>
 <p>The output should be similar to:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>NAME<span class="w">                                  </span>READY<span class="w">   </span>STATUS<span class="w">    </span>RESTARTS<span class="w">   </span>AGE
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>burrito-controllers-7657b7455-2ldtd<span class="w">   </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>5m32s
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>burrito-datastore-5967f46497-tfzgg<span class="w">    </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>5m32s
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>burrito-server-5b6fb78949-ngcnt<span class="w">       </span><span class="m">1</span>/1<span class="w">     </span>Running<span class="w">   </span><span class="m">0</span><span class="w">          </span>5m32s
-</span></code></pre></div>
+<p><code>bash
+NAME                                  READY   STATUS    RESTARTS   AGE
+burrito-controllers-7657b7455-2ldtd   1/1     Running   0          5m32s
+burrito-datastore-5967f46497-tfzgg    1/1     Running   0          5m32s
+burrito-server-5b6fb78949-ngcnt       1/1     Running   0          5m32s</code></p>
 </li>
 <li>
 <p><strong>Create layers and repository resources:</strong></p>
 <p>Create a <code>dev</code> directory in <code>deploy/charts/burrito/templates/</code> and add a <code>dev.yaml</code> manifest with development resources:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformLayer</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-layer</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">branch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform/</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nn">---</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">        </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/padok-team/burrito-examples</span>
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">    </span><span class="nt">remediationStrategy</span><span class="p">:</span>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">        </span><span class="nt">autoApply</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">    </span><span class="nt">terraform</span><span class="p">:</span>
-</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">        </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">    </span><span class="nt">opentofu</span><span class="p">:</span>
-</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">        </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">    </span><span class="nt">terragrunt</span><span class="p">:</span>
-</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">        </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span></code></pre></div>
+<p>```yaml
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+    name: my-layer
+    namespace: burrito-project
+spec:
+    branch: main
+    path: terraform/
+    repository:
+        name: my-repository
+        namespace: burrito-project</p>
+<hr />
+<p>apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+    name: my-repository
+    namespace: burrito-project
+spec:
+    repository:
+        url: https://github.com/padok-team/burrito-examples
+    remediationStrategy:
+        autoApply: true
+    terraform:
+        enabled: true
+    opentofu:
+        enabled: false
+    terragrunt:
+        enabled: false
+```</p>
 </li>
 <li>
 <p><strong>Refresh your Helm configuration:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>make<span class="w"> </span>upgrade-dev-helm
-</span></code></pre></div>
+<p><code>bash
+make upgrade-dev-helm</code></p>
 </li>
 <li>
 <p><strong>Check that a runner pod is created for the newly created layer:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</span></code></pre></div>
+<p><code>bash
+kubectl get pods -n burrito-project</code></p>
 <p>The output should be similar to:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>NAME                   READY   STATUS      RESTARTS   AGE
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>my-layer-apply-gxjhd   0/1     Completed   0          2m36s
-</span></code></pre></div>
+<p><code>text
+NAME                   READY   STATUS      RESTARTS   AGE
+my-layer-apply-gxjhd   0/1     Completed   0          2m36s</code></p>
 </li>
 </ol>
 <h3 id="refresh-commands">Refresh Commands<a class="headerlink" href="#refresh-commands" title="Permanent link">&para;</a></h3>
 <p>To build a new local image of Burrito, push it into your local Kind cluster, and update the Helm release with the new image tag, run the following:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>upgrade-dev-kind
-</span></code></pre></div>
+<pre><code class="language-bash">make upgrade-dev-kind
+</code></pre>
 <p>To refresh the Helm chart with development values, run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>upgrade-dev-helm
-</span></code></pre></div>
+<pre><code class="language-bash">make upgrade-dev-helm
+</code></pre>
 <p>Check the <a href="https://github.com/padok-team/burrito/blob/main/Makefile">Makefile</a> for more details about these commands.</p>
 <h3 id="advanced-settings">Advanced Settings<a class="headerlink" href="#advanced-settings" title="Permanent link">&para;</a></h3>
 <p><strong>Configure a GitHub Token for TENV:</strong></p>
 <p>It is strongly recommended to create a GitHub token with no specific rights to bypass the GitHub API rate limiting. Append the following configuration to your development <code>TerraformRepository</code> resources:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="w">  </span><span class="nt">overrideRunnerSpec</span><span class="p">:</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TENV_GITHUB_TOKEN</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">        </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghp_xxxxx</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">  overrideRunnerSpec:
+    env:
+      - name: TENV_GITHUB_TOKEN
+        value: ghp_xxxxx
+</code></pre>
 <h2 id="development-guidelines">Development Guidelines<a class="headerlink" href="#development-guidelines" title="Permanent link">&para;</a></h2>
 <h3 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2037,30 +2038,30 @@
 <p>First, being by installing dlv: <code>go install github.com/go-delve/delve/cmd/dlv@latest</code></p>
 <p>We'll rely on <code>deploy/charts/burrito/values-debug.yaml</code> to deploy the configuration to start the debugging session.</p>
 <p>By default, the different component debug configs are commented in the Helm values. Indeed, starting the application with dlv server will hang until you connect with the dlv client so it has to be enabled only when you need it.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># config:</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1">#   burrito:</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1">#     runner:</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1">#       command: [&quot;/usr/local/bin/dlv&quot;]</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1">#       args: [&quot;--listen=0.0.0.0:2346&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;runner&quot;, &quot;start&quot;]</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># controllers:</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1">#   deployment:</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1">#     mode: Debug</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="c1">#     command: [&quot;/usr/local/bin/dlv&quot;]</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1">#     args: [&quot;--listen=0.0.0.0:2345&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;controllers&quot;, &quot;start&quot;]</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="c1"># datastore:</span>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="c1">#   deployment:</span>
-</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="c1">#     mode: Debug</span>
-</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="c1">#     command: [&quot;/usr/local/bin/dlv&quot;]</span>
-</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="c1">#     args: [&quot;--listen=0.0.0.0:2347&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;datastore&quot;, &quot;start&quot;]</span>
-</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>
-</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="c1"># server:</span>
-</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="c1">#   deployment:</span>
-</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="c1">#     mode: Debug</span>
-</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="c1">#     command: [&quot;/usr/local/bin/dlv&quot;]</span>
-</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="c1">#     args: [&quot;--listen=0.0.0.0:2348&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;server&quot;, &quot;start&quot;]</span>
-</span></code></pre></div>
+<pre><code class="language-yaml"># config:
+#   burrito:
+#     runner:
+#       command: [&quot;/usr/local/bin/dlv&quot;]
+#       args: [&quot;--listen=0.0.0.0:2346&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;runner&quot;, &quot;start&quot;]
+
+# controllers:
+#   deployment:
+#     mode: Debug
+#     command: [&quot;/usr/local/bin/dlv&quot;]
+#     args: [&quot;--listen=0.0.0.0:2345&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;controllers&quot;, &quot;start&quot;]
+
+# datastore:
+#   deployment:
+#     mode: Debug
+#     command: [&quot;/usr/local/bin/dlv&quot;]
+#     args: [&quot;--listen=0.0.0.0:2347&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;datastore&quot;, &quot;start&quot;]
+
+# server:
+#   deployment:
+#     mode: Debug
+#     command: [&quot;/usr/local/bin/dlv&quot;]
+#     args: [&quot;--listen=0.0.0.0:2348&quot;, &quot;--headless=true&quot;, &quot;--accept-multiclient&quot;, &quot;--api-version=2&quot;, &quot;--log&quot;, &quot;exec&quot;, &quot;/usr/local/bin/burrito&quot;, &quot;server&quot;, &quot;start&quot;]
+</code></pre>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The runner command+args override isn't under <code>runner.deployment</code> as other components as it's not a k8s deployment</p>
@@ -2074,35 +2075,35 @@
 <h3 id="deployrefresh-commands">Deploy/refresh commands<a class="headerlink" href="#deployrefresh-commands" title="Permanent link">&para;</a></h3>
 <p>You'll need to deploy the debug container images and config. This is the same command if you need to refresh your deployment.</p>
 <p>To build a new local debug image of Burrito, push it into your local Kind cluster, and update the Helm release with the new image tag, run the following:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>make<span class="w"> </span>upgrade-debug-kind
-</span></code></pre></div>
+<pre><code class="language-bash">make upgrade-debug-kind
+</code></pre>
 <p>To refresh the Helm chart with debug values, run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>make<span class="w"> </span>upgrade-debug-helm
-</span></code></pre></div>
+<pre><code class="language-bash">make upgrade-debug-helm
+</code></pre>
 <p>Check the <a href="https://github.com/padok-team/burrito/blob/main/Makefile">Makefile</a> for more details about these commands.</p>
 <h3 id="connect-from-your-computer-to-the-debug-session">Connect from your computer to the debug session<a class="headerlink" href="#connect-from-your-computer-to-the-debug-session" title="Permanent link">&para;</a></h3>
 <p>The debugging port won't be exposed by default so you'll need to port-forward it.</p>
 <ul>
 <li>For the controller:</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span><span class="k">$(</span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;/burrito-controllers.*Running/{print $1}&#39;</span><span class="k">)</span><span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="m">2345</span>:2345
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-controllers.*Running/{print $1}') -n burrito-system 2345:2345
+</code></pre>
 <ul>
 <li>For the runner:</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>-n<span class="w"> </span>burrito-project<span class="w"> </span>&lt;layerName&gt;<span class="w"> </span><span class="m">2346</span>:2346
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl port-forward -n burrito-project &lt;layerName&gt; 2346:2346
+</code></pre>
 <p>It will listen on the same port than the controller so we're exposing it on port 2346 on your computer so you can debug the controller and the runner if needed.</p>
 <ul>
 <li>For the datastore:</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span><span class="k">$(</span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;/burrito-datastore.*Running/{print $1}&#39;</span><span class="k">)</span><span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="m">2347</span>:2347
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-datastore.*Running/{print $1}') -n burrito-system 2347:2347
+</code></pre>
 <ul>
 <li>For the server:</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span><span class="k">$(</span>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;/burrito-server.*Running/{print $1}&#39;</span><span class="k">)</span><span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="m">2348</span>:2348
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl port-forward $(kubectl get pods -n burrito-system | awk '/burrito-server.*Running/{print $1}') -n burrito-system 2348:2348
+</code></pre>
 <h3 id="start-debugging">Start debugging<a class="headerlink" href="#start-debugging" title="Permanent link">&para;</a></h3>
 <h4 id="with-vscode">With vscode<a class="headerlink" href="#with-vscode" title="Permanent link">&para;</a></h4>
 <div class="admonition note">
@@ -2110,48 +2111,48 @@
 <p>You can get more information about Vscode+Go debugging <a href="https://github.com/golang/vscode-go/blob/master/docs/debugging.md">here</a></p>
 </div>
 <p>If you want to use Vscode to debug the app, you'll need to get the <a href="https://marketplace.visualstudio.com/items?itemName=golang.go">Go extension</a> and create a <code>.vscode/launch.json</code>:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">{</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">    </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="nt">&quot;configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">            </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Attach to Controller&quot;</span><span class="p">,</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;go&quot;</span><span class="p">,</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">            </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">            </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">            </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2345</span><span class="p">,</span>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">            </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">            </span><span class="nt">&quot;apiVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">            </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Attach to Runner&quot;</span><span class="p">,</span>
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;go&quot;</span><span class="p">,</span>
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">            </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
-</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">            </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
-</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">            </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2346</span><span class="p">,</span>
-</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">            </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
-</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">            </span><span class="nt">&quot;apiVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
-</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a><span class="w">            </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Attach to Datastore&quot;</span><span class="p">,</span>
-</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;go&quot;</span><span class="p">,</span>
-</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">            </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
-</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">            </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
-</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="w">            </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2347</span><span class="p">,</span>
-</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="w">            </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
-</span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="w">            </span><span class="nt">&quot;apiVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
-</span><span id="__span-18-30"><a id="__codelineno-18-30" name="__codelineno-18-30" href="#__codelineno-18-30"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-18-31"><a id="__codelineno-18-31" name="__codelineno-18-31" href="#__codelineno-18-31"></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-18-32"><a id="__codelineno-18-32" name="__codelineno-18-32" href="#__codelineno-18-32"></a><span class="w">            </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Attach to Server&quot;</span><span class="p">,</span>
-</span><span id="__span-18-33"><a id="__codelineno-18-33" name="__codelineno-18-33" href="#__codelineno-18-33"></a><span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;go&quot;</span><span class="p">,</span>
-</span><span id="__span-18-34"><a id="__codelineno-18-34" name="__codelineno-18-34" href="#__codelineno-18-34"></a><span class="w">            </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
-</span><span id="__span-18-35"><a id="__codelineno-18-35" name="__codelineno-18-35" href="#__codelineno-18-35"></a><span class="w">            </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
-</span><span id="__span-18-36"><a id="__codelineno-18-36" name="__codelineno-18-36" href="#__codelineno-18-36"></a><span class="w">            </span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2348</span><span class="p">,</span>
-</span><span id="__span-18-37"><a id="__codelineno-18-37" name="__codelineno-18-37" href="#__codelineno-18-37"></a><span class="w">            </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
-</span><span id="__span-18-38"><a id="__codelineno-18-38" name="__codelineno-18-38" href="#__codelineno-18-38"></a><span class="w">            </span><span class="nt">&quot;apiVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span>
-</span><span id="__span-18-39"><a id="__codelineno-18-39" name="__codelineno-18-39" href="#__codelineno-18-39"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-18-40"><a id="__codelineno-18-40" name="__codelineno-18-40" href="#__codelineno-18-40"></a><span class="w">    </span><span class="p">]</span>
-</span><span id="__span-18-41"><a id="__codelineno-18-41" name="__codelineno-18-41" href="#__codelineno-18-41"></a><span class="p">}</span>
-</span></code></pre></div>
+<pre><code class="language-json">{
+    &quot;version&quot;: &quot;0.2.0&quot;,
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Attach to Controller&quot;,
+            &quot;type&quot;: &quot;go&quot;,
+            &quot;request&quot;: &quot;attach&quot;,
+            &quot;mode&quot;: &quot;remote&quot;,
+            &quot;port&quot;: 2345,
+            &quot;host&quot;: &quot;127.0.0.1&quot;,
+            &quot;apiVersion&quot;: 2
+        },
+        {
+            &quot;name&quot;: &quot;Attach to Runner&quot;,
+            &quot;type&quot;: &quot;go&quot;,
+            &quot;request&quot;: &quot;attach&quot;,
+            &quot;mode&quot;: &quot;remote&quot;,
+            &quot;port&quot;: 2346,
+            &quot;host&quot;: &quot;127.0.0.1&quot;,
+            &quot;apiVersion&quot;: 2
+        },
+        {
+            &quot;name&quot;: &quot;Attach to Datastore&quot;,
+            &quot;type&quot;: &quot;go&quot;,
+            &quot;request&quot;: &quot;attach&quot;,
+            &quot;mode&quot;: &quot;remote&quot;,
+            &quot;port&quot;: 2347,
+            &quot;host&quot;: &quot;127.0.0.1&quot;,
+            &quot;apiVersion&quot;: 2
+        },
+        {
+            &quot;name&quot;: &quot;Attach to Server&quot;,
+            &quot;type&quot;: &quot;go&quot;,
+            &quot;request&quot;: &quot;attach&quot;,
+            &quot;mode&quot;: &quot;remote&quot;,
+            &quot;port&quot;: 2348,
+            &quot;host&quot;: &quot;127.0.0.1&quot;,
+            &quot;apiVersion&quot;: 2
+        }
+    ]
+}
+</code></pre>
 <div class="admonition question">
 <p class="admonition-title">New to debugging on Vscode?</p>
 <p>For a vscode debug introduction, you can check <a href="https://code.visualstudio.com/docs/debugtest/debugging">Debug code with Visual Studio Code</a>.</p>

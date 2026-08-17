@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
-      <meta name="generator" content="zensical-0.0.54">
+      <meta name="generator" content="zensical-0.0.55">
     
     
       
@@ -1727,12 +1727,12 @@
 </ul>
 <h2 id="override-known-hosts">Override known hosts<a class="headerlink" href="#override-known-hosts" title="Permanent link">&para;</a></h2>
 <p>If you need to provide your own keys for other repositories, you can override the default value in the chart with:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">global</span><span class="p">:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">sshKnownHosts</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|-</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="no">git.domain.com ssh-ed25519 AAAAC3Nxxx</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="no">git.domain.com ssh-rsa AAAAB3Nxxx</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="no">git.domain.com ecdsa-sha2-nistp256 AAAAE2Vxxx</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">global:
+  sshKnownHosts: |-
+    git.domain.com ssh-ed25519 AAAAC3Nxxx
+    git.domain.com ssh-rsa AAAAB3Nxxx
+    git.domain.com ecdsa-sha2-nistp256 AAAAE2Vxxx
+</code></pre>
 <p>To get those keys, you can run: <code>ssh-keyscan git.domain.com 2&gt;&amp;1| grep -vE '^#'</code></p>
 
 
