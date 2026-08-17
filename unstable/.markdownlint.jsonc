@@ -1,0 +1,8 @@
+{
+    "line-length": false,
+    "no-inline-html": false,
+    "no-alt-text": false,
+    "no-duplicate-heading": false,
+    "ul-indent": false,
+    "descriptive-link-text": false
+}

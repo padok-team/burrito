@@ -8,6 +8,8 @@
       
       
       
+        <link rel="canonical" href="https://docs.burrito.tf/unstable/operator-manual/metrics/">
+      
       
         <link rel="prev" href="../encrypt-endpoint/">
       
@@ -19,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
@@ -27,7 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/classic/main.39e53929.min.css">
       
       
 
@@ -41,12 +46,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -60,7 +65,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -86,10 +91,10 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="Burrito" class="md-header__button md-logo" aria-label="Burrito" data-md-component="logo">
       
-  <img src="../../assets/icon/burrito.png" alt="logo">
+  <img src="../../assets/icon/burrito.png" alt="Burrito">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
     </label>
@@ -117,57 +122,30 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/padok-team/burrito" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -195,7 +173,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="Burrito" class="md-nav__button md-logo" aria-label="Burrito" data-md-component="logo">
       
-  <img src="../../assets/icon/burrito.png" alt="logo">
+  <img src="../../assets/icon/burrito.png" alt="Burrito">
 
     </a>
     Burrito
@@ -205,7 +183,7 @@
       <a href="https://github.com/padok-team/burrito" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -229,8 +207,7 @@
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -256,8 +233,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
-  
+  Overview
 
     
   </span>
@@ -283,8 +259,7 @@
   <span class="md-ellipsis">
     
   
-    Getting started
-  
+  Getting started
 
     
   </span>
@@ -334,8 +309,7 @@
   <span class="md-ellipsis">
     
   
-    Guides
-  
+  Guides
 
     
   </span>
@@ -356,8 +330,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Guides
-  
+  Guides
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -378,8 +351,7 @@
   <span class="md-ellipsis">
     
   
-    IaC Drift Detection
-  
+  IaC Drift Detection
 
     
   </span>
@@ -406,8 +378,7 @@
   <span class="md-ellipsis">
     
   
-    PR/MR Workflow
-  
+  PR/MR Workflow
 
     
   </span>
@@ -434,8 +405,7 @@
   <span class="md-ellipsis">
     
   
-    UI Overview
-  
+  UI Overview
 
     
   </span>
@@ -486,8 +456,7 @@
   <span class="md-ellipsis">
     
   
-    Installation
-  
+  Installation
 
     
   </span>
@@ -502,8 +471,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Installation
-  
+  Installation
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -522,8 +490,7 @@
   <span class="md-ellipsis">
     
   
-    Install with Helm (recommended)
-  
+  Install with Helm (recommended)
 
     
   </span>
@@ -550,8 +517,7 @@
   <span class="md-ellipsis">
     
   
-    Install with static manifests
-  
+  Install with static manifests
 
     
   </span>
@@ -631,8 +597,7 @@
   <span class="md-ellipsis">
     
   
-    Operator Manual
-  
+  Operator Manual
 
     
   </span>
@@ -653,8 +618,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Operator Manual
-  
+  Operator Manual
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -675,8 +639,7 @@
   <span class="md-ellipsis">
     
   
-    Architectural Overview
-  
+  Architectural Overview
 
     
   </span>
@@ -703,8 +666,7 @@
   <span class="md-ellipsis">
     
   
-    User Authentication
-  
+  User Authentication
 
     
   </span>
@@ -731,8 +693,7 @@
   <span class="md-ellipsis">
     
   
-    Repository Controller
-  
+  Repository Controller
 
     
   </span>
@@ -780,8 +741,7 @@
   <span class="md-ellipsis">
     
   
-    Git Authentication
-  
+  Git Authentication
 
     
   </span>
@@ -796,8 +756,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Git Authentication
-  
+  Git Authentication
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -816,8 +775,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
-  
+  Overview
 
     
   </span>
@@ -844,8 +802,7 @@
   <span class="md-ellipsis">
     
   
-    GitHub App
-  
+  GitHub App
 
     
   </span>
@@ -872,8 +829,7 @@
   <span class="md-ellipsis">
     
   
-    GitHub Token
-  
+  GitHub Token
 
     
   </span>
@@ -900,8 +856,7 @@
   <span class="md-ellipsis">
     
   
-    GitLab Token
-  
+  GitLab Token
 
     
   </span>
@@ -936,8 +891,7 @@
   <span class="md-ellipsis">
     
   
-    PR/MR Workflow
-  
+  PR/MR Workflow
 
     
   </span>
@@ -964,8 +918,7 @@
   <span class="md-ellipsis">
     
   
-    Setup a Git Webhook
-  
+  Setup a Git Webhook
 
     
   </span>
@@ -992,8 +945,7 @@
   <span class="md-ellipsis">
     
   
-    Advanced configuration
-  
+  Advanced configuration
 
     
   </span>
@@ -1020,8 +972,7 @@
   <span class="md-ellipsis">
     
   
-    Multi-tenant architecture
-  
+  Multi-tenant architecture
 
     
   </span>
@@ -1048,8 +999,7 @@
   <span class="md-ellipsis">
     
   
-    Datastore
-  
+  Datastore
 
     
   </span>
@@ -1076,8 +1026,7 @@
   <span class="md-ellipsis">
     
   
-    Caching Terraform Providers
-  
+  Caching Terraform Providers
 
     
   </span>
@@ -1104,8 +1053,7 @@
   <span class="md-ellipsis">
     
   
-    Fine-tuning the scheduling of Burrito pods
-  
+  Fine-tuning the scheduling of Burrito pods
 
     
   </span>
@@ -1132,8 +1080,7 @@
   <span class="md-ellipsis">
     
   
-    Encrypt Endpoint
-  
+  Encrypt Endpoint
 
     
   </span>
@@ -1156,7 +1103,9 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+        <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -1169,8 +1118,7 @@
   <span class="md-ellipsis">
     
   
-    Burrito Metrics Endpoint
-  
+  Burrito Metrics Endpoint
 
     
   </span>
@@ -1180,15 +1128,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Burrito Metrics Endpoint
-  
+  Burrito Metrics Endpoint
 
     
   </span>
@@ -1199,7 +1146,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1208,16 +1156,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#endpoint" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Endpoint
-      
+      </span>
     </span>
   </a>
   
@@ -1226,9 +1174,9 @@
         <li class="md-nav__item">
   <a href="#exposing-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Exposing Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1238,9 +1186,9 @@
           <li class="md-nav__item">
   <a href="#using-ingress-recommended-for-production" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Using Ingress (Recommended for Production)
-      
+      </span>
     </span>
   </a>
   
@@ -1249,9 +1197,9 @@
           <li class="md-nav__item">
   <a href="#using-port-forward-for-testing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Using Port-Forward (For Testing)
-      
+      </span>
     </span>
   </a>
   
@@ -1265,9 +1213,9 @@
         <li class="md-nav__item">
   <a href="#available-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Available Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1277,9 +1225,9 @@
           <li class="md-nav__item">
   <a href="#terraform-layer-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Terraform Layer Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1289,9 +1237,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_status" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_status
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_status</code>
+      </span>
     </span>
   </a>
   
@@ -1300,9 +1248,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_state" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_state
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_state</code>
+      </span>
     </span>
   </a>
   
@@ -1311,9 +1259,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_runs_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_runs_total
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_runs_total</code>
+      </span>
     </span>
   </a>
   
@@ -1322,9 +1270,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_last_run_timestamp" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_last_run_timestamp
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_last_run_timestamp</code>
+      </span>
     </span>
   </a>
   
@@ -1333,9 +1281,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_run_duration_seconds" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_run_duration_seconds
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_run_duration_seconds</code>
+      </span>
     </span>
   </a>
   
@@ -1349,9 +1297,9 @@
           <li class="md-nav__item">
   <a href="#terraform-repository-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Terraform Repository Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1361,9 +1309,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_repositories_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_repositories_total
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_repositories_total</code>
+      </span>
     </span>
   </a>
   
@@ -1377,9 +1325,9 @@
           <li class="md-nav__item">
   <a href="#terraform-run-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Terraform Run Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1389,9 +1337,9 @@
           <li class="md-nav__item">
   <a href="#current-state-metrics-gauges" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Current State Metrics (Gauges)
-      
+      </span>
     </span>
   </a>
   
@@ -1400,9 +1348,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_by_action" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_by_action
-      
+      <span class="md-typeset">
+        <code>burrito_runs_by_action</code>
+      </span>
     </span>
   </a>
   
@@ -1411,9 +1359,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_by_status" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_by_status
-      
+      <span class="md-typeset">
+        <code>burrito_runs_by_status</code>
+      </span>
     </span>
   </a>
   
@@ -1422,9 +1370,9 @@
           <li class="md-nav__item">
   <a href="#cumulative-metrics-counters" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Cumulative Metrics (Counters)
-      
+      </span>
     </span>
   </a>
   
@@ -1433,9 +1381,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_created_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_created_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_created_total</code>
+      </span>
     </span>
   </a>
   
@@ -1444,9 +1392,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_completed_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_completed_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_completed_total</code>
+      </span>
     </span>
   </a>
   
@@ -1455,9 +1403,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_failed_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_failed_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_failed_total</code>
+      </span>
     </span>
   </a>
   
@@ -1471,9 +1419,9 @@
           <li class="md-nav__item">
   <a href="#aggregate-summary-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Aggregate Summary Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1483,9 +1431,9 @@
           <li class="md-nav__item">
   <a href="#burrito_layers_status_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_layers_status_total
-      
+      <span class="md-typeset">
+        <code>burrito_layers_status_total</code>
+      </span>
     </span>
   </a>
   
@@ -1494,9 +1442,9 @@
           <li class="md-nav__item">
   <a href="#burrito_layers_namespace_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_layers_namespace_total
-      
+      <span class="md-typeset">
+        <code>burrito_layers_namespace_total</code>
+      </span>
     </span>
   </a>
   
@@ -1505,9 +1453,9 @@
           <li class="md-nav__item">
   <a href="#burrito_layers_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_layers_total
-      
+      <span class="md-typeset">
+        <code>burrito_layers_total</code>
+      </span>
     </span>
   </a>
   
@@ -1516,9 +1464,9 @@
           <li class="md-nav__item">
   <a href="#burrito_repositories_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_repositories_total
-      
+      <span class="md-typeset">
+        <code>burrito_repositories_total</code>
+      </span>
     </span>
   </a>
   
@@ -1527,9 +1475,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_total</code>
+      </span>
     </span>
   </a>
   
@@ -1538,9 +1486,9 @@
           <li class="md-nav__item">
   <a href="#burrito_pullrequests_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_pullrequests_total
-      
+      <span class="md-typeset">
+        <code>burrito_pullrequests_total</code>
+      </span>
     </span>
   </a>
   
@@ -1554,9 +1502,9 @@
           <li class="md-nav__item">
   <a href="#controller-performance-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Controller Performance Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1566,9 +1514,9 @@
           <li class="md-nav__item">
   <a href="#burrito_controller_reconcile_duration_seconds" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_controller_reconcile_duration_seconds
-      
+      <span class="md-typeset">
+        <code>burrito_controller_reconcile_duration_seconds</code>
+      </span>
     </span>
   </a>
   
@@ -1577,9 +1525,9 @@
           <li class="md-nav__item">
   <a href="#burrito_controller_reconcile_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_controller_reconcile_total
-      
+      <span class="md-typeset">
+        <code>burrito_controller_reconcile_total</code>
+      </span>
     </span>
   </a>
   
@@ -1588,9 +1536,9 @@
           <li class="md-nav__item">
   <a href="#burrito_controller_reconcile_errors_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_controller_reconcile_errors_total
-      
+      <span class="md-typeset">
+        <code>burrito_controller_reconcile_errors_total</code>
+      </span>
     </span>
   </a>
   
@@ -1609,9 +1557,9 @@
         <li class="md-nav__item">
   <a href="#usage-examples" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Usage Examples
-      
+      </span>
     </span>
   </a>
   
@@ -1621,9 +1569,9 @@
           <li class="md-nav__item">
   <a href="#prometheus-configuration" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Prometheus Configuration
-      
+      </span>
     </span>
   </a>
   
@@ -1632,9 +1580,9 @@
           <li class="md-nav__item">
   <a href="#example-queries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Example Queries
-      
+      </span>
     </span>
   </a>
   
@@ -1644,9 +1592,9 @@
           <li class="md-nav__item">
   <a href="#layers-by-status" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layers by Status
-      
+      </span>
     </span>
   </a>
   
@@ -1655,9 +1603,9 @@
           <li class="md-nav__item">
   <a href="#layer-states" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layer States
-      
+      </span>
     </span>
   </a>
   
@@ -1666,9 +1614,9 @@
           <li class="md-nav__item">
   <a href="#run-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Run Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1677,9 +1625,9 @@
           <li class="md-nav__item">
   <a href="#layer-detailed-analysis" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layer Detailed Analysis
-      
+      </span>
     </span>
   </a>
   
@@ -1693,9 +1641,9 @@
           <li class="md-nav__item">
   <a href="#alerting-rules" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Alerting Rules
-      
+      </span>
     </span>
   </a>
   
@@ -1705,9 +1653,9 @@
           <li class="md-nav__item">
   <a href="#alert-severity-guidelines" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Alert Severity Guidelines
-      
+      </span>
     </span>
   </a>
   
@@ -1716,9 +1664,9 @@
           <li class="md-nav__item">
   <a href="#customization-tips" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Customization Tips
-      
+      </span>
     </span>
   </a>
   
@@ -1737,9 +1685,9 @@
         <li class="md-nav__item">
   <a href="#accessing-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Accessing Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -1749,9 +1697,9 @@
           <li class="md-nav__item">
   <a href="#internal-access-kubernetes-service" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Internal Access (Kubernetes Service)
-      
+      </span>
     </span>
   </a>
   
@@ -1760,9 +1708,9 @@
           <li class="md-nav__item">
   <a href="#external-access-ingress" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         External Access (Ingress)
-      
+      </span>
     </span>
   </a>
   
@@ -1776,9 +1724,9 @@
         <li class="md-nav__item">
   <a href="#security-considerations" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Security Considerations
-      
+      </span>
     </span>
   </a>
   
@@ -1846,8 +1794,7 @@
   <span class="md-ellipsis">
     
   
-    User Guide
-  
+  User Guide
 
     
   </span>
@@ -1868,8 +1815,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    User Guide
-  
+  User Guide
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -1890,8 +1836,7 @@
   <span class="md-ellipsis">
     
   
-    Override the runner pod spec
-  
+  Override the runner pod spec
 
     
   </span>
@@ -1918,8 +1863,7 @@
   <span class="md-ellipsis">
     
   
-    Choose a remediation strategy
-  
+  Choose a remediation strategy
 
     
   </span>
@@ -1946,8 +1890,7 @@
   <span class="md-ellipsis">
     
   
-    Configure a Terraform/Terragrunt/OpenTofu version
-  
+  Configure a Terraform/Terragrunt/OpenTofu version
 
     
   </span>
@@ -1974,8 +1917,7 @@
   <span class="md-ellipsis">
     
   
-    Configure the TerraformLayer to use private modules and providers
-  
+  Configure the TerraformLayer to use private modules and providers
 
     
   </span>
@@ -2002,8 +1944,7 @@
   <span class="md-ellipsis">
     
   
-    Additionnal Trigger Paths
-  
+  Additionnal Trigger Paths
 
     
   </span>
@@ -2030,8 +1971,7 @@
   <span class="md-ellipsis">
     
   
-    Manage SSH known hosts
-  
+  Manage SSH known hosts
 
     
   </span>
@@ -2058,8 +1998,7 @@
   <span class="md-ellipsis">
     
   
-    Sync Windows
-  
+  Sync Windows
 
     
   </span>
@@ -2108,8 +2047,7 @@
   <span class="md-ellipsis">
     
   
-    Migration Guides
-  
+  Migration Guides
 
     
   </span>
@@ -2124,8 +2062,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Migration Guides
-  
+  Migration Guides
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -2144,8 +2081,7 @@
   <span class="md-ellipsis">
     
   
-    0.9.0 - Migrating to the New Credential System
-  
+  0.9.0 - Migrating to the New Credential System
 
     
   </span>
@@ -2199,8 +2135,7 @@
   <span class="md-ellipsis">
     
   
-    Contributing
-  
+  Contributing
 
     
   </span>
@@ -2221,8 +2156,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Contributing
-  
+  Contributing
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -2243,8 +2177,7 @@
   <span class="md-ellipsis">
     
   
-    CI/CD &amp; Release Process
-  
+  CI/CD &amp; Release Process
 
     
   </span>
@@ -2274,10 +2207,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -2286,16 +2221,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#endpoint" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Endpoint
-      
+      </span>
     </span>
   </a>
   
@@ -2304,9 +2239,9 @@
         <li class="md-nav__item">
   <a href="#exposing-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Exposing Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2316,9 +2251,9 @@
           <li class="md-nav__item">
   <a href="#using-ingress-recommended-for-production" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Using Ingress (Recommended for Production)
-      
+      </span>
     </span>
   </a>
   
@@ -2327,9 +2262,9 @@
           <li class="md-nav__item">
   <a href="#using-port-forward-for-testing" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Using Port-Forward (For Testing)
-      
+      </span>
     </span>
   </a>
   
@@ -2343,9 +2278,9 @@
         <li class="md-nav__item">
   <a href="#available-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Available Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2355,9 +2290,9 @@
           <li class="md-nav__item">
   <a href="#terraform-layer-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Terraform Layer Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2367,9 +2302,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_status" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_status
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_status</code>
+      </span>
     </span>
   </a>
   
@@ -2378,9 +2313,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_state" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_state
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_state</code>
+      </span>
     </span>
   </a>
   
@@ -2389,9 +2324,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_runs_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_runs_total
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_runs_total</code>
+      </span>
     </span>
   </a>
   
@@ -2400,9 +2335,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_last_run_timestamp" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_last_run_timestamp
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_last_run_timestamp</code>
+      </span>
     </span>
   </a>
   
@@ -2411,9 +2346,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_layer_run_duration_seconds" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_layer_run_duration_seconds
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_layer_run_duration_seconds</code>
+      </span>
     </span>
   </a>
   
@@ -2427,9 +2362,9 @@
           <li class="md-nav__item">
   <a href="#terraform-repository-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Terraform Repository Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2439,9 +2374,9 @@
           <li class="md-nav__item">
   <a href="#burrito_terraform_repositories_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_terraform_repositories_total
-      
+      <span class="md-typeset">
+        <code>burrito_terraform_repositories_total</code>
+      </span>
     </span>
   </a>
   
@@ -2455,9 +2390,9 @@
           <li class="md-nav__item">
   <a href="#terraform-run-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Terraform Run Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2467,9 +2402,9 @@
           <li class="md-nav__item">
   <a href="#current-state-metrics-gauges" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Current State Metrics (Gauges)
-      
+      </span>
     </span>
   </a>
   
@@ -2478,9 +2413,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_by_action" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_by_action
-      
+      <span class="md-typeset">
+        <code>burrito_runs_by_action</code>
+      </span>
     </span>
   </a>
   
@@ -2489,9 +2424,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_by_status" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_by_status
-      
+      <span class="md-typeset">
+        <code>burrito_runs_by_status</code>
+      </span>
     </span>
   </a>
   
@@ -2500,9 +2435,9 @@
           <li class="md-nav__item">
   <a href="#cumulative-metrics-counters" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Cumulative Metrics (Counters)
-      
+      </span>
     </span>
   </a>
   
@@ -2511,9 +2446,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_created_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_created_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_created_total</code>
+      </span>
     </span>
   </a>
   
@@ -2522,9 +2457,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_completed_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_completed_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_completed_total</code>
+      </span>
     </span>
   </a>
   
@@ -2533,9 +2468,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_failed_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_failed_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_failed_total</code>
+      </span>
     </span>
   </a>
   
@@ -2549,9 +2484,9 @@
           <li class="md-nav__item">
   <a href="#aggregate-summary-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Aggregate Summary Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2561,9 +2496,9 @@
           <li class="md-nav__item">
   <a href="#burrito_layers_status_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_layers_status_total
-      
+      <span class="md-typeset">
+        <code>burrito_layers_status_total</code>
+      </span>
     </span>
   </a>
   
@@ -2572,9 +2507,9 @@
           <li class="md-nav__item">
   <a href="#burrito_layers_namespace_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_layers_namespace_total
-      
+      <span class="md-typeset">
+        <code>burrito_layers_namespace_total</code>
+      </span>
     </span>
   </a>
   
@@ -2583,9 +2518,9 @@
           <li class="md-nav__item">
   <a href="#burrito_layers_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_layers_total
-      
+      <span class="md-typeset">
+        <code>burrito_layers_total</code>
+      </span>
     </span>
   </a>
   
@@ -2594,9 +2529,9 @@
           <li class="md-nav__item">
   <a href="#burrito_repositories_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_repositories_total
-      
+      <span class="md-typeset">
+        <code>burrito_repositories_total</code>
+      </span>
     </span>
   </a>
   
@@ -2605,9 +2540,9 @@
           <li class="md-nav__item">
   <a href="#burrito_runs_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_runs_total
-      
+      <span class="md-typeset">
+        <code>burrito_runs_total</code>
+      </span>
     </span>
   </a>
   
@@ -2616,9 +2551,9 @@
           <li class="md-nav__item">
   <a href="#burrito_pullrequests_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_pullrequests_total
-      
+      <span class="md-typeset">
+        <code>burrito_pullrequests_total</code>
+      </span>
     </span>
   </a>
   
@@ -2632,9 +2567,9 @@
           <li class="md-nav__item">
   <a href="#controller-performance-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Controller Performance Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2644,9 +2579,9 @@
           <li class="md-nav__item">
   <a href="#burrito_controller_reconcile_duration_seconds" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_controller_reconcile_duration_seconds
-      
+      <span class="md-typeset">
+        <code>burrito_controller_reconcile_duration_seconds</code>
+      </span>
     </span>
   </a>
   
@@ -2655,9 +2590,9 @@
           <li class="md-nav__item">
   <a href="#burrito_controller_reconcile_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_controller_reconcile_total
-      
+      <span class="md-typeset">
+        <code>burrito_controller_reconcile_total</code>
+      </span>
     </span>
   </a>
   
@@ -2666,9 +2601,9 @@
           <li class="md-nav__item">
   <a href="#burrito_controller_reconcile_errors_total" class="md-nav__link">
     <span class="md-ellipsis">
-      
-        burrito_controller_reconcile_errors_total
-      
+      <span class="md-typeset">
+        <code>burrito_controller_reconcile_errors_total</code>
+      </span>
     </span>
   </a>
   
@@ -2687,9 +2622,9 @@
         <li class="md-nav__item">
   <a href="#usage-examples" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Usage Examples
-      
+      </span>
     </span>
   </a>
   
@@ -2699,9 +2634,9 @@
           <li class="md-nav__item">
   <a href="#prometheus-configuration" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Prometheus Configuration
-      
+      </span>
     </span>
   </a>
   
@@ -2710,9 +2645,9 @@
           <li class="md-nav__item">
   <a href="#example-queries" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Example Queries
-      
+      </span>
     </span>
   </a>
   
@@ -2722,9 +2657,9 @@
           <li class="md-nav__item">
   <a href="#layers-by-status" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layers by Status
-      
+      </span>
     </span>
   </a>
   
@@ -2733,9 +2668,9 @@
           <li class="md-nav__item">
   <a href="#layer-states" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layer States
-      
+      </span>
     </span>
   </a>
   
@@ -2744,9 +2679,9 @@
           <li class="md-nav__item">
   <a href="#run-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Run Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2755,9 +2690,9 @@
           <li class="md-nav__item">
   <a href="#layer-detailed-analysis" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Layer Detailed Analysis
-      
+      </span>
     </span>
   </a>
   
@@ -2771,9 +2706,9 @@
           <li class="md-nav__item">
   <a href="#alerting-rules" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Alerting Rules
-      
+      </span>
     </span>
   </a>
   
@@ -2783,9 +2718,9 @@
           <li class="md-nav__item">
   <a href="#alert-severity-guidelines" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Alert Severity Guidelines
-      
+      </span>
     </span>
   </a>
   
@@ -2794,9 +2729,9 @@
           <li class="md-nav__item">
   <a href="#customization-tips" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Customization Tips
-      
+      </span>
     </span>
   </a>
   
@@ -2815,9 +2750,9 @@
         <li class="md-nav__item">
   <a href="#accessing-metrics" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Accessing Metrics
-      
+      </span>
     </span>
   </a>
   
@@ -2827,9 +2762,9 @@
           <li class="md-nav__item">
   <a href="#internal-access-kubernetes-service" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Internal Access (Kubernetes Service)
-      
+      </span>
     </span>
   </a>
   
@@ -2838,9 +2773,9 @@
           <li class="md-nav__item">
   <a href="#external-access-ingress" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         External Access (Ingress)
-      
+      </span>
     </span>
   </a>
   
@@ -2854,9 +2789,9 @@
         <li class="md-nav__item">
   <a href="#security-considerations" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Security Considerations
-      
+      </span>
     </span>
   </a>
   
@@ -2876,8 +2811,6 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
@@ -2890,11 +2823,11 @@
 <h2 id="exposing-metrics">Exposing Metrics<a class="headerlink" href="#exposing-metrics" title="Permanent link">&para;</a></h2>
 <h3 id="using-ingress-recommended-for-production">Using Ingress (Recommended for Production)<a class="headerlink" href="#using-ingress-recommended-for-production" title="Permanent link">&para;</a></h3>
 <p>You can expose the metrics endpoint externally using an ingress controller. Enable the controllers ingress in your Helm values:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">controllers</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">ingress</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">    </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-controllers.example.com</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">controllers</span><span class="p">:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">ingress</span><span class="p">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-controllers.example.com</span>
+</span></code></pre></div>
 <p>Once configured, your metrics will be available at: <code>https://burrito-controllers.example.com/metrics</code></p>
 <div class="admonition warning">
 <p class="admonition-title">Security Considerations</p>
@@ -2905,13 +2838,13 @@
 </div>
 <h3 id="using-port-forward-for-testing">Using Port-Forward (For Testing)<a class="headerlink" href="#using-port-forward-for-testing" title="Permanent link">&para;</a></h3>
 <p>To quickly test the metrics endpoint locally:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># If running in Kubernetes (default controller metrics port is 8080)</span>
-kubectl<span class="w"> </span>port-forward<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>deployment/burrito-controllers<span class="w"> </span><span class="m">8080</span>:8080
-curl<span class="w"> </span>http://localhost:8080/metrics
-
-<span class="c1"># You can also check standard controller-runtime metrics</span>
-curl<span class="w"> </span>http://localhost:8080/metrics<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>controller_runtime
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># If running in Kubernetes (default controller metrics port is 8080)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>deployment/burrito-controllers<span class="w"> </span><span class="m">8080</span>:8080
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>curl<span class="w"> </span>http://localhost:8080/metrics
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># You can also check standard controller-runtime metrics</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>curl<span class="w"> </span>http://localhost:8080/metrics<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>controller_runtime
+</span></code></pre></div>
 <p><strong>Note</strong>: The metrics are exposed by the <code>burrito-controllers</code> deployment, not the <code>burrito-server</code>. The server handles the Web UI and webhook events, while the controllers manage the lifecycle of Terraform resources and expose their metrics.</p>
 <h2 id="available-metrics">Available Metrics<a class="headerlink" href="#available-metrics" title="Permanent link">&para;</a></h2>
 <h3 id="terraform-layer-metrics">Terraform Layer Metrics<a class="headerlink" href="#terraform-layer-metrics" title="Permanent link">&para;</a></h3>
@@ -3061,288 +2994,288 @@ curl<span class="w"> </span>http://localhost:8080/metrics<span class="w"> </span
 <h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
 <h3 id="prometheus-configuration">Prometheus Configuration<a class="headerlink" href="#prometheus-configuration" title="Permanent link">&para;</a></h3>
 <p>Add the following to your Prometheus configuration:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">scrape_configs</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;burrito-controllers&#39;</span>
-<span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;burrito-controllers:8080&#39;</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/metrics&#39;</span>
-<span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">scrape_configs</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;burrito-controllers&#39;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;burrito-controllers:8080&#39;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/metrics&#39;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</span></code></pre></div>
 <p>If you're using the ingress approach, configure Prometheus to scrape via the ingress endpoint:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">scrape_configs</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;burrito-controllers&#39;</span>
-<span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;burrito-controllers-metrics.example.com&#39;</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https</span>
-<span class="w">    </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/metrics&#39;</span>
-<span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">scrape_configs</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;burrito-controllers&#39;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;burrito-controllers-metrics.example.com&#39;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">metrics_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/metrics&#39;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</span></code></pre></div>
 <p><strong>Note</strong>: Make sure to scrape the <code>burrito-controllers</code> service/deployment (port 8080 by default, configurable via <code>config.burrito.controller.metricsBindAddress</code>), not the <code>burrito-server</code>.</p>
 <h3 id="example-queries">Example Queries<a class="headerlink" href="#example-queries" title="Permanent link">&para;</a></h3>
 <h4 id="layers-by-status">Layers by Status<a class="headerlink" href="#layers-by-status" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="c1"># Count layers by status</span>
-<span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">status</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">)</span>
-
-<span class="c1"># Get all layers in error state</span>
-<span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">error</span><span class="p">&quot;}</span>
-
-<span class="c1"># Get layers that need attention (warning or error)</span>
-<span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=~</span><span class="p">&quot;</span><span class="s">warning|error</span><span class="p">&quot;}</span>
-
-<span class="c1"># Get layers by repository</span>
-<span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">repository_name</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">)</span>
-
-<span class="c1"># Count total layers across all statuses</span>
-<span class="k">count</span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">)</span>
-</code></pre></div>
+<div class="language-promql highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Count layers by status</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">status</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Get all layers in error state</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">error</span><span class="p">&quot;}</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Get layers that need attention (warning or error)</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=~</span><span class="p">&quot;</span><span class="s">warning|error</span><span class="p">&quot;}</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Get layers by repository</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">repository_name</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Count total layers across all statuses</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="k">count</span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">)</span>
+</span></code></pre></div>
 <h4 id="layer-states">Layer States<a class="headerlink" href="#layer-states" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="c1"># Count layers by status</span>
-<span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">state</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_terraform_layer_state</span><span class="o">)</span>
-
-<span class="c1"># Get layers that need attention (warning or error)</span>
-<span class="nv">burrito_terraform_layer_state</span><span class="p">{</span><span class="nl">state</span><span class="o">=~</span><span class="p">&quot;</span><span class="s">warning|error</span><span class="p">&quot;}</span>
-
-<span class="c1"># Get specific layer status</span>
-<span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">namespace</span><span class="o">=</span><span class="p">&quot;</span><span class="s">production</span><span class="p">&quot;,</span><span class="w"> </span><span class="nl">layer_name</span><span class="o">=</span><span class="p">&quot;</span><span class="s">app-infrastructure</span><span class="p">&quot;}</span>
-</code></pre></div>
+<div class="language-promql highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Count layers by status</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">state</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_terraform_layer_state</span><span class="o">)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Get layers that need attention (warning or error)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nv">burrito_terraform_layer_state</span><span class="p">{</span><span class="nl">state</span><span class="o">=~</span><span class="p">&quot;</span><span class="s">warning|error</span><span class="p">&quot;}</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Get specific layer status</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">namespace</span><span class="o">=</span><span class="p">&quot;</span><span class="s">production</span><span class="p">&quot;,</span><span class="w"> </span><span class="nl">layer_name</span><span class="o">=</span><span class="p">&quot;</span><span class="s">app-infrastructure</span><span class="p">&quot;}</span>
+</span></code></pre></div>
 <h4 id="run-metrics">Run Metrics<a class="headerlink" href="#run-metrics" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="c1"># Current number of runs by action</span>
-<span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">action</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_runs_by_action</span><span class="o">)</span>
-
-<span class="c1"># Current number of runs by status</span>
-<span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">status</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_runs_by_status</span><span class="o">)</span>
-
-<span class="c1"># Run creation rate (runs per second over last 5 minutes)</span>
-<span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_created_total</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">)</span>
-
-<span class="c1"># Run failure rate</span>
-<span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_failed_total</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">)</span>
-
-<span class="c1"># Success rate (percentage of completed vs failed)</span>
-<span class="o">(</span>
-<span class="w">  </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_completed_total</span><span class="p">[</span><span class="s">1h</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="o">/</span>
-<span class="w">  </span><span class="o">(</span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_completed_total</span><span class="p">[</span><span class="s">1h</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_failed_total</span><span class="p">[</span><span class="s">1h</span><span class="p">]</span><span class="o">)))</span>
-<span class="o">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span>
-
-<span class="c1"># Total runs created in last 24 hours</span>
-<span class="k">sum</span><span class="o">(</span><span class="kr">increase</span><span class="o">(</span><span class="nv">burrito_runs_created_total</span><span class="p">[</span><span class="s">24h</span><span class="p">]</span><span class="o">))</span>
-
-<span class="c1"># Failed runs in specific namespace</span>
-<span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">action</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="kr">increase</span><span class="o">(</span><span class="nv">burrito_runs_failed_total</span><span class="p">{</span><span class="nl">namespace</span><span class="o">=</span><span class="p">&quot;</span><span class="s">production</span><span class="p">&quot;}[</span><span class="s">1h</span><span class="p">]</span><span class="o">))</span>
-</code></pre></div>
+<div class="language-promql highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Current number of runs by action</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">action</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_runs_by_action</span><span class="o">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Current number of runs by status</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">status</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="nv">burrito_runs_by_status</span><span class="o">)</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Run creation rate (runs per second over last 5 minutes)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_created_total</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">)</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># Run failure rate</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_failed_total</span><span class="p">[</span><span class="s">5m</span><span class="p">]</span><span class="o">)</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="c1"># Success rate (percentage of completed vs failed)</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="o">(</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_completed_total</span><span class="p">[</span><span class="s">1h</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="o">/</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="o">(</span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_completed_total</span><span class="p">[</span><span class="s">1h</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sum</span><span class="o">(</span><span class="kr">rate</span><span class="o">(</span><span class="nv">burrito_runs_failed_total</span><span class="p">[</span><span class="s">1h</span><span class="p">]</span><span class="o">)))</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="o">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="c1"># Total runs created in last 24 hours</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="k">sum</span><span class="o">(</span><span class="kr">increase</span><span class="o">(</span><span class="nv">burrito_runs_created_total</span><span class="p">[</span><span class="s">24h</span><span class="p">]</span><span class="o">))</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="c1"># Failed runs in specific namespace</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="k">sum</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">action</span><span class="o">)</span><span class="w"> </span><span class="o">(</span><span class="kr">increase</span><span class="o">(</span><span class="nv">burrito_runs_failed_total</span><span class="p">{</span><span class="nl">namespace</span><span class="o">=</span><span class="p">&quot;</span><span class="s">production</span><span class="p">&quot;}[</span><span class="s">1h</span><span class="p">]</span><span class="o">))</span>
+</span></code></pre></div>
 <h4 id="layer-detailed-analysis">Layer Detailed Analysis<a class="headerlink" href="#layer-detailed-analysis" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="c1"># Layers currently running</span>
-<span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">running</span><span class="p">&quot;}</span>
-
-<span class="c1"># Layers with errors</span>
-<span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">error</span><span class="p">&quot;}</span>
-
-<span class="c1"># Percentage of layers in error state</span>
-<span class="o">(</span><span class="k">sum</span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">error</span><span class="p">&quot;}</span><span class="o">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sum</span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span>
-</code></pre></div>
+<div class="language-promql highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Layers currently running</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">running</span><span class="p">&quot;}</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Layers with errors</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">error</span><span class="p">&quot;}</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Percentage of layers in error state</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="o">(</span><span class="k">sum</span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="p">{</span><span class="nl">status</span><span class="o">=</span><span class="p">&quot;</span><span class="s">error</span><span class="p">&quot;}</span><span class="o">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sum</span><span class="o">(</span><span class="nv">burrito_terraform_layer_status</span><span class="o">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span>
+</span></code></pre></div>
 <h3 id="alerting-rules">Alerting Rules<a class="headerlink" href="#alerting-rules" title="Permanent link">&para;</a></h3>
 <p>Here's a comprehensive set of alerting rules for monitoring Burrito:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">groups</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_layer_health</span>
-<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Critical: Layers in error state (not currently running)</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoLayerInError</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;error&quot;}</span>
-<span class="w">          </span><span class="no">unless</span>
-<span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;running&quot;}</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">layer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.layer_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">state&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">Layer &quot;{{ $labels.layer_name }}&quot; in namespace &quot;{{ $labels.namespace }}&quot; has been in error state for 5 minutes.</span>
-<span class="w">            </span><span class="no">Repository: {{ $labels.repository_name }}</span>
-<span class="w">            </span><span class="no">This typically indicates plan or apply failures that require immediate attention.</span>
-
-<span class="w">      </span><span class="c1"># Warning: Layers need planning or applying</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoLayerNeedsAttention</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;warning&quot;}</span>
-<span class="w">          </span><span class="no">unless</span>
-<span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;running&quot;}</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">layer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.layer_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">needs</span><span class="nv"> </span><span class="s">attention&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">Layer &quot;{{ $labels.layer_name }}&quot; in namespace &quot;{{ $labels.namespace }}&quot; has been in warning state for 15 minutes.</span>
-<span class="w">            </span><span class="no">Repository: {{ $labels.repository_name }}</span>
-<span class="w">            </span><span class="no">This may indicate drift detection or pending changes that need to be applied.</span>
-
-<span class="w">      </span><span class="c1"># Warning: Layers stuck in running state</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoLayerStuckRunning</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;running&quot;}</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">layer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.layer_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">stuck</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">running</span><span class="nv"> </span><span class="s">state&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">Layer &quot;{{ $labels.layer_name }}&quot; has been running for over 30 minutes.</span>
-<span class="w">            </span><span class="no">Repository: {{ $labels.repository_name }}</span>
-<span class="w">            </span><span class="no">Check if the run is actually progressing or if it&#39;s stuck.</span>
-
-<span class="w">      </span><span class="c1"># Critical: High percentage of layers in error</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoHighErrorRate</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">(sum(burrito_terraform_layer_status{status=&quot;error&quot;}) / sum(burrito_terraform_layer_status)) * 100 &gt; 50</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;More</span><span class="nv"> </span><span class="s">than</span><span class="nv"> </span><span class="s">50%</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">layers</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">state&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">{{ printf &quot;%.1f&quot; $value }}% of layers are currently in error state.</span>
-<span class="w">            </span><span class="no">This may indicate a systemic issue affecting multiple layers.</span>
-
-<span class="w">      </span><span class="c1"># Warning: No layers found (monitoring health check)</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoNoLayersFound</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">sum(burrito_terraform_layer_status) == 0</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;No</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">layers</span><span class="nv"> </span><span class="s">found</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">Burrito&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">No layers are being reported by Burrito metrics.</span>
-<span class="w">            </span><span class="no">This may indicate an issue with the controller or metrics collection.</span>
-
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_run_failures</span>
-<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Critical: Run failures increasing</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoRunFailureRate</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">rate(burrito_runs_failed_total[5m]) &gt; 0.1</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;High</span><span class="nv"> </span><span class="s">rate</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">run</span><span class="nv"> </span><span class="s">failures</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">Namespace &quot;{{ $labels.namespace }}&quot; is experiencing {{ printf &quot;%.2f&quot; $value }} run failures per second for action &quot;{{ $labels.action }}&quot;.</span>
-<span class="w">            </span><span class="no">Current failure rate indicates {{ printf &quot;%.0f&quot; (mul $value 300) }} failures in the last 5 minutes.</span>
-
-<span class="w">      </span><span class="c1"># Warning: Runs created but not completing</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoRunsStalling</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">(</span>
-<span class="w">            </span><span class="no">rate(burrito_runs_created_total[10m]) - </span>
-<span class="w">            </span><span class="no">rate(burrito_runs_completed_total[10m]) - </span>
-<span class="w">            </span><span class="no">rate(burrito_runs_failed_total[10m])</span>
-<span class="w">          </span><span class="no">) &gt; 0.5</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">runs</span><span class="nv"> </span><span class="s">may</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">stalling</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">More runs are being created than completed/failed in namespace &quot;{{ $labels.namespace }}&quot; for action &quot;{{ $labels.action }}&quot;.</span>
-<span class="w">            </span><span class="no">This could indicate runs getting stuck or taking too long.</span>
-
-<span class="w">      </span><span class="c1"># Info: High run volume</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoHighRunVolume</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">rate(burrito_runs_created_total[5m]) &gt; 1</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">info</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;High</span><span class="nv"> </span><span class="s">volume</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">runs</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">Namespace &quot;{{ $labels.namespace }}&quot; is creating {{ printf &quot;%.2f&quot; $value }} runs per second for action &quot;{{ $labels.action }}&quot;.</span>
-<span class="w">            </span><span class="no">This may be expected behavior or could indicate excessive reconciliation.</span>
-
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_repository_health</span>
-<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Warning: Repository in error state</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoRepositoryError</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">burrito_terraform_repository_status{status=&quot;error&quot;}</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">repository</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.repository_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">state&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">Repository &quot;{{ $labels.repository_name }}&quot; in namespace &quot;{{ $labels.namespace }}&quot; is in error state.</span>
-<span class="w">            </span><span class="no">URL: {{ $labels.url }}</span>
-<span class="w">            </span><span class="no">This may prevent layers from being updated. Check repository connectivity and credentials.</span>
-
-<span class="w">      </span><span class="c1"># Critical: No repositories found</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoNoRepositoriesFound</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">burrito_repositories_total == 0</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;No</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">repositories</span><span class="nv"> </span><span class="s">found</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">Burrito&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">No repositories are being reported by Burrito metrics.</span>
-<span class="w">            </span><span class="no">This will prevent any layers from functioning.</span>
-
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_controller_health</span>
-<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Warning: High reconciliation error rate</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoControllerErrors</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">rate(burrito_controller_reconcile_errors_total[5m]) &gt; 0.1</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;High</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">rate</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.controller</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">controller&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">The {{ $labels.controller }} controller is experiencing {{ printf &quot;%.2f&quot; $value }} errors per second.</span>
-<span class="w">            </span><span class="no">Error type: {{ $labels.error_type }}</span>
-<span class="w">            </span><span class="no">Check controller logs for details.</span>
-
-<span class="w">      </span><span class="c1"># Warning: Slow reconciliation</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoSlowReconciliation</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">histogram_quantile(0.95, rate(burrito_controller_reconcile_duration_seconds_bucket[5m])) &gt; 30</span>
-<span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
-<span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
-<span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">$labels.controller</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">controller</span><span class="nv"> </span><span class="s">reconciliation</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">slow&quot;</span>
-<span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">            </span><span class="no">95th percentile reconciliation time for {{ $labels.controller }} is {{ printf &quot;%.2f&quot; $value }} seconds.</span>
-<span class="w">            </span><span class="no">This may indicate performance issues or resource constraints.</span>
-
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_aggregate_health</span>
-<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1m</span>
-<span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
-<span class="w">      </span><span class="c1"># Info: Overall system health score</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">record</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito:layer_health_score</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">(</span>
-<span class="w">            </span><span class="no">sum(burrito_terraform_layer_status{status=&quot;success&quot;}) /</span>
-<span class="w">            </span><span class="no">sum(burrito_terraform_layer_status)</span>
-<span class="w">          </span><span class="no">) * 100</span>
-
-<span class="w">      </span><span class="c1"># Info: Success rate of runs</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">record</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito:run_success_rate</span>
-<span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<span class="w">          </span><span class="no">(</span>
-<span class="w">            </span><span class="no">sum(rate(burrito_runs_completed_total[1h])) /</span>
-<span class="w">            </span><span class="no">(sum(rate(burrito_runs_completed_total[1h])) + sum(rate(burrito_runs_failed_total[1h])))</span>
-<span class="w">          </span><span class="no">) * 100</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">groups</span><span class="p">:</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_layer_health</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">      </span><span class="c1"># Critical: Layers in error state (not currently running)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoLayerInError</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;error&quot;}</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">          </span><span class="no">unless</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;running&quot;}</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">layer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.layer_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">state&quot;</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">            </span><span class="no">Layer &quot;{{ $labels.layer_name }}&quot; in namespace &quot;{{ $labels.namespace }}&quot; has been in error state for 5 minutes.</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">            </span><span class="no">Repository: {{ $labels.repository_name }}</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">            </span><span class="no">This typically indicates plan or apply failures that require immediate attention.</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">      </span><span class="c1"># Warning: Layers need planning or applying</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoLayerNeedsAttention</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;warning&quot;}</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">          </span><span class="no">unless</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;running&quot;}</span>
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15m</span>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">layer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.layer_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">needs</span><span class="nv"> </span><span class="s">attention&quot;</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a><span class="w">            </span><span class="no">Layer &quot;{{ $labels.layer_name }}&quot; in namespace &quot;{{ $labels.namespace }}&quot; has been in warning state for 15 minutes.</span>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="w">            </span><span class="no">Repository: {{ $labels.repository_name }}</span>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="w">            </span><span class="no">This may indicate drift detection or pending changes that need to be applied.</span>
+</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a>
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="w">      </span><span class="c1"># Warning: Layers stuck in running state</span>
+</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoLayerStuckRunning</span>
+</span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="w">          </span><span class="no">burrito_terraform_layer_status{status=&quot;running&quot;}</span>
+</span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30m</span>
+</span><span id="__span-8-42"><a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-43"><a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-44"><a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">layer</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.layer_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">stuck</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">running</span><span class="nv"> </span><span class="s">state&quot;</span>
+</span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-47"><a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a><span class="w">            </span><span class="no">Layer &quot;{{ $labels.layer_name }}&quot; has been running for over 30 minutes.</span>
+</span><span id="__span-8-48"><a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a><span class="w">            </span><span class="no">Repository: {{ $labels.repository_name }}</span>
+</span><span id="__span-8-49"><a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a><span class="w">            </span><span class="no">Check if the run is actually progressing or if it&#39;s stuck.</span>
+</span><span id="__span-8-50"><a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a>
+</span><span id="__span-8-51"><a id="__codelineno-8-51" name="__codelineno-8-51" href="#__codelineno-8-51"></a><span class="w">      </span><span class="c1"># Critical: High percentage of layers in error</span>
+</span><span id="__span-8-52"><a id="__codelineno-8-52" name="__codelineno-8-52" href="#__codelineno-8-52"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoHighErrorRate</span>
+</span><span id="__span-8-53"><a id="__codelineno-8-53" name="__codelineno-8-53" href="#__codelineno-8-53"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-54"><a id="__codelineno-8-54" name="__codelineno-8-54" href="#__codelineno-8-54"></a><span class="w">          </span><span class="no">(sum(burrito_terraform_layer_status{status=&quot;error&quot;}) / sum(burrito_terraform_layer_status)) * 100 &gt; 50</span>
+</span><span id="__span-8-55"><a id="__codelineno-8-55" name="__codelineno-8-55" href="#__codelineno-8-55"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
+</span><span id="__span-8-56"><a id="__codelineno-8-56" name="__codelineno-8-56" href="#__codelineno-8-56"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-57"><a id="__codelineno-8-57" name="__codelineno-8-57" href="#__codelineno-8-57"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
+</span><span id="__span-8-58"><a id="__codelineno-8-58" name="__codelineno-8-58" href="#__codelineno-8-58"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-59"><a id="__codelineno-8-59" name="__codelineno-8-59" href="#__codelineno-8-59"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;More</span><span class="nv"> </span><span class="s">than</span><span class="nv"> </span><span class="s">50%</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">layers</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">state&quot;</span>
+</span><span id="__span-8-60"><a id="__codelineno-8-60" name="__codelineno-8-60" href="#__codelineno-8-60"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-61"><a id="__codelineno-8-61" name="__codelineno-8-61" href="#__codelineno-8-61"></a><span class="w">            </span><span class="no">{{ printf &quot;%.1f&quot; $value }}% of layers are currently in error state.</span>
+</span><span id="__span-8-62"><a id="__codelineno-8-62" name="__codelineno-8-62" href="#__codelineno-8-62"></a><span class="w">            </span><span class="no">This may indicate a systemic issue affecting multiple layers.</span>
+</span><span id="__span-8-63"><a id="__codelineno-8-63" name="__codelineno-8-63" href="#__codelineno-8-63"></a>
+</span><span id="__span-8-64"><a id="__codelineno-8-64" name="__codelineno-8-64" href="#__codelineno-8-64"></a><span class="w">      </span><span class="c1"># Warning: No layers found (monitoring health check)</span>
+</span><span id="__span-8-65"><a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoNoLayersFound</span>
+</span><span id="__span-8-66"><a id="__codelineno-8-66" name="__codelineno-8-66" href="#__codelineno-8-66"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-67"><a id="__codelineno-8-67" name="__codelineno-8-67" href="#__codelineno-8-67"></a><span class="w">          </span><span class="no">sum(burrito_terraform_layer_status) == 0</span>
+</span><span id="__span-8-68"><a id="__codelineno-8-68" name="__codelineno-8-68" href="#__codelineno-8-68"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+</span><span id="__span-8-69"><a id="__codelineno-8-69" name="__codelineno-8-69" href="#__codelineno-8-69"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-70"><a id="__codelineno-8-70" name="__codelineno-8-70" href="#__codelineno-8-70"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-71"><a id="__codelineno-8-71" name="__codelineno-8-71" href="#__codelineno-8-71"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-72"><a id="__codelineno-8-72" name="__codelineno-8-72" href="#__codelineno-8-72"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;No</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">layers</span><span class="nv"> </span><span class="s">found</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">Burrito&quot;</span>
+</span><span id="__span-8-73"><a id="__codelineno-8-73" name="__codelineno-8-73" href="#__codelineno-8-73"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-74"><a id="__codelineno-8-74" name="__codelineno-8-74" href="#__codelineno-8-74"></a><span class="w">            </span><span class="no">No layers are being reported by Burrito metrics.</span>
+</span><span id="__span-8-75"><a id="__codelineno-8-75" name="__codelineno-8-75" href="#__codelineno-8-75"></a><span class="w">            </span><span class="no">This may indicate an issue with the controller or metrics collection.</span>
+</span><span id="__span-8-76"><a id="__codelineno-8-76" name="__codelineno-8-76" href="#__codelineno-8-76"></a>
+</span><span id="__span-8-77"><a id="__codelineno-8-77" name="__codelineno-8-77" href="#__codelineno-8-77"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_run_failures</span>
+</span><span id="__span-8-78"><a id="__codelineno-8-78" name="__codelineno-8-78" href="#__codelineno-8-78"></a><span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</span><span id="__span-8-79"><a id="__codelineno-8-79" name="__codelineno-8-79" href="#__codelineno-8-79"></a><span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
+</span><span id="__span-8-80"><a id="__codelineno-8-80" name="__codelineno-8-80" href="#__codelineno-8-80"></a><span class="w">      </span><span class="c1"># Critical: Run failures increasing</span>
+</span><span id="__span-8-81"><a id="__codelineno-8-81" name="__codelineno-8-81" href="#__codelineno-8-81"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoRunFailureRate</span>
+</span><span id="__span-8-82"><a id="__codelineno-8-82" name="__codelineno-8-82" href="#__codelineno-8-82"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-83"><a id="__codelineno-8-83" name="__codelineno-8-83" href="#__codelineno-8-83"></a><span class="w">          </span><span class="no">rate(burrito_runs_failed_total[5m]) &gt; 0.1</span>
+</span><span id="__span-8-84"><a id="__codelineno-8-84" name="__codelineno-8-84" href="#__codelineno-8-84"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+</span><span id="__span-8-85"><a id="__codelineno-8-85" name="__codelineno-8-85" href="#__codelineno-8-85"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-86"><a id="__codelineno-8-86" name="__codelineno-8-86" href="#__codelineno-8-86"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
+</span><span id="__span-8-87"><a id="__codelineno-8-87" name="__codelineno-8-87" href="#__codelineno-8-87"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-88"><a id="__codelineno-8-88" name="__codelineno-8-88" href="#__codelineno-8-88"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;High</span><span class="nv"> </span><span class="s">rate</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">run</span><span class="nv"> </span><span class="s">failures</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-8-89"><a id="__codelineno-8-89" name="__codelineno-8-89" href="#__codelineno-8-89"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-90"><a id="__codelineno-8-90" name="__codelineno-8-90" href="#__codelineno-8-90"></a><span class="w">            </span><span class="no">Namespace &quot;{{ $labels.namespace }}&quot; is experiencing {{ printf &quot;%.2f&quot; $value }} run failures per second for action &quot;{{ $labels.action }}&quot;.</span>
+</span><span id="__span-8-91"><a id="__codelineno-8-91" name="__codelineno-8-91" href="#__codelineno-8-91"></a><span class="w">            </span><span class="no">Current failure rate indicates {{ printf &quot;%.0f&quot; (mul $value 300) }} failures in the last 5 minutes.</span>
+</span><span id="__span-8-92"><a id="__codelineno-8-92" name="__codelineno-8-92" href="#__codelineno-8-92"></a>
+</span><span id="__span-8-93"><a id="__codelineno-8-93" name="__codelineno-8-93" href="#__codelineno-8-93"></a><span class="w">      </span><span class="c1"># Warning: Runs created but not completing</span>
+</span><span id="__span-8-94"><a id="__codelineno-8-94" name="__codelineno-8-94" href="#__codelineno-8-94"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoRunsStalling</span>
+</span><span id="__span-8-95"><a id="__codelineno-8-95" name="__codelineno-8-95" href="#__codelineno-8-95"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-96"><a id="__codelineno-8-96" name="__codelineno-8-96" href="#__codelineno-8-96"></a><span class="w">          </span><span class="no">(</span>
+</span><span id="__span-8-97"><a id="__codelineno-8-97" name="__codelineno-8-97" href="#__codelineno-8-97"></a><span class="w">            </span><span class="no">rate(burrito_runs_created_total[10m]) - </span>
+</span><span id="__span-8-98"><a id="__codelineno-8-98" name="__codelineno-8-98" href="#__codelineno-8-98"></a><span class="w">            </span><span class="no">rate(burrito_runs_completed_total[10m]) - </span>
+</span><span id="__span-8-99"><a id="__codelineno-8-99" name="__codelineno-8-99" href="#__codelineno-8-99"></a><span class="w">            </span><span class="no">rate(burrito_runs_failed_total[10m])</span>
+</span><span id="__span-8-100"><a id="__codelineno-8-100" name="__codelineno-8-100" href="#__codelineno-8-100"></a><span class="w">          </span><span class="no">) &gt; 0.5</span>
+</span><span id="__span-8-101"><a id="__codelineno-8-101" name="__codelineno-8-101" href="#__codelineno-8-101"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15m</span>
+</span><span id="__span-8-102"><a id="__codelineno-8-102" name="__codelineno-8-102" href="#__codelineno-8-102"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-103"><a id="__codelineno-8-103" name="__codelineno-8-103" href="#__codelineno-8-103"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-104"><a id="__codelineno-8-104" name="__codelineno-8-104" href="#__codelineno-8-104"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-105"><a id="__codelineno-8-105" name="__codelineno-8-105" href="#__codelineno-8-105"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">runs</span><span class="nv"> </span><span class="s">may</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">stalling</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-8-106"><a id="__codelineno-8-106" name="__codelineno-8-106" href="#__codelineno-8-106"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-107"><a id="__codelineno-8-107" name="__codelineno-8-107" href="#__codelineno-8-107"></a><span class="w">            </span><span class="no">More runs are being created than completed/failed in namespace &quot;{{ $labels.namespace }}&quot; for action &quot;{{ $labels.action }}&quot;.</span>
+</span><span id="__span-8-108"><a id="__codelineno-8-108" name="__codelineno-8-108" href="#__codelineno-8-108"></a><span class="w">            </span><span class="no">This could indicate runs getting stuck or taking too long.</span>
+</span><span id="__span-8-109"><a id="__codelineno-8-109" name="__codelineno-8-109" href="#__codelineno-8-109"></a>
+</span><span id="__span-8-110"><a id="__codelineno-8-110" name="__codelineno-8-110" href="#__codelineno-8-110"></a><span class="w">      </span><span class="c1"># Info: High run volume</span>
+</span><span id="__span-8-111"><a id="__codelineno-8-111" name="__codelineno-8-111" href="#__codelineno-8-111"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoHighRunVolume</span>
+</span><span id="__span-8-112"><a id="__codelineno-8-112" name="__codelineno-8-112" href="#__codelineno-8-112"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-113"><a id="__codelineno-8-113" name="__codelineno-8-113" href="#__codelineno-8-113"></a><span class="w">          </span><span class="no">rate(burrito_runs_created_total[5m]) &gt; 1</span>
+</span><span id="__span-8-114"><a id="__codelineno-8-114" name="__codelineno-8-114" href="#__codelineno-8-114"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
+</span><span id="__span-8-115"><a id="__codelineno-8-115" name="__codelineno-8-115" href="#__codelineno-8-115"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-116"><a id="__codelineno-8-116" name="__codelineno-8-116" href="#__codelineno-8-116"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">info</span>
+</span><span id="__span-8-117"><a id="__codelineno-8-117" name="__codelineno-8-117" href="#__codelineno-8-117"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-118"><a id="__codelineno-8-118" name="__codelineno-8-118" href="#__codelineno-8-118"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;High</span><span class="nv"> </span><span class="s">volume</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">runs</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.namespace</span><span class="nv"> </span><span class="s">}}&quot;</span>
+</span><span id="__span-8-119"><a id="__codelineno-8-119" name="__codelineno-8-119" href="#__codelineno-8-119"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-120"><a id="__codelineno-8-120" name="__codelineno-8-120" href="#__codelineno-8-120"></a><span class="w">            </span><span class="no">Namespace &quot;{{ $labels.namespace }}&quot; is creating {{ printf &quot;%.2f&quot; $value }} runs per second for action &quot;{{ $labels.action }}&quot;.</span>
+</span><span id="__span-8-121"><a id="__codelineno-8-121" name="__codelineno-8-121" href="#__codelineno-8-121"></a><span class="w">            </span><span class="no">This may be expected behavior or could indicate excessive reconciliation.</span>
+</span><span id="__span-8-122"><a id="__codelineno-8-122" name="__codelineno-8-122" href="#__codelineno-8-122"></a>
+</span><span id="__span-8-123"><a id="__codelineno-8-123" name="__codelineno-8-123" href="#__codelineno-8-123"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_repository_health</span>
+</span><span id="__span-8-124"><a id="__codelineno-8-124" name="__codelineno-8-124" href="#__codelineno-8-124"></a><span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</span><span id="__span-8-125"><a id="__codelineno-8-125" name="__codelineno-8-125" href="#__codelineno-8-125"></a><span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
+</span><span id="__span-8-126"><a id="__codelineno-8-126" name="__codelineno-8-126" href="#__codelineno-8-126"></a><span class="w">      </span><span class="c1"># Warning: Repository in error state</span>
+</span><span id="__span-8-127"><a id="__codelineno-8-127" name="__codelineno-8-127" href="#__codelineno-8-127"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoRepositoryError</span>
+</span><span id="__span-8-128"><a id="__codelineno-8-128" name="__codelineno-8-128" href="#__codelineno-8-128"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-129"><a id="__codelineno-8-129" name="__codelineno-8-129" href="#__codelineno-8-129"></a><span class="w">          </span><span class="no">burrito_terraform_repository_status{status=&quot;error&quot;}</span>
+</span><span id="__span-8-130"><a id="__codelineno-8-130" name="__codelineno-8-130" href="#__codelineno-8-130"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+</span><span id="__span-8-131"><a id="__codelineno-8-131" name="__codelineno-8-131" href="#__codelineno-8-131"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-132"><a id="__codelineno-8-132" name="__codelineno-8-132" href="#__codelineno-8-132"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-133"><a id="__codelineno-8-133" name="__codelineno-8-133" href="#__codelineno-8-133"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-134"><a id="__codelineno-8-134" name="__codelineno-8-134" href="#__codelineno-8-134"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Terraform</span><span class="nv"> </span><span class="s">repository</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.repository_name</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">state&quot;</span>
+</span><span id="__span-8-135"><a id="__codelineno-8-135" name="__codelineno-8-135" href="#__codelineno-8-135"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-136"><a id="__codelineno-8-136" name="__codelineno-8-136" href="#__codelineno-8-136"></a><span class="w">            </span><span class="no">Repository &quot;{{ $labels.repository_name }}&quot; in namespace &quot;{{ $labels.namespace }}&quot; is in error state.</span>
+</span><span id="__span-8-137"><a id="__codelineno-8-137" name="__codelineno-8-137" href="#__codelineno-8-137"></a><span class="w">            </span><span class="no">URL: {{ $labels.url }}</span>
+</span><span id="__span-8-138"><a id="__codelineno-8-138" name="__codelineno-8-138" href="#__codelineno-8-138"></a><span class="w">            </span><span class="no">This may prevent layers from being updated. Check repository connectivity and credentials.</span>
+</span><span id="__span-8-139"><a id="__codelineno-8-139" name="__codelineno-8-139" href="#__codelineno-8-139"></a>
+</span><span id="__span-8-140"><a id="__codelineno-8-140" name="__codelineno-8-140" href="#__codelineno-8-140"></a><span class="w">      </span><span class="c1"># Critical: No repositories found</span>
+</span><span id="__span-8-141"><a id="__codelineno-8-141" name="__codelineno-8-141" href="#__codelineno-8-141"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoNoRepositoriesFound</span>
+</span><span id="__span-8-142"><a id="__codelineno-8-142" name="__codelineno-8-142" href="#__codelineno-8-142"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-143"><a id="__codelineno-8-143" name="__codelineno-8-143" href="#__codelineno-8-143"></a><span class="w">          </span><span class="no">burrito_repositories_total == 0</span>
+</span><span id="__span-8-144"><a id="__codelineno-8-144" name="__codelineno-8-144" href="#__codelineno-8-144"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+</span><span id="__span-8-145"><a id="__codelineno-8-145" name="__codelineno-8-145" href="#__codelineno-8-145"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-146"><a id="__codelineno-8-146" name="__codelineno-8-146" href="#__codelineno-8-146"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
+</span><span id="__span-8-147"><a id="__codelineno-8-147" name="__codelineno-8-147" href="#__codelineno-8-147"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-148"><a id="__codelineno-8-148" name="__codelineno-8-148" href="#__codelineno-8-148"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;No</span><span class="nv"> </span><span class="s">Terraform</span><span class="nv"> </span><span class="s">repositories</span><span class="nv"> </span><span class="s">found</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">Burrito&quot;</span>
+</span><span id="__span-8-149"><a id="__codelineno-8-149" name="__codelineno-8-149" href="#__codelineno-8-149"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-150"><a id="__codelineno-8-150" name="__codelineno-8-150" href="#__codelineno-8-150"></a><span class="w">            </span><span class="no">No repositories are being reported by Burrito metrics.</span>
+</span><span id="__span-8-151"><a id="__codelineno-8-151" name="__codelineno-8-151" href="#__codelineno-8-151"></a><span class="w">            </span><span class="no">This will prevent any layers from functioning.</span>
+</span><span id="__span-8-152"><a id="__codelineno-8-152" name="__codelineno-8-152" href="#__codelineno-8-152"></a>
+</span><span id="__span-8-153"><a id="__codelineno-8-153" name="__codelineno-8-153" href="#__codelineno-8-153"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_controller_health</span>
+</span><span id="__span-8-154"><a id="__codelineno-8-154" name="__codelineno-8-154" href="#__codelineno-8-154"></a><span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</span><span id="__span-8-155"><a id="__codelineno-8-155" name="__codelineno-8-155" href="#__codelineno-8-155"></a><span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
+</span><span id="__span-8-156"><a id="__codelineno-8-156" name="__codelineno-8-156" href="#__codelineno-8-156"></a><span class="w">      </span><span class="c1"># Warning: High reconciliation error rate</span>
+</span><span id="__span-8-157"><a id="__codelineno-8-157" name="__codelineno-8-157" href="#__codelineno-8-157"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoControllerErrors</span>
+</span><span id="__span-8-158"><a id="__codelineno-8-158" name="__codelineno-8-158" href="#__codelineno-8-158"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-159"><a id="__codelineno-8-159" name="__codelineno-8-159" href="#__codelineno-8-159"></a><span class="w">          </span><span class="no">rate(burrito_controller_reconcile_errors_total[5m]) &gt; 0.1</span>
+</span><span id="__span-8-160"><a id="__codelineno-8-160" name="__codelineno-8-160" href="#__codelineno-8-160"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+</span><span id="__span-8-161"><a id="__codelineno-8-161" name="__codelineno-8-161" href="#__codelineno-8-161"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-162"><a id="__codelineno-8-162" name="__codelineno-8-162" href="#__codelineno-8-162"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-163"><a id="__codelineno-8-163" name="__codelineno-8-163" href="#__codelineno-8-163"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-164"><a id="__codelineno-8-164" name="__codelineno-8-164" href="#__codelineno-8-164"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;High</span><span class="nv"> </span><span class="s">error</span><span class="nv"> </span><span class="s">rate</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">{{</span><span class="nv"> </span><span class="s">$labels.controller</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">controller&quot;</span>
+</span><span id="__span-8-165"><a id="__codelineno-8-165" name="__codelineno-8-165" href="#__codelineno-8-165"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-166"><a id="__codelineno-8-166" name="__codelineno-8-166" href="#__codelineno-8-166"></a><span class="w">            </span><span class="no">The {{ $labels.controller }} controller is experiencing {{ printf &quot;%.2f&quot; $value }} errors per second.</span>
+</span><span id="__span-8-167"><a id="__codelineno-8-167" name="__codelineno-8-167" href="#__codelineno-8-167"></a><span class="w">            </span><span class="no">Error type: {{ $labels.error_type }}</span>
+</span><span id="__span-8-168"><a id="__codelineno-8-168" name="__codelineno-8-168" href="#__codelineno-8-168"></a><span class="w">            </span><span class="no">Check controller logs for details.</span>
+</span><span id="__span-8-169"><a id="__codelineno-8-169" name="__codelineno-8-169" href="#__codelineno-8-169"></a>
+</span><span id="__span-8-170"><a id="__codelineno-8-170" name="__codelineno-8-170" href="#__codelineno-8-170"></a><span class="w">      </span><span class="c1"># Warning: Slow reconciliation</span>
+</span><span id="__span-8-171"><a id="__codelineno-8-171" name="__codelineno-8-171" href="#__codelineno-8-171"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">alert</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">BurritoSlowReconciliation</span>
+</span><span id="__span-8-172"><a id="__codelineno-8-172" name="__codelineno-8-172" href="#__codelineno-8-172"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-173"><a id="__codelineno-8-173" name="__codelineno-8-173" href="#__codelineno-8-173"></a><span class="w">          </span><span class="no">histogram_quantile(0.95, rate(burrito_controller_reconcile_duration_seconds_bucket[5m])) &gt; 30</span>
+</span><span id="__span-8-174"><a id="__codelineno-8-174" name="__codelineno-8-174" href="#__codelineno-8-174"></a><span class="w">        </span><span class="nt">for</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span>
+</span><span id="__span-8-175"><a id="__codelineno-8-175" name="__codelineno-8-175" href="#__codelineno-8-175"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
+</span><span id="__span-8-176"><a id="__codelineno-8-176" name="__codelineno-8-176" href="#__codelineno-8-176"></a><span class="w">          </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">warning</span>
+</span><span id="__span-8-177"><a id="__codelineno-8-177" name="__codelineno-8-177" href="#__codelineno-8-177"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-8-178"><a id="__codelineno-8-178" name="__codelineno-8-178" href="#__codelineno-8-178"></a><span class="w">          </span><span class="nt">summary</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">$labels.controller</span><span class="nv"> </span><span class="s">}}</span><span class="nv"> </span><span class="s">controller</span><span class="nv"> </span><span class="s">reconciliation</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">slow&quot;</span>
+</span><span id="__span-8-179"><a id="__codelineno-8-179" name="__codelineno-8-179" href="#__codelineno-8-179"></a><span class="w">          </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-180"><a id="__codelineno-8-180" name="__codelineno-8-180" href="#__codelineno-8-180"></a><span class="w">            </span><span class="no">95th percentile reconciliation time for {{ $labels.controller }} is {{ printf &quot;%.2f&quot; $value }} seconds.</span>
+</span><span id="__span-8-181"><a id="__codelineno-8-181" name="__codelineno-8-181" href="#__codelineno-8-181"></a><span class="w">            </span><span class="no">This may indicate performance issues or resource constraints.</span>
+</span><span id="__span-8-182"><a id="__codelineno-8-182" name="__codelineno-8-182" href="#__codelineno-8-182"></a>
+</span><span id="__span-8-183"><a id="__codelineno-8-183" name="__codelineno-8-183" href="#__codelineno-8-183"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito_aggregate_health</span>
+</span><span id="__span-8-184"><a id="__codelineno-8-184" name="__codelineno-8-184" href="#__codelineno-8-184"></a><span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1m</span>
+</span><span id="__span-8-185"><a id="__codelineno-8-185" name="__codelineno-8-185" href="#__codelineno-8-185"></a><span class="w">    </span><span class="nt">rules</span><span class="p">:</span>
+</span><span id="__span-8-186"><a id="__codelineno-8-186" name="__codelineno-8-186" href="#__codelineno-8-186"></a><span class="w">      </span><span class="c1"># Info: Overall system health score</span>
+</span><span id="__span-8-187"><a id="__codelineno-8-187" name="__codelineno-8-187" href="#__codelineno-8-187"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">record</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito:layer_health_score</span>
+</span><span id="__span-8-188"><a id="__codelineno-8-188" name="__codelineno-8-188" href="#__codelineno-8-188"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-189"><a id="__codelineno-8-189" name="__codelineno-8-189" href="#__codelineno-8-189"></a><span class="w">          </span><span class="no">(</span>
+</span><span id="__span-8-190"><a id="__codelineno-8-190" name="__codelineno-8-190" href="#__codelineno-8-190"></a><span class="w">            </span><span class="no">sum(burrito_terraform_layer_status{status=&quot;success&quot;}) /</span>
+</span><span id="__span-8-191"><a id="__codelineno-8-191" name="__codelineno-8-191" href="#__codelineno-8-191"></a><span class="w">            </span><span class="no">sum(burrito_terraform_layer_status)</span>
+</span><span id="__span-8-192"><a id="__codelineno-8-192" name="__codelineno-8-192" href="#__codelineno-8-192"></a><span class="w">          </span><span class="no">) * 100</span>
+</span><span id="__span-8-193"><a id="__codelineno-8-193" name="__codelineno-8-193" href="#__codelineno-8-193"></a>
+</span><span id="__span-8-194"><a id="__codelineno-8-194" name="__codelineno-8-194" href="#__codelineno-8-194"></a><span class="w">      </span><span class="c1"># Info: Success rate of runs</span>
+</span><span id="__span-8-195"><a id="__codelineno-8-195" name="__codelineno-8-195" href="#__codelineno-8-195"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">record</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito:run_success_rate</span>
+</span><span id="__span-8-196"><a id="__codelineno-8-196" name="__codelineno-8-196" href="#__codelineno-8-196"></a><span class="w">        </span><span class="nt">expr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-8-197"><a id="__codelineno-8-197" name="__codelineno-8-197" href="#__codelineno-8-197"></a><span class="w">          </span><span class="no">(</span>
+</span><span id="__span-8-198"><a id="__codelineno-8-198" name="__codelineno-8-198" href="#__codelineno-8-198"></a><span class="w">            </span><span class="no">sum(rate(burrito_runs_completed_total[1h])) /</span>
+</span><span id="__span-8-199"><a id="__codelineno-8-199" name="__codelineno-8-199" href="#__codelineno-8-199"></a><span class="w">            </span><span class="no">(sum(rate(burrito_runs_completed_total[1h])) + sum(rate(burrito_runs_failed_total[1h])))</span>
+</span><span id="__span-8-200"><a id="__codelineno-8-200" name="__codelineno-8-200" href="#__codelineno-8-200"></a><span class="w">          </span><span class="no">) * 100</span>
+</span></code></pre></div>
 <h4 id="alert-severity-guidelines">Alert Severity Guidelines<a class="headerlink" href="#alert-severity-guidelines" title="Permanent link">&para;</a></h4>
 <ul>
 <li><strong>Critical</strong>: Immediate action required - layers in error, high failure rates, missing resources</li>
@@ -3359,13 +3292,13 @@ curl<span class="w"> </span>http://localhost:8080/metrics<span class="w"> </span
 <h2 id="accessing-metrics">Accessing Metrics<a class="headerlink" href="#accessing-metrics" title="Permanent link">&para;</a></h2>
 <h3 id="internal-access-kubernetes-service">Internal Access (Kubernetes Service)<a class="headerlink" href="#internal-access-kubernetes-service" title="Permanent link">&para;</a></h3>
 <p>Access metrics through the Kubernetes service:</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>port-forward<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>svc/burrito-controllers<span class="w"> </span><span class="m">8080</span>:8080
-curl<span class="w"> </span>http://localhost:8080/metrics
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>svc/burrito-controllers<span class="w"> </span><span class="m">8080</span>:8080
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>curl<span class="w"> </span>http://localhost:8080/metrics
+</span></code></pre></div>
 <h3 id="external-access-ingress">External Access (Ingress)<a class="headerlink" href="#external-access-ingress" title="Permanent link">&para;</a></h3>
 <p>If you've configured the controllers ingress (see <a href="#exposing-metrics">Exposing Metrics</a> section above), access metrics externally:</p>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>https://burrito-controllers-metrics.example.com/metrics
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl<span class="w"> </span>https://burrito-controllers-metrics.example.com/metrics
+</span></code></pre></div>
 <h2 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h2>
 <p>When exposing metrics externally via ingress:</p>
 <ol>
@@ -3375,19 +3308,21 @@ curl<span class="w"> </span>http://localhost:8080/metrics
 <li><strong>TLS</strong>: Always use HTTPS when exposing metrics externally to prevent data interception</li>
 </ol>
 <p>Example of securing with basic authentication via ingress annotations:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">controllers</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">ingress</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">    </span><span class="nt">metadata</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">annotations</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">nginx.ingress.kubernetes.io/auth-type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">basic</span>
-<span class="w">        </span><span class="nt">nginx.ingress.kubernetes.io/auth-secret</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">metrics-basic-auth</span>
-<span class="w">        </span><span class="nt">nginx.ingress.kubernetes.io/auth-realm</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Authentication</span><span class="nv"> </span><span class="s">Required</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">Burrito</span><span class="nv"> </span><span class="s">Metrics&#39;</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">controllers</span><span class="p">:</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">ingress</span><span class="p">:</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">      </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">        </span><span class="nt">nginx.ingress.kubernetes.io/auth-type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">basic</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">        </span><span class="nt">nginx.ingress.kubernetes.io/auth-secret</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">metrics-basic-auth</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">        </span><span class="nt">nginx.ingress.kubernetes.io/auth-realm</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Authentication</span><span class="nv"> </span><span class="s">Required</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">Burrito</span><span class="nv"> </span><span class="s">Metrics&#39;</span>
+</span></code></pre></div>
 <p>Create the auth secret:</p>
-<div class="highlight"><pre><span></span><code>htpasswd<span class="w"> </span>-c<span class="w"> </span>auth<span class="w"> </span>prometheus
-kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>metrics-basic-auth<span class="w"> </span>--from-file<span class="o">=</span>auth<span class="w"> </span>-n<span class="w"> </span>burrito-system
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>htpasswd<span class="w"> </span>-c<span class="w"> </span>auth<span class="w"> </span>prometheus
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="w"> </span>generic<span class="w"> </span>metrics-basic-auth<span class="w"> </span>--from-file<span class="o">=</span>auth<span class="w"> </span>-n<span class="w"> </span>burrito-system
+</span></code></pre></div>
+
+
 
 
 
@@ -3405,6 +3340,8 @@ kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -3418,8 +3355,8 @@ kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -3437,10 +3374,10 @@ kubectl<span class="w"> </span>create<span class="w"> </span>secret<span class="
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.indexes","navigation.instant","navigation.instant.prefetch","search.highlight"],"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"provider":"mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>

@@ -8,6 +8,8 @@
       
       
       
+        <link rel="canonical" href="https://docs.burrito.tf/unstable/guides/iac-drift-detection/">
+      
       
         <link rel="prev" href="../">
       
@@ -19,15 +21,18 @@
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="zensical-0.0.54">
     
     
       
-        <title>IaC Drift Detection - Burrito</title>
+        <title>Burrito Drift Detection - Burrito</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/classic/main.39e53929.min.css">
       
       
 
@@ -41,12 +46,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -60,7 +65,7 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
         
@@ -86,10 +91,10 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="Burrito" class="md-header__button md-logo" aria-label="Burrito" data-md-component="logo">
       
-  <img src="../../assets/icon/burrito.png" alt="logo">
+  <img src="../../assets/icon/burrito.png" alt="Burrito">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
     </label>
@@ -103,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              IaC Drift Detection
+              Burrito Drift Detection
             
           </span>
         </div>
@@ -117,57 +122,30 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search">
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
 </div>
       
     
-    
-      <div class="md-header__source">
+    <div class="md-header__source">
+      
         <a href="https://github.com/padok-team/burrito" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -195,7 +173,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="Burrito" class="md-nav__button md-logo" aria-label="Burrito" data-md-component="logo">
       
-  <img src="../../assets/icon/burrito.png" alt="logo">
+  <img src="../../assets/icon/burrito.png" alt="Burrito">
 
     </a>
     Burrito
@@ -205,7 +183,7 @@
       <a href="https://github.com/padok-team/burrito" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -229,8 +207,7 @@
   <span class="md-ellipsis">
     
   
-    Home
-  
+  Home
 
     
   </span>
@@ -256,8 +233,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
-  
+  Overview
 
     
   </span>
@@ -283,8 +259,7 @@
   <span class="md-ellipsis">
     
   
-    Getting started
-  
+  Getting started
 
     
   </span>
@@ -336,8 +311,7 @@
   <span class="md-ellipsis">
     
   
-    Guides
-  
+  Guides
 
     
   </span>
@@ -358,8 +332,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Guides
-  
+  Guides
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -376,7 +349,9 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+        <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -389,8 +364,7 @@
   <span class="md-ellipsis">
     
   
-    IaC Drift Detection
-  
+  IaC Drift Detection
 
     
   </span>
@@ -400,15 +374,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    IaC Drift Detection
-  
+  IaC Drift Detection
 
     
   </span>
@@ -419,7 +392,8 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -428,16 +402,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Exercise
-      
+      </span>
     </span>
   </a>
   
@@ -447,9 +421,9 @@
           <li class="md-nav__item">
   <a href="#requirements" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Requirements
-      
+      </span>
     </span>
   </a>
   
@@ -458,9 +432,9 @@
           <li class="md-nav__item">
   <a href="#install-burrito" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Install Burrito
-      
+      </span>
     </span>
   </a>
   
@@ -469,9 +443,9 @@
           <li class="md-nav__item">
   <a href="#connect-burrito-to-terraform-code-on-github" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Connect Burrito to Terraform code on GitHub
-      
+      </span>
     </span>
   </a>
   
@@ -480,9 +454,9 @@
           <li class="md-nav__item">
   <a href="#conclusion" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Conclusion
-      
+      </span>
     </span>
   </a>
   
@@ -496,9 +470,9 @@
         <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Next steps
-      
+      </span>
     </span>
   </a>
   
@@ -527,8 +501,7 @@
   <span class="md-ellipsis">
     
   
-    PR/MR Workflow
-  
+  PR/MR Workflow
 
     
   </span>
@@ -555,8 +528,7 @@
   <span class="md-ellipsis">
     
   
-    UI Overview
-  
+  UI Overview
 
     
   </span>
@@ -607,8 +579,7 @@
   <span class="md-ellipsis">
     
   
-    Installation
-  
+  Installation
 
     
   </span>
@@ -623,8 +594,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Installation
-  
+  Installation
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -643,8 +613,7 @@
   <span class="md-ellipsis">
     
   
-    Install with Helm (recommended)
-  
+  Install with Helm (recommended)
 
     
   </span>
@@ -671,8 +640,7 @@
   <span class="md-ellipsis">
     
   
-    Install with static manifests
-  
+  Install with static manifests
 
     
   </span>
@@ -750,8 +718,7 @@
   <span class="md-ellipsis">
     
   
-    Operator Manual
-  
+  Operator Manual
 
     
   </span>
@@ -772,8 +739,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Operator Manual
-  
+  Operator Manual
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -794,8 +760,7 @@
   <span class="md-ellipsis">
     
   
-    Architectural Overview
-  
+  Architectural Overview
 
     
   </span>
@@ -822,8 +787,7 @@
   <span class="md-ellipsis">
     
   
-    User Authentication
-  
+  User Authentication
 
     
   </span>
@@ -850,8 +814,7 @@
   <span class="md-ellipsis">
     
   
-    Repository Controller
-  
+  Repository Controller
 
     
   </span>
@@ -899,8 +862,7 @@
   <span class="md-ellipsis">
     
   
-    Git Authentication
-  
+  Git Authentication
 
     
   </span>
@@ -915,8 +877,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Git Authentication
-  
+  Git Authentication
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -935,8 +896,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
-  
+  Overview
 
     
   </span>
@@ -963,8 +923,7 @@
   <span class="md-ellipsis">
     
   
-    GitHub App
-  
+  GitHub App
 
     
   </span>
@@ -991,8 +950,7 @@
   <span class="md-ellipsis">
     
   
-    GitHub Token
-  
+  GitHub Token
 
     
   </span>
@@ -1019,8 +977,7 @@
   <span class="md-ellipsis">
     
   
-    GitLab Token
-  
+  GitLab Token
 
     
   </span>
@@ -1055,8 +1012,7 @@
   <span class="md-ellipsis">
     
   
-    PR/MR Workflow
-  
+  PR/MR Workflow
 
     
   </span>
@@ -1083,8 +1039,7 @@
   <span class="md-ellipsis">
     
   
-    Setup a Git Webhook
-  
+  Setup a Git Webhook
 
     
   </span>
@@ -1111,8 +1066,7 @@
   <span class="md-ellipsis">
     
   
-    Advanced configuration
-  
+  Advanced configuration
 
     
   </span>
@@ -1139,8 +1093,7 @@
   <span class="md-ellipsis">
     
   
-    Multi-tenant architecture
-  
+  Multi-tenant architecture
 
     
   </span>
@@ -1167,8 +1120,7 @@
   <span class="md-ellipsis">
     
   
-    Datastore
-  
+  Datastore
 
     
   </span>
@@ -1195,8 +1147,7 @@
   <span class="md-ellipsis">
     
   
-    Caching Terraform Providers
-  
+  Caching Terraform Providers
 
     
   </span>
@@ -1223,8 +1174,7 @@
   <span class="md-ellipsis">
     
   
-    Fine-tuning the scheduling of Burrito pods
-  
+  Fine-tuning the scheduling of Burrito pods
 
     
   </span>
@@ -1251,8 +1201,7 @@
   <span class="md-ellipsis">
     
   
-    Encrypt Endpoint
-  
+  Encrypt Endpoint
 
     
   </span>
@@ -1279,8 +1228,7 @@
   <span class="md-ellipsis">
     
   
-    Burrito Metrics Endpoint
-  
+  Burrito Metrics Endpoint
 
     
   </span>
@@ -1346,8 +1294,7 @@
   <span class="md-ellipsis">
     
   
-    User Guide
-  
+  User Guide
 
     
   </span>
@@ -1368,8 +1315,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    User Guide
-  
+  User Guide
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -1390,8 +1336,7 @@
   <span class="md-ellipsis">
     
   
-    Override the runner pod spec
-  
+  Override the runner pod spec
 
     
   </span>
@@ -1418,8 +1363,7 @@
   <span class="md-ellipsis">
     
   
-    Choose a remediation strategy
-  
+  Choose a remediation strategy
 
     
   </span>
@@ -1446,8 +1390,7 @@
   <span class="md-ellipsis">
     
   
-    Configure a Terraform/Terragrunt/OpenTofu version
-  
+  Configure a Terraform/Terragrunt/OpenTofu version
 
     
   </span>
@@ -1474,8 +1417,7 @@
   <span class="md-ellipsis">
     
   
-    Configure the TerraformLayer to use private modules and providers
-  
+  Configure the TerraformLayer to use private modules and providers
 
     
   </span>
@@ -1502,8 +1444,7 @@
   <span class="md-ellipsis">
     
   
-    Additionnal Trigger Paths
-  
+  Additionnal Trigger Paths
 
     
   </span>
@@ -1530,8 +1471,7 @@
   <span class="md-ellipsis">
     
   
-    Manage SSH known hosts
-  
+  Manage SSH known hosts
 
     
   </span>
@@ -1558,8 +1498,7 @@
   <span class="md-ellipsis">
     
   
-    Sync Windows
-  
+  Sync Windows
 
     
   </span>
@@ -1608,8 +1547,7 @@
   <span class="md-ellipsis">
     
   
-    Migration Guides
-  
+  Migration Guides
 
     
   </span>
@@ -1624,8 +1562,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Migration Guides
-  
+  Migration Guides
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -1644,8 +1581,7 @@
   <span class="md-ellipsis">
     
   
-    0.9.0 - Migrating to the New Credential System
-  
+  0.9.0 - Migrating to the New Credential System
 
     
   </span>
@@ -1699,8 +1635,7 @@
   <span class="md-ellipsis">
     
   
-    Contributing
-  
+  Contributing
 
     
   </span>
@@ -1721,8 +1656,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Contributing
-  
+  Contributing
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
@@ -1743,8 +1677,7 @@
   <span class="md-ellipsis">
     
   
-    CI/CD &amp; Release Process
-  
+  CI/CD &amp; Release Process
 
     
   </span>
@@ -1774,10 +1707,12 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -1786,16 +1721,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#exercise" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Exercise
-      
+      </span>
     </span>
   </a>
   
@@ -1805,9 +1740,9 @@
           <li class="md-nav__item">
   <a href="#requirements" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Requirements
-      
+      </span>
     </span>
   </a>
   
@@ -1816,9 +1751,9 @@
           <li class="md-nav__item">
   <a href="#install-burrito" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Install Burrito
-      
+      </span>
     </span>
   </a>
   
@@ -1827,9 +1762,9 @@
           <li class="md-nav__item">
   <a href="#connect-burrito-to-terraform-code-on-github" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Connect Burrito to Terraform code on GitHub
-      
+      </span>
     </span>
   </a>
   
@@ -1838,9 +1773,9 @@
           <li class="md-nav__item">
   <a href="#conclusion" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Conclusion
-      
+      </span>
     </span>
   </a>
   
@@ -1854,9 +1789,9 @@
         <li class="md-nav__item">
   <a href="#next-steps" class="md-nav__link">
     <span class="md-ellipsis">
-      
+      <span class="md-typeset">
         Next steps
-      
+      </span>
     </span>
   </a>
   
@@ -1876,8 +1811,6 @@
               <article class="md-content__inner md-typeset">
                 
                   
-
-
   
   
 
@@ -1895,104 +1828,104 @@ Burrito continuously plans your Terraform code by launching runner pods that wil
 </ul>
 <h3 id="install-burrito">Install Burrito<a class="headerlink" href="#install-burrito" title="Permanent link">&para;</a></h3>
 <p>Install Burrito with Helm as described in the <a href="../../installation/with-helm/">installation guide</a>, using the provided values file.</p>
-<div class="highlight"><pre><span></span><code>helm<span class="w"> </span>upgrade<span class="w"> </span>--install<span class="w"> </span>burrito<span class="w"> </span>oci://ghcr.io/padok-team/charts/burrito<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/values-simple.yaml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>helm<span class="w"> </span>upgrade<span class="w"> </span>--install<span class="w"> </span>burrito<span class="w"> </span>oci://ghcr.io/padok-team/charts/burrito<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/values-simple.yaml
+</span></code></pre></div>
 <p>With this command, you installed burrito with the following configuration:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">config</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">burrito</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">controller</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">timers</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">driftDetection</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span><span class="w"> </span><span class="c1"># run drift detection every 10 minutes</span>
-<span class="w">        </span><span class="nt">onError</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"> </span><span class="c1"># wait 10 seconds before retrying on error</span>
-<span class="w">        </span><span class="nt">waitAction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1m</span><span class="w"> </span><span class="c1"># wait 1 minute before retrying on locked layer</span>
-<span class="w">        </span><span class="nt">failureGracePeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"> </span><span class="c1"># set a grace period of 30 seconds before retrying on failure (increases exponentially with the amount of failed retries)</span>
-<span class="w">    </span><span class="nt">datastore</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">storage</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">mock</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># use a mock storage for the datastore (useful for testing, not recommended for production)</span>
-<span class="nt">tenants</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;burrito-project&quot;</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">config</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">burrito</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">controller</span><span class="p">:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="nt">timers</span><span class="p">:</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="nt">driftDetection</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span><span class="w"> </span><span class="c1"># run drift detection every 10 minutes</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="nt">onError</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"> </span><span class="c1"># wait 10 seconds before retrying on error</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="nt">waitAction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1m</span><span class="w"> </span><span class="c1"># wait 1 minute before retrying on locked layer</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="nt">failureGracePeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"> </span><span class="c1"># set a grace period of 30 seconds before retrying on failure (increases exponentially with the amount of failed retries)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="nt">datastore</span><span class="p">:</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nt">storage</span><span class="p">:</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="nt">mock</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># use a mock storage for the datastore (useful for testing, not recommended for production)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="nt">tenants</span><span class="p">:</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;burrito-project&quot;</span>
+</span></code></pre></div>
 <p>Burrito should be up and running in the <code>burrito-system</code> namespace.</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-system
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-system
+</span></code></pre></div>
 <p>Output:</p>
-<div class="highlight"><pre><span></span><code>NAME                                   READY   STATUS    RESTARTS   AGE
-burrito-controllers-6945797c5d-kjfl2   1/1     Running   0          2m00s
-burrito-datastore-94d999f54-kbg9z      1/1     Running   0          2m00s
-burrito-server-764f75766b-qw5nx        1/1     Running   0          2m00s
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>NAME                                   READY   STATUS    RESTARTS   AGE
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>burrito-controllers-6945797c5d-kjfl2   1/1     Running   0          2m00s
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>burrito-datastore-94d999f54-kbg9z      1/1     Running   0          2m00s
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>burrito-server-764f75766b-qw5nx        1/1     Running   0          2m00s
+</span></code></pre></div>
 <h3 id="connect-burrito-to-terraform-code-on-github">Connect Burrito to Terraform code on GitHub<a class="headerlink" href="#connect-burrito-to-terraform-code-on-github" title="Permanent link">&para;</a></h3>
 <p>You will use the <a href="https://github.com/padok-team/burrito-examples">example Terraform code</a> that we have prepared for you.
 This repository contains simple Terraform and Terragrunt with local random-pets resources that you can use to test Burrito.</p>
 <p>Create a TerraformRepository resource in the <code>burrito-system</code> namespace:</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-repository.yaml
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-repository.yaml
+</span></code></pre></div>
 <p>Here is the content of the <code>TerraformRepository</code> resource that you have created. It references the GitHub repository containing the Terraform code.
 It also specifies that the IaC is Terraform code (as opposed to OpenTofu code). This setting will propagate to all layers linked to this repository by default, but can be overridden at the layer level.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
-<span class="nt">metadata</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-<span class="nt">spec</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/padok-team/burrito-examples</span>
-<span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/padok-team/burrito-examples</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></code></pre></div>
 <p>Create a <code>TerraformLayer</code> resource in the <code>burrito-system</code> namespace, referencing the <code>TerraformRepository</code> you just created. For now, the <code>autoApply</code> is set to false, so the layer will only plan the Terraform code and not apply it.</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-layer.yaml
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-<span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformLayer</span>
-<span class="nt">metadata</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-layer</span>
-<span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-<span class="nt">spec</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">branch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
-<span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform</span>
-<span class="w">  </span><span class="nt">remediationStrategy</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">autoApply</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-<span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/padok-team/burrito/main/docs/examples/terraform-layer.yaml
+</span></code></pre></div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformLayer</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nt">metadata</span><span class="p">:</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-layer</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nt">spec</span><span class="p">:</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nt">branch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">terraform</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nt">remediationStrategy</span><span class="p">:</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="nt">autoApply</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
+</span></code></pre></div>
 <p>Check that your Terraform code is being planned by Burrito:</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-project
+</span></code></pre></div>
 <p>Output:</p>
-<div class="highlight"><pre><span></span><code>NAME<span class="w">                   </span>READY<span class="w">   </span>STATUS<span class="w">      </span>RESTARTS<span class="w">   </span>AGE
-my-layer-apply-xntrg<span class="w">   </span><span class="m">0</span>/1<span class="w">     </span>Completed<span class="w">   </span><span class="m">0</span><span class="w">          </span>82s
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>NAME<span class="w">                   </span>READY<span class="w">   </span>STATUS<span class="w">      </span>RESTARTS<span class="w">   </span>AGE
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>my-layer-apply-xntrg<span class="w">   </span><span class="m">0</span>/1<span class="w">     </span>Completed<span class="w">   </span><span class="m">0</span><span class="w">          </span>82s
+</span></code></pre></div>
 <p>The <code>TerraformLayer</code> should have been updated with the result of the plan. You can check the status of the <code>TerraformLayer</code> directly by querying the <code>TerraformLayer</code> resource, or by checking the burrito UI.</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>tfl<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>tfl<span class="w"> </span>-n<span class="w"> </span>burrito-project
+</span></code></pre></div>
 <p>Output:</p>
-<div class="highlight"><pre><span></span><code>NAME<span class="w">       </span>STATE<span class="w">         </span>REPOSITORY<span class="w">      </span>BRANCH<span class="w">   </span>PATH<span class="w">        </span>LAST<span class="w"> </span>RESULT
-my-layer<span class="w">   </span>ApplyNeeded<span class="w">   </span>my-repository<span class="w">   </span>main<span class="w">     </span>terraform<span class="w">   </span>Plan:<span class="w"> </span><span class="m">3</span><span class="w"> </span>to<span class="w"> </span>create,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>update,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>delete
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>port-forward<span class="w"> </span>svc/burrito-server<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="m">8080</span>:80
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>NAME<span class="w">       </span>STATE<span class="w">         </span>REPOSITORY<span class="w">      </span>BRANCH<span class="w">   </span>PATH<span class="w">        </span>LAST<span class="w"> </span>RESULT
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>my-layer<span class="w">   </span>ApplyNeeded<span class="w">   </span>my-repository<span class="w">   </span>main<span class="w">     </span>terraform<span class="w">   </span>Plan:<span class="w"> </span><span class="m">3</span><span class="w"> </span>to<span class="w"> </span>create,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>update,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>delete
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>svc/burrito-server<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span><span class="m">8080</span>:80
+</span></code></pre></div>
 <p><img alt="Burrito drift example" src="../../assets/demo/drift-example.png" /></p>
 <p>Activate the <code>autoApply</code> feature by updating the <code>TerraformLayer</code> resource:</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>patch<span class="w"> </span>tfl<span class="w"> </span>my-layer<span class="w"> </span>-n<span class="w"> </span>burrito-project<span class="w"> </span>--type<span class="w"> </span>merge<span class="w"> </span>--patch<span class="w"> </span><span class="s1">&#39;{&quot;spec&quot;:{&quot;remediationStrategy&quot;:{&quot;autoApply&quot;:true}}}&#39;</span>
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>kubectl<span class="w"> </span>patch<span class="w"> </span>tfl<span class="w"> </span>my-layer<span class="w"> </span>-n<span class="w"> </span>burrito-project<span class="w"> </span>--type<span class="w"> </span>merge<span class="w"> </span>--patch<span class="w"> </span><span class="s1">&#39;{&quot;spec&quot;:{&quot;remediationStrategy&quot;:{&quot;autoApply&quot;:true}}}&#39;</span>
+</span></code></pre></div>
 <p>Check that the Terraform code was applied:</p>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>-n<span class="w"> </span>burrito-project
+</span></code></pre></div>
 <p>Output:</p>
-<div class="highlight"><pre><span></span><code>NAME<span class="w">                   </span>READY<span class="w">   </span>STATUS<span class="w">      </span>RESTARTS<span class="w">   </span>AGE
-my-layer-apply-bxlcr<span class="w">   </span><span class="m">0</span>/1<span class="w">     </span>Completed<span class="w">   </span><span class="m">0</span><span class="w">          </span>54s
-my-layer-plan-jv86k<span class="w">    </span><span class="m">0</span>/1<span class="w">     </span>Completed<span class="w">   </span><span class="m">0</span><span class="w">          </span>7m22s
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>kubectl<span class="w"> </span>get<span class="w"> </span>tfl<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>NAME<span class="w">                   </span>READY<span class="w">   </span>STATUS<span class="w">      </span>RESTARTS<span class="w">   </span>AGE
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>my-layer-apply-bxlcr<span class="w">   </span><span class="m">0</span>/1<span class="w">     </span>Completed<span class="w">   </span><span class="m">0</span><span class="w">          </span>54s
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>my-layer-plan-jv86k<span class="w">    </span><span class="m">0</span>/1<span class="w">     </span>Completed<span class="w">   </span><span class="m">0</span><span class="w">          </span>7m22s
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>tfl<span class="w"> </span>-n<span class="w"> </span>burrito-project
+</span></code></pre></div>
 <p>Output:</p>
-<div class="highlight"><pre><span></span><code>NAME<span class="w">       </span>STATE<span class="w">   </span>REPOSITORY<span class="w">      </span>BRANCH<span class="w">   </span>PATH<span class="w">        </span>LAST<span class="w"> </span>RESULT
-my-layer<span class="w">   </span>Idle<span class="w">    </span>my-repository<span class="w">   </span>main<span class="w">     </span>terraform<span class="w">   </span>Apply<span class="w"> </span>Successful
-</code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>NAME<span class="w">       </span>STATE<span class="w">   </span>REPOSITORY<span class="w">      </span>BRANCH<span class="w">   </span>PATH<span class="w">        </span>LAST<span class="w"> </span>RESULT
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>my-layer<span class="w">   </span>Idle<span class="w">    </span>my-repository<span class="w">   </span>main<span class="w">     </span>terraform<span class="w">   </span>Apply<span class="w"> </span>Successful
+</span></code></pre></div>
 <h3 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h3>
 <p>You have successfully set up Burrito on a local cluster and planned your Terraform code automatically. You can now monitor the drift between your Terraform state and your infrastructure in real-time.</p>
 <h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
@@ -2011,11 +1944,15 @@ my-layer<span class="w">   </span>Idle<span class="w">    </span>my-repository<s
 
 
 
+
+
                 
               </article>
             </div>
           
           
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
@@ -2029,8 +1966,8 @@ my-layer<span class="w">   </span>Idle<span class="w">    </span>my-repository<s
   
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -2048,10 +1985,10 @@ my-layer<span class="w">   </span>Idle<span class="w">    </span>my-repository<s
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.indexes","navigation.instant","navigation.instant.prefetch","search.highlight"],"search":"../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":{"provider":"mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e886cdf1.min.js"></script>
       
     
   </body>
