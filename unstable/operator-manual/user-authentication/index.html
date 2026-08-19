@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.56">
     
     
       
@@ -1871,19 +1871,19 @@
 <h2 id="basic-authentication-default">Basic Authentication (Default)<a class="headerlink" href="#basic-authentication-default" title="Permanent link">&para;</a></h2>
 <p>When OIDC is disabled (<code>server.oidc.enabled: false</code>), Burrito falls back to a built-in basic authentication scheme. This mode is <strong>not recommended for production</strong>.</p>
 <h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">server</span><span class="p">:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">oidc</span><span class="p">:</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">server:
+  oidc:
+    enabled: false
+</code></pre>
 <h3 id="credentials">Credentials<a class="headerlink" href="#credentials" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Username:</strong> <code>admin</code></li>
 <li><strong>Password:</strong> Stored in the Kubernetes Secret <code>burrito-admin-credentials</code>.</li>
 </ul>
 <p>Retrieve the password with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>&lt;burrito-namespace&gt;<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>burrito-admin-credentials<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s2">&quot;{.data.password}&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>--decode
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl -n &lt;burrito-namespace&gt; get secret burrito-admin-credentials \
+  -o jsonpath=&quot;{.data.password}&quot; | base64 --decode
+</code></pre>
 <p>Use <code>admin</code> and the decoded password to log in to the Burrito server.</p>
 <hr />
 <h2 id="openid-connect-oidc-authentication">OpenID Connect (OIDC) Authentication<a class="headerlink" href="#openid-connect-oidc-authentication" title="Permanent link">&para;</a></h2>
@@ -1899,25 +1899,25 @@
 </ul>
 <p>The client secret must be stored in a Kubernetes Secret and referenced in the deployment environment variables.
 The environment variable name for the client secret must be <code>BURRITO_SERVER_OIDC_CLIENTSECRET</code>.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">config</span><span class="p">:</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">burrito</span><span class="p">:</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">server</span><span class="p">:</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">oidc</span><span class="p">:</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># Enable OIDC</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="nt">issuerUrl</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;OIDC_ISSUER&gt;</span><span class="w"> </span><span class="c1"># e.g. https://accounts.example.com</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="nt">clientId</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;CLIENT_ID&gt;</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="nt">redirectUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://&lt;your-domain&gt;/auth/callback&quot;</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">        </span><span class="nt">scopes</span><span class="p">:</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;openid&quot;</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;profile&quot;</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;email&quot;</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="nn">...</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="nt">server</span><span class="p">:</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nt">deployment</span><span class="p">:</span>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nt">envFrom</span><span class="p">:</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">secretRef</span><span class="p">:</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-oidc-client-secret</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">config:
+  burrito:
+    server:
+      oidc:
+        enabled: true # Enable OIDC
+        issuerUrl: &lt;OIDC_ISSUER&gt; # e.g. https://accounts.example.com
+        clientId: &lt;CLIENT_ID&gt;
+        redirectUrl: &quot;https://&lt;your-domain&gt;/auth/callback&quot;
+        scopes:
+          - &quot;openid&quot;
+          - &quot;profile&quot;
+          - &quot;email&quot;
+...
+server:
+  deployment:
+    envFrom:
+      - secretRef:
+          name: burrito-oidc-client-secret
+</code></pre>
 <table>
 <thead>
 <tr>

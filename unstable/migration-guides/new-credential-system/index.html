@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.56">
     
     
       
@@ -2066,181 +2066,181 @@
 <h2 id="migration-steps">Migration Steps<a class="headerlink" href="#migration-steps" title="Permanent link">&para;</a></h2>
 <h3 id="step-1-identify-existing-secret-references">Step 1: Identify Existing Secret References<a class="headerlink" href="#step-1-identify-existing-secret-references" title="Permanent link">&para;</a></h3>
 <p>First, identify all your <code>TerraformRepository</code> resources that reference secrets in their configuration:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>terraformrepositories<span class="w"> </span>--all-namespaces<span class="w"> </span>-o<span class="w"> </span>custom-columns<span class="o">=</span>NAME:.metadata.name,NAMESPACE:.metadata.namespace,SECRET:.spec.repository.secretName
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl get terraformrepositories --all-namespaces -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,SECRET:.spec.repository.secretName
+</code></pre>
 <h3 id="step-2-export-and-convert-existing-secrets">Step 2: Export and Convert Existing Secrets<a class="headerlink" href="#step-2-export-and-convert-existing-secrets" title="Permanent link">&para;</a></h3>
 <p>For each identified secret, export, convert, and reapply it in the new format. Below are conversion examples for each authentication method.</p>
 <h3 id="step-3-convert-repository-secrets">Step 3: Convert Repository Secrets<a class="headerlink" href="#step-3-convert-repository-secrets" title="Permanent link">&para;</a></h3>
 <h4 id="github-app-authentication">GitHub App Authentication<a class="headerlink" href="#github-app-authentication" title="Permanent link">&para;</a></h4>
 <p><strong>Old format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">githubAppId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;123456&quot;</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">githubAppInstallationId</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;12345678&quot;</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">githubAppPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="no">-----BEGIN RSA PRIVATE KEY-----</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="no">my-private-key</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="no">-----END RSA PRIVATE KEY-----</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: Opaque
+stringData:
+  githubAppId: &quot;123456&quot;
+  githubAppInstallationId: &quot;12345678&quot;
+  githubAppPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    my-private-key
+    -----END RSA PRIVATE KEY-----
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <p><strong>New format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/owner/repo</span><span class="w">  </span><span class="c1"># Add the actual repository URL here</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">githubAppID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;123456&quot;</span><span class="w">  </span><span class="c1"># Note the change from githubAppId to githubAppID</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">githubAppInstallationID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;12345678&quot;</span><span class="w">  </span><span class="c1"># Note the change from githubAppInstallationId to githubAppInstallationID</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">githubAppPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="no">-----BEGIN RSA PRIVATE KEY-----</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="no">my-private-key</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="no">-----END RSA PRIVATE KEY-----</span>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: github
+  url: https://github.com/owner/repo  # Add the actual repository URL here
+  githubAppID: &quot;123456&quot;  # Note the change from githubAppId to githubAppID
+  githubAppInstallationID: &quot;12345678&quot;  # Note the change from githubAppInstallationId to githubAppInstallationID
+  githubAppPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    my-private-key
+    -----END RSA PRIVATE KEY-----
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h4 id="github-token-authentication">GitHub Token Authentication<a class="headerlink" href="#github-token-authentication" title="Permanent link">&para;</a></h4>
 <p><strong>Old format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">githubToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;github_pat_xxx&quot;</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: Opaque
+stringData:
+  githubToken: &quot;github_pat_xxx&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <p><strong>New format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/owner/repo</span><span class="w">  </span><span class="c1"># Add the actual repository URL here</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="nt">githubToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;github_pat_xxx&quot;</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: github
+  url: https://github.com/owner/repo  # Add the actual repository URL here
+  githubToken: &quot;github_pat_xxx&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h4 id="gitlab-token-authentication">GitLab Token Authentication<a class="headerlink" href="#gitlab-token-authentication" title="Permanent link">&para;</a></h4>
 <p><strong>Old format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nt">gitlabToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;glpat-xxxx&quot;</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: Opaque
+stringData:
+  gitlabToken: &quot;glpat-xxxx&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <p><strong>New format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gitlab</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://gitlab.com/owner/repo</span><span class="w">  </span><span class="c1"># Add the actual repository URL here</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="nt">gitlabToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;glpat-xxxx&quot;</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: gitlab
+  url: https://gitlab.com/owner/repo  # Add the actual repository URL here
+  gitlabToken: &quot;glpat-xxxx&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h4 id="basic-authentication">Basic Authentication<a class="headerlink" href="#basic-authentication" title="Permanent link">&para;</a></h4>
 <p><strong>Old format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-username&quot;</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-password&quot;</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: Opaque
+stringData:
+  username: &quot;my-username&quot;
+  password: &quot;my-password&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <p><strong>New format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">standard</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.example.com/owner/repo</span><span class="w">  </span><span class="c1"># Add the actual repository URL here</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">  </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-username&quot;</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">  </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-password&quot;</span>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: standard
+  url: https://git.example.com/owner/repo  # Add the actual repository URL here
+  username: &quot;my-username&quot;
+  password: &quot;my-password&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h4 id="ssh-authentication">SSH Authentication<a class="headerlink" href="#ssh-authentication" title="Permanent link">&para;</a></h4>
 <p><strong>Old format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Opaque</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">  </span><span class="nt">sshPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="no">-----BEGIN OPENSSH PRIVATE KEY-----</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="no">my-private-key</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span><span class="no">-----END OPENSSH PRIVATE KEY-----</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: Opaque
+stringData:
+  sshPrivateKey: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    my-private-key
+    -----END OPENSSH PRIVATE KEY-----
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <p><strong>New format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">standard</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git@git.example.com:owner/repo</span><span class="w">  </span><span class="c1"># Add the actual repository URL here</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span><span class="nt">sshPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="no">-----BEGIN OPENSSH PRIVATE KEY-----</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span><span class="no">my-private-key</span>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">    </span><span class="no">-----END OPENSSH PRIVATE KEY-----</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-repo
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: standard
+  url: git@git.example.com:owner/repo  # Add the actual repository URL here
+  sshPrivateKey: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    my-private-key
+    -----END OPENSSH PRIVATE KEY-----
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h3 id="step-4-update-terraformrepository-resources">Step 4: Update TerraformRepository Resources<a class="headerlink" href="#step-4-update-terraformrepository-resources" title="Permanent link">&para;</a></h3>
 <p>In previous versions of Burrito, you needed to explicitly reference the secret name in the <code>TerraformRepository</code> resource. With the new credential system, this is no longer necessary as credentials are matched automatically based on URL and namespace.</p>
 <p><strong>Old format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/owner/repo</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">secretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-repo</span><span class="w">  </span><span class="c1"># This reference is no longer needed</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/owner/repo
+    secretName: burrito-repo  # This reference is no longer needed
+  terraform:
+    enabled: true
+</code></pre>
 <p><strong>New format:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/owner/repo</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/owner/repo
+  terraform:
+    enabled: true
+</code></pre>
 <p>The <code>secretName</code> field is no longer required. The credential system will automatically find the appropriate credentials based on:</p>
 <ol>
 <li>Matching URL in repository-specific credentials in the same namespace</li>
@@ -2248,32 +2248,32 @@
 </ol>
 <h3 id="step-5-consider-using-shared-credentials">Step 5: Consider Using Shared Credentials<a class="headerlink" href="#step-5-consider-using-shared-credentials" title="Permanent link">&para;</a></h3>
 <p>If you have multiple repositories that use the same credentials, consider migrating to shared credentials for easier management:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github-shared-credentials</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-system</span><span class="w">  </span><span class="c1"># Typically stored in a system namespace</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nt">annotations</span><span class="p">:</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">burrito.tf/allowed-tenants</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;team-a,team-b,burrito-project&quot;</span><span class="w">  </span><span class="c1"># Optional: restrict to specific namespaces</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/shared</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github.com</span><span class="w">  </span><span class="c1"># Use a common base URL to match multiple repositories</span>
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span><span class="nt">githubToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;github_pat_xxx&quot;</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: github-shared-credentials
+  namespace: burrito-system  # Typically stored in a system namespace
+  annotations:
+    burrito.tf/allowed-tenants: &quot;team-a,team-b,burrito-project&quot;  # Optional: restrict to specific namespaces
+type: credentials.burrito.tf/shared
+stringData:
+  provider: github
+  url: github.com  # Use a common base URL to match multiple repositories
+  githubToken: &quot;github_pat_xxx&quot;
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
 <p>After migrating your credentials, you can verify that they're correctly configured by:</p>
 <ol>
 <li>
 <p>Checking that your secrets have the correct type:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>secrets<span class="w"> </span>-n<span class="w"> </span>your-namespace<span class="w"> </span>-o<span class="w"> </span>custom-columns<span class="o">=</span>NAME:.metadata.name,TYPE:.type<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>credentials.burrito.tf
-</span></code></pre></div>
+<p><code>bash
+kubectl get secrets -n your-namespace -o custom-columns=NAME:.metadata.name,TYPE:.type | grep credentials.burrito.tf</code></p>
 </li>
 <li>
 <p>Verifying that the credentials are properly detected by Burrito by checking the logs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-n<span class="w"> </span>your-namespace<span class="w"> </span>deployment/burrito-controller<span class="w"> </span>-c<span class="w"> </span>controller
-</span></code></pre></div>
+<p><code>bash
+kubectl logs -n your-namespace deployment/burrito-controller -c controller</code></p>
 </li>
 <li>
 <p>Ensuring that Git operations such as clone, pull, and webhook events still work properly.</p>

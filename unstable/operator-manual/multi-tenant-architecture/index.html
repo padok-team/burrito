@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/icon/burrito.png">
-      <meta name="generator" content="zensical-0.0.55">
+      <meta name="generator" content="zensical-0.0.56">
     
     
       
@@ -1784,75 +1784,75 @@
 <h2 id="configuring-multi-tenancy-with-the-helm-chart">Configuring multi-tenancy with the Helm chart<a class="headerlink" href="#configuring-multi-tenancy-with-the-helm-chart" title="Permanent link">&para;</a></h2>
 <h3 id="1-configure-basic-tenants">1. Configure basic tenants<a class="headerlink" href="#1-configure-basic-tenants" title="Permanent link">&para;</a></h3>
 <p>In the <code>values.yaml</code> of the <a href="../../installation/with-helm/">Helm chart</a>, add the following:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">tenants</span><span class="p">:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-1</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">serviceAccounts</span><span class="p">:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-project</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-2</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">serviceAccounts</span><span class="p">:</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-project</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-3</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">serviceAccounts</span><span class="p">:</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-project</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">tenants:
+  - namespace:
+      create: true
+      name: tenant-namespace-1
+    serviceAccounts:
+      - name: runner-project
+  - namespace:
+      create: true
+      name: tenant-namespace-2
+    serviceAccounts:
+      - name: runner-project
+  - namespace:
+      create: true
+      name: tenant-namespace-3
+    serviceAccounts:
+      - name: runner-project
+</code></pre>
 <p>This setup creates 3 tenants with 3 namespaces with one service account in each namespace.</p>
 <p>The chart adds every tenant referenced in its values in the namespaces that the burrito controllers must watch.</p>
 <p>You can also customize namespaces' labels and annotations:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">tenants</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-1</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="nt">labels</span><span class="p">:</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="nt">app.kubernetes.io/part-of</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">project-1</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="nt">annotations</span><span class="p">:</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="nt">helm.sh/resource-policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keep</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">tenants:
+  - namespace:
+      create: true
+      name: tenant-namespace-1
+      labels:
+        app.kubernetes.io/part-of: project-1
+      annotations:
+        helm.sh/resource-policy: keep
+</code></pre>
 <h3 id="2-configure-service-accounts">2. Configure service accounts<a class="headerlink" href="#2-configure-service-accounts" title="Permanent link">&para;</a></h3>
 <p>Each service account created in a tenant is bound to the <code>burrito-runner</code> ClusterRole, it is a basic role with the required permissions for a burrito runner pod to work properly.</p>
 <p>You can add additional role bindings to the service accounts if you need special permissions in the cluster (e.g. a Terraform layer deploying to Kubernetes) as well as annotations and labels (e.g. assume a role on a cloud provider).</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-1</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">serviceAccounts</span><span class="p">:</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-kubernetes</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="nt">additionalRoleBindings</span><span class="p">:</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">            </span><span class="nt">role</span><span class="p">:</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">              </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ClusterRole</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom-role</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-google</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="nt">labels</span><span class="p">:</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">          </span><span class="nt">app.kubernetes.io/part-of</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">project-1</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">          </span><span class="nt">iam.gke.io/gcp-service-account</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project-1@company-project.iam.gserviceaccount.com</span>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-aws</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nt">annotations</span><span class="p">:</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">          </span><span class="nt">eks.amazonaws.com/role-arn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arn:aws:iam::111122223333:role/my-role</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">  - namespace:
+      create: true
+      name: tenant-namespace-1
+    serviceAccounts:
+      - name: runner-kubernetes
+        additionalRoleBindings:
+          - name: custom
+            role:
+              kind: ClusterRole
+              name: custom-role
+      - name: runner-google
+        labels:
+          app.kubernetes.io/part-of: project-1
+        annotations:
+          iam.gke.io/gcp-service-account: burrito-project-1@company-project.iam.gserviceaccount.com
+      - name: runner-aws
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/my-role
+</code></pre>
 <h3 id="3-use-service-accounts-in-the-tenant">3. Use service accounts in the tenant<a class="headerlink" href="#3-use-service-accounts-in-the-tenant" title="Permanent link">&para;</a></h3>
 <p>For the <code>TerraformRepository</code> or <code>TerraformLayer</code> you deploy in a tenant, you can use the <code>overrideRunnerSpec</code> parameter to select which service account to use for runners affected to a layer/repository.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformLayer</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">infra-aws</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-1</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.5.3&quot;</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;infra/layers/aws/production&quot;</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="nt">branch</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;main&quot;</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">project-1</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tenant-namespace-1</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="nt">overrideRunnerSpec</span><span class="p">:</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">runner-aws</span><span class="w"> </span><span class="c1"># &lt;-- Specify service account here</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: infra-aws
+  namespace: tenant-namespace-1
+spec:
+  terraform:
+    version: &quot;1.5.3&quot;
+  path: &quot;infra/layers/aws/production&quot;
+  branch: &quot;main&quot;
+  repository:
+    name: project-1
+    namespace: tenant-namespace-1
+  overrideRunnerSpec:
+    serviceAccountName: runner-aws # &lt;-- Specify service account here
+</code></pre>
 
 
 
