@@ -1772,37 +1772,37 @@
 <p class="admonition-title">Info</p>
 <p>Our Helm chart is published in an <a href="https://helm.sh/docs/topics/registries/">OCI-based registry</a> (ghcr.io). You must use Helm v3.8.0 or above.</p>
 </div>
-<pre><code class="language-bash">helm install burrito oci://ghcr.io/padok-team/charts/burrito -n burrito-system --create-namespace
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>helm<span class="w"> </span>install<span class="w"> </span>burrito<span class="w"> </span>oci://ghcr.io/padok-team/charts/burrito<span class="w"> </span>-n<span class="w"> </span>burrito-system<span class="w"> </span>--create-namespace
+</span></code></pre></div>
 <p>This will create a new namespace, <code>burrito-system</code>, where the burrito core components will live.</p>
 <p>You can change the chart's version with any version available on <a href="https://github.com/padok-team/burrito/pkgs/container/charts%2Fburrito">our Chart registry</a>.</p>
 <h2 id="2-burrito-helm-configuration">2. Burrito Helm configuration<a class="headerlink" href="#2-burrito-helm-configuration" title="Permanent link">&para;</a></h2>
 <p>The Burrito configuration is managed through Helm values files, which can be overridden at installation time.</p>
 <p>You can find the default values of the Burrito Helm chart by running:</p>
-<pre><code class="language-bash">helm show values oci://ghcr.io/padok-team/charts/burrito
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>show<span class="w"> </span>values<span class="w"> </span>oci://ghcr.io/padok-team/charts/burrito
+</span></code></pre></div>
 <p>The <a href="https://github.com/padok-team/burrito/tree/main/deploy/charts/burrito">source code</a> and <a href="https://github.com/padok-team/burrito/blob/main/deploy/charts/burrito/values.yaml">values file</a> of the chart is available on <a href="https://github.com/padok-team/burrito">burrito GitHub repository</a>.</p>
 <p>Here is an example of a simple burrito Helm values file that you can use to bootstrap your installation:</p>
-<pre><code class="language-yaml">config:
-  burrito:
-    controller:
-      timers:
-        driftDetection: 10m # run drift detection every 10 minutes
-        onError: 10s # wait 10 seconds before retrying on error
-        waitAction: 1m # wait 1 minute before retrying on locked layer
-        failureGracePeriod: 30s # set a grace period of 30 seconds before retrying on failure (increases exponentially with the amount of failed retries)
-    datastore:
-      storage:
-        mock: true # use a mock storage for the datastore (useful for testing, not recommended for production)
-tenants:
-  - namespace:
-      create: true
-      name: &quot;burrito-project&quot;
-    serviceAccounts:
-    - name: burrito-runner
-      annotations:
-        iam.gke.io/gcp-service-account: burrito@company-project.iam.gserviceaccount.com # example: use GKE Workload Identity to have access to GCP infrastructure
-</code></pre>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">config</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">burrito</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">controller</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">timers</span><span class="p">:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="nt">driftDetection</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10m</span><span class="w"> </span><span class="c1"># run drift detection every 10 minutes</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="nt">onError</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span><span class="w"> </span><span class="c1"># wait 10 seconds before retrying on error</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="nt">waitAction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1m</span><span class="w"> </span><span class="c1"># wait 1 minute before retrying on locked layer</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">        </span><span class="nt">failureGracePeriod</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span><span class="w"> </span><span class="c1"># set a grace period of 30 seconds before retrying on failure (increases exponentially with the amount of failed retries)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">datastore</span><span class="p">:</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="nt">storage</span><span class="p">:</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">        </span><span class="nt">mock</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># use a mock storage for the datastore (useful for testing, not recommended for production)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="nt">tenants</span><span class="p">:</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">namespace</span><span class="p">:</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nt">create</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;burrito-project&quot;</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nt">serviceAccounts</span><span class="p">:</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-runner</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="nt">annotations</span><span class="p">:</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="nt">iam.gke.io/gcp-service-account</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito@company-project.iam.gserviceaccount.com</span><span class="w"> </span><span class="c1"># example: use GKE Workload Identity to have access to GCP infrastructure</span>
+</span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>Learn more about these values in the chart's <a href="https://github.com/padok-team/burrito/tree/main/deploy/charts/burrito/README.md">README file</a> and <a href="../../operator-manual/multi-tenant-architecture/">Multi-tenant architecture</a>.</p>
@@ -1811,16 +1811,16 @@ tenants:
 <p>Every Docker image and Helm chart pushed to GHCR is signed with <a href="https://docs.sigstore.dev/cosign/overview/">cosign</a> using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.</p>
 <p>Signing happens right after the artifact is pushed, by digest, in <code>build-and-push.yaml</code> (job <code>merge</code>) and <code>helm.yaml</code> (job <code>helm-push</code>). It requires the <code>id-token: write</code> permission, which every workflow calling these reusable workflows must grant.</p>
 <p>To verify a signature:</p>
-<pre><code class="language-bash"># Docker image
-cosign verify ghcr.io/padok-team/burrito:&lt;version&gt; \
-  --certificate-identity-regexp 'https://github.com/padok-team/burrito/.github/workflows/.*' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
-
-# Helm chart
-cosign verify ghcr.io/padok-team/charts/burrito:&lt;chart-version&gt; \
-  --certificate-identity-regexp 'https://github.com/padok-team/burrito/.github/workflows/.*' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
-</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Docker image</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cosign<span class="w"> </span>verify<span class="w"> </span>ghcr.io/padok-team/burrito:&lt;version&gt;<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--certificate-identity-regexp<span class="w"> </span><span class="s1">&#39;https://github.com/padok-team/burrito/.github/workflows/.*&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--certificate-oidc-issuer<span class="w"> </span>https://token.actions.githubusercontent.com
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Helm chart</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>cosign<span class="w"> </span>verify<span class="w"> </span>ghcr.io/padok-team/charts/burrito:&lt;chart-version&gt;<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span>--certificate-identity-regexp<span class="w"> </span><span class="s1">&#39;https://github.com/padok-team/burrito/.github/workflows/.*&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>--certificate-oidc-issuer<span class="w"> </span>https://token.actions.githubusercontent.com
+</span></code></pre></div>
 
 
 
