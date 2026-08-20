@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
@@ -14,7 +14,7 @@ type GetLogsResponse struct {
 	Results []string `json:"results"`
 }
 
-func getLogsArgs(c echo.Context) (string, string, string, string, error) {
+func getLogsArgs(c *echo.Context) (string, string, string, string, error) {
 	namespace := c.QueryParam("namespace")
 	layer := c.QueryParam("layer")
 	run := c.QueryParam("run")
@@ -25,7 +25,7 @@ func getLogsArgs(c echo.Context) (string, string, string, string, error) {
 	return namespace, layer, run, attempt, nil
 }
 
-func (a *API) GetLogsHandler(c echo.Context) error {
+func (a *API) GetLogsHandler(c *echo.Context) error {
 	var err error
 	var content []byte
 	namespace, layer, run, attempt, err := getLogsArgs(c)
@@ -42,14 +42,14 @@ func (a *API) GetLogsHandler(c echo.Context) error {
 		return c.String(http.StatusNotFound, "No logs for this attempt")
 	}
 	if err != nil {
-		c.Logger().Errorf("Could not get logs, there's an issue with the storage backend : %s", err)
+		c.Logger().Error(fmt.Sprintf("Could not get logs, there's an issue with the storage backend : %s", err))
 		return c.String(http.StatusInternalServerError, "could not get logs, there's an issue with the storage backend")
 	}
 	response.Results = append(response.Results, strings.Split(string(content), "\n")...)
 	return c.JSON(http.StatusOK, &response)
 }
 
-func (a *API) PutLogsHandler(c echo.Context) error {
+func (a *API) PutLogsHandler(c *echo.Context) error {
 	var err error
 	namespace, layer, run, attempt, err := getLogsArgs(c)
 	if attempt == "" {
@@ -64,7 +64,7 @@ func (a *API) PutLogsHandler(c echo.Context) error {
 	}
 	err = a.Storage.PutLogs(namespace, layer, run, attempt, content)
 	if err != nil {
-		c.Logger().Errorf("Could not put logs, there's an issue with the storage backend : %s", err)
+		c.Logger().Error(fmt.Sprintf("Could not put logs, there's an issue with the storage backend : %s", err))
 		return c.String(http.StatusInternalServerError, "could not put logs, there's an issue with the storage backend")
 	}
 	return c.NoContent(http.StatusOK)

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/server/utils"
@@ -62,7 +62,7 @@ func (a *API) getLayersAndRuns() ([]configv1alpha1.TerraformLayer, map[string]co
 	return layers.Items, indexedRuns, err
 }
 
-func (a *API) LayersHandler(c echo.Context) error {
+func (a *API) LayersHandler(c *echo.Context) error {
 	layers, runs, err := a.getLayersAndRuns()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform layers or runs: %s", err))

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/server/utils"
@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *API) SyncLayerHandler(c echo.Context) error {
+func (a *API) SyncLayerHandler(c *echo.Context) error {
 	layer := &configv1alpha1.TerraformLayer{}
 	err := a.Client.Get(context.Background(), client.ObjectKey{
 		Namespace: c.Param("namespace"),

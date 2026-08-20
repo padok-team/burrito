@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,7 +26,7 @@ type EncryptResponse struct {
 	Errors         []string `json:"errors,omitempty"`
 }
 
-func (a *API) EncryptAllFilesHandler(c echo.Context) error {
+func (a *API) EncryptAllFilesHandler(c *echo.Context) error {
 	// Parse the request body
 	body, err := io.ReadAll(c.Request().Body)
 	if err != nil {

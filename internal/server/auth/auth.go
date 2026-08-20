@@ -5,16 +5,16 @@ import (
 
 	"github.com/padok-team/burrito/internal/server/utils"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type AuthHandlers interface {
-	HandleLogin(c echo.Context) error
-	HandleCallback(c echo.Context) error
+	HandleLogin(c *echo.Context) error
+	HandleCallback(c *echo.Context) error
 	GetLoginHTTPMethod() string
 }
 
-func HandleLogout(c echo.Context, sessionCookie string) error {
+func HandleLogout(c *echo.Context, sessionCookie string) error {
 	err := utils.InvalidateSession(c, sessionCookie)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to log out"})
@@ -23,7 +23,7 @@ func HandleLogout(c echo.Context, sessionCookie string) error {
 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
 }
 
-func HandleUserInfo(c echo.Context) error {
+func HandleUserInfo(c *echo.Context) error {
 	// Check if the user is authenticated
 	if c.Get("user_id") == nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "User not authenticated"})

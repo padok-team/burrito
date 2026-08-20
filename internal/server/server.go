@@ -4,13 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"embed"
+	"io/fs"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo-contrib/v5/session"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/server/api"
@@ -38,7 +39,7 @@ type Server struct {
 	config       *config.Config
 	Webhook      *webhook.Webhook
 	API          *api.API
-	staticAssets http.FileSystem
+	staticAssets fs.FS
 	client       client.Client
 	sessionStore sessions.Store
 }
@@ -64,7 +65,7 @@ func New(c *config.Config) *Server {
 	return &Server{
 		config:       c,
 		API:          api.New(c),
-		staticAssets: http.FS(content),
+		staticAssets: content,
 		sessionStore: sessionStore,
 	}
 }
@@ -127,7 +128,7 @@ func (s *Server) Exec() {
 			Root:       "dist",
 			Index:      "index.html",
 			HTML5:      true,
-			Skipper: func(c echo.Context) bool {
+			Skipper: func(c *echo.Context) bool {
 				p := c.Request().URL.Path
 				return strings.HasPrefix(p, "/auth") ||
 					strings.HasPrefix(p, "/api")
@@ -140,17 +141,17 @@ func (s *Server) Exec() {
 		auth := e.Group("/auth", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 		auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
 		auth.GET("/callback", authHandlers.HandleCallback)
-		auth.POST("/logout", func(c echo.Context) error {
+		auth.POST("/logout", func(c *echo.Context) error {
 			return a.HandleLogout(c, cookieName)
 		})
-		auth.GET("/type", func(c echo.Context) error {
+		auth.GET("/type", func(c *echo.Context) error {
 			authType := "basic"
 			if s.config.Server.OIDC.Enabled {
 				authType = "oauth"
 			}
 			return c.JSON(http.StatusOK, map[string]string{"type": authType})
 		})
-		auth.GET("/user", s.authMiddleware()(func(c echo.Context) error {
+		auth.GET("/user", s.authMiddleware()(func(c *echo.Context) error {
 			return a.HandleUserInfo(c)
 		}))
 	}
@@ -173,7 +174,7 @@ func (s *Server) Exec() {
 	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
 
 	// Redirect root to layers if authenticated, otherwise to login
-	e.GET("/", func(c echo.Context) error {
+	e.GET("/", func(c *echo.Context) error {
 		if !s.getAuthEnabled() {
 			return c.Redirect(http.StatusTemporaryRedirect, "/layers")
 		}
@@ -184,17 +185,17 @@ func (s *Server) Exec() {
 		return c.Redirect(http.StatusTemporaryRedirect, "/layers")
 	})
 
-	e.Logger.Fatal(e.Start(s.config.Server.Addr))
+	log.Fatal(e.Start(s.config.Server.Addr))
 	log.Infof("burrito server started on addr %s", s.config.Server.Addr)
 }
 
-func handleHealthz(c echo.Context) error {
+func handleHealthz(c *echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
 func (s *Server) authMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			sess, err := session.Get(cookieName, c)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Unauthorized")
