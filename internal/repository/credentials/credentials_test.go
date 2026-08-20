@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -128,6 +129,34 @@ var _ = Describe("Credentials", func() {
 				Expect(credentials.Username).To(Equal("username-match-1"))
 				Expect(credentials.Password).To(Equal("password-match-1"))
 			})
+		})
+	})
+	Describe("Concurrent access", Ordered, func() {
+		It("should not race when GetCredentials/GetAllCredentials run concurrently with a refresh", func() {
+			// TTL of 0 forces every call to attempt updateCredentials(), so reads
+			// (GetCredentials/GetAllCredentials) and writes (updateCredentials) are
+			// guaranteed to overlap across goroutines. Run with `go test -race`.
+			store := credentials.NewCredentialStore(k8sClient, 0)
+			repository := &configv1alpha1.TerraformRepository{}
+			err := k8sClient.Get(context.TODO(), types.NamespacedName{
+				Name:      "repository-secret-present",
+				Namespace: "default",
+			}, repository)
+			Expect(err).NotTo(HaveOccurred())
+
+			var wg sync.WaitGroup
+			for i := 0; i < 50; i++ {
+				wg.Add(2)
+				go func() {
+					defer wg.Done()
+					_, _ = store.GetCredentials(repository)
+				}()
+				go func() {
+					defer wg.Done()
+					store.GetAllCredentials()
+				}()
+			}
+			wg.Wait()
 		})
 	})
 })
