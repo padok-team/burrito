@@ -22,7 +22,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.42.1
 	github.com/sirupsen/logrus v1.10.1
-	github.com/stretchr/testify v1.12.0
+	github.com/stretchr/testify v1.12.1
 	github.com/tofuutils/tenv/v4 v4.15.1
 	google.golang.org/api v0.293.0
 	k8s.io/apimachinery v0.36.3
