@@ -22,12 +22,12 @@ _.python.venv = { path = ".venv", create = true }
 
 [tasks.install]
 description = "Install documentation dependencies"
-run = "uv pip install -r requirements.txt"
+run = "uv sync"
 
-[tasks.mkdocs-serve]
+[tasks.docs-serve]
 depends = "install"
-description = "Serve MkDocs documentation locally"
-run = "uv run mkdocs serve"
+description = "Serve Zensical documentation locally"
+run = "uv run zensical serve"
 
 [tasks.lint]
 description = "Run golangci-lint (no make target exists for it)"

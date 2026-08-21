@@ -60,8 +60,8 @@ Docker (with Buildx and Compose), `make` and Git are system-level tools and are 
 `mise.toml` also defines a few tasks:
 
 ```bash
-mise run lint          # golangci-lint run ./...
-mise run mkdocs-serve  # live docs preview (see "Building the Documentation Locally")
+mise run lint        # golangci-lint run ./...
+mise run docs-serve  # live docs preview (see "Building the Documentation Locally")
 ```
 
 To run an instance of Burrito, you will need a Kubernetes cluster. This tutorial uses Kind as a local development Kubernetes cluster.
@@ -212,20 +212,20 @@ It is strongly recommended to create a GitHub token with no specific rights to b
 
 ### Building the Documentation Locally
 
-The documentation site is built with [MkDocs](https://www.mkdocs.org/).
+The documentation site is built with [Zensical](https://zensical.org/).
 
 If you use [mise](#using-mise-recommended), the toolchain (`uv`) is already available and a task is provided:
 
 ```bash
-mise run mkdocs-serve   # installs deps into .venv, then serves at http://127.0.0.1:8000
+mise run docs-serve   # installs deps into .venv, then serves at http://127.0.0.1:8000
 ```
 
-Otherwise, with Python 3 directly:
+Otherwise, with `uv` directly:
 
 ```bash
-pip install -r requirements.txt   # mkdocs + material theme + plugins
-mkdocs serve                      # live preview at http://127.0.0.1:8000
-mkdocs build --strict             # what CI runs; fails on broken links
+uv sync                              # installs zensical + mike into .venv
+uv run zensical serve                # live preview at http://127.0.0.1:8000
+uv run zensical build --strict --clean  # what CI runs; fails on broken links
 ```
 
 CI also lints Markdown with `markdownlint-cli2` using `docs/.markdownlint.jsonc`.
