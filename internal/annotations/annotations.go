@@ -16,6 +16,7 @@ const (
 	LastPlanDate   string = "runner.terraform.padok.cloud/plan-date"
 	LastPlanSum    string = "runner.terraform.padok.cloud/plan-sum"
 	LastPlanRun    string = "runner.terraform.padok.cloud/plan-run"
+	LastPlanDeletions string = "runner.terraform.padok.cloud/plan-deletions"
 	Lock           string = "runner.terraform.padok.cloud/lock"
 
 	LastBranchCommit       string = "webhook.terraform.padok.cloud/branch-commit"

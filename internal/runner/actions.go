@@ -27,7 +27,7 @@ func (r *Runner) ExecAction() error {
 
 	switch r.config.Runner.Action {
 	case "plan":
-		sum, err := r.execPlan()
+		sum, deletions, err := r.execPlan()
 		if err != nil {
 			return err
 		}
@@ -35,6 +35,7 @@ func (r *Runner) ExecAction() error {
 		ann[annotations.LastPlanRun] = fmt.Sprintf("%s/%s", r.Run.Name, strconv.Itoa(r.Run.Status.Retries))
 		ann[annotations.LastPlanSum] = sum
 		ann[annotations.LastPlanCommit] = r.Run.Spec.Layer.Revision
+		ann[annotations.LastPlanDeletions] = strconv.Itoa(deletions)
 
 	case "apply":
 		sum, err := r.execApply()
@@ -75,16 +76,16 @@ func (r *Runner) ExecInit() error {
 
 // Run the `plan` command and save the plan artifact in the datastore
 // Returns the sha256 sum of the plan artifact
-func (r *Runner) execPlan() (string, error) {
+func (r *Runner) execPlan() (string, int, error) {
 	log.Infof("running %s plan", r.exec.TenvName())
 	if r.exec == nil {
 		err := errors.New("terraform or terragrunt binary not installed")
-		return "", err
+		return "", 0, err
 	}
 	err := r.exec.Plan(PlanArtifact)
 	if err != nil {
 		log.Errorf("error executing %s plan: %s", r.exec.TenvName(), err)
-		return "", err
+		return "", 0, err
 	}
 	planJsonBytes, err := r.exec.Show(PlanArtifact, "json")
 	if err != nil {
@@ -105,9 +106,10 @@ func (r *Runner) execPlan() (string, error) {
 	err = json.Unmarshal(planJsonBytes, plan)
 	if err != nil {
 		log.Errorf("error parsing %s json plan: %s", r.exec.TenvName(), err)
-		return "", err
+		return "", 0, err
 	}
 	_, shortDiff := runnerutils.GetDiff(plan)
+	deletionsCount := runnerutils.GetDeletionsCount(plan)
 	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "json", planJsonBytes)
 	if err != nil {
 		log.Errorf("could not put json plan in datastore: %s", err)
@@ -119,16 +121,16 @@ func (r *Runner) execPlan() (string, error) {
 	planBin, err := os.ReadFile(PlanArtifact)
 	if err != nil {
 		log.Errorf("could not read plan output: %s", err)
-		return "", err
+		return "", 0, err
 	}
 	sum := sha256.Sum256(planBin)
 	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "bin", planBin)
 	if err != nil {
 		log.Errorf("could not put plan binary in cache: %s", err)
-		return "", err
+		return "", 0, err
 	}
 	log.Infof("%s plan ran successfully", r.exec.TenvName())
-	return b64.StdEncoding.EncodeToString(sum[:]), nil
+	return b64.StdEncoding.EncodeToString(sum[:]), deletionsCount, nil
 }
 
 // Run the `apply` command, by default with the plan artifact from the previous plan run

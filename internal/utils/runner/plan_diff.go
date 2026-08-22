@@ -32,3 +32,14 @@ func GetDiff(plan *tfjson.Plan) (bool, string) {
 	}
 	return diff, fmt.Sprintf("Plan: %d to create, %d to update, %d to delete", create, update, delete)
 }
+
+// GetDeletionsCount returns the number of resources to be deleted or replaced in the plan
+func GetDeletionsCount(plan *tfjson.Plan) int {
+	deletions := 0
+	for _, res := range plan.ResourceChanges {
+		if res.Change.Actions.Delete() || res.Change.Actions.Replace() {
+			deletions++
+		}
+	}
+	return deletions
+}
