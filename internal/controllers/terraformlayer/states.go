@@ -3,6 +3,7 @@ package terraformlayer
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -97,6 +98,16 @@ func (s *ApplyNeeded) getHandler() Handler {
 		if !autoApply {
 			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+		}
+		preventDestroy := configv1alpha1.GetPreventDestroyEnabled(repository, layer)
+		if preventDestroy {
+			if delStr, ok := layer.Annotations[annotations.LastPlanDeletions]; ok {
+				if dels, err := strconv.Atoi(delStr); err == nil && dels > 0 {
+					log.Warnf("preventDestroy is enabled and plan contains %d deletions for layer %s, skipping apply", dels, layer.Name)
+					r.Recorder.Eventf(layer, corev1.EventTypeWarning, "Reconciliation", "Apply skipped: preventDestroy is enabled and plan contains %d resource(s) to destroy", dels)
+					return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+				}
+			}
 		}
 		// Check for sync windows that would block the apply action
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
