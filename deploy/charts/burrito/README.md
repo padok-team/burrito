@@ -39,6 +39,8 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.runner.sshKnownHostsConfigMapName | string | `"burrito-ssh-known-hosts"` | Configmap name to store the SSH known hosts in the runner |
 | config.burrito.runner.args | list | `["runner", "start"]` | Override the default args for the runner container |
 | config.burrito.runner.command | list | `["burrito"]` | Override the default command for the runner container |
+| config.burrito.runner.podSecurityContext | object | `{}` | Pod security context for runner pods, can be overridden with spec.overrideRunnerSpec in repositories and layer definitions |
+| config.burrito.runner.securityContext | object | `{}` | Container security context for runner pods, can be overridden with spec.overrideRunnerSpec in repositories and layer definitions |
 | config.burrito.server.addr | string | `":8080"` | Server exposed port |
 | config.burrito.server.webhook.github.secret | string | `""` | Secret to validate webhook payload, prefer override with the BURRITO_SERVER_WEBHOOK_GITHUB_SECRET environment variable |
 | config.burrito.server.webhook.gitlab.secret | string | `""` | Secret to validate webhook payload, Prefer override with the BURRITO_SERVER_WEBHOOK_GITLAB_SECRET environment variable |

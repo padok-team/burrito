@@ -102,6 +102,10 @@ config:
         repository: ghcr.io/padok-team/burrito
         tag: "v0.13.0@sha256:e957726fe488c5532d4e510ffd15b0b05694e0ffcaa1831797e5fb01aa699d64" # By default use Chart's appVersion
         pullPolicy: Always
+      # -- Pod security context for runner pods, can be overridden with spec.overrideRunnerSpec in repositories and layer definitions
+      podSecurityContext: {}
+      # -- Container security context for runner pods, can be overridden with spec.overrideRunnerSpec in repositories and layer definitions
+      securityContext: {}
       # -- Command to run in the Burrito runner container
       command: ["burrito"]
       # -- Arguments to pass to the Burrito runner container
