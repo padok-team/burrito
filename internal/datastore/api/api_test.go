@@ -259,6 +259,98 @@ var _ = Describe("Datastore API", func() {
 				})
 			})
 		})
+		Describe("Storage backend errors", func() {
+			errorAPI := &api.API{
+				Storage: storage.Storage{
+					Backend: &errBackend{},
+					Config: config.Config{
+						Datastore: config.DatastoreConfig{
+							Storage: config.StorageConfig{
+								Mock: true,
+								Encryption: config.EncryptionConfig{
+									Enabled: false,
+								},
+							},
+						},
+					},
+					EncryptionManager: &storage.EncryptionManager{},
+				},
+			}
+			Describe("Logs", func() {
+				It("should return 500 Internal Server Error when getting logs", func() {
+					context := getContext(http.MethodGet, "/logs", map[string]string{
+						"namespace": "default",
+						"layer":     "test1",
+						"run":       "test1",
+						"attempt":   "0",
+					}, nil)
+					err := errorAPI.GetLogsHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().(*echo.Response).Status).To(Equal(http.StatusInternalServerError))
+				})
+				It("should return 500 Internal Server Error when putting logs", func() {
+					body := []byte(`test1`)
+					context := getContext(http.MethodPut, "/logs", map[string]string{
+						"namespace": "default",
+						"layer":     "test1",
+						"run":       "test1",
+						"attempt":   "0",
+					}, body)
+					err := errorAPI.PutLogsHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().(*echo.Response).Status).To(Equal(http.StatusInternalServerError))
+				})
+			})
+			Describe("Plans", func() {
+				It("should return 500 Internal Server Error when getting a plan", func() {
+					context := getContext(http.MethodGet, "/plans", map[string]string{
+						"namespace": "default",
+						"layer":     "test1",
+						"run":       "test1",
+						"attempt":   "0",
+					}, nil)
+					err := errorAPI.GetPlanHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().(*echo.Response).Status).To(Equal(http.StatusInternalServerError))
+				})
+			})
+			Describe("Revisions", func() {
+				It("should return 500 Internal Server Error when storing a revision", func() {
+					body := []byte(`test-bundle`)
+					context := getContext(http.MethodPut, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						"ref":       "main",
+						"revision":  "def456",
+					}, body)
+					err := errorAPI.PutGitBundleHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().(*echo.Response).Status).To(Equal(http.StatusInternalServerError))
+				})
+				It("should return 500 Internal Server Error when checking a revision", func() {
+					context := getContext(http.MethodGet, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						"ref":       "main",
+						"revision":  "def456",
+					}, nil)
+					err := errorAPI.HeadGitBundleHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().(*echo.Response).Status).To(Equal(http.StatusInternalServerError))
+				})
+				It("should return 500 Internal Server Error when getting a revision bundle", func() {
+					context := getContext(http.MethodGet, "/revisions", map[string]string{
+						"namespace": "default",
+						"name":      "test1",
+						"ref":       "main",
+						"revision":  "def456",
+					}, nil)
+					err := errorAPI.GetGitBundleHandler(context)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(context.Response().(*echo.Response).Status).To(Equal(http.StatusInternalServerError))
+				})
+			})
+		})
 		Describe("Write with Encryption", func() {
 			Describe("Plans", func() {
 				It("should return 200 OK with encryption enabled", func() {

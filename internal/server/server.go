@@ -128,11 +128,7 @@ func (s *Server) Exec() {
 			Root:       "dist",
 			Index:      "index.html",
 			HTML5:      true,
-			Skipper: func(c *echo.Context) bool {
-				p := c.Request().URL.Path
-				return strings.HasPrefix(p, "/auth") ||
-					strings.HasPrefix(p, "/api")
-			},
+			Skipper:    s.staticSkipper,
 		},
 	))
 
@@ -141,19 +137,9 @@ func (s *Server) Exec() {
 		auth := e.Group("/auth", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 		auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
 		auth.GET("/callback", authHandlers.HandleCallback)
-		auth.POST("/logout", func(c *echo.Context) error {
-			return a.HandleLogout(c, cookieName)
-		})
-		auth.GET("/type", func(c *echo.Context) error {
-			authType := "basic"
-			if s.config.Server.OIDC.Enabled {
-				authType = "oauth"
-			}
-			return c.JSON(http.StatusOK, map[string]string{"type": authType})
-		})
-		auth.GET("/user", s.authMiddleware()(func(c *echo.Context) error {
-			return a.HandleUserInfo(c)
-		}))
+		auth.POST("/logout", s.handleLogout)
+		auth.GET("/type", s.handleAuthType)
+		auth.GET("/user", s.authMiddleware()(s.handleUserInfo))
 	}
 
 	api := e.Group("/api")
@@ -174,16 +160,7 @@ func (s *Server) Exec() {
 	api.GET("/run/:namespace/:layer/:run/attempts", s.API.GetAttemptsHandler)
 
 	// Redirect root to layers if authenticated, otherwise to login
-	e.GET("/", func(c *echo.Context) error {
-		if !s.getAuthEnabled() {
-			return c.Redirect(http.StatusTemporaryRedirect, "/layers")
-		}
-		sess, err := session.Get(cookieName, c)
-		if err != nil || sess.Values["user_id"] == nil {
-			return c.Redirect(http.StatusTemporaryRedirect, "/login")
-		}
-		return c.Redirect(http.StatusTemporaryRedirect, "/layers")
-	})
+	e.GET("/", s.handleRoot)
 
 	log.Fatal(e.Start(s.config.Server.Addr))
 	log.Infof("burrito server started on addr %s", s.config.Server.Addr)
@@ -191,6 +168,39 @@ func (s *Server) Exec() {
 
 func handleHealthz(c *echo.Context) error {
 	return c.String(http.StatusOK, "OK")
+}
+
+func (s *Server) staticSkipper(c *echo.Context) bool {
+	p := c.Request().URL.Path
+	return strings.HasPrefix(p, "/auth") ||
+		strings.HasPrefix(p, "/api")
+}
+
+func (s *Server) handleLogout(c *echo.Context) error {
+	return a.HandleLogout(c, cookieName)
+}
+
+func (s *Server) handleAuthType(c *echo.Context) error {
+	authType := "basic"
+	if s.config.Server.OIDC.Enabled {
+		authType = "oauth"
+	}
+	return c.JSON(http.StatusOK, map[string]string{"type": authType})
+}
+
+func (s *Server) handleUserInfo(c *echo.Context) error {
+	return a.HandleUserInfo(c)
+}
+
+func (s *Server) handleRoot(c *echo.Context) error {
+	if !s.getAuthEnabled() {
+		return c.Redirect(http.StatusTemporaryRedirect, "/layers")
+	}
+	sess, err := session.Get(cookieName, c)
+	if err != nil || sess.Values["user_id"] == nil {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+	return c.Redirect(http.StatusTemporaryRedirect, "/layers")
 }
 
 func (s *Server) authMiddleware() echo.MiddlewareFunc {
