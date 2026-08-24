@@ -42,3 +42,5 @@ func GetDiff(plan *tfjson.Plan) (bool, bool, string) {
 		delete,
 	)
 }
+
+// Diff summary helpers
