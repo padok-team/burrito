@@ -22,7 +22,7 @@ func hash(s string) uint32 {
 }
 
 func getLeaseName(layer *configv1alpha1.TerraformLayer) string {
-	return fmt.Sprintf("%s-%d", lockPrefix, hash(layer.Spec.Repository.Name+layer.Spec.Repository.Namespace+layer.Spec.Path))
+	return fmt.Sprintf("%s-%d", lockPrefix, hash(layer.Spec.Repository.Name+layer.Spec.Repository.Namespace+layer.Spec.Path+layer.Spec.Branch))
 }
 
 func getLeaseLock(layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) *coordination.Lease {
