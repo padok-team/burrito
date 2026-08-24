@@ -2036,6 +2036,95 @@ func TestOverrideRunnerSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			"SecurityContextOnlyInRepository",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						PodSecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: boolPointer(true),
+						},
+						SecurityContext: &corev1.SecurityContext{
+							ReadOnlyRootFilesystem: boolPointer(true),
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{
+				PodSecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: boolPointer(true),
+				},
+				SecurityContext: &corev1.SecurityContext{
+					ReadOnlyRootFilesystem: boolPointer(true),
+				},
+			},
+		},
+		{
+			"SecurityContextOnlyInLayer",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						PodSecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: boolPointer(true),
+						},
+						SecurityContext: &corev1.SecurityContext{
+							ReadOnlyRootFilesystem: boolPointer(true),
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				PodSecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: boolPointer(true),
+				},
+				SecurityContext: &corev1.SecurityContext{
+					ReadOnlyRootFilesystem: boolPointer(true),
+				},
+			},
+		},
+		{
+			"SecurityContextInBothLayerWins",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						PodSecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: boolPointer(false),
+						},
+						SecurityContext: &corev1.SecurityContext{
+							ReadOnlyRootFilesystem: boolPointer(false),
+						},
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					OverrideRunnerSpec: configv1alpha1.OverrideRunnerSpec{
+						PodSecurityContext: &corev1.PodSecurityContext{
+							RunAsNonRoot: boolPointer(true),
+						},
+						SecurityContext: &corev1.SecurityContext{
+							ReadOnlyRootFilesystem: boolPointer(true),
+						},
+					},
+				},
+			},
+			configv1alpha1.OverrideRunnerSpec{
+				PodSecurityContext: &corev1.PodSecurityContext{
+					RunAsNonRoot: boolPointer(true),
+				},
+				SecurityContext: &corev1.SecurityContext{
+					ReadOnlyRootFilesystem: boolPointer(true),
+				},
+			},
+		},
+		{
+			"SecurityContextInNeither",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{},
+			configv1alpha1.OverrideRunnerSpec{},
+		},
 	}
 
 	for _, tc := range tt {
@@ -2210,12 +2299,26 @@ func TestOverrideRunnerSpec(t *testing.T) {
 			if !reflect.DeepEqual(result.Affinity, tc.expectedSpec.Affinity) {
 				t.Errorf("different affinity: got %v expected %v", result.Affinity, tc.expectedSpec.Affinity)
 			}
+
+			// Check PodSecurityContext
+			if !reflect.DeepEqual(result.PodSecurityContext, tc.expectedSpec.PodSecurityContext) {
+				t.Errorf("different pod security context: got %v expected %v", result.PodSecurityContext, tc.expectedSpec.PodSecurityContext)
+			}
+
+			// Check SecurityContext
+			if !reflect.DeepEqual(result.SecurityContext, tc.expectedSpec.SecurityContext) {
+				t.Errorf("different security context: got %v expected %v", result.SecurityContext, tc.expectedSpec.SecurityContext)
+			}
 		})
 	}
 }
 
 func intPointer(i int) *int {
 	return &i
+}
+
+func boolPointer(b bool) *bool {
+	return &b
 }
 
 func TestGetHistoryPolicy(t *testing.T) {
