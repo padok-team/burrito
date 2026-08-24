@@ -44,7 +44,7 @@ services:
       - ./scripts:/scripts
 
   burritotest-gcs:
-    image: fsouza/fake-gcs-server:1.55.1
+    image: fsouza/fake-gcs-server:1.56.1
     hostname: gcs    
     command:
       - -backend=memory
