@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo-contrib/v5/session"
+	"github.com/labstack/echo/v5"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/server/utils"
 	"golang.org/x/oauth2"
@@ -48,7 +48,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 	return oauth, nil
 }
 
-func (o *OAuthAuthHandlers) HandleLogin(c echo.Context) error {
+func (o *OAuthAuthHandlers) HandleLogin(c *echo.Context) error {
 	// Generate state parameter for CSRF protection
 	state := generateRandomString(32)
 
@@ -75,7 +75,7 @@ func (o *OAuthAuthHandlers) GetLoginHTTPMethod() string {
 	return o.LoginHTTPMethod
 }
 
-func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
+func (o *OAuthAuthHandlers) HandleCallback(c *echo.Context) error {
 	sess, err := session.Get(o.SessionCookie, c)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get session")

@@ -1,11 +1,12 @@
 package datastore
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/api"
 	"github.com/padok-team/burrito/internal/datastore/storage"
@@ -54,13 +55,13 @@ func (s *Datastore) Exec() {
 	api.HEAD("/repository/revision/bundle", s.API.HeadGitBundleHandler)
 	api.POST("/encrypt", s.API.EncryptAllFilesHandler)
 	if s.Config.Datastore.TLS {
-		e.Logger.Fatal(e.StartTLS(s.Config.Datastore.Addr, DefaultCertPath, DefaultKeyPath))
+		log.Fatal(echo.StartConfig{Address: s.Config.Datastore.Addr}.StartTLS(context.Background(), e, DefaultCertPath, DefaultKeyPath))
 	} else {
-		e.Logger.Fatal(e.Start(s.Config.Datastore.Addr))
+		log.Fatal(e.Start(s.Config.Datastore.Addr))
 	}
 }
 
-func handleHealthz(c echo.Context) error {
+func handleHealthz(c *echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
@@ -70,11 +71,10 @@ func getLoggerConfig() middleware.RequestLoggerConfig {
 		LogMethod:        true,
 		LogURI:           true,
 		LogStatus:        true,
-		LogError:         true,
 		LogLatency:       true,
 		LogContentLength: true,
 		LogResponseSize:  true,
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			user, _ := c.Get("serviceAccount").(string)
 			log.WithFields(log.Fields{
 				"service_account": user,
