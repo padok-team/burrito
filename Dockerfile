@@ -2,7 +2,7 @@
 
 # Build Burrito UI
 
-FROM ghcr.io/pnpm/pnpm:11.22.0@sha256:eba76954b37ec1ba6187f0adb39caee1e31733194857eedd01319da0af3fa00d AS builder-ui
+FROM ghcr.io/pnpm/pnpm:11.23.0@sha256:f6614f68a90569f9d336f9f92ca15536a1e2f205b53391c0ee561dd0b1ddd746 AS builder-ui
 
 WORKDIR /workspace
 # Copy the node modules manifests
