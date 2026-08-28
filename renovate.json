@@ -11,6 +11,7 @@
   ],
   "commitMessageLowerCase": "auto",
   "prHourlyLimit": 10,
+  "minimumReleaseAge": "3 days",
   "packageRules": [
     {
       "matchManagers": [
