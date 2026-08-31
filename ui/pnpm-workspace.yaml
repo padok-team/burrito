@@ -9,4 +9,4 @@ trustPolicyExclude:
 
 # `@swc/core` needs to be able to execute scripts during installation.
 allowBuilds:
-  "@swc/core": true
+  '@swc/core': true
