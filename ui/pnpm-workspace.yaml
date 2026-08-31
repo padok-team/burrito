@@ -1,4 +1,5 @@
-minimumReleaseAge: 10080 # 7 days
+minimumReleaseAge: 4320 # 3 days, aligned with renovate.json's minimumReleaseAge
+minimumReleaseAgeStrict: false
 trustPolicy: no-downgrade
 ignoreScripts: true
 
