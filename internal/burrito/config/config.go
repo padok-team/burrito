@@ -143,6 +143,8 @@ type SecretConfig struct {
 	SecretKey  string `mapstructure:"secretKey"`
 }
 
+const envPrefix = "burrito"
+
 var flagConfigKeys = map[string]string{
 	"addr":                       "server.addr",
 	"credentials-ttl":            "controller.timers.credentialsTTL",
@@ -166,6 +168,11 @@ var flagConfigKeys = map[string]string{
 	"wait-action-period":         "controller.timers.waitAction",
 }
 
+func ConfigKeyForFlag(flagName string) (string, bool) {
+	configKey, ok := flagConfigKeys[flagName]
+	return configKey, ok
+}
+
 func (c *Config) Load(flags *pflag.FlagSet) error {
 	v := viper.New()
 
@@ -186,7 +193,7 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 
 	// burrito can be configured with environment variables that start with
 	// burrito_.
-	v.SetEnvPrefix("burrito")
+	v.SetEnvPrefix(envPrefix)
 	v.AutomaticEnv()
 
 	// Options with dashes in flag names have underscores when set inside a
@@ -241,7 +248,7 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 		default:
 			keyParts := append(parts, tv)
 			key := strings.Join(keyParts, ".")
-			envName := "BURRITO_" + strings.ToUpper(strings.Join(keyParts, "_"))
+			envName := environmentVariableName(keyParts)
 			if value, exists := os.LookupEnv(envName); exists && value != "" {
 				v.Set(key, value)
 				continue
@@ -253,6 +260,10 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 		}
 	}
 	return nil
+}
+
+func environmentVariableName(parts []string) string {
+	return strings.ToUpper(envPrefix + "_" + strings.Join(parts, "_"))
 }
 
 func TestConfig() *Config {

@@ -6,7 +6,10 @@ import (
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	burritocmd "github.com/padok-team/burrito/cmd"
+	"github.com/padok-team/burrito/internal/burrito"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 )
@@ -289,4 +292,23 @@ func TestConfig_EmptyEnvVarDoesNotOverrideFlag(t *testing.T) {
 	}
 
 	assert.Equal(t, ":8081", cfg.Server.Addr)
+}
+
+func TestConfig_EveryRegisteredStartFlagHasConfigKey(t *testing.T) {
+	app := &burrito.App{Config: &config.Config{}}
+	rootCmd := burritocmd.New(app)
+
+	walkCommands(rootCmd, func(cmd *cobra.Command) {
+		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			_, ok := config.ConfigKeyForFlag(flag.Name)
+			assert.Truef(t, ok, "missing config key for flag %q on command %q", flag.Name, cmd.CommandPath())
+		})
+	})
+}
+
+func walkCommands(cmd *cobra.Command, visit func(*cobra.Command)) {
+	visit(cmd)
+	for _, child := range cmd.Commands() {
+		walkCommands(child, visit)
+	}
 }
