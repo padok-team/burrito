@@ -273,7 +273,6 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 		},
 		RestartPolicy:      corev1.RestartPolicyNever,
 		ServiceAccountName: "burrito-runner",
-		SecurityContext:    config.Runner.PodSecurityContext,
 		Containers: []corev1.Container{
 			{
 				Name:            "runner",
@@ -281,7 +280,6 @@ func defaultPodSpec(config *config.Config, layer *configv1alpha1.TerraformLayer,
 				ImagePullPolicy: corev1.PullPolicy(config.Runner.Image.PullPolicy),
 				Args:            config.Runner.Args,
 				Command:         config.Runner.Command,
-				SecurityContext: config.Runner.SecurityContext,
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						MountPath: "/home/burrito/.ssh/known_hosts",

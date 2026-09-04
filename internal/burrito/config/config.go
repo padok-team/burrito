@@ -10,7 +10,6 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -86,17 +85,15 @@ type ControllerTimers struct {
 }
 
 type RunnerConfig struct {
-	Action                     string                     `mapstructure:"action"`
-	Layer                      Layer                      `mapstructure:"layer"`
-	Run                        string                     `mapstructure:"run"`
-	SSHKnownHostsConfigMapName string                     `mapstructure:"sshKnownHostsConfigMapName"`
-	Image                      ImageConfig                `mapstructure:"image"`
-	RunnerBinaryPath           string                     `mapstructure:"runnerBinaryPath"`
-	RepositoryPath             string                     `mapstructure:"repositoryPath"`
-	Args                       []string                   `mapstructure:"args"`
-	Command                    []string                   `mapstructure:"command"`
-	PodSecurityContext         *corev1.PodSecurityContext `mapstructure:"podSecurityContext"`
-	SecurityContext            *corev1.SecurityContext    `mapstructure:"securityContext"`
+	Action                     string      `mapstructure:"action"`
+	Layer                      Layer       `mapstructure:"layer"`
+	Run                        string      `mapstructure:"run"`
+	SSHKnownHostsConfigMapName string      `mapstructure:"sshKnownHostsConfigMapName"`
+	Image                      ImageConfig `mapstructure:"image"`
+	RunnerBinaryPath           string      `mapstructure:"runnerBinaryPath"`
+	RepositoryPath             string      `mapstructure:"repositoryPath"`
+	Args                       []string    `mapstructure:"args"`
+	Command                    []string    `mapstructure:"command"`
 }
 
 type ImageConfig struct {
