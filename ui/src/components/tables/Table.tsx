@@ -147,7 +147,7 @@ const Table: React.FC<TableProps> = ({
     return (
       <div className="relative flex items-center">
         <Tag variant={state} />
-        {state === 'error' &&
+        {(state === 'error' || state === 'retriesExhausted') &&
           (variant === 'light' ? (
             <ChiliLight
               className="absolute translate-x-16 rotate-[-21deg]"

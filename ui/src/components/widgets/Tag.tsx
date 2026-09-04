@@ -15,7 +15,9 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
     error: `bg-status-error-default
       text-nuances-white`,
     disabled: `bg-nuances-50
-      text-nuances-200`
+      text-nuances-200`,
+    retriesExhausted: `bg-status-error-default
+      text-nuances-white`
   };
 
   const getContent = () => {
@@ -28,6 +30,8 @@ const Tag: React.FC<TagProps> = ({ variant }) => {
         return 'Error';
       case 'disabled':
         return 'Disabled';
+      case 'retriesExhausted':
+        return 'Max Retries';
     }
   };
 
