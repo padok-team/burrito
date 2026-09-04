@@ -1,0 +1,28 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: nominal-case-security-context-plan
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: pod-nominal-case-security-context
+    namespace: default
+    revision: TEST_REVISION
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: pod-nominal-case-security-context
+  namespace: default
+spec:
+  branch: main
+  path: security-context-case/
+  repository:
+    name: burrito
+    namespace: default
+  overrideRunnerSpec:
+    podSecurityContext:
+      runAsNonRoot: true
+    securityContext:
+      readOnlyRootFilesystem: true

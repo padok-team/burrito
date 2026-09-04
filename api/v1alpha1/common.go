@@ -20,6 +20,8 @@ type OverrideRunnerSpec struct {
 	Affinity           *corev1.Affinity              `json:"affinity,omitempty"`
 	ServiceAccountName string                        `json:"serviceAccountName,omitempty"`
 	Resources          corev1.ResourceRequirements   `json:"resources,omitempty"`
+	PodSecurityContext *corev1.PodSecurityContext    `json:"podSecurityContext,omitempty"`
+	SecurityContext    *corev1.SecurityContext       `json:"securityContext,omitempty"`
 	Env                []corev1.EnvVar               `json:"env,omitempty"`
 	EnvFrom            []corev1.EnvFromSource        `json:"envFrom,omitempty"`
 	Volumes            []corev1.Volume               `json:"volumes,omitempty"`
@@ -110,6 +112,8 @@ func GetOverrideRunnerSpec(repository *TerraformRepository, layer *TerraformLaye
 		Volumes:            mergeVolumes(repository.Spec.OverrideRunnerSpec.Volumes, layer.Spec.OverrideRunnerSpec.Volumes),
 		VolumeMounts:       mergeVolumeMounts(repository.Spec.OverrideRunnerSpec.VolumeMounts, layer.Spec.OverrideRunnerSpec.VolumeMounts),
 		Resources:          mergeResources(repository.Spec.OverrideRunnerSpec.Resources, layer.Spec.OverrideRunnerSpec.Resources),
+		PodSecurityContext: overridePodSecurityContext(repository.Spec.OverrideRunnerSpec.PodSecurityContext, layer.Spec.OverrideRunnerSpec.PodSecurityContext),
+		SecurityContext:    overrideSecurityContext(repository.Spec.OverrideRunnerSpec.SecurityContext, layer.Spec.OverrideRunnerSpec.SecurityContext),
 		EnvFrom:            mergeEnvFrom(repository.Spec.OverrideRunnerSpec.EnvFrom, layer.Spec.OverrideRunnerSpec.EnvFrom),
 		Image:              chooseString(repository.Spec.OverrideRunnerSpec.Image, layer.Spec.OverrideRunnerSpec.Image),
 		ImagePullPolicy:    chooseImagePullPolicy(repository.Spec.OverrideRunnerSpec.ImagePullPolicy, layer.Spec.OverrideRunnerSpec.ImagePullPolicy),
@@ -317,6 +321,20 @@ func overrideAffinity(repoAffinity, layerAffinity *corev1.Affinity) *corev1.Affi
 		return layerAffinity
 	}
 	return repoAffinity
+}
+
+func overridePodSecurityContext(repo, layer *corev1.PodSecurityContext) *corev1.PodSecurityContext {
+	if layer != nil {
+		return layer
+	}
+	return repo
+}
+
+func overrideSecurityContext(repo, layer *corev1.SecurityContext) *corev1.SecurityContext {
+	if layer != nil {
+		return layer
+	}
+	return repo
 }
 
 func mergeEnvVars(a, b []corev1.EnvVar) []corev1.EnvVar {

@@ -70,5 +70,31 @@ var _ = Describe("Pod", func() {
 
 			})
 		})
+		Describe("When a TerraformRun is created with an overridden runner securityContext", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "nominal-case-security-context-plan",
+					Namespace: "default",
+				}
+				_, run, reconcileError, err = getResult(name)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should have created a pod with the overridden pod and container securityContext", func() {
+				pods, err := reconciler.GetLinkedPods(run)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Items)).To(Equal(1))
+				Expect(pods.Items[0].Spec.SecurityContext).NotTo(BeNil())
+				Expect(pods.Items[0].Spec.SecurityContext.RunAsNonRoot).NotTo(BeNil())
+				Expect(*pods.Items[0].Spec.SecurityContext.RunAsNonRoot).To(BeTrue())
+				Expect(pods.Items[0].Spec.Containers[0].SecurityContext).NotTo(BeNil())
+				Expect(pods.Items[0].Spec.Containers[0].SecurityContext.ReadOnlyRootFilesystem).NotTo(BeNil())
+				Expect(*pods.Items[0].Spec.Containers[0].SecurityContext.ReadOnlyRootFilesystem).To(BeTrue())
+			})
+		})
 	})
 })
