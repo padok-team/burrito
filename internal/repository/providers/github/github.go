@@ -12,7 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	wh "github.com/go-playground/webhooks/github"
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v90/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/padok-team/burrito/internal/repository/providers/standard"
@@ -125,13 +125,16 @@ func buildGithubClient(config credentials.Credential, clientType string) (*githu
 		return nil, fmt.Errorf("unsupported GitHub client type: %s, secret may be malformed, check controller errors", clientType)
 	}
 	if subscription == GitHubEnterprise {
-		client, err = github.NewClient(httpClient).WithEnterpriseURLs(apiUrl, apiUrl)
+		client, err = github.NewClient(github.WithHTTPClient(httpClient), github.WithEnterpriseURLs(apiUrl, apiUrl))
 		if err != nil {
 			return nil, fmt.Errorf("error creating GitHub Enterprise client: %w", err)
 		}
 		return client, nil
 	}
-	client = github.NewClient(httpClient)
+	client, err = github.NewClient(github.WithHTTPClient(httpClient))
+	if err != nil {
+		return nil, fmt.Errorf("error creating GitHub client: %w", err)
+	}
 	return client, nil
 }
 
