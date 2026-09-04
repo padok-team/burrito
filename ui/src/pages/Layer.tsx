@@ -148,6 +148,7 @@ const Layer: React.FC = () => {
       .filter((change) => change.after !== undefined && change.after !== null)
       .map((change) => ({
         addr: change.addr,
+        action: change.action,
         // cast to the expected record type or undefined
         attributes: (change.after ?? undefined) as
           Record<string, unknown> | undefined
@@ -157,10 +158,21 @@ const Layer: React.FC = () => {
       planChanges.every(
         (change) => change.before === null || change.before === undefined
       );
+    // Counted per instance: the same plan can destroy some instances of a
+    // count/for_each resource, create others and leave the rest untouched, so
+    // the aggregated action alone cannot describe what happens to the resource.
+    const deletedCount = planChanges.filter(
+      (change) => change.action === 'delete'
+    ).length;
+    const createdCount = planChanges.filter(
+      (change) => change.action === 'create'
+    ).length;
     return {
       action,
       futureInstances,
       planHasOnlyCreates,
+      deletedCount,
+      createdCount,
       hasPlanChanges: planChanges.length > 0
     };
   }, [planHighlights, selectedResourceData]);
@@ -181,10 +193,13 @@ const Layer: React.FC = () => {
   const futureInstances = selectedPlanDetails?.futureInstances ?? [];
 
   const currentInstanceCount = currentInstances.length;
+  // Instances that survive the plan, plus the ones it creates. Deriving this
+  // from the aggregated action would report a full teardown as soon as a
+  // single instance is destroyed. A replaced instance still exists afterwards.
   const futureInstanceCount = selectedPlanDetails
-    ? selectedPlanDetails.action === 'delete'
-      ? 0
-      : futureInstances.length
+    ? currentInstanceCount -
+      selectedPlanDetails.deletedCount +
+      selectedPlanDetails.createdCount
     : null;
   const showCountArrow =
     futureInstanceCount !== null &&
@@ -307,10 +322,11 @@ const Layer: React.FC = () => {
                 </span>{' '}
                 {selectedPlanDetails.action}
               </div>
-              {selectedPlanDetails.action === 'delete' && (
+              {selectedPlanDetails.deletedCount > 0 && (
                 <div className={plannedDeletionClass}>
-                  All current instances will be destroyed when this plan is
-                  applied.
+                  {selectedPlanDetails.deletedCount >= currentInstanceCount
+                    ? 'All current instances will be destroyed when this plan is applied.'
+                    : `${selectedPlanDetails.deletedCount} of ${currentInstanceCount} current instances will be destroyed when this plan is applied.`}
                 </div>
               )}
             </div>
@@ -338,31 +354,29 @@ const Layer: React.FC = () => {
               </ul>
             </>
           )}
-          {futureInstances.length > 0 &&
-            selectedPlanDetails &&
-            selectedPlanDetails.action !== 'delete' && (
-              <>
-                <h3 className="text-lg font-semibold mt-4 mb-2">
-                  Future instance{futureInstances.length > 1 ? 's' : ''}
-                </h3>
-                <ul className="list-inside">
-                  {futureInstances.map((inst) => (
-                    <li key={`future-${inst.addr}`} className="mb-2">
-                      <StateGraphInstanceCard
-                        instance={inst}
-                        variant={theme}
-                        tone="future"
-                        planAction={selectedPlanDetails.action}
-                        isDependencyAvailable={(addr) =>
-                          !!resolveDependencyNode(addr)
-                        }
-                        onDependencyClick={handleDependencyClick}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+          {futureInstances.length > 0 && selectedPlanDetails && (
+            <>
+              <h3 className="text-lg font-semibold mt-4 mb-2">
+                Future instance{futureInstances.length > 1 ? 's' : ''}
+              </h3>
+              <ul className="list-inside">
+                {futureInstances.map((inst) => (
+                  <li key={`future-${inst.addr}`} className="mb-2">
+                    <StateGraphInstanceCard
+                      instance={inst}
+                      variant={theme}
+                      tone="future"
+                      planAction={inst.action}
+                      isDependencyAvailable={(addr) =>
+                        !!resolveDependencyNode(addr)
+                      }
+                      onDependencyClick={handleDependencyClick}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           {selectedPlanDetails?.action === 'create' &&
             futureInstances.length === 0 &&
             selectedPlanDetails.planHasOnlyCreates && (
