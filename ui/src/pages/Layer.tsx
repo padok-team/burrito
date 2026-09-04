@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import { twMerge } from 'tailwind-merge';
 import { ThemeContext } from '@/contexts/ThemeContext';
 import LayerStateGraph from '@/components/tools/LayerStateGraph';
@@ -25,14 +31,16 @@ const Layer: React.FC = () => {
   const { namespace = '', name = '' } = useParams();
   const navigate = useNavigate();
   const [showResourcePane, setShowResourcePane] = useState(false);
-  const [selectedResourceData, setSelectedResourceData] = useState<StateGraphNode | null>(null);
-  const [isManualSyncPending, setIsManualSyncPending] = useState<boolean>(false);
+  const [selectedResourceData, setSelectedResourceData] =
+    useState<StateGraphNode | null>(null);
+  const [isManualSyncPending, setIsManualSyncPending] =
+    useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [stateGraph, setStateGraph] = useState<StateGraph | null>(null);
 
   const layerQuery = useQuery({
     queryKey: reactQueryKeys.layer(namespace, name),
-    queryFn: () => fetchLayer(namespace, name),
+    queryFn: () => fetchLayer(namespace, name)
   });
 
   const syncSelectedLayer = async (layer: Layer) => {
@@ -45,7 +53,9 @@ const Layer: React.FC = () => {
 
   useEffect(() => {
     if (!layer) return;
-    const pending = layer.manualSyncStatus === 'pending' || layer.manualSyncStatus === 'annotated';
+    const pending =
+      layer.manualSyncStatus === 'pending' ||
+      layer.manualSyncStatus === 'annotated';
     setIsManualSyncPending(pending);
   }, [layer]);
 
@@ -55,12 +65,10 @@ const Layer: React.FC = () => {
   useEffect(() => {
     const lastRunTime = layer?.lastRun?.date
       ? new Date(layer.lastRun.date).getTime()
-      : 0
-    const withinTwoMinutes = Date.now() - lastRunTime < 2 * 60 * 1000
+      : 0;
+    const withinTwoMinutes = Date.now() - lastRunTime < 2 * 60 * 1000;
     const shouldPoll =
-      isManualSyncPending ||
-      !!layer?.isRunning ||
-      withinTwoMinutes
+      isManualSyncPending || !!layer?.isRunning || withinTwoMinutes;
     if (!shouldPoll) return;
     const id = setInterval(() => {
       layerQuery.refetch();
@@ -92,7 +100,12 @@ const Layer: React.FC = () => {
   }, [attemptsQuery.data]);
 
   const planQuery = useQuery({
-    queryKey: reactQueryKeys.plan(namespace, name, latestRunId || null, latestAttempt),
+    queryKey: reactQueryKeys.plan(
+      namespace,
+      name,
+      latestRunId || null,
+      latestAttempt
+    ),
     queryFn: () => fetchPlan(namespace, name, latestRunId, latestAttempt!),
     enabled: !!latestRunId && latestAttempt !== null,
     select: (data) => parseTerraformPlan(data)
@@ -136,11 +149,14 @@ const Layer: React.FC = () => {
       .map((change) => ({
         addr: change.addr,
         // cast to the expected record type or undefined
-        attributes: (change.after ?? undefined) as Record<string, unknown> | undefined
+        attributes: (change.after ?? undefined) as
+          Record<string, unknown> | undefined
       }));
     const planHasOnlyCreates =
       planChanges.length > 0 &&
-      planChanges.every((change) => change.before === null || change.before === undefined);
+      planChanges.every(
+        (change) => change.before === null || change.before === undefined
+      );
     return {
       action,
       futureInstances,
@@ -153,7 +169,10 @@ const Layer: React.FC = () => {
     if (!selectedResourceData) {
       return [];
     }
-    if (selectedPlanDetails?.action === 'create' && selectedPlanDetails.planHasOnlyCreates) {
+    if (
+      selectedPlanDetails?.action === 'create' &&
+      selectedPlanDetails.planHasOnlyCreates
+    ) {
       return [];
     }
     return selectedResourceData.instances ?? [];
@@ -168,12 +187,15 @@ const Layer: React.FC = () => {
       : futureInstances.length
     : null;
   const showCountArrow =
-    futureInstanceCount !== null && futureInstanceCount !== currentInstanceCount;
+    futureInstanceCount !== null &&
+    futureInstanceCount !== currentInstanceCount;
 
   const paneTitleClass =
     theme === 'light' ? 'text-nuances-black' : 'text-nuances-50';
-  const paneLabelClass = theme === 'light' ? 'text-gray-500' : 'text-nuances-300';
-  const paneValueClass = theme === 'light' ? 'text-gray-500' : 'text-nuances-200';
+  const paneLabelClass =
+    theme === 'light' ? 'text-gray-500' : 'text-nuances-300';
+  const paneValueClass =
+    theme === 'light' ? 'text-gray-500' : 'text-nuances-200';
   const paneMutedTextClass =
     theme === 'light' ? 'text-gray-500' : 'text-nuances-200';
   const plannedDeletionClass = twMerge(
@@ -287,7 +309,8 @@ const Layer: React.FC = () => {
               </div>
               {selectedPlanDetails.action === 'delete' && (
                 <div className={plannedDeletionClass}>
-                  All current instances will be destroyed when this plan is applied.
+                  All current instances will be destroyed when this plan is
+                  applied.
                 </div>
               )}
             </div>
@@ -305,7 +328,9 @@ const Layer: React.FC = () => {
                       defaultExpanded={currentInstances.length === 1}
                       variant={theme}
                       tone="current"
-                      isDependencyAvailable={(addr) => !!resolveDependencyNode(addr)}
+                      isDependencyAvailable={(addr) =>
+                        !!resolveDependencyNode(addr)
+                      }
                       onDependencyClick={handleDependencyClick}
                     />
                   </li>
@@ -313,27 +338,31 @@ const Layer: React.FC = () => {
               </ul>
             </>
           )}
-          {futureInstances.length > 0 && selectedPlanDetails && selectedPlanDetails.action !== 'delete' && (
-            <>
-              <h3 className="text-lg font-semibold mt-4 mb-2">
-                Future instance{futureInstances.length > 1 ? 's' : ''}
-              </h3>
-              <ul className="list-inside">
-                {futureInstances.map((inst) => (
-                  <li key={`future-${inst.addr}`} className="mb-2">
-                    <StateGraphInstanceCard
-                      instance={inst}
-                      variant={theme}
-                      tone="future"
-                      planAction={selectedPlanDetails.action}
-                      isDependencyAvailable={(addr) => !!resolveDependencyNode(addr)}
-                      onDependencyClick={handleDependencyClick}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+          {futureInstances.length > 0 &&
+            selectedPlanDetails &&
+            selectedPlanDetails.action !== 'delete' && (
+              <>
+                <h3 className="text-lg font-semibold mt-4 mb-2">
+                  Future instance{futureInstances.length > 1 ? 's' : ''}
+                </h3>
+                <ul className="list-inside">
+                  {futureInstances.map((inst) => (
+                    <li key={`future-${inst.addr}`} className="mb-2">
+                      <StateGraphInstanceCard
+                        instance={inst}
+                        variant={theme}
+                        tone="future"
+                        planAction={selectedPlanDetails.action}
+                        isDependencyAvailable={(addr) =>
+                          !!resolveDependencyNode(addr)
+                        }
+                        onDependencyClick={handleDependencyClick}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           {selectedPlanDetails?.action === 'create' &&
             futureInstances.length === 0 &&
             selectedPlanDetails.planHasOnlyCreates && (
@@ -367,7 +396,12 @@ const Layer: React.FC = () => {
           </h1>
         </div>
         <div className="flex p-6 justify-between gap-4">
-          <LayerStatus layer={layer} variant="health" theme={theme} syncPending={isManualSyncPending} />
+          <LayerStatus
+            layer={layer}
+            variant="health"
+            theme={theme}
+            syncPending={isManualSyncPending}
+          />
           <LayerStatus layer={layer} variant="lastOperation" theme={theme} />
           <LayerStatus layer={layer} variant="details" theme={theme} />
           <div className="flex flex-col justify-between gap-2 min-w-32">
@@ -382,7 +416,9 @@ const Layer: React.FC = () => {
             <Button
               theme={theme}
               variant="secondary"
-              onClick={() => syncSelectedLayer(layer!).then(() => layerQuery.refetch())}
+              onClick={() =>
+                syncSelectedLayer(layer!).then(() => layerQuery.refetch())
+              }
               disabled={!layer || isManualSyncPending}
             >
               Run sync
@@ -390,11 +426,12 @@ const Layer: React.FC = () => {
             <Button
               theme={theme}
               variant="secondary"
-              onClick={() => navigate(`/logs/${layer!.namespace}/${layer!.name}`)}
+              onClick={() =>
+                navigate(`/logs/${layer!.namespace}/${layer!.name}`)
+              }
             >
               View logs
             </Button>
-
           </div>
         </div>
         <div className="flex-1 min-h-0 overflow-auto p-6">
@@ -405,10 +442,11 @@ const Layer: React.FC = () => {
             plan={planHighlights}
             planLoading={planQuery.isLoading || planQuery.isFetching}
             onGraphChange={setStateGraph}
-            onNodeClick={(n) => { setShowResourcePane(true)
+            onNodeClick={(n) => {
+              setShowResourcePane(true);
               setSelectedResourceData(n);
               console.log('Clicked node', n);
-            } }
+            }}
           />
         </div>
       </div>

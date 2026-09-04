@@ -54,19 +54,19 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
         light: `outline-terraform-create
           border-2 border-terraform-create`,
         dark: `outline-terraform-create
-          border-2 border-terraform-create`,
+          border-2 border-terraform-create`
       },
       update: {
         light: `outline-terraform-update
           border-2 border-terraform-update`,
         dark: `outline-terraform-update
-          border-2 border-terraform-update`,
+          border-2 border-terraform-update`
       },
       replace: {
         light: `outline-terraform-replace
           border-2 border-terraform-replace`,
         dark: `outline-terraform-replace
-          border-2 border-terraform-replace`,
+          border-2 border-terraform-replace`
       }
     }
   };
@@ -77,7 +77,10 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
       : 'update';
   const cardClass =
     tone === 'future'
-      ? twMerge(styles.future[futureKey as 'create' | 'update' | 'replace'][variant],styles.current[variant])
+      ? twMerge(
+          styles.future[futureKey as 'create' | 'update' | 'replace'][variant],
+          styles.current[variant]
+        )
       : styles.current[variant];
   const headerColor =
     tone === 'future'
@@ -102,7 +105,10 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
     variant === 'light'
       ? 'bg-gray-50 text-gray-900'
       : 'bg-nuances-black/70 text-nuances-50';
-  const futureBadgeStyles: Record<'create' | 'update' | 'replace', Record<'light' | 'dark', string>> = {
+  const futureBadgeStyles: Record<
+    'create' | 'update' | 'replace',
+    Record<'light' | 'dark', string>
+  > = {
     create: {
       light: 'text-terraform-create border border-terraform-create',
       dark: 'text-terraform-create border border-terraform-create/60'
@@ -126,18 +132,18 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
     badge ??
     (tone === 'future' &&
     planAction &&
-    futureBadgeStyles[futureKey as 'create' | 'update' | 'replace']
-      ? (
-          <span
-            className={twMerge(
-              'text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
-              futureBadgeStyles[futureKey as 'create' | 'update' | 'replace'][variant]
-            )}
-          >
-            {planAction}
-          </span>
-        )
-      : null);
+    futureBadgeStyles[futureKey as 'create' | 'update' | 'replace'] ? (
+      <span
+        className={twMerge(
+          'text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border inline-flex items-center gap-1',
+          futureBadgeStyles[futureKey as 'create' | 'update' | 'replace'][
+            variant
+          ]
+        )}
+      >
+        {planAction}
+      </span>
+    ) : null);
   const dependencyDisabledClass = twMerge(
     'cursor-not-allowed focus-visible:outline-none hover:text-current no-underline',
     variant === 'light'
@@ -174,7 +180,10 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
       if (copyResetRef.current) {
         window.clearTimeout(copyResetRef.current);
       }
-      copyResetRef.current = window.setTimeout(() => setCopyStatus('idle'), 1500);
+      copyResetRef.current = window.setTimeout(
+        () => setCopyStatus('idle'),
+        1500
+      );
     };
 
     if (navigator?.clipboard?.writeText) {
@@ -225,7 +234,9 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
           >
             {addr}
           </p>
-          {computedBadge && <span className="flex-shrink-0">{computedBadge}</span>}
+          {computedBadge && (
+            <span className="flex-shrink-0">{computedBadge}</span>
+          )}
         </div>
         <AngleDownIcon
           className={twMerge(
@@ -257,25 +268,26 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
                     ? isDependencyAvailable(dep)
                     : !!onDependencyClick;
                   return (
-                  <li key={dep}>
-                    <button
-                      type="button"
-                      className={twMerge(
-                        dependencyLinkClass,
-                        !isAvailable && dependencyDisabledClass
-                      )}
-                      disabled={!isAvailable}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (isAvailable && onDependencyClick) {
-                          onDependencyClick(dep);
-                        }
-                      }}
-                    >
-                      {dep}
-                    </button>
-                  </li>
-                )})}
+                    <li key={dep}>
+                      <button
+                        type="button"
+                        className={twMerge(
+                          dependencyLinkClass,
+                          !isAvailable && dependencyDisabledClass
+                        )}
+                        disabled={!isAvailable}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (isAvailable && onDependencyClick) {
+                            onDependencyClick(dep);
+                          }
+                        }}
+                      >
+                        {dep}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -289,7 +301,11 @@ const StateGraphInstanceCard: React.FC<StateGraphInstanceCardProps> = ({
               type="button"
               onClick={handleCopyAttributes}
               className={copyButtonClass}
-              aria-label={copyStatus === 'copied' ? 'Attributes copied' : 'Copy attributes to clipboard'}
+              aria-label={
+                copyStatus === 'copied'
+                  ? 'Attributes copied'
+                  : 'Copy attributes to clipboard'
+              }
             >
               <CopyIcon className="h-4 w-4 fill-current" />
               {copyStatus === 'copied' && <span>Copied</span>}
