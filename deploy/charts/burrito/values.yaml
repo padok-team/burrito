@@ -89,6 +89,10 @@ config:
           - "openid"
           - "profile"
           - "email"
+        # -- Map of claim name to allowed values; a user is authorized only if the ID token
+        # satisfies every listed claim (e.g. {"groups": ["burrito-admins"]}). Empty means no
+        # restriction: any authenticated user is authorized (default).
+        requiredClaims: {}
       session:
         # -- Session max age in seconds, after which the session will expire
         maxAge: 86400

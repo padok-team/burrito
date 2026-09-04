@@ -132,6 +132,10 @@ type OIDCConfig struct {
 	ClientSecret string   `mapstructure:"clientSecret"`
 	RedirectURL  string   `mapstructure:"redirectUrl"`
 	Scopes       []string `mapstructure:"scopes"`
+	// RequiredClaims maps a claim name to the list of values that satisfy it. A user is
+	// authorized only if every configured claim has a matching value on the ID token. Empty
+	// or absent means no restriction.
+	RequiredClaims map[string][]string `mapstructure:"requiredClaims"`
 }
 
 type BasicAuthConfig struct {
