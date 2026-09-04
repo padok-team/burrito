@@ -1,6 +1,6 @@
 [tools]
 # Language runtimes — pinned to the versions the repo declares for itself
-go = "1.27.0"      # Dockerfile golang builder (>= go.mod 1.26.0)
+go = "1.27.1"      # Dockerfile golang builder (>= go.mod 1.26.0)
 node = "26.8.1"    # root package.json devEngines runtime
 pnpm = "11.25.0"   # root package.json devEngines packageManager; ui/ downloads its own via devEngines
 
@@ -12,7 +12,7 @@ yq = "4.53.6"           # mikefarah
 golangci-lint = "2.13.2"
 
 # Docs toolchain
-uv = "0.12.8"
+uv = "0.12.9"
 
 # Not managed here (system-level): docker + buildx/compose, make, git.
 
