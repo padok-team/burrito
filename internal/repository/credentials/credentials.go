@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -22,13 +23,22 @@ const (
 	CredentialsType       = "credentials.burrito.tf/repository"
 )
 
+// credentialsSnapshot is an immutable view of the cached credentials. Each
+// refresh builds a brand new snapshot and swaps it in atomically, so readers
+// never mutate or block on it — they just load whatever snapshot is current.
+type credentialsSnapshot struct {
+	shared     []*SharedCredential
+	repository []*RepositoryCredential
+	updatedAt  time.Time
+}
+
 type CredentialStore struct {
 	TTL time.Duration
-	mu  sync.Mutex
 	client.Client
-	sharedCredentials     []*SharedCredential
-	repositoryCredentials []*RepositoryCredential
-	lastUpdate            time.Time
+	current atomic.Pointer[credentialsSnapshot]
+	// refreshMu serializes refreshes so that concurrent stale readers trigger
+	// a single API call instead of one each. It is never held by readers.
+	refreshMu sync.Mutex
 }
 
 func NewCredentialStore(client client.Client, ttl time.Duration) *CredentialStore {
@@ -36,32 +46,64 @@ func NewCredentialStore(client client.Client, ttl time.Duration) *CredentialStor
 		Client: client,
 		TTL:    ttl,
 	}
+	credentialStore.current.Store(&credentialsSnapshot{})
 	return credentialStore
 }
 
 func (s *CredentialStore) GetAllCredentials() ([]*SharedCredential, []*RepositoryCredential) {
-	if time.Since(s.lastUpdate) >= s.TTL {
-		err := s.updateCredentials()
-		if err != nil {
-			log.Errorf("Failed to update credentials: %v", err)
-		}
-	}
-	return s.sharedCredentials, s.repositoryCredentials
+	snapshot := s.refreshIfNeeded()
+	return snapshot.shared, snapshot.repository
 }
 
-func (s *CredentialStore) updateCredentials() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	// Skip if the last update was less than the TTL
-	if time.Since(s.lastUpdate) < s.TTL {
-		return nil
+// refreshIfNeeded returns the current snapshot, refreshing it first if it is
+// older than the TTL. The common case (fresh snapshot) never takes a lock.
+func (s *CredentialStore) refreshIfNeeded() *credentialsSnapshot {
+	snapshot := s.load()
+	if time.Since(snapshot.updatedAt) < s.TTL {
+		return snapshot
+	}
+
+	s.refreshMu.Lock()
+	defer s.refreshMu.Unlock()
+	// Re-check: another goroutine may have refreshed while we waited for the lock.
+	snapshot = s.load()
+	if time.Since(snapshot.updatedAt) < s.TTL {
+		return snapshot
+	}
+
+	next, err := s.buildSnapshot(snapshot)
+	if err != nil {
+		log.Errorf("failed to update credentials: %v", err)
+	}
+	// Stamp the snapshot even when the refresh failed, so a failing API call is
+	// retried after the TTL instead of on every single request.
+	next.updatedAt = time.Now()
+	s.current.Store(next)
+	return next
+}
+
+// load returns the current snapshot, never nil. A CredentialStore built as a
+// struct literal instead of through NewCredentialStore has no snapshot yet.
+func (s *CredentialStore) load() *credentialsSnapshot {
+	if snapshot := s.current.Load(); snapshot != nil {
+		return snapshot
+	}
+	return &credentialsSnapshot{}
+}
+
+// buildSnapshot lists secrets and returns the next snapshot. On a list error it
+// returns a snapshot carrying the previous credentials, so a failed refresh
+// keeps serving the last known-good values instead of dropping them.
+func (s *CredentialStore) buildSnapshot(previous *credentialsSnapshot) (*credentialsSnapshot, error) {
+	next := &credentialsSnapshot{
+		shared:     previous.shared,
+		repository: previous.repository,
 	}
 
 	sharedSecrets := &corev1.SecretList{}
 	err := s.List(context.Background(), sharedSecrets, client.MatchingFields{"type": SharedCredentialsType})
 	if err != nil {
-		s.lastUpdate = time.Now()
-		return err
+		return next, err
 	}
 	var sharedCredentials []*SharedCredential
 	for _, secret := range sharedSecrets.Items {
@@ -76,8 +118,7 @@ func (s *CredentialStore) updateCredentials() error {
 	repositorySecrets := &corev1.SecretList{}
 	err = s.List(context.Background(), repositorySecrets, client.MatchingFields{"type": CredentialsType})
 	if err != nil {
-		s.lastUpdate = time.Now()
-		return err
+		return next, err
 	}
 	var repositoryCredentials []*RepositoryCredential
 	for _, secret := range repositorySecrets.Items {
@@ -89,29 +130,22 @@ func (s *CredentialStore) updateCredentials() error {
 		repositoryCredentials = append(repositoryCredentials, tmp)
 	}
 
-	s.repositoryCredentials = repositoryCredentials
-	s.sharedCredentials = sharedCredentials
-	s.lastUpdate = time.Now()
-
-	return nil
+	next.shared = sharedCredentials
+	next.repository = repositoryCredentials
+	return next, nil
 }
 
 // Returns the credentials for a given repository. If a specific repository credential is found, it will be returned.
 // If not, the most specific shared credential that matches the repository will be returned.
 func (s *CredentialStore) GetCredentials(repository *configv1alpha1.TerraformRepository) (*Credential, error) {
-	if time.Since(s.lastUpdate) >= s.TTL {
-		err := s.updateCredentials()
-		if err != nil {
-			log.Errorf("failed to update credentials: %v", err)
-		}
-	}
-	for _, repositoryCredentials := range s.repositoryCredentials {
+	snapshot := s.refreshIfNeeded()
+	for _, repositoryCredentials := range snapshot.repository {
 		if repositoryCredentials.Matches(repository) {
 			return &repositoryCredentials.Credential, nil
 		}
 	}
 	var sharedCredential *SharedCredential
-	for _, tmp := range s.sharedCredentials {
+	for _, tmp := range snapshot.shared {
 		isAllowed := tmp.IsAllowed(repository)
 		matches := tmp.Matches(repository)
 		if isAllowed && matches {
