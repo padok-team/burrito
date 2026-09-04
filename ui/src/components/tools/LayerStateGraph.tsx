@@ -104,8 +104,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   const hasGraphData = (graph?.nodes?.length ?? 0) > 0;
   const infoTextClass =
     variant === 'light' ? 'text-slate-500' : 'text-nuances-200';
-  const errorTextClass =
-    variant === 'light' ? 'text-red-500' : 'text-red-400';
+  const errorTextClass = variant === 'light' ? 'text-red-500' : 'text-red-400';
 
   if (layerQuery.isLoading) {
     return (

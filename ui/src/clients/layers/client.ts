@@ -14,14 +14,14 @@ export const fetchLayer = async (namespace: string, name: string) => {
     `${import.meta.env.VITE_API_BASE_URL}/layers/${namespace}/${name}`
   );
   return response.data;
-}
+};
 
 export const fetchStateGraph = async (namespace: string, name: string) => {
   const response = await axios.get<StateGraph>(
     `${import.meta.env.VITE_API_BASE_URL}/layers/${namespace}/${name}/stategraph`
   );
   return response.data;
-}
+};
 
 export const syncLayer = async (namespace: string, name: string) => {
   const response = await axios.post(

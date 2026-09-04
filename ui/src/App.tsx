@@ -47,9 +47,7 @@ const router = createBrowserRouter([
         path: 'layers',
         element: <Layers />
       },
-      { path: 'layers/:namespace?/:name?', 
-        element: <Layer />
-      },
+      { path: 'layers/:namespace?/:name?', element: <Layer /> },
       {
         path: 'pulls',
         element: <Pulls />
