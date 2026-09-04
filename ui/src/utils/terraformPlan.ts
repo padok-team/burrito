@@ -1,4 +1,9 @@
-import { StateGraph, StateGraphEdge, StateGraphNode, StateGraphResourceInstance } from '@/clients/layers/types';
+import {
+  StateGraph,
+  StateGraphEdge,
+  StateGraphNode,
+  StateGraphResourceInstance
+} from '@/clients/layers/types';
 
 export type PlanAction = 'create' | 'delete' | 'update' | 'replace';
 
@@ -63,10 +68,15 @@ function normalizeAction(actions: string[] | undefined): PlanAction | null {
   return null;
 }
 
-function mergeAction(existing: PlanAction | null, next: PlanAction | null): PlanAction | null {
+function mergeAction(
+  existing: PlanAction | null,
+  next: PlanAction | null
+): PlanAction | null {
   if (!existing) return next;
   if (!next) return existing;
-  return PLAN_ACTION_PRIORITY[existing] >= PLAN_ACTION_PRIORITY[next] ? existing : next;
+  return PLAN_ACTION_PRIORITY[existing] >= PLAN_ACTION_PRIORITY[next]
+    ? existing
+    : next;
 }
 
 function baseAddr(addr: string): string {
@@ -82,7 +92,11 @@ function extractIndex(addr: string): string | null {
   return match ? match[0] : null;
 }
 
-function toPlanChange(rawAddr: string, action: PlanAction, change: NonNullable<RawPlanChange['change']>): PlanChange {
+function toPlanChange(
+  rawAddr: string,
+  action: PlanAction,
+  change: NonNullable<RawPlanChange['change']>
+): PlanChange {
   const base = baseAddr(rawAddr);
   const index = extractIndex(rawAddr);
   return {
@@ -117,7 +131,10 @@ export function parseTerraformPlan(plan: unknown): ParsedTerraformPlan {
     const change = toPlanChange(addr, action, rc.change);
     byAddr.set(addr, change);
 
-    const aggregate = byBase.get(change.base) ?? { action: null, instances: {} };
+    const aggregate = byBase.get(change.base) ?? {
+      action: null,
+      instances: {}
+    };
     aggregate.action = mergeAction(aggregate.action, change.action);
     if (change.index) {
       aggregate.instances[change.index] = change;
@@ -164,7 +181,9 @@ function parseBaseAddress(addr: string): ParsedAddressInfo {
   };
 }
 
-function planChangesForAggregate(aggregate: AggregatedPlanChange): PlanChange[] {
+function planChangesForAggregate(
+  aggregate: AggregatedPlanChange
+): PlanChange[] {
   const out: PlanChange[] = [];
   if (aggregate.single) {
     out.push(aggregate.single);
@@ -175,16 +194,19 @@ function planChangesForAggregate(aggregate: AggregatedPlanChange): PlanChange[] 
   return out;
 }
 
-function planInstances(changes: PlanChange[]): StateGraphResourceInstance[] | undefined {
+function planInstances(
+  changes: PlanChange[]
+): StateGraphResourceInstance[] | undefined {
   if (changes.length === 0) {
     return undefined;
   }
   return changes.map((change) => {
-    const rawAttrs = (change.after ?? change.before) ?? undefined;
+    const rawAttrs = change.after ?? change.before ?? undefined;
     // Ensure the attributes conform to Record<string, unknown> | undefined
-    const attributes = (rawAttrs && typeof rawAttrs === 'object')
-      ? (rawAttrs as Record<string, unknown>)
-      : undefined;
+    const attributes =
+      rawAttrs && typeof rawAttrs === 'object'
+        ? (rawAttrs as Record<string, unknown>)
+        : undefined;
     return {
       addr: change.addr,
       attributes
@@ -192,10 +214,14 @@ function planInstances(changes: PlanChange[]): StateGraphResourceInstance[] | un
   });
 }
 
-function cloneInstance(instance: StateGraphResourceInstance): StateGraphResourceInstance {
+function cloneInstance(
+  instance: StateGraphResourceInstance
+): StateGraphResourceInstance {
   return {
     addr: instance.addr,
-    dependencies: instance.dependencies ? [...instance.dependencies] : undefined,
+    dependencies: instance.dependencies
+      ? [...instance.dependencies]
+      : undefined,
     attributes: instance.attributes ? { ...instance.attributes } : undefined,
     created_at: instance.created_at
   };
@@ -234,7 +260,10 @@ export function augmentStateGraphWithPlan(
 
       const existing = mergedNodes.get(base);
       if (existing) {
-        if ((!existing.instances || existing.instances.length === 0) && planInst) {
+        if (
+          (!existing.instances || existing.instances.length === 0) &&
+          planInst
+        ) {
           existing.instances = planInst.map(cloneInstance);
         }
         if (existing.instances_count === 0) {

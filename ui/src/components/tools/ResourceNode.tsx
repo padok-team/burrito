@@ -22,14 +22,20 @@ const ResourceNode: React.FC<ResourceNodeProps> = ({ data }) => {
   const change = data.change || null;
   const variant = data.variant ?? 'light';
 
-  const planColorMap: Record<'create' | 'delete' | 'update' | 'replace', string> = {
+  const planColorMap: Record<
+    'create' | 'delete' | 'update' | 'replace',
+    string
+  > = {
     create: '#10b981',
     delete: '#ef4444',
     update: '#f59e0b',
     replace: '#8b5cf6'
   };
 
-  const planSymbolMap: Record<'create' | 'delete' | 'update' | 'replace', string> = {
+  const planSymbolMap: Record<
+    'create' | 'delete' | 'update' | 'replace',
+    string
+  > = {
     create: '+',
     delete: '-',
     update: '~',
@@ -50,13 +56,19 @@ const ResourceNode: React.FC<ResourceNodeProps> = ({ data }) => {
     variant === 'light' ? 'text-nuances-black' : 'text-nuances-50';
   const countClass = twMerge(
     'absolute -top-2 -right-2 inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[10px] font-semibold shadow',
-    variant === 'light' ? 'text-primary-100 bg-nuances-black' : 'text-nuances-black bg-nuances-50'
+    variant === 'light'
+      ? 'text-primary-100 bg-nuances-black'
+      : 'text-nuances-black bg-nuances-50'
   );
 
   return (
     <div
       className={containerClass}
-      style={accentColor ? { boxShadow: `inset 0 0 0 2px ${accentColor}33` } : undefined}
+      style={
+        accentColor
+          ? { boxShadow: `inset 0 0 0 2px ${accentColor}33` }
+          : undefined
+      }
     >
       {/* Provide handles on all sides with stable ids for edge anchoring */}
       <Handle
@@ -94,10 +106,17 @@ const ResourceNode: React.FC<ResourceNodeProps> = ({ data }) => {
           aria-hidden
         />
       )}
-      <div className={twMerge('text-[10px] tracking-wide uppercase', typeClass)}>
+      <div
+        className={twMerge('text-[10px] tracking-wide uppercase', typeClass)}
+      >
         {data.type}
       </div>
-      <div className={twMerge('text-lg font-semibold flex items-center gap-2', nameClass)}>
+      <div
+        className={twMerge(
+          'text-lg font-semibold flex items-center gap-2',
+          nameClass
+        )}
+      >
         <span className="truncate max-w-[200px]" title={data.name}>
           {data.name}
         </span>

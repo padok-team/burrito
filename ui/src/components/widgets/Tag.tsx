@@ -35,7 +35,8 @@ const Tag: React.FC<TagProps> = ({ variant, className }) => {
 
   return (
     <div
-      className={twMerge(`
+      className={twMerge(
+        `
         flex
         px-3 py-1
         items-center
@@ -45,7 +46,9 @@ const Tag: React.FC<TagProps> = ({ variant, className }) => {
         font-semibold
         leading-5
         ${styles[variant]}
-      `, className)}
+      `,
+        className
+      )}
     >
       {getContent()}
     </div>

@@ -123,34 +123,35 @@ const Logs: React.FC = () => {
     [layerOffset, layersQuery]
   );
 
-  const handleActive = useCallback((layer: Layer, run?: string) => {
-    navigate({
-      pathname: `/logs/${layer.namespace}/${layer.name}${
-        run
-          ? `/${run}`
-          : layer.latestRuns.length > 0
-            ? `/${layer.lastRun.id}`
-            : ''
-      }`,
-      search: searchParams.toString()
-    });
-  }, [navigate, searchParams]);
+  const handleActive = useCallback(
+    (layer: Layer, run?: string) => {
+      navigate({
+        pathname: `/logs/${layer.namespace}/${layer.name}${
+          run
+            ? `/${run}`
+            : layer.latestRuns.length > 0
+              ? `/${layer.lastRun.id}`
+              : ''
+        }`,
+        search: searchParams.toString()
+      });
+    },
+    [navigate, searchParams]
+  );
 
   // Redirect to default run when no runId is provided
-  if (
-    namespace &&
-    layerId &&
-    layersQuery.isSuccess &&
-    !runId
-  ) {
+  if (namespace && layerId && layersQuery.isSuccess && !runId) {
     const activeLayer = layersQuery.data.results.find(
-      layer => layer.namespace === namespace && layer.name === layerId
+      (layer) => layer.namespace === namespace && layer.name === layerId
     );
 
     if (activeLayer?.lastRun) {
       const defaultRunId = activeLayer.lastRun.id;
       const searchString = searchParams.toString();
-      navigate(`/logs/${namespace}/${layerId}/${defaultRunId}${searchString ? `?${searchString}` : ''}`, { replace: true });
+      navigate(
+        `/logs/${namespace}/${layerId}/${defaultRunId}${searchString ? `?${searchString}` : ''}`,
+        { replace: true }
+      );
     }
   }
 

@@ -1,5 +1,9 @@
 import ELK from 'elkjs/lib/elk.bundled.js';
-import { StateGraph, StateGraphNode, StateGraphEdge } from '@/clients/layers/types.ts';
+import {
+  StateGraph,
+  StateGraphNode,
+  StateGraphEdge
+} from '@/clients/layers/types.ts';
 import { Node, Edge, Position } from 'reactflow';
 
 export type ReactFlowNode = Node<{
@@ -31,39 +35,45 @@ function sizeForLabel(label: string): { w: number; h: number } {
 }
 
 // Async builder using ELK with fixed settings
-export async function buildReactFlow(graph: StateGraph): Promise<ReactFlowGraph> {
+export async function buildReactFlow(
+  graph: StateGraph
+): Promise<ReactFlowGraph> {
   const positioned = await layoutWithElk(graph);
   const isTB = false; // hard-coded RIGHT direction
-  const nodes: ReactFlowNode[] = (graph.nodes || []).map((n: StateGraphNode) => {
-    const label = `${(n.type || '').toUpperCase()}\n${n.name || ''}`;
-    const { w, h } = sizeForLabel(label);
-    const p = positioned.get(n.id) || { x: 0, y: 0 };
-    const pos = { x: p.x - w / 2, y: p.y - h / 2 };
-    return {
-      id: n.id,
-      type: 'resource',
-      position: pos,
-      sourcePosition: isTB ? Position.Bottom : Position.Right,
-      targetPosition: isTB ? Position.Top : Position.Left,
-      data: {
+  const nodes: ReactFlowNode[] = (graph.nodes || []).map(
+    (n: StateGraphNode) => {
+      const label = `${(n.type || '').toUpperCase()}\n${n.name || ''}`;
+      const { w, h } = sizeForLabel(label);
+      const p = positioned.get(n.id) || { x: 0, y: 0 };
+      const pos = { x: p.x - w / 2, y: p.y - h / 2 };
+      return {
         id: n.id,
-        type: (n.type || '').toUpperCase(),
-        name: n.name || '',
-        count: n.instances_count || 0,
-        provider: n.provider || '',
-        module: n.module || '',
-        change: null
-      }
-    };
-  });
-  const edges: ReactFlowEdge[] = (graph.edges || []).map((e: StateGraphEdge) => ({
-    id: `${e.from}->${e.to}`,
-    source: e.from,
-    target: e.to,
-    type: 'step',
-    sourceHandle: isTB ? 'bottom' : 'right',
-    targetHandle: isTB ? 'top' : 'left'
-  }));
+        type: 'resource',
+        position: pos,
+        sourcePosition: isTB ? Position.Bottom : Position.Right,
+        targetPosition: isTB ? Position.Top : Position.Left,
+        data: {
+          id: n.id,
+          type: (n.type || '').toUpperCase(),
+          name: n.name || '',
+          count: n.instances_count || 0,
+          provider: n.provider || '',
+          module: n.module || '',
+          change: null
+        }
+      };
+    }
+  );
+  const edges: ReactFlowEdge[] = (graph.edges || []).map(
+    (e: StateGraphEdge) => ({
+      id: `${e.from}->${e.to}`,
+      source: e.from,
+      target: e.to,
+      type: 'step',
+      sourceHandle: isTB ? 'bottom' : 'right',
+      targetHandle: isTB ? 'top' : 'left'
+    })
+  );
   return { nodes, edges };
 }
 
