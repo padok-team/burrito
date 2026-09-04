@@ -24,10 +24,8 @@ import (
 )
 
 type fakeAPIProvider struct {
-	pullRequests   []configv1alpha1.TerraformPullRequest
-	err            error
-	mergeCommit    string
-	mergeCommitErr error
+	pullRequests []configv1alpha1.TerraformPullRequest
+	err          error
 }
 
 func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
@@ -47,13 +45,6 @@ func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformR
 
 func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
 	return nil
-}
-
-func (p *fakeAPIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
-	if p.mergeCommitErr != nil {
-		return "", p.mergeCommitErr
-	}
-	return p.mergeCommit, nil
 }
 
 func newTerraformRepositoryTestScheme(t *testing.T) *runtime.Scheme {
@@ -167,84 +158,6 @@ func TestSyncPullRequestsCreatesDesiredAndDeletesClosedPullRequests(t *testing.T
 	}
 	if err := reconciler.Get(context.Background(), ktypes.NamespacedName{Name: otherRepositoryPR.Name, Namespace: otherRepositoryPR.Namespace}, &configv1alpha1.TerraformPullRequest{}); err != nil {
 		t.Fatalf("expected other repository PR to be preserved, got %v", err)
-	}
-}
-
-func TestSyncPullRequestsPreservesMergedPullRequestNotInOpenList(t *testing.T) {
-	scheme := newTerraformRepositoryTestScheme(t)
-	repository := testTerraformRepository("default", "repo")
-	merged := testTerraformPullRequest("default", "repo-1", "1", "feature", "sha")
-	merged.Annotations[annotations.MergedAt] = "2026-01-01T00:00:00Z"
-
-	reconciler := &Reconciler{
-		Client:   fake.NewClientBuilder().WithScheme(scheme).WithObjects(repository, merged).Build(),
-		Config:   config.TestConfig(),
-		Recorder: record.NewFakeRecorder(10),
-		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
-			// The remote pull/merge request no longer appears in the "open" list once merged.
-			return &fakeAPIProvider{pullRequests: []configv1alpha1.TerraformPullRequest{}}, nil
-		},
-	}
-
-	if err := reconciler.syncPullRequests(context.Background(), repository); err != nil {
-		t.Fatalf("syncPullRequests returned error: %v", err)
-	}
-	if err := reconciler.Get(context.Background(), ktypes.NamespacedName{Name: merged.Name, Namespace: merged.Namespace}, &configv1alpha1.TerraformPullRequest{}); err != nil {
-		t.Fatalf("expected merged pull request to survive until the apply flow deletes it, got %v", err)
-	}
-}
-
-func TestSyncPullRequestsDetectsMergeViaPollingWhenNoWebhookAnnotatedIt(t *testing.T) {
-	scheme := newTerraformRepositoryTestScheme(t)
-	repository := testTerraformRepository("default", "repo")
-	// Not yet annotated MergedAt: no webhook is configured, so polling is the only signal.
-	disappeared := testTerraformPullRequest("default", "repo-1", "1", "feature", "sha")
-
-	reconciler := &Reconciler{
-		Client:   fake.NewClientBuilder().WithScheme(scheme).WithObjects(repository, disappeared).Build(),
-		Config:   config.TestConfig(),
-		Recorder: record.NewFakeRecorder(10),
-		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
-			return &fakeAPIProvider{pullRequests: []configv1alpha1.TerraformPullRequest{}, mergeCommit: "merge-sha-abc"}, nil
-		},
-	}
-
-	if err := reconciler.syncPullRequests(context.Background(), repository); err != nil {
-		t.Fatalf("syncPullRequests returned error: %v", err)
-	}
-
-	updated := &configv1alpha1.TerraformPullRequest{}
-	if err := reconciler.Get(context.Background(), ktypes.NamespacedName{Name: disappeared.Name, Namespace: disappeared.Namespace}, updated); err != nil {
-		t.Fatalf("expected pull request to survive as merged, got %v", err)
-	}
-	if updated.Annotations[annotations.MergedAt] == "" {
-		t.Fatalf("expected MergedAt annotation to be set")
-	}
-	if updated.Annotations[annotations.MergeCommit] != "merge-sha-abc" {
-		t.Fatalf("expected merge commit annotation %q, got %q", "merge-sha-abc", updated.Annotations[annotations.MergeCommit])
-	}
-}
-
-func TestSyncPullRequestsDeletesGenuinelyClosedPullRequestWithoutMergeCommit(t *testing.T) {
-	scheme := newTerraformRepositoryTestScheme(t)
-	repository := testTerraformRepository("default", "repo")
-	closed := testTerraformPullRequest("default", "repo-1", "1", "feature", "sha")
-
-	reconciler := &Reconciler{
-		Client:   fake.NewClientBuilder().WithScheme(scheme).WithObjects(repository, closed).Build(),
-		Config:   config.TestConfig(),
-		Recorder: record.NewFakeRecorder(10),
-		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
-			// No merge commit: the pull request was closed without being merged.
-			return &fakeAPIProvider{pullRequests: []configv1alpha1.TerraformPullRequest{}}, nil
-		},
-	}
-
-	if err := reconciler.syncPullRequests(context.Background(), repository); err != nil {
-		t.Fatalf("syncPullRequests returned error: %v", err)
-	}
-	if err := reconciler.Get(context.Background(), ktypes.NamespacedName{Name: closed.Name, Namespace: closed.Namespace}, &configv1alpha1.TerraformPullRequest{}); !apierrors.IsNotFound(err) {
-		t.Fatalf("expected closed-without-merge pull request to be deleted, got %v", err)
 	}
 }
 

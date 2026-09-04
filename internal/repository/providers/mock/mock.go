@@ -138,10 +138,6 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 	return nil
 }
 
-func (api *APIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
-	return "mock-merge-commit", nil
-}
-
 type WebhookProvider struct{}
 
 func (w *WebhookProvider) ParseWebhookPayload(payload *http.Request) (interface{}, bool) {

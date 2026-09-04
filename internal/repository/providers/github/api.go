@@ -84,20 +84,6 @@ func toGithubState(s status.State) string {
 	return string(s)
 }
 
-func (api *APIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
-	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
-	id, err := strconv.Atoi(pr.Spec.ID)
-	if err != nil {
-		log.Errorf("Error while parsing Github pull request ID: %s", err)
-		return "", err
-	}
-	pullRequest, _, err := api.client.PullRequests.Get(context.TODO(), owner, repoName, id)
-	if err != nil {
-		return "", err
-	}
-	return pullRequest.GetMergeCommitSHA(), nil
-}
-
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {
 	body, err := prComment.Generate(pr.Annotations[annotations.LastBranchCommit])
 	if err != nil {

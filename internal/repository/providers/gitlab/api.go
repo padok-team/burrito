@@ -84,23 +84,6 @@ func toGitlabBuildState(s status.State) gitlab.BuildStateValue {
 	}
 }
 
-func (api *APIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
-	id, err := strconv.ParseInt(pr.Spec.ID, 10, 64)
-	if err != nil {
-		log.Errorf("Error while parsing Gitlab merge request ID: %s", err)
-		return "", err
-	}
-	mergeRequest, _, err := api.client.MergeRequests.GetMergeRequest(getGitlabNamespacedName(repository.Spec.Repository.Url), id, nil)
-	if err != nil {
-		return "", err
-	}
-	if mergeRequest.MergeCommitSHA != "" {
-		return mergeRequest.MergeCommitSHA, nil
-	}
-	// Squashed merge requests only get a squash_commit_sha, not a merge_commit_sha.
-	return mergeRequest.SquashCommitSHA, nil
-}
-
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {
 	body, err := prComment.Generate(pr.Annotations[annotations.LastBranchCommit])
 	if err != nil {
