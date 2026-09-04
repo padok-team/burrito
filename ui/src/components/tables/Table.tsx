@@ -3,8 +3,8 @@ import { twMerge } from 'tailwind-merge';
 import {
   createColumnHelper,
   flexRender,
-  getCoreRowModel,
-  useReactTable
+  tableFeatures,
+  useTable
 } from '@tanstack/react-table';
 import { Tooltip } from 'react-tooltip';
 
@@ -28,13 +28,15 @@ export interface TableProps {
   data: Layer[];
 }
 
+const features = tableFeatures({});
+
 const Table: React.FC<TableProps> = ({
   className,
   variant = 'light',
   isLoading,
   data
 }) => {
-  const columnHelper = createColumnHelper<Layer>();
+  const columnHelper = createColumnHelper<typeof features, Layer>();
   const [hoveredRow, setHoveredRow] = useState<Layer | null>(null);
   const syncSelectedLayer = async (index: number) => {
     const sync = await syncLayer(data[index].namespace, data[index].name);
@@ -43,7 +45,7 @@ const Table: React.FC<TableProps> = ({
     }
   };
 
-  const columns = [
+  const columns = columnHelper.columns([
     columnHelper.accessor('isPR', {
       header: '',
       cell: (isPR) => isPR.getValue() && <CodeBranchIcon className="-mr-6" />
@@ -141,7 +143,7 @@ const Table: React.FC<TableProps> = ({
         </div>
       )
     })
-  ];
+  ]);
 
   const getTag = (state: LayerState) => {
     return (
@@ -165,10 +167,10 @@ const Table: React.FC<TableProps> = ({
     );
   };
 
-  const table = useReactTable({
+  const table = useTable({
+    features,
     data,
-    columns,
-    getCoreRowModel: getCoreRowModel()
+    columns
   });
 
   const styles = {
@@ -332,7 +334,7 @@ const Table: React.FC<TableProps> = ({
                   onMouseEnter={() => setHoveredRow(row.original)}
                   onMouseLeave={() => setHoveredRow(null)}
                 >
-                  {row.getVisibleCells().map((cell, index) => (
+                  {row.getAllCells().map((cell, index) => (
                     <td
                       key={cell.id}
                       className={twMerge(
@@ -368,7 +370,7 @@ const Table: React.FC<TableProps> = ({
                             ${styles.separator[variant]}
                           `}
                         />
-                      ) : index === row.getVisibleCells().length - 1 ? (
+                      ) : index === row.getAllCells().length - 1 ? (
                         <hr
                           className={`
                             absolute
