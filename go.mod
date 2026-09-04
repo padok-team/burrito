@@ -24,7 +24,7 @@ require (
 	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/tofuutils/tenv/v4 v4.15.1
-	google.golang.org/api v0.295.0
+	google.golang.org/api v0.296.0
 	k8s.io/apimachinery v0.36.4
 	k8s.io/client-go v0.36.4
 	sigs.k8s.io/controller-runtime v0.24.1
