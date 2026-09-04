@@ -1,18 +1,18 @@
 [tools]
 # Language runtimes — pinned to the versions the repo declares for itself
-go = "1.26.3"      # Dockerfile golang builder (>= go.mod 1.26.0)
+go = "1.27.0"      # Dockerfile golang builder (>= go.mod 1.26.0)
 node = "26.8.1"    # root package.json devEngines runtime
-pnpm = "11.20.0"   # root package.json devEngines packageManager; ui/ downloads its own via devEngines
+pnpm = "11.25.0"   # root package.json devEngines packageManager; ui/ downloads its own via devEngines
 
 # Kubernetes & dev CLIs — pinned for a reproducible environment
-kubectl = "1.36.2"      # aligns with ENVTEST_K8S_VERSION (1.36.0)
-helm = "4.2.0"
-kind = "0.32.0"
-yq = "4.53.3"           # mikefarah
-golangci-lint = "2.12.2"
+kubectl = "1.37.0"      # aligns with ENVTEST_K8S_VERSION (1.36.0)
+helm = "4.2.4"
+kind = "0.33.0"
+yq = "4.53.6"           # mikefarah
+golangci-lint = "2.13.2"
 
 # Docs toolchain
-uv = "0.11.19"
+uv = "0.12.8"
 
 # Not managed here (system-level): docker + buildx/compose, make, git.
 
