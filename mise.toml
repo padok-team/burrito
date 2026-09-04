@@ -10,6 +10,7 @@ helm = "4.2.4"
 kind = "0.33.0"
 yq = "4.53.6"           # mikefarah
 golangci-lint = "2.13.2"
+helm-docs = "1.14.2"    # regenerates deploy/charts/burrito/README.md from values.yaml
 
 # Docs toolchain
 uv = "0.12.8"
@@ -32,3 +33,7 @@ run = "uv run zensical serve"
 [tasks.lint]
 description = "Run golangci-lint (no make target exists for it)"
 run = "golangci-lint run ./..."
+
+[tasks."helm-docs"]
+description = "Regenerate deploy/charts/burrito/README.md from values.yaml"
+run = "helm-docs --chart-search-root=deploy/charts"
