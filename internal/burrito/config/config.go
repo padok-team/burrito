@@ -143,6 +143,36 @@ type SecretConfig struct {
 	SecretKey  string `mapstructure:"secretKey"`
 }
 
+const envPrefix = "burrito"
+
+var flagConfigKeys = map[string]string{
+	"addr":                       "server.addr",
+	"credentials-ttl":            "controller.timers.credentialsTTL",
+	"drift-detection-period":     "controller.timers.driftDetection",
+	"failure-grace-period":       "controller.timers.failureGracePeriod",
+	"health-probe-bind-address":  "controller.healthProbeBindAddress",
+	"kubernetes-webhook-port":    "controller.kubernetesWebhookPort",
+	"leader-election":            "controller.leaderElection.enabled",
+	"leader-election-id":         "controller.leaderElection.id",
+	"max-concurrent-reconciles":  "controller.maxConcurrentReconciles",
+	"max-concurrent-runner-pods": "controller.maxConcurrentRunnerPods",
+	"metrics-bind-address":       "controller.metricsBindAddress",
+	"namespaces":                 "controller.namespaces",
+	"on-error-period":            "controller.timers.onError",
+	"repository-path":            "runner.repositoryPath",
+	"repository-sync-period":     "controller.timers.repositorySync",
+	"runner-binary-path":         "runner.runnerBinaryPath",
+	"ssh-known-hosts-cm-name":    "runner.sshKnownHostsConfigMapName",
+	"terraform-max-retries":      "controller.terraformMaxRetries",
+	"types":                      "controller.types",
+	"wait-action-period":         "controller.timers.waitAction",
+}
+
+func ConfigKeyForFlag(flagName string) (string, bool) {
+	configKey, ok := flagConfigKeys[flagName]
+	return configKey, ok
+}
+
 func (c *Config) Load(flags *pflag.FlagSet) error {
 	v := viper.New()
 
@@ -163,7 +193,7 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 
 	// burrito can be configured with environment variables that start with
 	// burrito_.
-	v.SetEnvPrefix("burrito")
+	v.SetEnvPrefix(envPrefix)
 	v.AutomaticEnv()
 
 	// Options with dashes in flag names have underscores when set inside a
@@ -172,16 +202,21 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 		name = strings.ReplaceAll(name, "-", "_")
 		return pflag.NormalizedName(name)
 	})
-	err := v.BindPFlags(flags)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error binding flags: %s\n", err)
-		return err
+	for flagName, configKey := range flagConfigKeys {
+		flag := flags.Lookup(flagName)
+		if flag == nil {
+			continue
+		}
+		if err := v.BindPFlag(configKey, flag); err != nil {
+			fmt.Fprintf(os.Stderr, "Error binding flag %q: %s\n", flagName, err)
+			return err
+		}
 	}
 
 	// Nested configuration options set with environment variables use an
 	// underscore as a separator.
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	err = bindEnvironmentVariables(v, *c)
+	err := bindEnvironmentVariables(v, *c)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error binding environment variables: %s\n", err)
 		return err
@@ -211,13 +246,24 @@ func bindEnvironmentVariables(v *viper.Viper, iface interface{}, parts ...string
 				return err
 			}
 		default:
-			err := v.BindEnv(strings.Join(append(parts, tv), "."))
+			keyParts := append(parts, tv)
+			key := strings.Join(keyParts, ".")
+			envName := environmentVariableName(keyParts)
+			if value, exists := os.LookupEnv(envName); exists && value != "" {
+				v.Set(key, value)
+				continue
+			}
+			err := v.BindEnv(key)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+func environmentVariableName(parts []string) string {
+	return strings.ToUpper(envPrefix + "_" + strings.Join(parts, "_"))
 }
 
 func TestConfig() *Config {
