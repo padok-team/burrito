@@ -134,6 +134,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		LastRun:    runInfo.LastRun,
 		RunnerPod:  runInfo.RunnerPod,
 		Attempts:   run.Status.Attempts,
+		Commit:     run.Status.Commit,
+		Message:    run.Status.Message,
+		Author:     run.Status.Author,
 	}
 	err = r.uploadLogs(run)
 	if err != nil {

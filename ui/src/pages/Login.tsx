@@ -135,7 +135,8 @@ const Login: React.FC = () => {
                 )}
                 <Button
                   className="w-full"
-                  variant={theme === 'light' ? 'primary' : 'secondary'}
+                  variant="primary"
+                  theme={theme}
                   type="submit"
                   disabled={loginMutation.isPending}
                 >

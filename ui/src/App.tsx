@@ -8,6 +8,7 @@ import Layers from '@/pages/Layers';
 import Pulls from '@/pages/Pulls';
 import Logs from '@/pages/Logs';
 import Login from '@/pages/Login';
+import Layer from '@/pages/Layer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
         path: 'layers',
         element: <Layers />
       },
+      { path: 'layers/:namespace?/:name?', element: <Layer /> },
       {
         path: 'pulls',
         element: <Pulls />
