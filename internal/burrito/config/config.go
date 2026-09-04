@@ -27,6 +27,7 @@ type DatastoreConfig struct {
 	CertificateSecretName     string        `mapstructure:"certificateSecretName"`
 	Storage                   StorageConfig `mapstructure:"storage"`
 	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
+	LogFormat                 string        `mapstructure:"logFormat"`
 }
 
 type StorageConfig struct {

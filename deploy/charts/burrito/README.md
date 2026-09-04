@@ -30,6 +30,7 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.controller.timers.waitAction | string | `"1m"` | Duration to wait before retrying on locked layer |
 | config.burrito.controller.types | list | `["layer","repository","run","pullrequest"]` | Resource types to watch for reconciliation |
 | config.burrito.datastore.addr | string | `":8080"` | Datastore exposed port |
+| config.burrito.datastore.logFormat | string | `"text"` | Log format for the datastore, either "text" or "json" |
 | config.burrito.datastore.serviceAccounts | list | `[]` | Service account to use for datastore operations (e.g. reading/writing to storage) |
 | config.burrito.datastore.storage.azure.container | string | `""` | Azure storage container name |
 | config.burrito.datastore.storage.azure.storageAccount | string | `""` | Azure storage account name |

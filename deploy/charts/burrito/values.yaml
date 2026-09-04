@@ -49,6 +49,8 @@ config:
     # -- Provider cache custom configuration
     hermitcrab: {}
     datastore:
+      # -- Log format for the datastore, either "text" or "json"
+      logFormat: text
       # -- Service accounts that are allowed to access the datastore API in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that)
       serviceAccounts: []
       storage:

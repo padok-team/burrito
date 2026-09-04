@@ -37,5 +37,8 @@ controller:
   kubernetesWebhookPort: 9443
   logFormat: text
 
+datastore:
+  logFormat: text
+
 server:
   addr: ":9090"
