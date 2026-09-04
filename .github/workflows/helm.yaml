@@ -31,6 +31,23 @@ env:
   CHART_REPO: ghcr.io/${{ github.repository_owner }}/charts
 
 jobs:
+  check-helm-docs:
+    name: Check Helm Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Generate README
+        uses: docker://jnorwood/helm-docs@sha256:7e562b49ab6b1dbc50c3da8f2dd6ffa8a5c6bba327b1c6335cc15ce29267979c # v1.14.2
+        with:
+          args: --chart-search-root=deploy/charts
+
+      - name: Check nothing has changed
+        run: git diff --exit-code -- deploy/charts/burrito/README.md
+
   helm-render:
     name: Helm Render
     runs-on: ubuntu-latest
