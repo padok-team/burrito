@@ -8,7 +8,7 @@ import React, {
 import { twMerge } from 'tailwind-merge';
 import { ThemeContext } from '@/contexts/ThemeContext';
 import LayerStateGraph from '@/components/tools/LayerStateGraph';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { reactQueryKeys } from '@/clients/reactQueryConfig';
 import { fetchLayer, syncLayer } from '@/clients/layers/client';

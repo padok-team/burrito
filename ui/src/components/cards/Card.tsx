@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { Tooltip } from 'react-tooltip';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import Running from '@/components/widgets/Running';
 import Tag from '@/components/widgets/Tag';
