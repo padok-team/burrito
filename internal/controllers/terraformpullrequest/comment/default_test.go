@@ -49,6 +49,14 @@ func (f *fakeDatastore) GetGitBundle(namespace string, name string, ref string, 
 	return nil, nil
 }
 
+func (f *fakeDatastore) GetStateGraph(namespace string, layer string) ([]byte, error) {
+	return nil, nil
+}
+
+func (f *fakeDatastore) PutStateGraph(namespace string, layer string, graph []byte) error {
+	return nil
+}
+
 func TestDefaultCommentGenerate(t *testing.T) {
 	comment := NewDefaultComment([]configv1alpha1.TerraformLayer{
 		{
