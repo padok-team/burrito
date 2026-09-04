@@ -27,6 +27,7 @@ type DatastoreConfig struct {
 	CertificateSecretName     string        `mapstructure:"certificateSecretName"`
 	Storage                   StorageConfig `mapstructure:"storage"`
 	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
+	LogFormat                 string        `mapstructure:"logFormat"`
 }
 
 type StorageConfig struct {
@@ -68,6 +69,7 @@ type ControllerConfig struct {
 	RunParallelism          int                         `mapstructure:"runParallelism"`
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
+	LogFormat               string                      `mapstructure:"logFormat"`
 }
 
 type LeaderElectionConfig struct {

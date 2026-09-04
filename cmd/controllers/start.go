@@ -46,5 +46,6 @@ func buildControllersStartCmd(app *burrito.App) *cobra.Command {
 	cmd.Flags().StringVar(&app.Config.Controller.HealthProbeBindAddress, "health-probe-bind-address", ":8081", "address to bind the metrics server embedded in the controllers")
 	cmd.Flags().StringVar(&app.Config.Controller.MetricsBindAddress, "metrics-bind-address", ":8080", "address to bind the health probe server embedded in the controllers")
 	cmd.Flags().IntVar(&app.Config.Controller.KubernetesWebhookPort, "kubernetes-webhook-port", 9443, "port used by the validating webhook server embedded in the controllers")
+	cmd.Flags().StringVar(&app.Config.Controller.LogFormat, "log-format", "text", "log format for controller logs, either \"text\" or \"json\"")
 	return cmd
 }

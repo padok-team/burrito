@@ -19,5 +19,6 @@ func buildDatastoreStartCmd(app *burrito.App) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&app.Config.Server.Addr, "addr", ":8080", "addr the datastore listens on")
+	cmd.Flags().StringVar(&app.Config.Datastore.LogFormat, "log-format", "text", "log format for the datastore, either \"text\" or \"json\"")
 	return cmd
 }

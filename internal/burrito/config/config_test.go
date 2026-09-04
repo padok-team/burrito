@@ -81,6 +81,10 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			MetricsBindAddress:     ":8080",
 			HealthProbeBindAddress: ":8081",
 			KubernetesWebhookPort:  9443,
+			LogFormat:              "text",
+		},
+		Datastore: config.DatastoreConfig{
+			LogFormat: "text",
 		},
 		Server: config.ServerConfig{
 			Addr: ":9090",
@@ -136,6 +140,9 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	setEnvVar(t, "BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS", "10", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_TERRAFORMMAXRETRIES", "32", &envVarList)
 	setEnvVar(t, "BURRITO_CONTROLLER_LEADERELECTION_ID", "other-leader-id", &envVarList)
+	setEnvVar(t, "BURRITO_CONTROLLER_LOGFORMAT", "json", &envVarList)
+	// Datastore
+	setEnvVar(t, "BURRITO_DATASTORE_LOGFORMAT", "json", &envVarList)
 	// Server
 	setEnvVar(t, "BURRITO_SERVER_ADDR", ":8090", &envVarList)
 
@@ -200,6 +207,10 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			MetricsBindAddress:     ":8080",
 			HealthProbeBindAddress: ":8081",
 			KubernetesWebhookPort:  9443,
+			LogFormat:              "json",
+		},
+		Datastore: config.DatastoreConfig{
+			LogFormat: "json",
 		},
 		Server: config.ServerConfig{
 			Addr: ":8090",

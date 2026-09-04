@@ -44,9 +44,13 @@ config:
       healthProbeBindAddress: ":8081"
       # -- Port used to handle the Kubernetes webhook
       kubernetesWebhookPort: 9443
+      # -- Log format for the controller, either "text" or "json"
+      logFormat: text
     # -- Provider cache custom configuration
     hermitcrab: {}
     datastore:
+      # -- Log format for the datastore, either "text" or "json"
+      logFormat: text
       # -- Service accounts that are allowed to access the datastore API in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that)
       serviceAccounts: []
       storage:
