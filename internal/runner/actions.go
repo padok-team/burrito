@@ -73,7 +73,7 @@ func (r *Runner) ExecInit() error {
 			return err
 		}
 		log.Warnf("error executing %s init through Hermitcrab network mirror: %s", tenvName, err)
-		log.Warnf("Hermitcrab network mirror may be stale or unreachable, removing mirror configuration and retrying %s init directly", tenvName)
+		log.Warnf("init failure cause is unknown; speculatively retrying %s init without the Hermitcrab mirror", tenvName)
 		removeErr := r.DisableHermitcrab()
 		if removeErr != nil {
 			return fmt.Errorf("could not remove Hermitcrab network mirror configuration: %w", removeErr)

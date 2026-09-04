@@ -95,6 +95,7 @@ func TestExecInitWithHermitcrabRetriesWithoutMirrorConfigWhenInitFails(t *testin
 		_ = os.Unsetenv("TF_CLI_CONFIG_FILE")
 	})
 
+	t.Setenv("TF_CLI_CONFIG_FILE", "custom.tfrc")
 	runnerInstance := New(conf)
 	if err := runnerInstance.EnableHermitcrab(); err != nil {
 		t.Fatalf("EnableHermitcrab() error = %v", err)
@@ -111,8 +112,8 @@ func TestExecInitWithHermitcrabRetriesWithoutMirrorConfigWhenInitFails(t *testin
 	if !reflect.DeepEqual(exec.initCalls, expectedCalls) {
 		t.Fatalf("Init() calls = %v, want %v", exec.initCalls, expectedCalls)
 	}
-	if got := os.Getenv("TF_CLI_CONFIG_FILE"); got != "" {
-		t.Fatalf("TF_CLI_CONFIG_FILE = %q, want empty", got)
+	if got := os.Getenv("TF_CLI_CONFIG_FILE"); got != "custom.tfrc" {
+		t.Fatalf("TF_CLI_CONFIG_FILE = %q, want custom.tfrc", got)
 	}
 	if _, err := os.Stat(filepath.Join(conf.Runner.RepositoryPath, "config.tfrc")); !os.IsNotExist(err) {
 		t.Fatalf("network mirror config should be removed, stat error = %v", err)
