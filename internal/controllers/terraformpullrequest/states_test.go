@@ -9,6 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
@@ -21,10 +22,10 @@ import (
 )
 
 type fakeAPIProvider struct {
-	changes       []string
-	changesErr    error
-	commentErr    error
-	pullRequests  []configv1alpha1.TerraformPullRequest
+	changes         []string
+	changesErr      error
+	commentErr      error
+	pullRequests    []configv1alpha1.TerraformPullRequest
 	pullRequestsErr error
 }
 
@@ -41,6 +42,10 @@ func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository
 
 func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	return p.pullRequests, p.pullRequestsErr
+}
+
+func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	return nil
 }
 
 func TestDiscoveryNeededHandlerReturnsOnErrorWhenLayerCreationFails(t *testing.T) {
