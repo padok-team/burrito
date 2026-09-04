@@ -45,14 +45,14 @@ We welcome suggestions for improvements. Please use the issue tracker to submit 
 
 `controller-gen`, `kustomize`, and `setup-envtest` are installed automatically into `./bin` by the relevant `make` targets — no manual install needed.
 
-For UI development you also need [Node.js 24](https://nodejs.org/) and Yarn (classic) — see [`ui/AGENTS.md`](https://github.com/padok-team/burrito/blob/main/ui/AGENTS.md) for the UI workflow.
+For UI development you also need [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/installation) — pnpm fetches the exact Node.js version pinned in [`ui/package.json`](https://github.com/padok-team/burrito/blob/main/ui/package.json) (`devEngines`) for the UI build itself. See [`ui/AGENTS.md`](https://github.com/padok-team/burrito/blob/main/ui/AGENTS.md) for the UI workflow.
 
 #### Using mise (recommended)
 
 This repository ships a [`mise.toml`](https://github.com/padok-team/burrito/blob/main/mise.toml) that pins the exact versions of the tools above with [mise](https://mise.jdx.dev/), so every contributor gets an identical environment. After [installing mise](https://mise.jdx.dev/getting-started.html), run from the repository root:
 
 ```bash
-mise install        # install all pinned tools (Go, Node, Yarn, kubectl, helm, kind, yq, golangci-lint, uv)
+mise install        # install all pinned tools (Go, Node, pnpm, kubectl, helm, kind, yq, golangci-lint, uv)
 ```
 
 Docker (with Buildx and Compose), `make` and Git are system-level tools and are **not** managed by mise — install them yourself.
