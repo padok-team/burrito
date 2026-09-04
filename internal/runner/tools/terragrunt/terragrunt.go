@@ -3,6 +3,7 @@ package terragrunt
 import (
 	"errors"
 	"os/exec"
+	"slices"
 
 	"github.com/blang/semver/v4"
 	c "github.com/padok-team/burrito/internal/utils/cmd"
@@ -136,10 +137,14 @@ func (t *Terragrunt) Show(planArtifactPath, mode string) ([]byte, error) {
 
 func (t *Terragrunt) StatePull(workingDir string) ([]byte, error) {
 	t.WorkingDir = workingDir
-	options, err := t.getDefaultOptions("state pull")
+	options, err := t.getDefaultOptions("state")
 	if err != nil {
 		return nil, err
 	}
+	// "state pull" is a command and its subcommand, not a single argument:
+	// passing it as one makes terraform report `no command named "state pull"`.
+	// The subcommand has to sit right after the command, before the flags.
+	options = slices.Insert(options, 1, "pull")
 	cmd := exec.Command(t.ExecPath, options...)
 	cmd.Dir = t.WorkingDir
 	out, err := cmd.Output()
