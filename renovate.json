@@ -63,6 +63,18 @@
       ]
     },
     {
+      "matchFileNames": [
+        "mise.toml"
+      ],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "groupName": "mise tools",
+      "groupSlug": "mise-tools",
+      "addLabels": [
+        "mise"
+      ]
+    },
+    {
       "groupName": "go github sdk",
       "groupSlug": "go-github",
       "matchDatasources": [
