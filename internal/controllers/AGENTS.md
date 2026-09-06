@@ -12,6 +12,7 @@ custom resource: `terraformlayer/`, `terraformrun/`, `terraformrepository/`,
   (`ctrl.Result{RequeueAfter: ...}`), do not sleep.
 - **Never `panic()`.** Return an error or a requeue.
 - Always check errors explicitly — no `_ = err`.
+- Return status-update errors from reconcilers so controller-runtime retries from the current object.
 - Use structured logging via the `logr.Logger` carried in `ctx` (`log.FromContext(ctx)`).
 - Propagate `ctx` and set timeouts on every external call (GitHub, GitLab, Terraform).
 - CRD shapes live in `api/v1alpha1`; never edit generated deepcopy code. After API changes run `make manifests && make generate`.

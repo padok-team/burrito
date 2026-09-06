@@ -105,6 +105,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err := r.Status().Update(ctx, repository); err != nil {
 		r.Recorder.Event(repository, corev1.EventTypeWarning, "Reconciliation", "Could not update repository status")
 		log.Errorf("failed to update repository status: %s", err)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 
 	metrics.UpdateRepositoryMetrics(*repository)
