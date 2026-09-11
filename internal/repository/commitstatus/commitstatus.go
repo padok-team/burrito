@@ -5,6 +5,7 @@
 package commitstatus
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"strings"
 
@@ -34,12 +35,13 @@ const (
 // No emoji prefix here: GitHub's Statuses API rejects any 4-byte UTF-8 character (which
 // covers almost every modern emoji, e.g. 🌯) in the description with a 422.
 func Post(provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer, phase status.Phase, state status.State, commit string, message string, targetURL string) error {
+	ctx := fmt.Sprintf("Burrito ▶ %s %s/%s", capitalize(string(phase)), layer.Namespace, layer.Name)
 	cs := status.CommitStatus{
 		Phase:       phase,
 		State:       state,
 		Description: truncate(message, maxDescriptionLength),
 		Commit:      commit,
-		Context:     fmt.Sprintf("Burrito ▶ %s %s/%s", capitalize(string(phase)), layer.Namespace, layer.Name),
+		Context:     stableContext(ctx),
 		TargetURL:   targetURL,
 	}
 	// A single attempt on purpose: retrying here would mean sleeping on the reconciler's
@@ -74,6 +76,25 @@ func capitalize(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// stableContext trunates ctx to at most 255 runes (GitHub's practical limit) in a way that
+// is stable — the same input always produces the same output, which is critical so that
+// successive posts replace each other rather than pile up. The strategy: truncate name
+// and suffix to a hash of the original, preserving the display prefix but making the
+// full identity available to the provider for deduplication.
+func stableContext(ctx string) string {
+	const maxLen = 255
+	if len([]rune(ctx)) <= maxLen {
+		return ctx
+	}
+	// Reserve 9 runes for " #" + 7-char hex hash suffix.
+	nameLen := maxLen - 9
+	r := []rune(ctx)
+	name := string(r[:nameLen])
+	h := sha256.Sum256([]byte(ctx))
+	hash := fmt.Sprintf("%x", h)[:7] // 7 chars of hex is ~28 bits, sufficient for uniqueness
+	return name + " #" + hash
 }
 
 func truncate(s string, max int) string {
