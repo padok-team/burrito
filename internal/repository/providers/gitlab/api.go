@@ -48,7 +48,7 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 
 func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
 	commit := s.Commit
-	if commit == "" {
+	if commit == "" && pr != nil {
 		commit = pr.Annotations[annotations.LastBranchCommit]
 	}
 	name := "burrito/" + string(s.Phase)

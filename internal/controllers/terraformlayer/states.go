@@ -10,7 +10,6 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	"github.com/padok-team/burrito/internal/utils/syncwindow"
-	logrus "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -73,8 +72,11 @@ func (s *PlanNeeded) getHandler() Handler {
 		if isActionBlocked(r, layer, repository, syncwindow.PlanAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
+		// An annotation that exists but is empty is as unusable as a missing one: it would
+		// create a run on no revision at all, and make every downstream consumer (commit
+		// statuses included) work on an empty commit.
 		revision, ok := layer.Annotations[annotations.LastBranchCommit]
-		if !ok {
+		if !ok || revision == "" {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last branch commit annotation, Plan run not created")
 			log.Errorf("layer %s has no last branch commit annotation, run not created", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
@@ -106,8 +108,9 @@ func (s *ApplyNeeded) getHandler() Handler {
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
 		}
+		// See the equivalent check in PlanNeeded: an empty annotation is not a usable revision.
 		revision, ok := layer.Annotations[annotations.LastBranchCommit]
-		if !ok {
+		if !ok || revision == "" {
 			r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has no last branch commit annotation, Apply run not created")
 			log.Errorf("layer %s has no last branch commit annotation, run not created", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
@@ -139,9 +142,10 @@ func (s *MaxRetriesReached) getHandler() Handler {
 // postCommitStatus posts a plan/apply commit status scoped to layer, best-effort: a
 // failure here must not block the reconciliation.
 func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase status.Phase, state status.State, commit string) {
+	log := log.WithContext(ctx)
 	provider, err := r.getAPIProvider(repository)
 	if err != nil {
-		logrus.Warnf("could not get API provider to set commit status for layer %s: %s", layer.Name, err)
+		log.Warnf("could not get API provider to set commit status for layer %s: %s", layer.Name, err)
 		return
 	}
 	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, "")

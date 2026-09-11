@@ -225,6 +225,34 @@ func TestAPIProvider_SetStatus_MapsRunningToPending(t *testing.T) {
 	assert.Equal(t, "pending", gotState)
 }
 
+// Commit statuses posted for a commit pushed directly to the base branch have no pull
+// request to attach to, so SetStatus is called with a nil one.
+func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
+	called := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/statuses/sha123", func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		fmt.Fprint(w, `{}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	require.NotPanics(t, func() {
+		require.NoError(t, api.SetStatus(testRepository(), nil, status.CommitStatus{
+			Phase:  status.PhasePlan,
+			State:  status.StateSuccess,
+			Commit: "sha123",
+		}))
+	})
+	assert.True(t, called, "expected the status to be posted on the given commit")
+}
+
+func TestAPIProvider_SetStatus_DoesNotPanicWithoutAPullRequestNorACommit(t *testing.T) {
+	api := newTestAPIProvider(t, http.NewServeMux())
+	require.NotPanics(t, func() {
+		_ = api.SetStatus(testRepository(), nil, status.CommitStatus{Phase: status.PhasePlan, State: status.StateSuccess})
+	})
+}
+
 func TestToGithubState(t *testing.T) {
 	assert.Equal(t, "pending", toGithubState(status.StateRunning))
 	assert.Equal(t, "pending", toGithubState(status.StatePending))

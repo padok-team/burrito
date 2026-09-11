@@ -205,6 +205,34 @@ func TestAPIProvider_SetStatus_PostsRunningState(t *testing.T) {
 	assert.Equal(t, "running", gotState)
 }
 
+// Commit statuses posted for a commit pushed directly to the base branch have no merge
+// request to attach to, so SetStatus is called with a nil one.
+func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
+	called := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/statuses/sha123", func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		fmt.Fprint(w, `{}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	require.NotPanics(t, func() {
+		require.NoError(t, api.SetStatus(testRepository(), nil, status.CommitStatus{
+			Phase:  status.PhasePlan,
+			State:  status.StateSuccess,
+			Commit: "sha123",
+		}))
+	})
+	assert.True(t, called, "expected the status to be posted on the given commit")
+}
+
+func TestAPIProvider_SetStatus_DoesNotPanicWithoutAPullRequestNorACommit(t *testing.T) {
+	api := newTestAPIProvider(t, http.NewServeMux())
+	require.NotPanics(t, func() {
+		_ = api.SetStatus(testRepository(), nil, status.CommitStatus{Phase: status.PhasePlan, State: status.StateSuccess})
+	})
+}
+
 func TestToGitlabBuildState(t *testing.T) {
 	assert.Equal(t, gitlab.Running, toGitlabBuildState(status.StateRunning))
 	assert.Equal(t, gitlab.Pending, toGitlabBuildState(status.StatePending))

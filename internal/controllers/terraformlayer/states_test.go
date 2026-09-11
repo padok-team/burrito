@@ -90,6 +90,77 @@ func TestApplyNeededEventIncludesCreateError(t *testing.T) {
 	assertEventContains(t, recorder, "Failed to create TerraformRun for Apply action: "+createErr.Error())
 }
 
+type failOnCreateClient struct {
+	client.Client
+	t *testing.T
+}
+
+func (c failOnCreateClient) Create(context.Context, client.Object, ...client.CreateOption) error {
+	c.t.Fatalf("expected no TerraformRun to be created")
+	return nil
+}
+
+func TestPlanNeededSkipsRunWhenLastBranchCommitIsEmpty(t *testing.T) {
+	recorder := record.NewFakeRecorder(1)
+	reconciler := &Reconciler{
+		Client:   failOnCreateClient{t: t},
+		Recorder: recorder,
+		Config:   config.TestConfig(),
+	}
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "pwet",
+			Namespace:   "default",
+			Annotations: map[string]string{annotations.LastBranchCommit: ""},
+		},
+	}
+
+	result, run := (&PlanNeeded{}).getHandler()(context.Background(), reconciler, layer, &configv1alpha1.TerraformRepository{})
+
+	if run != nil {
+		t.Fatalf("expected no run when the last branch commit annotation is empty")
+	}
+	if result.RequeueAfter != reconciler.Config.Controller.Timers.OnError {
+		t.Fatalf("expected OnError requeue, got %s", result.RequeueAfter)
+	}
+	assertEventContains(t, recorder, "Layer has no last branch commit annotation, Plan run not created")
+}
+
+func TestApplyNeededSkipsRunWhenLastBranchCommitIsEmpty(t *testing.T) {
+	recorder := record.NewFakeRecorder(1)
+	reconciler := &Reconciler{
+		Client:   failOnCreateClient{t: t},
+		Recorder: recorder,
+		Config:   config.TestConfig(),
+	}
+	autoApply := true
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pwet",
+			Namespace: "default",
+			Annotations: map[string]string{
+				annotations.LastBranchCommit: "",
+				annotations.LastPlanRun:      "plan-run/0",
+			},
+		},
+	}
+	repository := &configv1alpha1.TerraformRepository{
+		Spec: configv1alpha1.TerraformRepositorySpec{
+			RemediationStrategy: configv1alpha1.RemediationStrategy{AutoApply: &autoApply},
+		},
+	}
+
+	result, run := (&ApplyNeeded{}).getHandler()(context.Background(), reconciler, layer, repository)
+
+	if run != nil {
+		t.Fatalf("expected no run when the last branch commit annotation is empty")
+	}
+	if result.RequeueAfter != reconciler.Config.Controller.Timers.OnError {
+		t.Fatalf("expected OnError requeue, got %s", result.RequeueAfter)
+	}
+	assertEventContains(t, recorder, "Layer has no last branch commit annotation, Apply run not created")
+}
+
 func assertEventContains(t *testing.T, recorder *record.FakeRecorder, want string) {
 	t.Helper()
 
