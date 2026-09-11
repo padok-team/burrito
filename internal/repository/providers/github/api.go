@@ -66,13 +66,13 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 		return err
 	}
 	if managedCommentID != 0 {
-		_, _, err = api.client.Issues.EditComment(context.TODO(), owner, repoName, managedCommentID, &github.IssueComment{
-			Body: &body,
+		_, _, err = api.client.Issues.UpdateComment(context.TODO(), owner, repoName, managedCommentID, github.IssueCommentRequest{
+			Body: body,
 		})
 		return err
 	}
-	_, _, err = api.client.Issues.CreateComment(context.TODO(), owner, repoName, id, &github.IssueComment{
-		Body: &body,
+	_, _, err = api.client.Issues.CreateComment(context.TODO(), owner, repoName, id, github.IssueCommentRequest{
+		Body: body,
 	})
 	return err
 }
