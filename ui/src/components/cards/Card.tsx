@@ -54,18 +54,18 @@ const Card: React.FC<CardProps> = ({
 
   const getTag = () => {
     return (
-      <div className="flex items-center">
+      <div className="relative inline-flex items-center">
         <Tag variant={state} />
-        {state === 'error' &&
+        {(state === 'error' || state === 'retriesExhausted') &&
           (variant === 'light' ? (
             <ChiliLight
-              className="absolute translate-x-16 rotate-[-21deg]"
+              className="absolute left-full ml-1 rotate-[-21deg]"
               height={40}
               width={40}
             />
           ) : (
             <ChiliDark
-              className="absolute translate-x-16 rotate-[-21deg]"
+              className="absolute left-full ml-1 rotate-[-21deg]"
               height={40}
               width={40}
             />

@@ -117,18 +117,16 @@ const createCoreStatuses = (counts: LayerCounts): StatusItem[] => [
     count: counts.applyNeeded + counts.planNeeded,
     variant: 'warning'
   },
-  { label: 'Errors', count: counts.error, variant: 'error' },
-  {
-    label: 'Max Retries',
-    count: counts.retriesExhausted,
-    variant: 'retries-exhausted'
-  }
+  { label: 'Errors', count: counts.error, variant: 'error' }
 ];
 
 const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {
   const additionalStatuses: StatusItem[] = [];
   const hasAdditionalStatuses =
-    counts.running > 0 || counts.applyNeeded > 0 || counts.planNeeded > 0;
+    counts.running > 0 ||
+    counts.applyNeeded > 0 ||
+    counts.planNeeded > 0 ||
+    counts.retriesExhausted > 0;
 
   if (!hasAdditionalStatuses) {
     return additionalStatuses;
@@ -164,6 +162,14 @@ const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {
       label: 'Plan Needed',
       count: counts.planNeeded,
       variant: 'plan-needed'
+    });
+  }
+
+  if (counts.retriesExhausted > 0) {
+    additionalStatuses.push({
+      label: 'Max Retries',
+      count: counts.retriesExhausted,
+      variant: 'retries-exhausted'
     });
   }
 
