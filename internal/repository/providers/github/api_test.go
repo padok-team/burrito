@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v90/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/stretchr/testify/assert"
@@ -28,10 +27,9 @@ func newTestAPIProvider(t *testing.T, mux *http.ServeMux) *APIProvider {
 	t.Helper()
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
-	client := github.NewClient(nil)
-	baseURL, err := url.Parse(server.URL + "/")
+	baseURL := server.URL + "/"
+	client, err := github.NewClient(github.WithURLs(&baseURL, &baseURL))
 	require.NoError(t, err)
-	client.BaseURL = baseURL
 	return &APIProvider{client: client}
 }
 
