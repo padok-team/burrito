@@ -9,6 +9,9 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -88,6 +91,142 @@ func TestApplyNeededEventIncludesCreateError(t *testing.T) {
 		t.Fatalf("expected OnError requeue, got %s", result.RequeueAfter)
 	}
 	assertEventContains(t, recorder, "Failed to create TerraformRun for Apply action: "+createErr.Error())
+}
+
+type createRecordingClient struct {
+	client.Client
+	created []*configv1alpha1.TerraformRun
+}
+
+func (c *createRecordingClient) Create(_ context.Context, obj client.Object, _ ...client.CreateOption) error {
+	c.created = append(c.created, obj.(*configv1alpha1.TerraformRun))
+	return nil
+}
+
+type fakeAPIProvider struct {
+	setStatusCalls []status.CommitStatus
+}
+
+func (p *fakeAPIProvider) GetChanges(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest) ([]string, error) {
+	return nil, nil
+}
+
+func (p *fakeAPIProvider) Comment(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest, comment.Comment) error {
+	return nil
+}
+
+func (p *fakeAPIProvider) ListPullRequests(*configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
+	return nil, nil
+}
+
+func (p *fakeAPIProvider) SetStatus(_ *configv1alpha1.TerraformRepository, _ *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	p.setStatusCalls = append(p.setStatusCalls, s)
+	return nil
+}
+
+func reconcilerWithFakeProvider(client client.Client, provider *fakeAPIProvider) *Reconciler {
+	return &Reconciler{
+		Client:   client,
+		Recorder: record.NewFakeRecorder(10),
+		Config:   config.TestConfig(),
+		APIProviderFactory: func(*configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+			return provider, nil
+		},
+	}
+}
+
+func TestPlanNeededReportsACommitStatusForAnUnplannedCommit(t *testing.T) {
+	recordingClient := &createRecordingClient{}
+	provider := &fakeAPIProvider{}
+	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pwet",
+			Namespace: "default",
+			Annotations: map[string]string{
+				annotations.LastBranchCommit: "sha-new",
+				annotations.LastPlanCommit:   "sha-old",
+			},
+		},
+	}
+
+	_, run := (&PlanNeeded{}).getHandler()(context.Background(), reconciler, layer, &configv1alpha1.TerraformRepository{})
+
+	if run == nil {
+		t.Fatalf("expected a run to be created")
+	}
+	if run.Annotations[annotations.PostCommitStatus] != "true" {
+		t.Errorf("expected the run to be marked for commit statuses, got annotations %v", run.Annotations)
+	}
+	if len(provider.setStatusCalls) != 1 {
+		t.Fatalf("expected one commit status to be posted, got %d", len(provider.setStatusCalls))
+	}
+	if got := provider.setStatusCalls[0]; got.Commit != "sha-new" || got.State != status.StatePending {
+		t.Errorf("expected a pending status on sha-new, got %q on %q", got.State, got.Commit)
+	}
+}
+
+func TestPlanNeededSkipsCommitStatusOnDriftDetectionReplan(t *testing.T) {
+	recordingClient := &createRecordingClient{}
+	provider := &fakeAPIProvider{}
+	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pwet",
+			Namespace: "default",
+			Annotations: map[string]string{
+				annotations.LastBranchCommit: "sha-same",
+				annotations.LastPlanCommit:   "sha-same",
+			},
+		},
+	}
+
+	_, run := (&PlanNeeded{}).getHandler()(context.Background(), reconciler, layer, &configv1alpha1.TerraformRepository{})
+
+	if run == nil {
+		t.Fatalf("expected drift detection to still create a run")
+	}
+	if _, marked := run.Annotations[annotations.PostCommitStatus]; marked {
+		t.Errorf("expected a drift detection re-plan not to be marked for commit statuses")
+	}
+	if len(provider.setStatusCalls) != 0 {
+		t.Errorf("expected no commit status for a drift detection re-plan, got %d", len(provider.setStatusCalls))
+	}
+}
+
+func TestApplyNeededReportsACommitStatus(t *testing.T) {
+	recordingClient := &createRecordingClient{}
+	provider := &fakeAPIProvider{}
+	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
+	autoApply := true
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pwet",
+			Namespace: "default",
+			Annotations: map[string]string{
+				annotations.LastBranchCommit: "sha-same",
+				annotations.LastPlanCommit:   "sha-same",
+				annotations.LastPlanRun:      "plan-run/0",
+			},
+		},
+	}
+	repository := &configv1alpha1.TerraformRepository{
+		Spec: configv1alpha1.TerraformRepositorySpec{
+			RemediationStrategy: configv1alpha1.RemediationStrategy{AutoApply: &autoApply},
+		},
+	}
+
+	_, run := (&ApplyNeeded{}).getHandler()(context.Background(), reconciler, layer, repository)
+
+	if run == nil {
+		t.Fatalf("expected a run to be created")
+	}
+	if run.Annotations[annotations.PostCommitStatus] != "true" {
+		t.Errorf("expected every apply to be marked for commit statuses, got annotations %v", run.Annotations)
+	}
+	if len(provider.setStatusCalls) != 1 {
+		t.Fatalf("expected one commit status to be posted, got %d", len(provider.setStatusCalls))
+	}
 }
 
 type failOnCreateClient struct {

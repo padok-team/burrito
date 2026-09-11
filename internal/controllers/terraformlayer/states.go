@@ -82,6 +82,15 @@ func (s *PlanNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		run := r.getRun(layer, revision, PlanAction)
+		// Re-planning a commit that has already been planned is drift detection doing its
+		// rounds, not a reaction to a push: its commit statuses would say nothing new about
+		// the commit, and re-posting the whole lifecycle every driftDetection interval would
+		// make the check flap and exhaust the provider's per-commit status cap. Only report
+		// on a commit this layer has not planned yet.
+		reportsCommitStatus := layer.Annotations[annotations.LastPlanCommit] != revision
+		if reportsCommitStatus {
+			markForCommitStatus(&run)
+		}
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			r.Recorder.Eventf(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Plan action: %s", err)
@@ -89,7 +98,9 @@ func (s *PlanNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Plan action")
-		r.postCommitStatus(ctx, layer, repository, status.PhasePlan, status.StatePending, revision)
+		if reportsCommitStatus {
+			r.postCommitStatus(ctx, layer, repository, status.PhasePlan, status.StatePending, revision)
+		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -116,6 +127,10 @@ func (s *ApplyNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		run := r.getRun(layer, revision, ApplyAction)
+		// Unlike a plan, an apply cannot repeat on an unchanged commit: once it succeeds the
+		// layer's apply is up to date and no further apply is scheduled, so reporting every
+		// apply is bounded by the commits that actually get applied.
+		markForCommitStatus(&run)
 		err := r.Client.Create(ctx, &run)
 		if err != nil {
 			r.Recorder.Eventf(layer, corev1.EventTypeWarning, "Reconciliation", "Failed to create TerraformRun for Apply action: %s", err)
@@ -137,6 +152,15 @@ func (s *MaxRetriesReached) getHandler() Handler {
 		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has reached max retries for Plan or Apply action, check the status and logs of the last run")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 	}
+}
+
+// markForCommitStatus flags run as one whose lifecycle the run controller should report as
+// a commit status, so that both controllers report on the same runs.
+func markForCommitStatus(run *configv1alpha1.TerraformRun) {
+	if run.Annotations == nil {
+		run.Annotations = map[string]string{}
+	}
+	run.Annotations[annotations.PostCommitStatus] = "true"
 }
 
 // postCommitStatus posts a plan/apply commit status scoped to layer, best-effort: a

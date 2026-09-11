@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
@@ -65,7 +66,11 @@ func testPullRequestLayer() *configv1alpha1.TerraformLayer {
 
 func testRun(action string, revision string) *configv1alpha1.TerraformRun {
 	return &configv1alpha1.TerraformRun{
-		ObjectMeta: metav1.ObjectMeta{Name: "pwet-" + action + "-abcde", Namespace: "default"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "pwet-" + action + "-abcde",
+			Namespace:   "default",
+			Annotations: map[string]string{annotations.PostCommitStatus: "true"},
+		},
 		Spec: configv1alpha1.TerraformRunSpec{
 			Action: action,
 			Layer:  configv1alpha1.TerraformRunLayer{Revision: revision},
@@ -83,6 +88,25 @@ func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 	r.postCommitStatus(context.Background(), testRun("plan", ""), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
 	if len(provider.setStatusCalls) != 0 {
 		t.Fatalf("expected no commit status to be set when the run has no revision, got %d calls", len(provider.setStatusCalls))
+	}
+}
+
+func TestPostCommitStatusSkipsRunsNotMarkedByTheLayerController(t *testing.T) {
+	provider := &fakeAPIProvider{}
+	r := &Reconciler{
+		Config:    &config.Config{},
+		Datastore: datastore.NewMockClient(),
+		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+			return provider, nil
+		},
+	}
+	run := testRun("plan", "sha123")
+	run.Annotations = nil
+
+	r.postCommitStatus(context.Background(), run, testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+
+	if len(provider.setStatusCalls) != 0 {
+		t.Fatalf("expected no commit status for an unmarked run, got %d calls", len(provider.setStatusCalls))
 	}
 }
 
