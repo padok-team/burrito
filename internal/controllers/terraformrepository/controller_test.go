@@ -2,6 +2,7 @@ package terraformrepository_test
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 	"time"
@@ -19,11 +20,14 @@ import (
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -263,6 +267,43 @@ var _ = Describe("Run", func() {
 	var err error
 	var result reconcile.Result
 	var name types.NamespacedName
+
+	Describe("When the repository status update fails", func() {
+		It("should return the error and requeue", func() {
+			testScheme := runtime.NewScheme()
+			Expect(configv1alpha1.AddToScheme(testScheme)).To(Succeed())
+
+			repository := &configv1alpha1.TerraformRepository{
+				ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"},
+			}
+			expectedErr := errors.New("status update failed")
+			fakeClient := fake.NewClientBuilder().
+				WithScheme(testScheme).
+				WithObjects(repository).
+				WithStatusSubresource(repository).
+				WithInterceptorFuncs(interceptor.Funcs{
+					SubResourceUpdate: func(ctx context.Context, c client.Client, subResourceName string, obj client.Object, opts ...client.SubResourceUpdateOption) error {
+						if subResourceName == "status" {
+							return expectedErr
+						}
+						return c.SubResource(subResourceName).Update(ctx, obj, opts...)
+					},
+				}).
+				Build()
+			testReconciler := &controller.Reconciler{
+				Client:   fakeClient,
+				Config:   config.TestConfig(),
+				Recorder: record.NewFakeRecorder(10),
+			}
+
+			result, err := testReconciler.Reconcile(context.Background(), reconcile.Request{
+				NamespacedName: types.NamespacedName{Name: repository.Name, Namespace: repository.Namespace},
+			})
+
+			Expect(err).To(MatchError(expectedErr))
+			Expect(result.RequeueAfter).To(Equal(testReconciler.Config.Controller.Timers.OnError))
+		})
+	})
 
 	Describe("Nominal Case", func() {
 		Describe("When a TerraformRepository without TerraformLayer is created", Ordered, func() {
