@@ -158,7 +158,7 @@ spec:
 apiVersion: coordination.k8s.io/v1
 kind: Lease
 metadata:
-  name: burrito-layer-lock-953655719
+  name: burrito-layer-lock-1842901862
   namespace: default
 spec:
   holderIdentity: burrito-controller
