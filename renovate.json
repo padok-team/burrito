@@ -61,6 +61,16 @@
       ]
     },
     {
+      "description": "Block TypeScript major version updates until typescript-eslint supports TS 7.0+. See: https://github.com/typescript-eslint/typescript-eslint/issues/10940",
+      "matchFileNames": [
+        "ui/package.json"
+      ],
+      "matchPackageNames": [
+        "typescript"
+      ],
+      "allowedVersions": "<7.0.0"
+    },
+    {
       "groupName": "go github sdk",
       "groupSlug": "go-github",
       "matchDatasources": [
