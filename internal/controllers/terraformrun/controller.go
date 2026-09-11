@@ -130,10 +130,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if !bundleOk {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Bundle for revision %s not found in datastore", run.Spec.Layer.Revision))
 		log.Errorf("bundle for revision %s not found in datastore, failing run %s/%s", run.Spec.Layer.Revision, run.Namespace, run.Name)
+		run.Status.State = "Failed"
+		err = r.Client.Status().Update(ctx, run)
+		if err != nil {
+			log.Errorf("could not mark run as failed: %s", err)
+		}
 		// Post a terminal status so the commit doesn't sit in a pending state forever on the git
 		// provider if this run was ever reported there (best-effort).
 		r.postCommitStatus(ctx, run, layer, repo, status.StateFailure, commitstatus.Failed)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		return ctrl.Result{}, nil
 	}
 
 	state, conditions := r.GetState(ctx, run, layer, repo)
