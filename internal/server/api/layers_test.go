@@ -43,6 +43,28 @@ func TestGetLayerState(t *testing.T) {
 			expected: "retriesExhausted",
 		},
 		{
+			name: "max retries reached without plan sum stays retries exhausted",
+			layer: configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{},
+				Status: configv1alpha1.TerraformLayerStatus{
+					Conditions: someCondition,
+					State:      "MaxRetriesReached",
+				},
+			},
+			expected: "retriesExhausted",
+		},
+		{
+			name: "missing plan sum is an error",
+			layer: configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{},
+				Status: configv1alpha1.TerraformLayerStatus{
+					Conditions: someCondition,
+					State:      "Idle",
+				},
+			},
+			expected: "error",
+		},
+		{
 			name: "default state is success",
 			layer: configv1alpha1.TerraformLayer{
 				ObjectMeta: metav1.ObjectMeta{Annotations: baseAnnotations},
