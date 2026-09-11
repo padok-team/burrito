@@ -2,15 +2,12 @@ package commitstatus
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/google/go-github/v84/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
-	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -41,10 +38,6 @@ func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformReposito
 		return err
 	}
 	return nil
-}
-
-func (p *fakeAPIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
-	return "", nil
 }
 
 func TestPostTruncatesLongDescriptionToGitHubLimit(t *testing.T) {
@@ -108,91 +101,18 @@ func TestLogsURL(t *testing.T) {
 	}
 }
 
-func TestPostRetriesOnTransientFailureAndEventuallySucceeds(t *testing.T) {
-	provider := &fakeAPIProvider{
-		setStatusErrs: []error{errors.New("500 Internal Server Error"), errors.New("500 Internal Server Error")},
-	}
+func TestPostReturnsTheProviderErrorWithoutRetrying(t *testing.T) {
+	providerErr := errors.New("500 Internal Server Error")
+	provider := &fakeAPIProvider{setStatusErrs: []error{providerErr, nil}}
 	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 
 	err := Post(provider, repository, layer, status.PhasePlan, status.StateSuccess, "sha123", "message", "")
-	if err != nil {
-		t.Fatalf("expected the third attempt to succeed, got error: %v", err)
-	}
-	if len(provider.setStatusCalls) != 3 {
-		t.Fatalf("expected 3 attempts, got %d", len(provider.setStatusCalls))
-	}
-}
-
-func TestPostGivesUpAfterExhaustingRetries(t *testing.T) {
-	persistentErr := errors.New("500 Internal Server Error")
-	provider := &fakeAPIProvider{
-		setStatusErrs: []error{persistentErr, persistentErr, persistentErr},
-	}
-	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
-	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
-
-	err := Post(provider, repository, layer, status.PhasePlan, status.StateSuccess, "sha123", "message", "")
-	if err == nil {
-		t.Fatalf("expected an error after exhausting retries")
-	}
-	if len(provider.setStatusCalls) != 3 {
-		t.Fatalf("expected exactly 3 attempts, got %d", len(provider.setStatusCalls))
-	}
-}
-
-func TestPostDoesNotRetryOnPermanentGitHubError(t *testing.T) {
-	permanentErr := &github.ErrorResponse{Response: &http.Response{StatusCode: 422}}
-	provider := &fakeAPIProvider{
-		setStatusErrs: []error{permanentErr, permanentErr, permanentErr},
-	}
-	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
-	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
-
-	err := Post(provider, repository, layer, status.PhasePlan, status.StateSuccess, "sha123", "message", "")
-	if err == nil {
-		t.Fatalf("expected the permanent error to be returned")
+	if !errors.Is(err, providerErr) {
+		t.Fatalf("expected the provider error to be returned, got %v", err)
 	}
 	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly 1 attempt (no retry on a permanent error), got %d", len(provider.setStatusCalls))
-	}
-}
-
-func TestPostDoesNotRetryOnPermanentGitLabError(t *testing.T) {
-	permanentErr := &gitlab.ErrorResponse{Response: &http.Response{StatusCode: 400}}
-	provider := &fakeAPIProvider{
-		setStatusErrs: []error{permanentErr, permanentErr, permanentErr},
-	}
-	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
-	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
-
-	err := Post(provider, repository, layer, status.PhasePlan, status.StateSuccess, "sha123", "message", "")
-	if err == nil {
-		t.Fatalf("expected the permanent error to be returned")
-	}
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly 1 attempt (no retry on a permanent error), got %d", len(provider.setStatusCalls))
-	}
-}
-
-func TestIsRetryable(t *testing.T) {
-	cases := []struct {
-		name string
-		err  error
-		want bool
-	}{
-		{"nil", nil, false},
-		{"unrecognized error shape", errors.New("boom"), true},
-		{"github 422", &github.ErrorResponse{Response: &http.Response{StatusCode: 422}}, false},
-		{"github 500", &github.ErrorResponse{Response: &http.Response{StatusCode: 500}}, true},
-		{"github 429", &github.ErrorResponse{Response: &http.Response{StatusCode: 429}}, true},
-		{"gitlab 400", &gitlab.ErrorResponse{Response: &http.Response{StatusCode: 400}}, false},
-		{"gitlab 503", &gitlab.ErrorResponse{Response: &http.Response{StatusCode: 503}}, true},
-	}
-	for _, c := range cases {
-		if got := isRetryable(c.err); got != c.want {
-			t.Errorf("%s: isRetryable() = %v, want %v", c.name, got, c.want)
-		}
+		t.Fatalf("expected exactly 1 attempt, got %d", len(provider.setStatusCalls))
 	}
 }
 
