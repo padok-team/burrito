@@ -37,10 +37,6 @@ func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformReposito
 	return p.setStatusErr
 }
 
-func (p *fakeAPIProvider) GetMergeCommit(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
-	return "", nil
-}
-
 func testRepository() *configv1alpha1.TerraformRepository {
 	return &configv1alpha1.TerraformRepository{
 		ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"},
@@ -156,7 +152,7 @@ func TestResultMessageUsesLastResultWhilePending(t *testing.T) {
 	layer := testMainLayer()
 	layer.Status.LastResult = "Plan: 1 to add, 0 to change, 0 to destroy."
 
-	got := r.resultMessage(testRun("plan", "sha123"), layer, commitstatus.Needed)
+	got := r.resultMessage(context.Background(), testRun("plan", "sha123"), layer, testRepository(), commitstatus.Needed)
 	if got != layer.Status.LastResult {
 		t.Errorf("expected pending outcome to reuse Last Result %q, got %q", layer.Status.LastResult, got)
 	}
@@ -164,9 +160,46 @@ func TestResultMessageUsesLastResultWhilePending(t *testing.T) {
 
 func TestResultMessageReturnsErrorPlaceholderOnDatastoreFailure(t *testing.T) {
 	r := &Reconciler{Datastore: &erroringDatastoreClient{}}
-	got := r.resultMessage(testRun("apply", "sha123"), testMainLayer(), commitstatus.Succeeded)
+	got := r.resultMessage(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), commitstatus.Succeeded)
 	if got != "Error getting last Result" {
 		t.Errorf("expected error placeholder, got %q", got)
+	}
+}
+
+func TestResultMessageDescribesTheAppliedPlan(t *testing.T) {
+	r := &Reconciler{Datastore: &planDatastoreClient{shortDiff: "Plan: 2 to create, 1 to update, 1 to delete"}}
+	run := testRun("apply", "sha123")
+	run.Spec.Artifact = configv1alpha1.Artifact{Run: "pwet-plan-abcde", Attempt: "0"}
+
+	got := r.resultMessage(context.Background(), run, testMainLayer(), testRepository(), commitstatus.Succeeded)
+	want := "Applied: 2 to create, 1 to update, 1 to delete"
+	if got != want {
+		t.Errorf("expected %q, got %q", want, got)
+	}
+}
+
+func TestResultMessageFallsBackWhenTheAppliedPlanIsUnavailable(t *testing.T) {
+	r := &Reconciler{Datastore: &erroringDatastoreClient{}}
+	run := testRun("apply", "sha123")
+	run.Spec.Artifact = configv1alpha1.Artifact{Run: "pwet-plan-abcde", Attempt: "0"}
+
+	got := r.resultMessage(context.Background(), run, testMainLayer(), testRepository(), commitstatus.Succeeded)
+	if got != applySucceeded {
+		t.Errorf("expected %q, got %q", applySucceeded, got)
+	}
+}
+
+func TestResultMessageIgnoresTheAppliedPlanWhenItWasNotReused(t *testing.T) {
+	r := &Reconciler{Datastore: &planDatastoreClient{shortDiff: "Plan: 2 to create, 1 to update, 1 to delete"}}
+	run := testRun("apply", "sha123")
+	run.Spec.Artifact = configv1alpha1.Artifact{Run: "pwet-plan-abcde", Attempt: "0"}
+	applyWithoutPlanArtifact := true
+	repository := testRepository()
+	repository.Spec.RemediationStrategy.ApplyWithoutPlanArtifact = &applyWithoutPlanArtifact
+
+	got := r.resultMessage(context.Background(), run, testMainLayer(), repository, commitstatus.Succeeded)
+	if got != applySucceeded {
+		t.Errorf("expected the stale diff to be ignored and %q returned, got %q", applySucceeded, got)
 	}
 }
 
@@ -176,4 +209,13 @@ type erroringDatastoreClient struct {
 
 func (c *erroringDatastoreClient) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
 	return nil, errors.New("datastore unavailable")
+}
+
+type planDatastoreClient struct {
+	datastore.MockClient
+	shortDiff string
+}
+
+func (c *planDatastoreClient) GetPlan(namespace string, layer string, run string, attempt string, format string) ([]byte, error) {
+	return []byte(c.shortDiff), nil
 }
