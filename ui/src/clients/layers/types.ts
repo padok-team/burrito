@@ -20,11 +20,7 @@ export type Layer = {
 };
 
 export type LayerState =
-  | 'success'
-  | 'warning'
-  | 'error'
-  | 'disabled'
-  | 'retriesExhausted';
+  'success' | 'warning' | 'error' | 'disabled' | 'retriesExhausted';
 export type ManualSyncStatus = 'none' | 'annotated' | 'pending';
 
 export type Run = {
