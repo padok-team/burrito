@@ -14,6 +14,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/repository/credentials"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,24 +84,26 @@ var _ = BeforeSuite(func() {
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
-		Scheme:    scheme.Scheme,
-		Config:    config.TestConfig(),
-		Datastore: datastore.NewMockClient(),
+		Scheme:      scheme.Scheme,
+		Config:      config.TestConfig(),
+		Datastore:   datastore.NewMockClient(),
+		Credentials: credentials.NewCredentialStore(k8sClient, config.TestConfig().Controller.Timers.CredentialsTTL),
 	}
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 })
 
-func getReconcilerWithConfig(config *config.Config) *controller.Reconciler {
+func getReconcilerWithConfig(cfg *config.Config) *controller.Reconciler {
 	return &controller.Reconciler{
 		Client: k8sClient,
 		Clock:  &MockClock{},
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
-		Scheme:    scheme.Scheme,
-		Config:    config,
-		Datastore: datastore.NewMockClient(),
+		Scheme:      scheme.Scheme,
+		Config:      cfg,
+		Datastore:   datastore.NewMockClient(),
+		Credentials: credentials.NewCredentialStore(k8sClient, cfg.Controller.Timers.CredentialsTTL),
 	}
 }
 

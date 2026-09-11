@@ -39,6 +39,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/credentials"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
 
 type Clock interface {
@@ -54,11 +57,22 @@ func (c RealClock) Now() time.Time {
 // Reconciler reconciles a TerraformLayer object
 type Reconciler struct {
 	client.Client
-	Scheme    *runtime.Scheme
-	Config    *config.Config
-	Recorder  record.EventRecorder
-	Datastore datastore.Client
+	Scheme      *runtime.Scheme
+	Config      *config.Config
+	Recorder    record.EventRecorder
+	Datastore   datastore.Client
+	Credentials *credentials.CredentialStore
 	Clock
+	// APIProviderFactory overrides how the API provider is resolved for a repository.
+	// Only used in tests; production code always uses repository.GetAPIProviderFromRepository.
+	APIProviderFactory func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error)
+}
+
+func (r *Reconciler) getAPIProvider(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+	if r.APIProviderFactory != nil {
+		return r.APIProviderFactory(repository)
+	}
+	return repo.GetAPIProviderFromRepository(r.Credentials, repository)
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformlayers,verbs=get;list;watch;create;update;patch;delete

@@ -9,6 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +41,10 @@ func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformR
 		return nil, p.err
 	}
 	return p.pullRequests, nil
+}
+
+func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	return nil
 }
 
 func newTerraformRepositoryTestScheme(t *testing.T) *runtime.Scheme {

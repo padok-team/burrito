@@ -162,10 +162,31 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("error executing %s apply: %s", r.exec.TenvName(), err)
 		return "", err
 	}
-	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "short", []byte("Apply Successful"))
+	planJsonBytes, err := r.Datastore.GetPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Spec.Artifact.Run, r.Run.Spec.Artifact.Attempt, "json")
+	if err != nil {
+		log.Errorf("could not get json plan artifact for apply summary: %s", err)
+	}
+	shortDiff := applySummary(planJsonBytes, err)
+	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "short", []byte(shortDiff))
 	if err != nil {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
 	log.Infof("%s apply ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
+// applySummary builds the same "Plan: X to create, Y to update, Z to delete" summary as
+// execPlan, from the JSON plan artifact that was applied, falling back to a plain
+// "Apply Successful" when that artifact is unavailable or unparseable.
+func applySummary(planJsonBytes []byte, getPlanErr error) string {
+	if getPlanErr != nil {
+		return "Apply Successful"
+	}
+	appliedPlan := &tfjson.Plan{}
+	if err := json.Unmarshal(planJsonBytes, appliedPlan); err != nil {
+		log.Errorf("could not parse json plan for apply summary: %s", err)
+		return "Apply Successful"
+	}
+	_, shortDiff := runnerutils.GetDiff(appliedPlan)
+	return shortDiff
 }

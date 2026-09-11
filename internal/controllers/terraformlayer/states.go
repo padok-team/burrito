@@ -7,7 +7,10 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	"github.com/padok-team/burrito/internal/utils/syncwindow"
+	logrus "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -84,6 +87,7 @@ func (s *PlanNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Plan action")
+		r.postCommitStatus(ctx, layer, repository, status.PhasePlan, status.StatePending, revision)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -116,6 +120,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
+		r.postCommitStatus(ctx, layer, repository, status.PhaseApply, status.StatePending, revision)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -128,6 +133,21 @@ func (s *MaxRetriesReached) getHandler() Handler {
 		// Requeue with a longer interval since frequent checks won't help
 		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Layer has reached max retries for Plan or Apply action, check the status and logs of the last run")
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+	}
+}
+
+// postCommitStatus posts a plan/apply commit status scoped to layer, best-effort: a
+// failure here must not block the reconciliation.
+func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase status.Phase, state status.State, commit string) {
+	provider, err := r.getAPIProvider(repository)
+	if err != nil {
+		logrus.Warnf("could not get API provider to set commit status for layer %s: %s", layer.Name, err)
+		return
+	}
+	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, "")
+	if err := commitstatus.Post(provider, repository, layer, phase, state, commit, layer.Status.LastResult, targetURL); err != nil {
+		// Already logged inside Post with more specific context; best-effort, nothing more to do.
+		return
 	}
 }
 

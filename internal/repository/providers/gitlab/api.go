@@ -7,6 +7,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	log "github.com/sirupsen/logrus"
 	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,6 +44,44 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 		listOpts.Page = resp.NextPage
 	}
 	return changes, nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+	commit := s.Commit
+	if commit == "" {
+		commit = pr.Annotations[annotations.LastBranchCommit]
+	}
+	name := "burrito/" + string(s.Phase)
+	if s.Context != "" {
+		name = s.Context
+	}
+	description := s.Description
+	state := toGitlabBuildState(s.State)
+	opts := &gitlab.SetCommitStatusOptions{
+		State:       state,
+		Name:        &name,
+		Description: &description,
+	}
+	if s.TargetURL != "" {
+		opts.TargetURL = &s.TargetURL
+	}
+	// Errors are logged by the caller (commitstatus.Post), which has the context to tell a
+	// permanent failure from a transient one worth retrying.
+	_, _, err := api.client.Commits.SetCommitStatus(getGitlabNamespacedName(repository.Spec.Repository.Url), commit, opts)
+	return err
+}
+
+func toGitlabBuildState(s status.State) gitlab.BuildStateValue {
+	switch s {
+	case status.StateRunning:
+		return gitlab.Running
+	case status.StateSuccess:
+		return gitlab.Success
+	case status.StateFailure:
+		return gitlab.Failed
+	default:
+		return gitlab.Pending
+	}
 }
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {
