@@ -166,10 +166,15 @@ func markForCommitStatus(run *configv1alpha1.TerraformRun) {
 // postCommitStatus posts a plan/apply commit status scoped to layer, best-effort: a
 // failure here must not block the reconciliation.
 func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase status.Phase, state status.State, commit string) {
+	if !r.Config.Controller.CommitStatus.Enabled {
+		return
+	}
 	log := log.WithContext(ctx)
 	provider, err := r.getAPIProvider(repository)
 	if err != nil {
-		log.Warnf("could not get API provider to set commit status for layer %s: %s", layer.Name, err)
+		// Expected for repositories on the standard git provider or without credentials:
+		// they simply have no API to post to, which is not something to warn about.
+		log.Debugf("no API provider to set commit status for layer %s: %s", layer.Name, err)
 		return
 	}
 	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, "")

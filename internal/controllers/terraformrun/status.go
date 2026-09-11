@@ -17,6 +17,9 @@ const applySucceeded = "Apply Successful"
 // postCommitStatus posts a plan/apply commit status scoped to layer for run, best-effort:
 // a failure here must not block the reconciliation.
 func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, state status.State, outcome string) {
+	if !r.Config.Controller.CommitStatus.Enabled {
+		return
+	}
 	// Whether a run is worth reporting is decided once, by the layer controller that
 	// created it: a drift detection re-plan of an already planned commit is not.
 	if run.Annotations[annotations.PostCommitStatus] != "true" {
@@ -29,7 +32,9 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.T
 
 	provider, err := r.getAPIProvider(repository)
 	if err != nil {
-		log.Warnf("could not get API provider to set commit status for run %s: %s", run.Name, err)
+		// Expected for repositories on the standard git provider or without credentials:
+		// they simply have no API to post to, which is not something to warn about.
+		log.Debugf("no API provider to set commit status for run %s: %s", run.Name, err)
 		return
 	}
 

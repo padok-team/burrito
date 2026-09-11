@@ -81,6 +81,7 @@ func testRun(action string, revision string) *configv1alpha1.TerraformRun {
 func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
+		Config: config.TestConfig(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
 		},
@@ -91,10 +92,29 @@ func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 	}
 }
 
+func TestPostCommitStatusSkipsWhenDisabled(t *testing.T) {
+	provider := &fakeAPIProvider{}
+	cfg := config.TestConfig()
+	cfg.Controller.CommitStatus.Enabled = false
+	r := &Reconciler{
+		Config:    cfg,
+		Datastore: datastore.NewMockClient(),
+		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+			return provider, nil
+		},
+	}
+
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+
+	if len(provider.setStatusCalls) != 0 {
+		t.Fatalf("expected no commit status when the feature is disabled, got %d calls", len(provider.setStatusCalls))
+	}
+}
+
 func TestPostCommitStatusSkipsRunsNotMarkedByTheLayerController(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
-		Config:    &config.Config{},
+		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
@@ -113,7 +133,7 @@ func TestPostCommitStatusSkipsRunsNotMarkedByTheLayerController(t *testing.T) {
 func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
-		Config:    &config.Config{},
+		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
@@ -140,7 +160,7 @@ func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 	provider := &fakeAPIProvider{}
 	r := &Reconciler{
-		Config:    &config.Config{},
+		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return provider, nil
@@ -162,7 +182,7 @@ func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 
 func TestPostCommitStatusDoesNotPanicOnProviderError(t *testing.T) {
 	r := &Reconciler{
-		Config:    &config.Config{},
+		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
 			return nil, errors.New("no provider configured")

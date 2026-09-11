@@ -9,6 +9,7 @@ A Helm chart for handling a complete burrito deployment
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | config.annotations | object | `{}` | Annotations to be added to the ConfigMap |
+| config.burrito.controller.commitStatus.enabled | bool | `true` | Enable/Disable the commit statuses posted on a layer's commit for its plan and apply runs. Needs GitHub or GitLab credentials on the repository: layers served by the standard git provider have no API to post to and never get any. |
 | config.burrito.controller.githubConfig.apiToken | string | `""` | Github API token, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APITOKEN environment variable |
 | config.burrito.controller.githubConfig.appId | string | `""` | Github app ID, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_APPID environment variable |
 | config.burrito.controller.githubConfig.installationId | string | `""` | Github app unstallation ID, prefer override with the BURRITO_CONTROLLER_GITHUBCONFIG_INSTALLATIONID environment variable |

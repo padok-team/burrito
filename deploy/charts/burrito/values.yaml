@@ -23,6 +23,11 @@ config:
         waitAction: 10s
         # -- Duration to wait before retrying on failure (increases exponentially with the amount of failed retries)
         failureGracePeriod: 15s
+      commitStatus:
+        # -- Enable/Disable the commit statuses posted on a layer's commit for its plan and
+        # apply runs. Needs GitHub or GitLab credentials on the repository: layers served by
+        # the standard git provider have no API to post to and never get any.
+        enabled: true
       # -- Default sync windows for layer reconciliation
       defaultSyncWindows: []
       # -- Maximum number of concurrent reconciles for the controller, increase this value if you have a lot of resources to reconcile

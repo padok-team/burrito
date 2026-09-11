@@ -166,6 +166,29 @@ func TestPlanNeededReportsACommitStatusForAnUnplannedCommit(t *testing.T) {
 	}
 }
 
+func TestPlanNeededSkipsCommitStatusWhenDisabled(t *testing.T) {
+	recordingClient := &createRecordingClient{}
+	provider := &fakeAPIProvider{}
+	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
+	reconciler.Config.Controller.CommitStatus.Enabled = false
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "pwet",
+			Namespace:   "default",
+			Annotations: map[string]string{annotations.LastBranchCommit: "sha-new"},
+		},
+	}
+
+	_, run := (&PlanNeeded{}).getHandler()(context.Background(), reconciler, layer, &configv1alpha1.TerraformRepository{})
+
+	if run == nil {
+		t.Fatalf("expected a run to be created")
+	}
+	if len(provider.setStatusCalls) != 0 {
+		t.Errorf("expected no commit status when the feature is disabled, got %d", len(provider.setStatusCalls))
+	}
+}
+
 func TestPlanNeededSkipsCommitStatusOnDriftDetectionReplan(t *testing.T) {
 	recordingClient := &createRecordingClient{}
 	provider := &fakeAPIProvider{}

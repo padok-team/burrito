@@ -73,6 +73,7 @@ func TestConfig_FromYamlFile(t *testing.T) {
 			TerraformMaxRetries:     5,
 			MaxConcurrentReconciles: 1,
 			MaxConcurrentRunnerPods: 0,
+			CommitStatus:            config.CommitStatusConfig{Enabled: true},
 			Types:                   []string{"layer", "repository", "run", "pullrequest"},
 			LeaderElection: config.LeaderElectionConfig{
 				Enabled: true,
@@ -191,6 +192,7 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 			},
 			MaxConcurrentReconciles: 3,
 			MaxConcurrentRunnerPods: 10,
+			CommitStatus:            config.CommitStatusConfig{Enabled: true},
 			TerraformMaxRetries:     32,
 			Types:                   []string{"layer", "repository"},
 			LeaderElection: config.LeaderElectionConfig{

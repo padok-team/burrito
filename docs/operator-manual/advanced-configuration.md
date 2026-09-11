@@ -21,12 +21,16 @@ They can be set in the Helm chart [values](https://github.com/padok-team/burrito
 |   `BURRITO_CONTROLLER_KUBERNETESWEBHOOKPORT`   |   port used by the validating webhook server embedded in the controllers    |               `9443`               |
 |   `BURRITO_CONTROLLER_MAXCONCURRENTRECONCILES` |    number of parallel resource reconciliation performed by the contoller    |                `0`                 |
 |   `BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS` | maximum number for pods that run in parallel to perform plan/apply (0=inf)  |                `0`                 |
+|   `BURRITO_CONTROLLER_COMMITSTATUS_ENABLED`    |  whether plan/apply runs report a commit status on the layer's commit (needs GitHub or GitLab credentials)  |               `true`               |
+
+
 
 ## Server's configuration
 
-| Environment variable  |          Description          | Default |
-| :-------------------: | :---------------------------: | :-----: |
-| `BURRITO_SERVER_ADDR` | address the server listens on | `:8080` |
+| Environment variable       |                                  Description                                  | Default |
+| :------------------------: | :---------------------------------------------------------------------------: | :-----: |
+| `BURRITO_SERVER_ADDR`      |                         address the server listens on                          | `:8080` |
+| `BURRITO_SERVER_PUBLICURL` | externally-reachable URL of the dashboard, used for commit status "Details" links (defaults to the server's Ingress URL when the chart enables one; empty disables the links) |  `""`   |
 
 !!! info
     For webhook configuration see [Setup a git webhook](./git-webhook.md).
