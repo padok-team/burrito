@@ -43,7 +43,9 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
