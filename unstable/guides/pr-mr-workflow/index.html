@@ -1803,17 +1803,17 @@
 <h3 id="setup-a-webhook-and-github-app-for-your-repository">Setup a webhook and GitHub app for your repository<a class="headerlink" href="#setup-a-webhook-and-github-app-for-your-repository" title="Permanent link">&para;</a></h3>
 <p>To trigger the Burrito plan and apply workflow, you need to set up a webhook from your repository to your Burrito instance.
 Fork the <a href="https://github.com/padok-team/burrito-examples">burrito-examples</a> repository and update the <code>TerraformRepository</code> resource to point to your forked repository.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/&lt;your-github-handle&gt;/burrito-examples</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/&lt;your-github-handle&gt;/burrito-examples
+  terraform:
+    enabled: true
+</code></pre>
 <p>You will also need to setup a <a href="https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps">GitHub App</a> to allow Burrito to comment on your PRs/MRs. Follow the instructions in the <a href="../../operator-manual/git-authentication/github-app/">GitHub App</a> section of the operator manual to set up the GitHub app.
 Make sure that you created a secret associated to your repository that include the GitHub app ID, installation ID, and private key.</p>
 <div class="admonition note">
@@ -1823,53 +1823,53 @@ Make sure that you created a secret associated to your repository that include t
 <p>Now let's configure the GitHub webhook. Expose the <code>burrito-server</code> kubernetes service to the internet using the method of your choice. (for testing purposes on a local cluster, you can use <code>kubectl port-forward</code> and <a href="https://ngrok.com/">ngrok</a> to expose the service to the internet).</p>
 <p>Configure a webhook in your GitHub repository to point to the exposed <code>burrito-server</code> service. <strong>Make sure to specify the <code>/api/webhook</code> path in the target url.</strong> The webhook should be triggered on <code>push</code> and <code>pull_request</code> events. Reference your webhook secret in the secret associated to your repository, in the <code>webhookSecret</code> key.</p>
 <p>Your <code>TerraformRepository</code> resource and secret should look like this:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.terraform.padok.cloud/v1alpha1</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">TerraformRepository</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-repository</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nt">spec</span><span class="p">:</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">repository</span><span class="p">:</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/&lt;your-github-handle&gt;/burrito-examples</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">terraform</span><span class="p">:</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="nn">---</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Secret</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nt">metadata</span><span class="p">:</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-webhook-secret</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">burrito-project</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">credentials.burrito.tf/repository</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="nt">stringData</span><span class="p">:</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/&lt;your-github-handle&gt;/burrito-examples</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;your-webhook-secret&quot;</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">  </span><span class="nt">githubAppID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;123456&quot;</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">  </span><span class="nt">githubAppInstallationID</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;12345678&quot;</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">  </span><span class="nt">githubAppPrivateKey</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="no">-----BEGIN RSA PRIVATE KEY-----</span>
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">    </span><span class="no">my-private-key</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">    </span><span class="no">-----END RSA PRIVATE KEY-----</span>
-</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">  </span><span class="nt">webhookSecret</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-webhook-secret&quot;</span>
-</span></code></pre></div>
+<pre><code class="language-yaml">apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRepository
+metadata:
+  name: my-repository
+  namespace: burrito-project
+spec:
+  repository:
+    url: https://github.com/&lt;your-github-handle&gt;/burrito-examples
+  terraform:
+    enabled: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: burrito-webhook-secret
+  namespace: burrito-project
+type: credentials.burrito.tf/repository
+stringData:
+  provider: github
+  url: https://github.com/&lt;your-github-handle&gt;/burrito-examples
+  webhookSecret: &quot;your-webhook-secret&quot;
+  githubAppID: &quot;123456&quot;
+  githubAppInstallationID: &quot;12345678&quot;
+  githubAppPrivateKey: |
+    -----BEGIN RSA PRIVATE KEY-----
+    my-private-key
+    -----END RSA PRIVATE KEY-----
+  webhookSecret: &quot;my-webhook-secret&quot;
+</code></pre>
 <h3 id="experiment-with-the-prmr-workflow">Experiment with the PR/MR workflow<a class="headerlink" href="#experiment-with-the-prmr-workflow" title="Permanent link">&para;</a></h3>
 <p>Now that you have set up the webhook and GitHub app, you can experiment with the PR/MR workflow.
 Create a new branch in your forked repository and make some changes to the Terraform code. Push the changes to the branch and open a PR/MR against the main branch.</p>
 <p>A new TerraformPullRequest resource should be created in your tenant namespace. You can check the status of the resource by running:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pr<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl get pr -n burrito-project
+</code></pre>
 <p>Output:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>NAME<span class="w">              </span>ID<span class="w">    </span>STATE<span class="w">   </span>PROVIDER<span class="w">   </span>BASE<span class="w">   </span>BRANCH
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>my-repository-1<span class="w">   </span><span class="m">1</span><span class="w">     </span>Idle<span class="w">    </span>github<span class="w">     </span>main<span class="w">   </span>update-tf-code
-</span></code></pre></div>
+<pre><code class="language-bash">NAME              ID    STATE   PROVIDER   BASE   BRANCH
+my-repository-1   1     Idle    github     main   update-tf-code
+</code></pre>
 <p>A new TerraformLayer resource should also be created to plan the Terraform code. You can check the status of the resource by running:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>tfl<span class="w"> </span>-n<span class="w"> </span>burrito-project
-</span></code></pre></div>
+<pre><code class="language-bash">kubectl get tfl -n burrito-project
+</code></pre>
 <p>Output:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>NAME<span class="w">                  </span>STATE<span class="w">         </span>REPOSITORY<span class="w">      </span>BRANCH<span class="w">           </span>PATH<span class="w">        </span>LAST<span class="w"> </span>RESULT
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>my-layer<span class="w">              </span>ApplyNeeded<span class="w">   </span>my-repository<span class="w">   </span>main<span class="w">             </span>terraform<span class="w">   </span>Plan:<span class="w"> </span><span class="m">3</span><span class="w"> </span>to<span class="w"> </span>create,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>update,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>delete
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>my-layer-pr-1-rxvrt<span class="w">   </span>ApplyNeeded<span class="w">   </span>my-repository<span class="w">   </span>update-tf-code<span class="w">   </span>terraform<span class="w">   </span>Plan:<span class="w"> </span><span class="m">2</span><span class="w"> </span>to<span class="w"> </span>create,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>update,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>delete
-</span></code></pre></div>
+<pre><code class="language-bash">NAME                  STATE         REPOSITORY      BRANCH           PATH        LAST RESULT
+my-layer              ApplyNeeded   my-repository   main             terraform   Plan: 3 to create, 0 to update, 0 to delete
+my-layer-pr-1-rxvrt   ApplyNeeded   my-repository   update-tf-code   terraform   Plan: 2 to create, 0 to update, 0 to delete
+</code></pre>
 <p>The Burrito server should have commented on the PR/MR with the plan output. You can check the comments on the PR/MR to see the plan output.</p>
 <p><img alt="Pull request comment demo" src="../../assets/demo/pr-demo.png" /></p>
 <p>Set the <code>autoApply</code> field to <code>true</code> in the TerraformLayer resource to automatically apply the Terraform code upon merging the PR/MR.</p>
