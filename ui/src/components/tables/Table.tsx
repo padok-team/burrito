@@ -147,18 +147,18 @@ const Table: React.FC<TableProps> = ({
 
   const getTag = (state: LayerState) => {
     return (
-      <div className="relative flex items-center">
+      <div className="relative inline-flex items-center">
         <Tag variant={state} />
-        {state === 'error' &&
+        {(state === 'error' || state === 'retriesExhausted') &&
           (variant === 'light' ? (
             <ChiliLight
-              className="absolute translate-x-16 rotate-[-21deg]"
+              className="absolute left-full ml-1 rotate-[-21deg]"
               height={24}
               width={24}
             />
           ) : (
             <ChiliDark
-              className="absolute translate-x-16 rotate-[-21deg]"
+              className="absolute left-full ml-1 rotate-[-21deg]"
               height={24}
               width={24}
             />

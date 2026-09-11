@@ -133,6 +133,11 @@ func (a *API) getLayerState(layer configv1alpha1.TerraformLayer) string {
 	switch {
 	case len(layer.Status.Conditions) == 0:
 		state = "disabled"
+	case layer.Status.State == "MaxRetriesReached":
+		// Returned as-is on purpose: a layer that exhausted its retries must stay
+		// reported as such, even when it never produced a plan sum and would
+		// otherwise be escalated to "error" by the checks below.
+		return "retriesExhausted"
 	case layer.Status.State == "ApplyNeeded":
 		if layer.Status.LastResult == "Plan: 0 to create, 0 to update, 0 to delete" {
 			state = "success"
