@@ -49,10 +49,17 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.T
 // has finished, describe run itself instead, since the layer's cached field won't be
 // refreshed with run's outcome until terraformlayer's next reconciliation.
 func (r *Reconciler) resultMessage(ctx context.Context, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, outcome string) string {
-	if outcome != commitstatus.Succeeded && outcome != commitstatus.Failed {
+	switch {
+	case outcome == commitstatus.Failed:
+		// A run that failed never got to write a result artifact, so there is nothing to
+		// fetch: say which phase failed and let the status's "Details" link lead to the logs.
+		if run.Spec.Action == string(ApplyAction) {
+			return "Apply failed"
+		}
+		return "Plan failed"
+	case outcome != commitstatus.Succeeded:
 		return layer.Status.LastResult
-	}
-	if outcome == commitstatus.Succeeded && run.Spec.Action == string(ApplyAction) {
+	case run.Spec.Action == string(ApplyAction):
 		return r.appliedDiff(ctx, run, layer, repository)
 	}
 	result, err := r.Datastore.GetPlan(layer.Namespace, layer.Name, run.Name, "", "short")

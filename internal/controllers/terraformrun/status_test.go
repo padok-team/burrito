@@ -190,6 +190,21 @@ func TestResultMessageReturnsErrorPlaceholderOnDatastoreFailure(t *testing.T) {
 	}
 }
 
+func TestResultMessageNamesTheFailedPhaseWithoutReadingTheDatastore(t *testing.T) {
+	// A failed run writes no result artifact: reading one back could only ever fail.
+	r := &Reconciler{Datastore: &erroringDatastoreClient{}}
+	cases := map[string]string{
+		"plan":  "Plan failed",
+		"apply": "Apply failed",
+	}
+	for action, want := range cases {
+		got := r.resultMessage(context.Background(), testRun(action, "sha123"), testMainLayer(), testRepository(), commitstatus.Failed)
+		if got != want {
+			t.Errorf("%s: expected %q, got %q", action, want, got)
+		}
+	}
+}
+
 func TestResultMessageDescribesTheAppliedPlan(t *testing.T) {
 	r := &Reconciler{Datastore: &planDatastoreClient{shortDiff: "Plan: 2 to create, 1 to update, 1 to delete"}}
 	run := testRun("apply", "sha123")
