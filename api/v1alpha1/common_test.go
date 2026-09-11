@@ -631,6 +631,91 @@ func TestGetAutoApplyEnabled(t *testing.T) {
 	}
 }
 
+func TestGetNonDestructiveApplyEnabled(t *testing.T) {
+	tt := []struct {
+		name       string
+		repository *configv1alpha1.TerraformRepository
+		layer      *configv1alpha1.TerraformLayer
+		expected   bool
+	}{
+		{
+			"EnabledInRepositoryDisabledInLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						NonDestructiveApply: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						NonDestructiveApply: &[]bool{false}[0],
+					},
+				},
+			},
+			false,
+		},
+		{
+			"DisabledInRepositoryEnabledInLayer",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						NonDestructiveApply: &[]bool{false}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						NonDestructiveApply: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		{
+			"OnlyRepositoryEnabling",
+			&configv1alpha1.TerraformRepository{
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						NonDestructiveApply: &[]bool{true}[0],
+					},
+				},
+			},
+			&configv1alpha1.TerraformLayer{},
+			true,
+		},
+		{
+			"OnlyLayerEnabling",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{
+				Spec: configv1alpha1.TerraformLayerSpec{
+					RemediationStrategy: configv1alpha1.RemediationStrategy{
+						NonDestructiveApply: &[]bool{true}[0],
+					},
+				},
+			},
+			true,
+		},
+		{
+			"Default",
+			&configv1alpha1.TerraformRepository{},
+			&configv1alpha1.TerraformLayer{},
+			false,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := configv1alpha1.GetNonDestructiveApplyEnabled(tc.repository, tc.layer)
+			if tc.expected != result {
+				t.Errorf("different enabled status computed: expected %t go %t", tc.expected, result)
+			}
+		})
+	}
+}
+
 func TestOverrideRunnerSpec(t *testing.T) {
 	tt := []struct {
 		name         string
