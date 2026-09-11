@@ -94,6 +94,23 @@ func (r *Runner) Init() error {
 		return err
 	}
 
+	commitHash, author, message, err := r.readCommitInfo()
+	if err != nil {
+		log.Errorf("error reading commit info, skipping commit info update: %s", err)
+	} else {
+		newRun := r.Run.DeepCopy()
+		newRun.Status.Commit = commitHash
+		newRun.Status.Author = author
+		newRun.Status.Message = message
+		err = r.Client.Status().Patch(context.TODO(), newRun, client.MergeFrom(r.Run))
+		if err != nil {
+			log.Errorf("error patching run commit info: %s", err)
+		} else {
+			r.Run = newRun
+			log.Infof("patched run commit info: hash=%s author=%s message=%s", commitHash, author, message)
+		}
+	}
+
 	log.Infof("installing binaries...")
 	r.exec, err = tools.InstallBinaries(r.Layer, r.Repository, r.config.Runner.RunnerBinaryPath, r.workingDir)
 	if err != nil {
@@ -195,4 +212,30 @@ func (r *Runner) cloneGitBundle() error {
 	log.Infof("successfully fetched and opened git bundle from the datastore: repo=%s/%s ref=%s rev=%s", r.Repository.Namespace, r.Repository.Name, r.Layer.Spec.Branch, r.Run.Spec.Layer.Revision)
 
 	return nil
+}
+
+func (r *Runner) readCommitInfo() (string, string, string, error) {
+	// Get commit hash, author and message
+	cmd := exec.Command("git", "-C", r.repoDir, "rev-parse", "HEAD")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", "", "", err
+	}
+	commitHash := string(out)
+
+	cmd = exec.Command("git", "-C", r.repoDir, "log", "-1", "--pretty=format:%an", "--no-merges")
+	out, err = cmd.Output()
+	if err != nil {
+		return "", "", "", err
+	}
+	author := string(out)
+
+	cmd = exec.Command("git", "-C", r.repoDir, "log", "-1", "--pretty=format:%s", "--no-merges")
+	out, err = cmd.Output()
+	if err != nil {
+		return "", "", "", err
+	}
+	message := string(out)
+
+	return strings.TrimSpace(commitHash), strings.TrimSpace(author), strings.TrimSpace(message), nil
 }

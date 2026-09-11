@@ -5405,10 +5405,14 @@ spec:
                 properties:
                   action:
                     type: string
+                  author:
+                    type: string
                   commit:
                     type: string
                   date:
                     format: date-time
+                    type: string
+                  message:
                     type: string
                   name:
                     type: string
@@ -5418,10 +5422,14 @@ spec:
                   properties:
                     action:
                       type: string
+                    author:
+                      type: string
                     commit:
                       type: string
                     date:
                       format: date-time
+                      type: string
+                    message:
                       type: string
                     name:
                       type: string
