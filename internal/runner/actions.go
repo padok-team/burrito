@@ -107,7 +107,7 @@ func (r *Runner) execPlan() (string, error) {
 		log.Errorf("error parsing %s json plan: %s", r.exec.TenvName(), err)
 		return "", err
 	}
-	_, shortDiff := runnerutils.GetDiff(plan)
+	_, _, shortDiff := runnerutils.GetDiff(plan)
 	err = r.Datastore.PutPlan(r.Layer.Namespace, r.Layer.Name, r.Run.Name, strconv.Itoa(r.Run.Status.Retries), "json", planJsonBytes)
 	if err != nil {
 		log.Errorf("could not put json plan in datastore: %s", err)
@@ -144,6 +144,43 @@ func (r *Runner) execApply() (string, error) {
 	if err != nil {
 		log.Errorf("could not get plan artifact: %s", err)
 		return "", err
+	}
+	if configv1alpha1.GetNonDestructiveApplyEnabled(r.Repository, r.Layer) {
+		planJSON, err := r.Datastore.GetPlan(
+			r.Layer.Namespace,
+			r.Layer.Name,
+			r.Run.Spec.Artifact.Run,
+			r.Run.Spec.Artifact.Attempt,
+			"json",
+		)
+		if err != nil {
+			log.Errorf("could not get plan JSON for destructive change check: %s", err)
+			return "", err
+		}
+
+		plan := &tfjson.Plan{}
+		err = json.Unmarshal(planJSON, plan)
+		if err != nil {
+			log.Errorf("could not parse plan JSON for destructive change check: %s", err)
+			return "", err
+		}
+
+		_, destructive, _ := runnerutils.GetDiff(plan)
+		if destructive {
+			log.Infof("nonDestructiveApply is enabled and plan contains destructive changes, skipping apply")
+			err = r.Datastore.PutPlan(
+				r.Layer.Namespace,
+				r.Layer.Name,
+				r.Run.Name,
+				strconv.Itoa(r.Run.Status.Retries),
+				"short",
+				[]byte("Apply skipped: plan contains destructive changes"),
+			)
+			if err != nil {
+				log.Errorf("could not put short plan in datastore: %s", err)
+			}
+			return "", fmt.Errorf("apply blocked: plan contains destructive changes")
+		}
 	}
 	sum := sha256.Sum256(plan)
 	err = os.WriteFile(PlanArtifact, plan, 0644)
