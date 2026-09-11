@@ -132,3 +132,36 @@ func TestTruncate(t *testing.T) {
 		}
 	}
 }
+
+func TestStableContext(t *testing.T) {
+	short := "Burrito ▶ Apply default/pwet"
+	long := "Burrito ▶ Plan " + strings.Repeat("very-long-namespace-name-", 20) + "/" + strings.Repeat("very-long-layer-name-", 20)
+
+	// Short context unchanged
+	if got := stableContext(short); got != short {
+		t.Errorf("short context changed: got %q, want %q", got, short)
+	}
+
+	// Long context truncated to exactly 255 runes
+	got := stableContext(long)
+	if len([]rune(got)) != 255 {
+		t.Errorf("long context truncated to %d runes, want 255", len([]rune(got)))
+	}
+
+	// Determinism: same input always produces same output
+	got1 := stableContext(long)
+	got2 := stableContext(long)
+	if got1 != got2 {
+		t.Errorf("non-deterministic output: %q != %q", got1, got2)
+	}
+
+	// Two contexts sharing prefix get different results due to hash suffix
+	prefix := "Burrito ▶ Plan " + strings.Repeat("x", 240)
+	ctx1 := prefix + "AAA"
+	ctx2 := prefix + "BBB"
+	res1 := stableContext(ctx1)
+	res2 := stableContext(ctx2)
+	if res1 == res2 {
+		t.Errorf("different inputs with same prefix produced identical truncated contexts: %q", res1)
+	}
+}
