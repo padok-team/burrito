@@ -56,4 +56,3 @@ node_modules/
 # Documentation artefacts
 site/
 .cache/
-.DS_Store

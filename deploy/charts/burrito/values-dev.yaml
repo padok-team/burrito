@@ -11,7 +11,6 @@ config:
     controller:
       timers:
         driftDetection: 10m
-        repositorySync: 1m
     server:
       # -- Externally-reachable URL of the Burrito dashboard, used to build "Details" links
       # on commit statuses. Leave empty to disable those links (ex: https://burrito.example.com)
