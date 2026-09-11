@@ -135,6 +135,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			lastResult = []byte("Error getting last Result")
 		}
 	}
+	// Update the layer's result before invoking the handler, so that commit statuses posted
+	// by the handler read the correct "Last Result" field.
+	layer.Status.LastResult = string(lastResult)
 	result, run := state.getHandler()(ctx, r, layer, repository)
 	lastRun := layer.Status.LastRun
 	runHistory := layer.Status.LatestRuns
@@ -142,7 +145,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		lastRun = getRun(*run)
 		runHistory = updateLatestRuns(runHistory, *run, *configv1alpha1.GetRunHistoryPolicy(repository, layer).KeepLastRuns)
 	}
-	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: string(lastResult), LastRun: lastRun, LatestRuns: runHistory}
+	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: layer.Status.LastResult, LastRun: lastRun, LatestRuns: runHistory}
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
 		r.Recorder.Event(layer, corev1.EventTypeWarning, "Reconciliation", "Could not update layer status")
