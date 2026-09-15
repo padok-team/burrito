@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
@@ -22,6 +22,8 @@ import SSOButton from '@/components/buttons/SSOButton';
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const accessDenied = searchParams.get('error') === 'access_denied';
   // Fetch supported auth method from server
   const {
     data: authType,
@@ -104,6 +106,13 @@ const Login: React.FC = () => {
             </span>
           </div>
           <div className="flex flex-col items-center justify-center gap-8 w-full">
+            {accessDenied && (
+              <div
+                className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}
+              >
+                You don&apos;t have permission to access this Burrito instance.
+              </div>
+            )}
             {isBasicAuth ? (
               <form
                 onSubmit={handleLogin}
