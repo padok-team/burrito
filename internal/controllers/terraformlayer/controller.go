@@ -26,6 +26,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/metrics"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/lock"
+	coordination "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,8 +90,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
 	}
 	if locked {
-		log.Infof("TerraformLayer %s is locked, skipping reconciliation.", layer.Name)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		released, err := r.releaseOrphanedLayerLock(ctx, layer)
+		if err != nil {
+			log.Errorf("failed to check or release the layer lock: %s", err)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, err
+		}
+		if !released {
+			log.Infof("TerraformLayer %s is locked, skipping reconciliation.", layer.Name)
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
+		}
+		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Released orphaned layer lock: the runner holding the lock does not exist anymore")
+		log.Infof("TerraformLayer %s was locked by a non-existent runner, releasing the lock and continuing reconciliation", layer.Name)
 	}
 	repository := &configv1alpha1.TerraformRepository{}
 	log.Infof("getting Linked TerraformRepository to layer %s", layer.Name)
@@ -143,6 +153,58 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	log.Infof("finished reconciliation cycle for layer %s/%s", layer.Namespace, layer.Name)
 	return result, nil
+}
+
+// releaseOrphanedLayerLock releases the layer lock when it is held by a run
+// whose runner pod no longer exists, or whose run has been deleted. Such a
+// lock can never be released by the run state machine: it only removes the
+// lock on success or failure, both of which depend on the missing pod.
+// Returns true when the orphaned lock was released.
+func (r *Reconciler) releaseOrphanedLayerLock(ctx context.Context, layer *configv1alpha1.TerraformLayer) (bool, error) {
+	lease, err := lock.GetLock(ctx, r.Client, layer)
+	if err != nil {
+		return false, err
+	}
+	if lease == nil {
+		return false, nil
+	}
+	runName := ""
+	for _, owner := range lease.OwnerReferences {
+		if owner.Kind == "TerraformRun" {
+			runName = owner.Name
+			break
+		}
+	}
+	if runName == "" {
+		return false, nil
+	}
+	run := &configv1alpha1.TerraformRun{}
+	err = r.Client.Get(ctx, types.NamespacedName{Namespace: layer.Namespace, Name: runName}, run)
+	if errors.IsNotFound(err) {
+		return r.deleteOrphanedLayerLock(ctx, lease)
+	}
+	if err != nil {
+		return false, err
+	}
+	if run.Status.RunnerPod == "" {
+		return false, nil
+	}
+	pod := &corev1.Pod{}
+	err = r.Client.Get(ctx, types.NamespacedName{Namespace: layer.Namespace, Name: run.Status.RunnerPod}, pod)
+	if errors.IsNotFound(err) {
+		return r.deleteOrphanedLayerLock(ctx, lease)
+	}
+	if err != nil {
+		return false, err
+	}
+	return false, nil
+}
+
+func (r *Reconciler) deleteOrphanedLayerLock(ctx context.Context, lease *coordination.Lease) (bool, error) {
+	if err := r.Client.Delete(ctx, lease); err != nil && !errors.IsNotFound(err) {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository) error {

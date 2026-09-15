@@ -100,6 +100,45 @@ var _ = Describe("Lock", func() {
 			Expect(locked).To(Equal(false))
 		})
 	})
+	Describe("GetLock and idempotent DeleteLock", Ordered, func() {
+		BeforeAll(func() {
+			layer = &configv1alpha1.TerraformLayer{}
+			getErrLayer = k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test",
+			}, layer)
+			run = &configv1alpha1.TerraformRun{}
+			getErrRun = k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test-run",
+			}, run)
+			Expect(getErrLayer).NotTo(HaveOccurred())
+			Expect(getErrRun).NotTo(HaveOccurred())
+		})
+		It("should return no lease when the layer is not locked", func() {
+			lease, err := lock.GetLock(context.TODO(), k8sClient, layer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lease).To(BeNil())
+		})
+		It("should not return an error when deleting a missing lease", func() {
+			err := lock.DeleteLock(context.TODO(), k8sClient, layer, run)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should return the lease when the layer is locked", func() {
+			err := lock.CreateLock(context.TODO(), k8sClient, layer, run)
+			Expect(err).NotTo(HaveOccurred())
+			lease, err := lock.GetLock(context.TODO(), k8sClient, layer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lease).NotTo(BeNil())
+			Expect(lease.OwnerReferences[0].Name).To(Equal("test-run"))
+		})
+		It("should not return an error when deleting the lease twice", func() {
+			err := lock.DeleteLock(context.TODO(), k8sClient, layer, run)
+			Expect(err).NotTo(HaveOccurred())
+			err = lock.DeleteLock(context.TODO(), k8sClient, layer, run)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
 })
 
 var _ = AfterSuite(func() {

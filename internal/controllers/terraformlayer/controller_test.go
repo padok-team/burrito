@@ -598,6 +598,85 @@ var _ = Describe("Layer", func() {
 			})
 		})
 	})
+	Describe("Orphaned lock cases", func() {
+		lockLayer := func(layerName, runName string) {
+			layer := &configv1alpha1.TerraformLayer{}
+			Expect(k8sClient.Get(context.TODO(), types.NamespacedName{Namespace: "default", Name: layerName}, layer)).NotTo(HaveOccurred())
+			run := &configv1alpha1.TerraformRun{}
+			Expect(k8sClient.Get(context.TODO(), types.NamespacedName{Namespace: "default", Name: runName}, run)).NotTo(HaveOccurred())
+			Expect(lock.CreateLock(context.TODO(), k8sClient, layer, run)).NotTo(HaveOccurred())
+		}
+		Describe("When a TerraformLayer is locked by a run whose runner pod no longer exists", Ordered, func() {
+			BeforeAll(func() {
+				lockLayer("orphan-lock-case-1", "orphan-lock-run")
+				name = types.NamespacedName{
+					Name:      "orphan-lock-case-1",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should have released the orphaned lock", func() {
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeFalse())
+			})
+			It("should continue reconciliation and end in PlanNeeded state", func() {
+				Expect(layer.Status.State).To(Equal("PlanNeeded"))
+			})
+			It("should have created a plan TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(1))
+				Expect(runs.Items[0].Spec.Action).To(Equal("plan"))
+			})
+		})
+		Describe("When a TerraformLayer is locked by a run whose runner pod is still running", Ordered, func() {
+			BeforeAll(func() {
+				err := k8sClient.Create(context.TODO(), &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "orphan-lock-pod-alive",
+						Namespace: "default",
+					},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{Name: "runner", Image: "burrito-runner:test"},
+						},
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+				lockLayer("orphan-lock-case-2", "orphan-lock-run-alive")
+				name = types.NamespacedName{
+					Name:      "orphan-lock-case-2",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+			It("should still exists", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should stay locked", func() {
+				Expect(lock.IsLayerLocked(context.TODO(), k8sClient, layer)).To(BeTrue())
+			})
+			It("should not update status", func() {
+				Expect(layer.Status.State).To(Equal(""))
+			})
+			It("should set RequeueAfter to WaitAction", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			})
+			It("should not have created any TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
+	})
 	Describe("Retry limit cases", func() {
 		Describe("When a TerraformLayer last plan run has reached the retry limit for the same revision", Ordered, func() {
 			BeforeAll(func() {
