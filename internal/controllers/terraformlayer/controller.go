@@ -121,6 +121,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			lastResult = []byte("Error getting last Result")
 		}
 	}
+	layer.Status.LastResult = string(lastResult)
 	result, run := state.getHandler()(ctx, r, layer, repository)
 	lastRun := layer.Status.LastRun
 	runHistory := layer.Status.LatestRuns
