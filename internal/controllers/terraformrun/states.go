@@ -135,10 +135,11 @@ func (s *FailureGracePeriod) getHandler() Handler {
 		endIdleTime := lastActionTime.Add(expTime)
 		now := r.Clock.Now()
 		if endIdleTime.After(now) {
-			log.Infof("the grace period is over for run %v, new retry", run.Name)
-			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
+			log.Infof("the grace period is still running for run %v, waiting until %v", run.Name, endIdleTime)
+			return ctrl.Result{RequeueAfter: endIdleTime.Sub(now)}, getRunInfo(run)
 		}
-		return ctrl.Result{RequeueAfter: now.Sub(endIdleTime)}, getRunInfo(run)
+		log.Infof("the grace period is over for run %v, new retry", run.Name)
+		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, getRunInfo(run)
 	}
 }
 
