@@ -389,8 +389,11 @@ var _ = Describe("Run", func() {
 			It("should end in FailureGracePeriod state", func() {
 				Expect(run.Status.State).To(Equal("FailureGracePeriod"))
 			})
-			It("should set RequeueAfter to WaitAction", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.WaitAction))
+			It("should set RequeueAfter to FailureGracePeriod", func() {
+				// The run must be requeued when the grace period ends. The mocked
+				// clock has not moved since the failed pod was created and the run
+				// has not been retried yet, so the whole grace period is left.
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.FailureGracePeriod))
 			})
 		})
 		Describe("When a TerraformRun has errored once and not in grace period anymore", Ordered, func() {
