@@ -5295,6 +5295,8 @@ spec:
                     type: boolean
                   autoApply:
                     type: boolean
+                  nonDestructiveApply:
+                    type: boolean
                   onError:
                     properties:
                       maxRetries:
