@@ -9,7 +9,7 @@
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "11.20.0"
+      "version": "12.4.2"
     }
   },
   "devDependencies": {
