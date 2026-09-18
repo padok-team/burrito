@@ -11,7 +11,6 @@ import (
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	"github.com/padok-team/burrito/internal/repository/providers/mock"
-	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -64,7 +63,7 @@ func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 			return provider, nil
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("plan", ""), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
+	r.postCommitStatus(context.Background(), testRun("plan", ""), testMainLayer(), testRepository(), repositorytypes.StateSuccess, "succeeded")
 	if len(provider.SetStatusCalls) != 0 {
 		t.Fatalf("expected no commit status to be set when the run has no revision, got %d calls", len(provider.SetStatusCalls))
 	}
@@ -82,7 +81,7 @@ func TestPostCommitStatusSkipsWhenDisabled(t *testing.T) {
 		},
 	}
 
-	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), repositorytypes.StateSuccess, commitstatus.Succeeded)
 
 	if len(provider.SetStatusCalls) != 0 {
 		t.Fatalf("expected no commit status when the feature is disabled, got %d calls", len(provider.SetStatusCalls))
@@ -101,7 +100,7 @@ func TestPostCommitStatusSkipsRunsNotMarkedByTheLayerController(t *testing.T) {
 	run := testRun("plan", "sha123")
 	run.Annotations = nil
 
-	r.postCommitStatus(context.Background(), run, testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+	r.postCommitStatus(context.Background(), run, testMainLayer(), testRepository(), repositorytypes.StateSuccess, commitstatus.Succeeded)
 
 	if len(provider.SetStatusCalls) != 0 {
 		t.Fatalf("expected no commit status for an unmarked run, got %d calls", len(provider.SetStatusCalls))
@@ -117,14 +116,14 @@ func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 			return provider, nil
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), repositorytypes.StateSuccess, commitstatus.Succeeded)
 
 	if len(provider.SetStatusCalls) != 1 {
 		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.SetStatusCalls))
 	}
 	got := provider.SetStatusCalls[0]
-	if got.Phase != status.PhasePlan {
-		t.Errorf("expected phase %q, got %q", status.PhasePlan, got.Phase)
+	if got.Phase != repositorytypes.PhasePlan {
+		t.Errorf("expected phase %q, got %q", repositorytypes.PhasePlan, got.Phase)
 	}
 	if got.Commit != "sha123" {
 		t.Errorf("expected commit %q, got %q", "sha123", got.Commit)
@@ -144,17 +143,17 @@ func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 			return provider, nil
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("apply", "sha456"), testPullRequestLayer(), testRepository(), status.StateFailure, commitstatus.Failed)
+	r.postCommitStatus(context.Background(), testRun("apply", "sha456"), testPullRequestLayer(), testRepository(), repositorytypes.StateFailure, commitstatus.Failed)
 
 	if len(provider.SetStatusCalls) != 1 {
 		t.Fatalf("expected exactly one commit status to be set for a pull request layer, got %d", len(provider.SetStatusCalls))
 	}
 	got := provider.SetStatusCalls[0]
-	if got.Phase != status.PhaseApply {
-		t.Errorf("expected phase %q, got %q", status.PhaseApply, got.Phase)
+	if got.Phase != repositorytypes.PhaseApply {
+		t.Errorf("expected phase %q, got %q", repositorytypes.PhaseApply, got.Phase)
 	}
-	if got.State != status.StateFailure {
-		t.Errorf("expected state %q, got %q", status.StateFailure, got.State)
+	if got.State != repositorytypes.StateFailure {
+		t.Errorf("expected state %q, got %q", repositorytypes.StateFailure, got.State)
 	}
 }
 
@@ -166,7 +165,7 @@ func TestPostCommitStatusDoesNotPanicOnProviderError(t *testing.T) {
 			return nil, errors.New("no provider configured")
 		},
 	}
-	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
+	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), repositorytypes.StateSuccess, commitstatus.Succeeded)
 }
 
 func TestResultMessageUsesLastResultWhilePending(t *testing.T) {

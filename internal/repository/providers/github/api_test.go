@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-github/v91/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -214,9 +214,9 @@ func TestAPIProvider_SetStatus_MapsRunningToPending(t *testing.T) {
 	})
 
 	api := newTestAPIProvider(t, mux)
-	err := api.SetStatus(testRepository(), testPullRequest("42"), status.CommitStatus{
-		Phase:  status.PhasePlan,
-		State:  status.StateRunning,
+	err := api.SetStatus(testRepository(), testPullRequest("42"), types.CommitStatus{
+		Phase:  types.PhasePlan,
+		State:  types.StateRunning,
 		Commit: "sha123",
 	})
 	require.NoError(t, err)
@@ -235,9 +235,9 @@ func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
 
 	api := newTestAPIProvider(t, mux)
 	require.NotPanics(t, func() {
-		require.NoError(t, api.SetStatus(testRepository(), nil, status.CommitStatus{
-			Phase:  status.PhasePlan,
-			State:  status.StateSuccess,
+		require.NoError(t, api.SetStatus(testRepository(), nil, types.CommitStatus{
+			Phase:  types.PhasePlan,
+			State:  types.StateSuccess,
 			Commit: "sha123",
 		}))
 	})
@@ -247,13 +247,13 @@ func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
 func TestAPIProvider_SetStatus_DoesNotPanicWithoutAPullRequestNorACommit(t *testing.T) {
 	api := newTestAPIProvider(t, http.NewServeMux())
 	require.NotPanics(t, func() {
-		_ = api.SetStatus(testRepository(), nil, status.CommitStatus{Phase: status.PhasePlan, State: status.StateSuccess})
+		_ = api.SetStatus(testRepository(), nil, types.CommitStatus{Phase: types.PhasePlan, State: types.StateSuccess})
 	})
 }
 
 func TestToGithubState(t *testing.T) {
-	assert.Equal(t, "pending", toGithubState(status.StateRunning))
-	assert.Equal(t, "pending", toGithubState(status.StatePending))
-	assert.Equal(t, "success", toGithubState(status.StateSuccess))
-	assert.Equal(t, "failure", toGithubState(status.StateFailure))
+	assert.Equal(t, "pending", toGithubState(types.StateRunning))
+	assert.Equal(t, "pending", toGithubState(types.StatePending))
+	assert.Equal(t, "success", toGithubState(types.StateSuccess))
+	assert.Equal(t, "failure", toGithubState(types.StateFailure))
 }

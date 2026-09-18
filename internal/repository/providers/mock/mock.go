@@ -9,7 +9,6 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/repository/status"
 	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"
@@ -84,7 +83,7 @@ func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 type APIProvider struct {
 	// SetStatusCalls records every status passed to SetStatus so tests can assert on
 	// what was posted. Left nil, the mock behaves as a plain stub.
-	SetStatusCalls []status.CommitStatus
+	SetStatusCalls []types.CommitStatus
 	// SetStatusErr, when set, is what SetStatus returns.
 	SetStatusErr error
 }
@@ -139,7 +138,7 @@ func (api *APIProvider) ListPullRequests(repository *configv1alpha1.TerraformRep
 	}, nil
 }
 
-func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s types.CommitStatus) error {
 	log.Infof("Mock provider status set: phase=%s state=%s", s.Phase, s.State)
 	api.SetStatusCalls = append(api.SetStatusCalls, s)
 	return api.SetStatusErr

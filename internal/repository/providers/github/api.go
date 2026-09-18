@@ -9,7 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/types"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -49,7 +49,7 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 	return allChangedFiles, nil
 }
 
-func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s types.CommitStatus) error {
 	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
 	commit := s.Commit
 	if commit == "" && pr != nil {
@@ -75,11 +75,11 @@ func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository
 	return err
 }
 
-// toGithubState maps our internal status.State to a GitHub-accepted value. GitHub only
+// toGithubState maps our internal types.State to a GitHub-accepted value. GitHub only
 // accepts error/failure/pending/success, with no notion of "running": fold it into pending.
-func toGithubState(s status.State) string {
-	if s == status.StateRunning {
-		return string(status.StatePending)
+func toGithubState(s types.State) string {
+	if s == types.StateRunning {
+		return string(types.StatePending)
 	}
 	return string(s)
 }

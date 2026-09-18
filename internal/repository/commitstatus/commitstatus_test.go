@@ -7,7 +7,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/providers/mock"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -17,7 +17,7 @@ func TestPostTruncatesLongDescriptionToGitHubLimit(t *testing.T) {
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 	longMessage := strings.Repeat("Plan: 1 to add, 0 to change, 0 to destroy. ", 10)
 
-	err := Post(provider, repository, layer, status.PhasePlan, status.StateSuccess, "sha123", longMessage, "")
+	err := Post(provider, repository, layer, types.PhasePlan, types.StateSuccess, "sha123", longMessage, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestPostKeepsShortDescriptionUntouched(t *testing.T) {
 	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 
-	err := Post(provider, repository, layer, status.PhaseApply, status.StateFailure, "sha123", "short message", "https://burrito.example.com/logs/default/pwet/run-1")
+	err := Post(provider, repository, layer, types.PhaseApply, types.StateFailure, "sha123", "short message", "https://burrito.example.com/logs/default/pwet/run-1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -78,7 +78,7 @@ func TestPostReturnsTheProviderErrorWithoutRetrying(t *testing.T) {
 	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 
-	err := Post(provider, repository, layer, status.PhasePlan, status.StateSuccess, "sha123", "message", "")
+	err := Post(provider, repository, layer, types.PhasePlan, types.StateSuccess, "sha123", "message", "")
 	if !errors.Is(err, providerErr) {
 		t.Fatalf("expected the provider error to be returned, got %v", err)
 	}

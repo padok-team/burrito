@@ -9,7 +9,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gitlab "gitlab.com/gitlab-org/api/client-go/v3"
@@ -196,9 +196,9 @@ func TestAPIProvider_SetStatus_PostsRunningState(t *testing.T) {
 	})
 
 	api := newTestAPIProvider(t, mux)
-	err := api.SetStatus(testRepository(), testPullRequest("42"), status.CommitStatus{
-		Phase:  status.PhasePlan,
-		State:  status.StateRunning,
+	err := api.SetStatus(testRepository(), testPullRequest("42"), types.CommitStatus{
+		Phase:  types.PhasePlan,
+		State:  types.StateRunning,
 		Commit: "sha123",
 	})
 	require.NoError(t, err)
@@ -217,9 +217,9 @@ func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
 
 	api := newTestAPIProvider(t, mux)
 	require.NotPanics(t, func() {
-		require.NoError(t, api.SetStatus(testRepository(), nil, status.CommitStatus{
-			Phase:  status.PhasePlan,
-			State:  status.StateSuccess,
+		require.NoError(t, api.SetStatus(testRepository(), nil, types.CommitStatus{
+			Phase:  types.PhasePlan,
+			State:  types.StateSuccess,
 			Commit: "sha123",
 		}))
 	})
@@ -229,13 +229,13 @@ func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
 func TestAPIProvider_SetStatus_DoesNotPanicWithoutAPullRequestNorACommit(t *testing.T) {
 	api := newTestAPIProvider(t, http.NewServeMux())
 	require.NotPanics(t, func() {
-		_ = api.SetStatus(testRepository(), nil, status.CommitStatus{Phase: status.PhasePlan, State: status.StateSuccess})
+		_ = api.SetStatus(testRepository(), nil, types.CommitStatus{Phase: types.PhasePlan, State: types.StateSuccess})
 	})
 }
 
 func TestToGitlabBuildState(t *testing.T) {
-	assert.Equal(t, gitlab.Running, toGitlabBuildState(status.StateRunning))
-	assert.Equal(t, gitlab.Pending, toGitlabBuildState(status.StatePending))
-	assert.Equal(t, gitlab.Success, toGitlabBuildState(status.StateSuccess))
-	assert.Equal(t, gitlab.Failed, toGitlabBuildState(status.StateFailure))
+	assert.Equal(t, gitlab.Running, toGitlabBuildState(types.StateRunning))
+	assert.Equal(t, gitlab.Pending, toGitlabBuildState(types.StatePending))
+	assert.Equal(t, gitlab.Success, toGitlabBuildState(types.StateSuccess))
+	assert.Equal(t, gitlab.Failed, toGitlabBuildState(types.StateFailure))
 }

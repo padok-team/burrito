@@ -8,7 +8,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/padok-team/burrito/internal/utils/syncwindow"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,7 +99,7 @@ func (s *PlanNeeded) getHandler() Handler {
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Plan action")
 		if reportsCommitStatus {
-			r.postCommitStatus(ctx, layer, repository, status.PhasePlan, status.StatePending, revision)
+			r.postCommitStatus(ctx, layer, repository, types.PhasePlan, types.StatePending, revision)
 		}
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
@@ -138,7 +138,7 @@ func (s *ApplyNeeded) getHandler() Handler {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
 		}
 		r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Created TerraformRun for Apply action")
-		r.postCommitStatus(ctx, layer, repository, status.PhaseApply, status.StatePending, revision)
+		r.postCommitStatus(ctx, layer, repository, types.PhaseApply, types.StatePending, revision)
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, &run
 	}
 }
@@ -165,7 +165,7 @@ func markForCommitStatus(run *configv1alpha1.TerraformRun) {
 
 // postCommitStatus posts a plan/apply commit status scoped to layer, best-effort: a
 // failure here must not block the reconciliation.
-func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase status.Phase, state status.State, commit string) {
+func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, phase types.Phase, state types.State, commit string) {
 	if !r.Config.Controller.CommitStatus.Enabled {
 		return
 	}

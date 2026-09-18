@@ -46,7 +46,6 @@ import (
 	repo "github.com/padok-team/burrito/internal/repository"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
 	"github.com/padok-team/burrito/internal/repository/credentials"
-	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
 
@@ -137,7 +136,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 		// Post a terminal status so the commit doesn't sit in a pending state forever on the git
 		// provider if this run was ever reported there (best-effort).
-		r.postCommitStatus(ctx, run, layer, repo, status.StateFailure, commitstatus.Failed)
+		r.postCommitStatus(ctx, run, layer, repo, repositorytypes.StateFailure, commitstatus.Failed)
 		return ctrl.Result{}, nil
 	}
 

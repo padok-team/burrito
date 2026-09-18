@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	logrus "github.com/sirupsen/logrus"
 )
@@ -34,9 +33,9 @@ const (
 //
 // No emoji prefix here: GitHub's Statuses API rejects any 4-byte UTF-8 character (which
 // covers almost every modern emoji, e.g. 🌯) in the description with a 422.
-func Post(provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer, phase status.Phase, state status.State, commit string, message string, targetURL string) error {
+func Post(provider repositorytypes.APIProvider, repository *configv1alpha1.TerraformRepository, layer *configv1alpha1.TerraformLayer, phase repositorytypes.Phase, state repositorytypes.State, commit string, message string, targetURL string) error {
 	ctx := fmt.Sprintf("Burrito ▶ %s %s/%s", capitalize(string(phase)), layer.Namespace, layer.Name)
-	cs := status.CommitStatus{
+	cs := repositorytypes.CommitStatus{
 		Phase:       phase,
 		State:       state,
 		Description: truncate(message, maxDescriptionLength),

@@ -10,7 +10,6 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/repository/providers/mock"
-	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
@@ -140,7 +139,7 @@ func TestPlanNeededReportsACommitStatusForAnUnplannedCommit(t *testing.T) {
 	if len(provider.SetStatusCalls) != 1 {
 		t.Fatalf("expected one commit status to be posted, got %d", len(provider.SetStatusCalls))
 	}
-	if got := provider.SetStatusCalls[0]; got.Commit != "sha-new" || got.State != status.StatePending {
+	if got := provider.SetStatusCalls[0]; got.Commit != "sha-new" || got.State != repositorytypes.StatePending {
 		t.Errorf("expected a pending status on sha-new, got %q on %q", got.State, got.Commit)
 	}
 }

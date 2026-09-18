@@ -7,7 +7,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/types"
 )
 
 // applySucceeded is what the runner records as a successful apply's result, and the
@@ -16,7 +16,7 @@ const applySucceeded = "Apply Successful"
 
 // postCommitStatus posts a plan/apply commit status scoped to layer for run, best-effort:
 // a failure here must not block the reconciliation.
-func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, state status.State, outcome string) {
+func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.TerraformRun, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, state types.State, outcome string) {
 	if !r.Config.Controller.CommitStatus.Enabled {
 		return
 	}
@@ -38,9 +38,9 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, run *configv1alpha1.T
 		return
 	}
 
-	phase := status.PhasePlan
+	phase := types.PhasePlan
 	if run.Spec.Action == string(ApplyAction) {
-		phase = status.PhaseApply
+		phase = types.PhaseApply
 	}
 	targetURL := commitstatus.LogsURL(r.Config.Server.PublicURL, layer, run.Name)
 	if err := commitstatus.Post(provider, repository, layer, phase, state, run.Spec.Layer.Revision, r.resultMessage(ctx, run, layer, repository, outcome), targetURL); err != nil {
