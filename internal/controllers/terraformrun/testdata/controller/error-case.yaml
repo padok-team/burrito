@@ -58,3 +58,17 @@ spec:
     name: nominal-case-1
     namespace: default
     revision: UNKNOWN_REVISION
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: error-case-5
+  namespace: default
+  annotations:
+    controller.terraform.padok.cloud/post-commit-status: "true"
+spec:
+  action: apply
+  layer:
+    name: nominal-case-1
+    namespace: default
+    revision: UNKNOWN_REVISION

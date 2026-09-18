@@ -357,8 +357,11 @@ var _ = Describe("Run", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
-			It("should set RequeueAfter to OnError", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			It("should end in Failed state", func() {
+				Expect(run.Status.State).To(Equal("Failed"))
+			})
+			It("should not requeue, the bundle for a stale revision is never written", func() {
+				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 			})
 		})
 		Describe("When a TerraformRun has errored once and still in grace period", Ordered, func() {
@@ -488,7 +491,7 @@ var _ = Describe("Run", func() {
 			var customReconciler *controller.Reconciler
 			BeforeAll(func() {
 				name = types.NamespacedName{
-					Name:      "error-case-4",
+					Name:      "error-case-5",
 					Namespace: "default",
 				}
 				fakeProvider = &mock.APIProvider{}
