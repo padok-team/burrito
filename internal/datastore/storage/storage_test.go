@@ -102,7 +102,7 @@ func isGCSBucketPresent(err error) bool {
 
 func setupS3Bucket(backendType string) {
 	os.Setenv("AWS_ACCESS_KEY_ID", "burritoadmin")
-	os.Setenv("AWS_SECRET_ACCESS_KEY", "burritoadmin")
+	os.Setenv("AWS_SECRET_ACCESS_KEY", "burritoadminsecret")
 	os.Setenv("AWS_REGION", "eu-west-3")
 
 	// Use the "new" function from the s3backend
@@ -188,9 +188,9 @@ var _ = BeforeSuite(func() {
 		}
 	}
 
-	if os.Getenv("SKIP_MINIO_TESTS") == "" {
+	if os.Getenv("SKIP_GARAGE_TESTS") == "" {
 		os.Setenv("AWS_ENDPOINT_URL_S3", "http://localhost:9000")
-		setupS3Bucket("minio")
+		setupS3Bucket("garage")
 	}
 
 	if os.Getenv("SKIP_AWS_TESTS") == "" {
@@ -326,7 +326,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - AWS", "aws"),
-		Entry("S3 backend - Minio", "minio"),
+		Entry("S3 backend - Garage", "garage"),
 		Entry("GCS backend", "gcs"),
 	)
 
@@ -358,7 +358,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - AWS", "aws"),
-		Entry("S3 backend - Minio", "minio"),
+		Entry("S3 backend - Garage", "garage"),
 		Entry("GCS backend", "gcs"),
 	)
 
@@ -386,7 +386,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - AWS", "aws"),
-		Entry("S3 backend - Minio", "minio"),
+		Entry("S3 backend - Garage", "garage"),
 		Entry("GCS backend", "gcs"),
 	)
 
@@ -427,7 +427,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - AWS", "aws"),
-		Entry("S3 backend - Minio", "minio"),
+		Entry("S3 backend - Garage", "garage"),
 		Entry("GCS backend", "gcs"),
 	)
 
@@ -461,7 +461,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - AWS", "aws"),
-		Entry("S3 backend - Minio", "minio"),
+		Entry("S3 backend - Garage", "garage"),
 		Entry("GCS backend", "gcs"),
 	)
 
@@ -530,7 +530,7 @@ var _ = Describe("Storage Backends", func() {
 		Entry("Mock backend", "mock"),
 		Entry("Azure backend", "azure"),
 		Entry("S3 backend - AWS", "aws"),
-		Entry("S3 backend - Minio", "minio"),
+		Entry("S3 backend - Garage", "garage"),
 		Entry("GCS backend", "gcs"),
 	)
 })
