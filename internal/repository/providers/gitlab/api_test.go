@@ -9,7 +9,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	"github.com/padok-team/burrito/internal/repository/status"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	gitlab "gitlab.com/gitlab-org/api/client-go/v3"

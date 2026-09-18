@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	logrus "github.com/sirupsen/logrus"
 )

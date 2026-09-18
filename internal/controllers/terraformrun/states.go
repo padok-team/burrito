@@ -8,9 +8,9 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/controllers/metrics"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/padok-team/burrito/internal/lock"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
+	"github.com/padok-team/burrito/internal/repository/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"

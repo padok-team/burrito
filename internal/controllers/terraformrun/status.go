@@ -6,8 +6,8 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
+	"github.com/padok-team/burrito/internal/repository/status"
 )
 
 // applySucceeded is what the runner records as a successful apply's result, and the

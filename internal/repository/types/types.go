@@ -6,7 +6,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	"github.com/padok-team/burrito/internal/repository/status"
 	"github.com/padok-team/burrito/internal/webhook/event"
 )
 

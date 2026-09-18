@@ -9,7 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

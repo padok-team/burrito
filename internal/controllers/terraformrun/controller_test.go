@@ -13,11 +13,11 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
+	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
+	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
