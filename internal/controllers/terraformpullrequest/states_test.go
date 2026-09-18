@@ -14,17 +14,17 @@ import (
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/record"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
-	"k8s.io/client-go/tools/record"
 )
 
 type fakeAPIProvider struct {
-	changes       []string
-	changesErr    error
-	commentErr    error
-	pullRequests  []configv1alpha1.TerraformPullRequest
+	changes         []string
+	changesErr      error
+	commentErr      error
+	pullRequests    []configv1alpha1.TerraformPullRequest
 	pullRequestsErr error
 }
 
