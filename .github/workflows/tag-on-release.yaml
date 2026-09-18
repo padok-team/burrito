@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - VERSION
-  workflow_dispatch:
 
 permissions: {}
 
@@ -43,28 +42,28 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      # - name: Verify the release commit matches the built image source
-      #   if: steps.check.outputs.exists == 'false'
-      #   run: |
-      #     SOURCE_SHA=$(git log -1 --format=%B | sed -n 's/.*Source-SHA:[[:space:]]*\([0-9a-f]\{40\}\).*/\1/p' | head -1)
-      #     if [[ -z "$SOURCE_SHA" ]]; then
-      #       echo "No Source-SHA trailer found on the release commit."
-      #       echo "VERSION is only meant to be bumped by the Release workflow, which records"
-      #       echo "the commit the signed image was built from."
-      #       exit 1
-      #     fi
+      - name: Verify the release commit matches the built image source
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          SOURCE_SHA=$(git log -1 --format=%B | sed -n 's/.*Source-SHA:[[:space:]]*\([0-9a-f]\{40\}\).*/\1/p' | head -1)
+          if [[ -z "$SOURCE_SHA" ]]; then
+            echo "No Source-SHA trailer found on the release commit."
+            echo "VERSION is only meant to be bumped by the Release workflow, which records"
+            echo "the commit the signed image was built from."
+            exit 1
+          fi
 
-      #     # main may have moved between the build and the merge of the bump PR: the
-      #     # signed image would then no longer match the source about to be tagged.
-      #     UNEXPECTED=$(git diff --name-only "$SOURCE_SHA" HEAD \
-      #       | grep -vxE "VERSION|${CHART_PATH#./}/Chart.yaml|${CHART_PATH#./}/values.yaml|${CHART_PATH#./}/README.md" || true)
-      #     if [[ -n "$UNEXPECTED" ]]; then
-      #       echo "The release commit diverges from $SOURCE_SHA outside of the release files:"
-      #       echo "$UNEXPECTED"
-      #       echo "Re-run the Release workflow to rebuild and re-sign from the current main."
-      #       exit 1
-      #     fi
-      #     echo "Release commit matches the image built from $SOURCE_SHA."
+          # main may have moved between the build and the merge of the bump PR: the
+          # signed image would then no longer match the source about to be tagged.
+          UNEXPECTED=$(git diff --name-only "$SOURCE_SHA" HEAD \
+            | grep -vxE "VERSION|${CHART_PATH#./}/Chart.yaml|${CHART_PATH#./}/values.yaml|${CHART_PATH#./}/README.md" || true)
+          if [[ -n "$UNEXPECTED" ]]; then
+            echo "The release commit diverges from $SOURCE_SHA outside of the release files:"
+            echo "$UNEXPECTED"
+            echo "Re-run the Release workflow to rebuild and re-sign from the current main."
+            exit 1
+          fi
+          echo "Release commit matches the image built from $SOURCE_SHA."
 
       - name: Create and push tag
         if: steps.check.outputs.exists == 'false'
