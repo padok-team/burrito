@@ -6,42 +6,13 @@ import (
 	"testing"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/repository/providers/mock"
 	"github.com/padok-team/burrito/internal/repository/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type fakeAPIProvider struct {
-	setStatusCalls []status.CommitStatus
-	// setStatusErrs, if set, is consumed one error per call (nil entries succeed);
-	// once exhausted, further calls succeed.
-	setStatusErrs []error
-}
-
-func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, c comment.Comment) error {
-	return nil
-}
-
-func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
-	p.setStatusCalls = append(p.setStatusCalls, s)
-	if len(p.setStatusErrs) > 0 {
-		err := p.setStatusErrs[0]
-		p.setStatusErrs = p.setStatusErrs[1:]
-		return err
-	}
-	return nil
-}
-
 func TestPostTruncatesLongDescriptionToGitHubLimit(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 	longMessage := strings.Repeat("Plan: 1 to add, 0 to change, 0 to destroy. ", 10)
@@ -51,10 +22,10 @@ func TestPostTruncatesLongDescriptionToGitHubLimit(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 1 {
+		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.SetStatusCalls))
 	}
-	got := provider.setStatusCalls[0].Description
+	got := provider.SetStatusCalls[0].Description
 	if len([]rune(got)) > maxDescriptionLength {
 		t.Fatalf("expected description to be at most %d runes, got %d: %q", maxDescriptionLength, len([]rune(got)), got)
 	}
@@ -64,7 +35,7 @@ func TestPostTruncatesLongDescriptionToGitHubLimit(t *testing.T) {
 }
 
 func TestPostKeepsShortDescriptionUntouched(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 
@@ -73,7 +44,7 @@ func TestPostKeepsShortDescriptionUntouched(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	call := provider.setStatusCalls[0]
+	call := provider.SetStatusCalls[0]
 	if call.Description != "short message" {
 		t.Errorf("expected description %q, got %q", "short message", call.Description)
 	}
@@ -103,7 +74,7 @@ func TestLogsURL(t *testing.T) {
 
 func TestPostReturnsTheProviderErrorWithoutRetrying(t *testing.T) {
 	providerErr := errors.New("500 Internal Server Error")
-	provider := &fakeAPIProvider{setStatusErrs: []error{providerErr, nil}}
+	provider := &mock.APIProvider{SetStatusErr: providerErr}
 	repository := &configv1alpha1.TerraformRepository{ObjectMeta: metav1.ObjectMeta{Name: "repo", Namespace: "default"}}
 	layer := &configv1alpha1.TerraformLayer{ObjectMeta: metav1.ObjectMeta{Name: "pwet", Namespace: "default"}}
 
@@ -111,8 +82,8 @@ func TestPostReturnsTheProviderErrorWithoutRetrying(t *testing.T) {
 	if !errors.Is(err, providerErr) {
 		t.Fatalf("expected the provider error to be returned, got %v", err)
 	}
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly 1 attempt, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 1 {
+		t.Fatalf("expected exactly 1 attempt, got %d", len(provider.SetStatusCalls))
 	}
 }
 

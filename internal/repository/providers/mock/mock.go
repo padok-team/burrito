@@ -81,7 +81,13 @@ func (p *GitProvider) GetLatestRevisionForRef(ref string) (string, error) {
 	return GetMockRevision(ref), nil
 }
 
-type APIProvider struct{}
+type APIProvider struct {
+	// SetStatusCalls records every status passed to SetStatus so tests can assert on
+	// what was posted. Left nil, the mock behaves as a plain stub.
+	SetStatusCalls []status.CommitStatus
+	// SetStatusErr, when set, is what SetStatus returns.
+	SetStatusErr error
+}
 
 func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) ([]string, error) {
 	log.Infof("Mock provider all changed files")
@@ -135,7 +141,8 @@ func (api *APIProvider) ListPullRequests(repository *configv1alpha1.TerraformRep
 
 func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
 	log.Infof("Mock provider status set: phase=%s state=%s", s.Phase, s.State)
-	return nil
+	api.SetStatusCalls = append(api.SetStatusCalls, s)
+	return api.SetStatusErr
 }
 
 type WebhookProvider struct{}

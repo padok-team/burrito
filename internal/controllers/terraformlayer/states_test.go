@@ -9,7 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/repository/providers/mock"
 	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -103,28 +103,7 @@ func (c *createRecordingClient) Create(_ context.Context, obj client.Object, _ .
 	return nil
 }
 
-type fakeAPIProvider struct {
-	setStatusCalls []status.CommitStatus
-}
-
-func (p *fakeAPIProvider) GetChanges(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest) ([]string, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) Comment(*configv1alpha1.TerraformRepository, *configv1alpha1.TerraformPullRequest, comment.Comment) error {
-	return nil
-}
-
-func (p *fakeAPIProvider) ListPullRequests(*configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) SetStatus(_ *configv1alpha1.TerraformRepository, _ *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
-	p.setStatusCalls = append(p.setStatusCalls, s)
-	return nil
-}
-
-func reconcilerWithFakeProvider(client client.Client, provider *fakeAPIProvider) *Reconciler {
+func reconcilerWithFakeProvider(client client.Client, provider *mock.APIProvider) *Reconciler {
 	return &Reconciler{
 		Client:   client,
 		Recorder: record.NewFakeRecorder(10),
@@ -137,7 +116,7 @@ func reconcilerWithFakeProvider(client client.Client, provider *fakeAPIProvider)
 
 func TestPlanNeededReportsACommitStatusForAnUnplannedCommit(t *testing.T) {
 	recordingClient := &createRecordingClient{}
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
 	layer := &configv1alpha1.TerraformLayer{
 		ObjectMeta: metav1.ObjectMeta{
@@ -158,17 +137,17 @@ func TestPlanNeededReportsACommitStatusForAnUnplannedCommit(t *testing.T) {
 	if run.Annotations[annotations.PostCommitStatus] != "true" {
 		t.Errorf("expected the run to be marked for commit statuses, got annotations %v", run.Annotations)
 	}
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected one commit status to be posted, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 1 {
+		t.Fatalf("expected one commit status to be posted, got %d", len(provider.SetStatusCalls))
 	}
-	if got := provider.setStatusCalls[0]; got.Commit != "sha-new" || got.State != status.StatePending {
+	if got := provider.SetStatusCalls[0]; got.Commit != "sha-new" || got.State != status.StatePending {
 		t.Errorf("expected a pending status on sha-new, got %q on %q", got.State, got.Commit)
 	}
 }
 
 func TestPlanNeededSkipsCommitStatusWhenDisabled(t *testing.T) {
 	recordingClient := &createRecordingClient{}
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
 	reconciler.Config.Controller.CommitStatus.Enabled = false
 	layer := &configv1alpha1.TerraformLayer{
@@ -184,14 +163,14 @@ func TestPlanNeededSkipsCommitStatusWhenDisabled(t *testing.T) {
 	if run == nil {
 		t.Fatalf("expected a run to be created")
 	}
-	if len(provider.setStatusCalls) != 0 {
-		t.Errorf("expected no commit status when the feature is disabled, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 0 {
+		t.Errorf("expected no commit status when the feature is disabled, got %d", len(provider.SetStatusCalls))
 	}
 }
 
 func TestPlanNeededSkipsCommitStatusOnDriftDetectionReplan(t *testing.T) {
 	recordingClient := &createRecordingClient{}
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
 	layer := &configv1alpha1.TerraformLayer{
 		ObjectMeta: metav1.ObjectMeta{
@@ -212,14 +191,14 @@ func TestPlanNeededSkipsCommitStatusOnDriftDetectionReplan(t *testing.T) {
 	if _, marked := run.Annotations[annotations.PostCommitStatus]; marked {
 		t.Errorf("expected a drift detection re-plan not to be marked for commit statuses")
 	}
-	if len(provider.setStatusCalls) != 0 {
-		t.Errorf("expected no commit status for a drift detection re-plan, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 0 {
+		t.Errorf("expected no commit status for a drift detection re-plan, got %d", len(provider.SetStatusCalls))
 	}
 }
 
 func TestApplyNeededReportsACommitStatus(t *testing.T) {
 	recordingClient := &createRecordingClient{}
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
 	autoApply := true
 	layer := &configv1alpha1.TerraformLayer{
@@ -247,8 +226,8 @@ func TestApplyNeededReportsACommitStatus(t *testing.T) {
 	if run.Annotations[annotations.PostCommitStatus] != "true" {
 		t.Errorf("expected every apply to be marked for commit statuses, got annotations %v", run.Annotations)
 	}
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected one commit status to be posted, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 1 {
+		t.Fatalf("expected one commit status to be posted, got %d", len(provider.SetStatusCalls))
 	}
 }
 

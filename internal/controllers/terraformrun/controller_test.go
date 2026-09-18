@@ -13,11 +13,10 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
-	"github.com/padok-team/burrito/internal/repository/status"
+	"github.com/padok-team/burrito/internal/repository/providers/mock"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
@@ -155,27 +154,6 @@ func updateLastRunDate(name types.NamespacedName, unixDate string) error {
 	}
 	run.Status.LastRun = unixDate
 	return k8sClient.Status().Update(context.TODO(), run)
-}
-
-type fakeAPIProvider struct {
-	setStatusCalls []status.CommitStatus
-}
-
-func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, c comment.Comment) error {
-	return nil
-}
-
-func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
-	p.setStatusCalls = append(p.setStatusCalls, s)
-	return nil
 }
 
 var _ = Describe("Run", func() {
@@ -506,14 +484,14 @@ var _ = Describe("Run", func() {
 			})
 		})
 		Describe("When a TerraformRun has a bundle missing for its revision", Ordered, func() {
-			var fakeProvider *fakeAPIProvider
+			var fakeProvider *mock.APIProvider
 			var customReconciler *controller.Reconciler
 			BeforeAll(func() {
 				name = types.NamespacedName{
 					Name:      "error-case-4",
 					Namespace: "default",
 				}
-				fakeProvider = &fakeAPIProvider{}
+				fakeProvider = &mock.APIProvider{}
 				customReconciler = &controller.Reconciler{
 					Client:       k8sClient,
 					Scheme:       scheme.Scheme,
@@ -544,7 +522,7 @@ var _ = Describe("Run", func() {
 				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 			})
 			It("should post exactly one failure status", func() {
-				Expect(fakeProvider.setStatusCalls).To(HaveLen(1))
+				Expect(fakeProvider.SetStatusCalls).To(HaveLen(1))
 			})
 		})
 	})

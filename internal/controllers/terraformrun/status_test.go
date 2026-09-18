@@ -8,35 +8,13 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/burrito/config"
-	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/commitstatus"
+	"github.com/padok-team/burrito/internal/repository/providers/mock"
 	"github.com/padok-team/burrito/internal/repository/status"
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-type fakeAPIProvider struct {
-	setStatusCalls []status.CommitStatus
-	setStatusErr   error
-}
-
-func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, c comment.Comment) error {
-	return nil
-}
-
-func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
-	return nil, nil
-}
-
-func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s status.CommitStatus) error {
-	p.setStatusCalls = append(p.setStatusCalls, s)
-	return p.setStatusErr
-}
 
 func testRepository() *configv1alpha1.TerraformRepository {
 	return &configv1alpha1.TerraformRepository{
@@ -79,7 +57,7 @@ func testRun(action string, revision string) *configv1alpha1.TerraformRun {
 }
 
 func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	r := &Reconciler{
 		Config: config.TestConfig(),
 		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
@@ -87,13 +65,13 @@ func TestPostCommitStatusSkipsWhenRevisionIsEmpty(t *testing.T) {
 		},
 	}
 	r.postCommitStatus(context.Background(), testRun("plan", ""), testMainLayer(), testRepository(), status.StateSuccess, "succeeded")
-	if len(provider.setStatusCalls) != 0 {
-		t.Fatalf("expected no commit status to be set when the run has no revision, got %d calls", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 0 {
+		t.Fatalf("expected no commit status to be set when the run has no revision, got %d calls", len(provider.SetStatusCalls))
 	}
 }
 
 func TestPostCommitStatusSkipsWhenDisabled(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	cfg := config.TestConfig()
 	cfg.Controller.CommitStatus.Enabled = false
 	r := &Reconciler{
@@ -106,13 +84,13 @@ func TestPostCommitStatusSkipsWhenDisabled(t *testing.T) {
 
 	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
 
-	if len(provider.setStatusCalls) != 0 {
-		t.Fatalf("expected no commit status when the feature is disabled, got %d calls", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 0 {
+		t.Fatalf("expected no commit status when the feature is disabled, got %d calls", len(provider.SetStatusCalls))
 	}
 }
 
 func TestPostCommitStatusSkipsRunsNotMarkedByTheLayerController(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	r := &Reconciler{
 		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
@@ -125,13 +103,13 @@ func TestPostCommitStatusSkipsRunsNotMarkedByTheLayerController(t *testing.T) {
 
 	r.postCommitStatus(context.Background(), run, testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
 
-	if len(provider.setStatusCalls) != 0 {
-		t.Fatalf("expected no commit status for an unmarked run, got %d calls", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 0 {
+		t.Fatalf("expected no commit status for an unmarked run, got %d calls", len(provider.SetStatusCalls))
 	}
 }
 
 func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	r := &Reconciler{
 		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
@@ -141,10 +119,10 @@ func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 	}
 	r.postCommitStatus(context.Background(), testRun("plan", "sha123"), testMainLayer(), testRepository(), status.StateSuccess, commitstatus.Succeeded)
 
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 1 {
+		t.Fatalf("expected exactly one commit status to be set, got %d", len(provider.SetStatusCalls))
 	}
-	got := provider.setStatusCalls[0]
+	got := provider.SetStatusCalls[0]
 	if got.Phase != status.PhasePlan {
 		t.Errorf("expected phase %q, got %q", status.PhasePlan, got.Phase)
 	}
@@ -158,7 +136,7 @@ func TestPostCommitStatusPostsForMainLayer(t *testing.T) {
 }
 
 func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
-	provider := &fakeAPIProvider{}
+	provider := &mock.APIProvider{}
 	r := &Reconciler{
 		Config:    config.TestConfig(),
 		Datastore: datastore.NewMockClient(),
@@ -168,10 +146,10 @@ func TestPostCommitStatusPostsForPullRequestLayer(t *testing.T) {
 	}
 	r.postCommitStatus(context.Background(), testRun("apply", "sha456"), testPullRequestLayer(), testRepository(), status.StateFailure, commitstatus.Failed)
 
-	if len(provider.setStatusCalls) != 1 {
-		t.Fatalf("expected exactly one commit status to be set for a pull request layer, got %d", len(provider.setStatusCalls))
+	if len(provider.SetStatusCalls) != 1 {
+		t.Fatalf("expected exactly one commit status to be set for a pull request layer, got %d", len(provider.SetStatusCalls))
 	}
-	got := provider.setStatusCalls[0]
+	got := provider.SetStatusCalls[0]
 	if got.Phase != status.PhaseApply {
 		t.Errorf("expected phase %q, got %q", status.PhaseApply, got.Phase)
 	}
