@@ -2,7 +2,7 @@
 # Language runtimes — pinned to the versions the repo declares for itself
 go = "1.27.1"      # Dockerfile golang builder (>= go.mod 1.26.0)
 node = "26.8.2"    # root package.json devEngines runtime
-pnpm = "12.4.1"   # root package.json devEngines packageManager; ui/ downloads its own via devEngines
+pnpm = "12.4.2"   # root package.json devEngines packageManager; ui/ downloads its own via devEngines
 
 # Kubernetes & dev CLIs — pinned for a reproducible environment
 kubectl = "1.37.0"      # aligns with ENVTEST_K8S_VERSION (1.36.0)
@@ -13,7 +13,7 @@ golangci-lint = "2.13.2"
 helm-docs = "1.14.2"    # regenerates deploy/charts/burrito/README.md from values.yaml
 
 # Docs toolchain
-uv = "0.12.13"
+uv = "0.12.15"
 
 # Not managed here (system-level): docker + buildx/compose, make, git.
 
