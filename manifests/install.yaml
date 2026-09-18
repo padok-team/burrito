@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.21.0
+    controller-gen.kubebuilder.io/version: v0.22.0
   name: terraformlayers.config.terraform.padok.cloud
 spec:
   group: config.terraform.padok.cloud
@@ -5610,7 +5610,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.21.0
+    controller-gen.kubebuilder.io/version: v0.22.0
   name: terraformpullrequests.config.terraform.padok.cloud
 spec:
   group: config.terraform.padok.cloud
@@ -5756,7 +5756,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.21.0
+    controller-gen.kubebuilder.io/version: v0.22.0
   name: terraformrepositories.config.terraform.padok.cloud
 spec:
   group: config.terraform.padok.cloud
@@ -11356,7 +11356,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.21.0
+    controller-gen.kubebuilder.io/version: v0.22.0
   name: terraformruns.config.terraform.padok.cloud
 spec:
   group: config.terraform.padok.cloud
