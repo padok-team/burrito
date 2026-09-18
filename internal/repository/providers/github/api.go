@@ -9,6 +9,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
+	"github.com/padok-team/burrito/internal/repository/types"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,6 +47,41 @@ func (api *APIProvider) GetChanges(repository *configv1alpha1.TerraformRepositor
 		opts.Page = resp.NextPage
 	}
 	return allChangedFiles, nil
+}
+
+func (api *APIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, s types.CommitStatus) error {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	commit := s.Commit
+	if commit == "" && pr != nil {
+		commit = pr.Annotations[annotations.LastBranchCommit]
+	}
+	ctx := "burrito/" + string(s.Phase)
+	if s.Context != "" {
+		ctx = s.Context
+	}
+	state := toGithubState(s.State)
+	description := s.Description
+	repoStatus := github.RepoStatus{
+		State:       &state,
+		Context:     &ctx,
+		Description: &description,
+	}
+	if s.TargetURL != "" {
+		repoStatus.TargetURL = &s.TargetURL
+	}
+	// Errors are logged by the caller (commitstatus.Post), which has the context to tell a
+	// permanent failure from a transient one worth retrying.
+	_, _, err := api.client.Repositories.CreateStatus(context.TODO(), owner, repoName, commit, repoStatus)
+	return err
+}
+
+// toGithubState maps our internal types.State to a GitHub-accepted value. GitHub only
+// accepts error/failure/pending/success, with no notion of "running": fold it into pending.
+func toGithubState(s types.State) string {
+	if s == types.StateRunning {
+		return string(types.StatePending)
+	}
+	return string(s)
 }
 
 func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, prComment comment.Comment) error {

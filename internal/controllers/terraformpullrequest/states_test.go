@@ -43,6 +43,10 @@ func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformR
 	return p.pullRequests, p.pullRequestsErr
 }
 
+func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s repositorytypes.CommitStatus) error {
+	return nil
+}
+
 func TestDiscoveryNeededHandlerReturnsOnErrorWhenLayerCreationFails(t *testing.T) {
 	scheme := newTerraformPullRequestTestScheme(t)
 	repository := terraformRepository("default", "repo")

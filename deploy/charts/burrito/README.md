@@ -14,6 +14,7 @@ A Helm chart for handling a complete burrito deployment
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| config.burrito.controller.commitStatus.enabled | bool | `true` | Enable/Disable the commit statuses posted on a layer's commit for its plan and apply runs. Needs GitHub or GitLab credentials on the repository: layers served by the standard git provider have no API to post to and never get any. |
 | config.burrito.controller.defaultSyncWindows | list | `[]` | Default sync windows for layer reconciliation |
 | config.burrito.controller.healthProbeBindAddress | string | `":8081"` | Address to bind the controller health probe |
 | config.burrito.controller.kubernetesWebhookPort | int | `9443` | Port used to handle the Kubernetes webhook |
@@ -55,6 +56,7 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.server.oidc.issuerUrl | string | `""` | OIDC issuer URL |
 | config.burrito.server.oidc.redirectUrl | string | `""` | OIDC Redirect URL, should be the Burrito server URL with /auth/callback appended (ex: https://burrito.example.com/auth/callback) |
 | config.burrito.server.oidc.scopes | list | `["openid","profile","email"]` | OIDC scopes to request |
+| config.burrito.server.publicUrl | string | `""` | Externally-reachable URL of the Burrito dashboard, used to build "Details" links on commit statuses. Leave empty to default to server.ingress's URL when it is enabled, or to disable those links if it isn't (ex: https://burrito.example.com) |
 | config.burrito.server.session.maxAge | int | `86400` | Session max age in seconds, after which the session will expire |
 | config.burrito.server.session.secure | bool | `false` | Cookie secure, set this to true if using HTTPS |
 | config.create | bool | `true` | Create ConfigMap with Burrito configuration |

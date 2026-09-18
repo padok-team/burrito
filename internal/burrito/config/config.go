@@ -70,6 +70,14 @@ type ControllerConfig struct {
 	MaxConcurrentReconciles int                         `mapstructure:"maxConcurrentReconciles"`
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
 	LogFormat               string                      `mapstructure:"logFormat"`
+	CommitStatus            CommitStatusConfig          `mapstructure:"commitStatus"`
+}
+
+// CommitStatusConfig gates the commit statuses the controllers post on the layer's commit.
+// They need a GitHub or GitLab API provider: repositories served by the standard git
+// provider, or without credentials at all, cannot post any.
+type CommitStatusConfig struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 type LeaderElectionConfig struct {
@@ -125,6 +133,9 @@ type ServerConfig struct {
 	OIDC      OIDCConfig      `mapstructure:"oidc"`
 	BasicAuth BasicAuthConfig `mapstructure:"basicAuth"`
 	Session   SessionConfig   `mapstructure:"session"`
+	// PublicURL is the externally-reachable URL of the Burrito dashboard, used to build
+	// links (e.g. commit status "Details" links) back to it. Empty disables those links.
+	PublicURL string `mapstructure:"publicUrl"`
 }
 
 type OIDCConfig struct {
@@ -147,6 +158,10 @@ type SecretConfig struct {
 
 func (c *Config) Load(flags *pflag.FlagSet) error {
 	v := viper.New()
+
+	// Opt-out options need their default spelled out here: an absent key would otherwise
+	// unmarshal to the zero value and turn the feature off.
+	v.SetDefault("controller.commitStatus.enabled", true)
 
 	// burrito looks for configuration files called config.yaml, config.json,
 	// config.toml, config.hcl, etc.
@@ -228,6 +243,7 @@ func TestConfig() *Config {
 			TerraformMaxRetries:     5,
 			MaxConcurrentReconciles: 1,
 			MaxConcurrentRunnerPods: 0,
+			CommitStatus:            CommitStatusConfig{Enabled: true},
 			Timers: ControllerTimers{
 				DriftDetection:     20 * time.Minute,
 				WaitAction:         5 * time.Minute,

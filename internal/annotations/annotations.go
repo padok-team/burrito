@@ -29,6 +29,11 @@ const (
 
 	SyncNow        string = "api.terraform.padok.cloud/sync-now"
 	AllowedTenants string = "credentials.terraform.padok.cloud/allowed-tenants"
+
+	// PostCommitStatus marks a TerraformRun whose lifecycle is worth reporting back to the
+	// git provider as a commit status. The layer controller takes that decision once, when
+	// it creates the run, so that both controllers report on exactly the same runs.
+	PostCommitStatus string = "controller.terraform.padok.cloud/post-commit-status"
 )
 
 func ComputeKeyForSyncBranchNow(branch string) string {

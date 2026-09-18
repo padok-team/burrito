@@ -58,6 +58,16 @@ TLS certificates
 {{- end }}
 
 {{/*
+Server public URL: default it to the server's own Ingress when set, unless the user already
+provided one explicitly. The ingress has no tls.enabled flag, so https vs http is inferred
+from whether its tls list has any entry.
+*/}}
+{{- if and (not $config.server.publicUrl) .Values.server.ingress.enabled }}
+{{- $scheme := ternary "https" "http" (gt (len .Values.server.ingress.tls) 0) }}
+{{- $_ := set $config.server "publicUrl" (printf "%s://%s" $scheme .Values.server.ingress.host) }}
+{{- end }}
+
+{{/*
 Runner
 */}}
 {{ if eq .Values.config.burrito.runner.image.tag "" }}

@@ -43,6 +43,10 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	repo "github.com/padok-team/burrito/internal/repository"
+	"github.com/padok-team/burrito/internal/repository/commitstatus"
+	"github.com/padok-team/burrito/internal/repository/credentials"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 )
 
 type Clock interface {
@@ -61,9 +65,20 @@ type Reconciler struct {
 	K8SLogClient *logClient.Clientset
 	Scheme       *runtime.Scheme
 	Config       *config.Config
+	Credentials  *credentials.CredentialStore
 	Recorder     record.EventRecorder
 	Datastore    datastore.Client
 	Clock
+	// APIProviderFactory overrides how the API provider is resolved for a repository.
+	// Only used in tests; production code always uses repository.GetAPIProviderFromRepository.
+	APIProviderFactory func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error)
+}
+
+func (r *Reconciler) getAPIProvider(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+	if r.APIProviderFactory != nil {
+		return r.APIProviderFactory(repository)
+	}
+	return repo.GetAPIProviderFromRepository(r.Credentials, repository)
 }
 
 //+kubebuilder:rbac:groups=config.terraform.padok.cloud,resources=terraformruns,verbs=get;list;watch;create;update;patch;delete
@@ -114,7 +129,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if !bundleOk {
 		r.Recorder.Event(run, corev1.EventTypeWarning, "Reconciliation", fmt.Sprintf("Bundle for revision %s not found in datastore", run.Spec.Layer.Revision))
 		log.Errorf("bundle for revision %s not found in datastore, failing run %s/%s", run.Spec.Layer.Revision, run.Namespace, run.Name)
-		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.OnError}, nil
+		run.Status.State = "Failed"
+		err = r.Client.Status().Update(ctx, run)
+		if err != nil {
+			log.Errorf("could not mark run as failed: %s", err)
+		}
+		// Post a terminal status so the commit doesn't sit in a pending state forever on the git
+		// provider if this run was ever reported there (best-effort).
+		r.postCommitStatus(ctx, run, layer, repo, repositorytypes.StateFailure, commitstatus.Failed)
+		return ctrl.Result{}, nil
 	}
 
 	state, conditions := r.GetState(ctx, run, layer, repo)

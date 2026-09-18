@@ -3,7 +3,7 @@ config:
     runner:
       image:
         repository: burrito
-        tag: "1783089222"
+        tag: "1784906373"
         pullPolicy: Never
     datastore:
       storage:
@@ -11,12 +11,15 @@ config:
     controller:
       timers:
         driftDetection: 10m
-        repositorySync: 2m
+    server:
+      # -- Externally-reachable URL of the Burrito dashboard, used to build "Details" links
+      # on commit statuses. Leave empty to disable those links (ex: https://burrito.example.com)
+      publicUrl: "http://localhost:8080"
 global:
   deployment:
     image:
       repository: burrito
-      tag: "1783089222"
+      tag: "1784906373"
       pullPolicy: Never
 tenants:
   - namespace:
