@@ -128,3 +128,27 @@ func TestGithub_GetEventFromWebhookPayload_PullRequestEvent(t *testing.T) {
 	assert.Equal(t, "faf5e25402a9bd10f7318c8a2cd984af576c687f", pullRequestEvt.Commit)
 	assert.Equal(t, "opened", pullRequestEvt.Action)
 }
+
+func TestGithub_GetAPIProvider_BuildsClientForClassicAndEnterprise(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{"classic github.com", "https://github.com/padok-team/burrito"},
+		{"github enterprise", "https://ghe.example.com/padok-team/burrito"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := &github.Github{
+				Config: credentials.Credential{
+					URL:         tt.url,
+					GitHubToken: "test-token",
+				},
+			}
+			provider, err := g.GetAPIProvider()
+			assert.NoError(t, err)
+			assert.NotNil(t, provider)
+		})
+	}
+}

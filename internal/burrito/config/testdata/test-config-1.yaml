@@ -35,6 +35,10 @@ controller:
   metricsBindAddress: ":8080"
   healthProbeBindAddress: ":8081"
   kubernetesWebhookPort: 9443
+  logFormat: text
+
+datastore:
+  logFormat: text
 
 server:
   addr: ":9090"

@@ -119,8 +119,9 @@ clean-compose: ## Run docker-compose down.
 	docker compose -f internal/e2e/docker-compose.yml down --remove-orphans --volumes
 
 .PHONY: test
+# -race is required for the concurrency specs to be able to fail at all.
 test: manifests generate fmt vet envtest compose ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test -race ./... -coverprofile cover.out
 	$(MAKE) clean-compose
 
 NEW_VERSION := $(shell date +%s)

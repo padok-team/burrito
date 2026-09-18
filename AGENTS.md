@@ -25,10 +25,23 @@ Nested `AGENTS.md` files add directory-specific rules — read them when working
 Do not read, edit, or use as reference:
 
 - `*zz_generated.deepcopy.go` (produced by `controller-gen`).
-- Lock files: `go.sum`, `ui/pnpm-lock.yaml`.
+- Lock files: `go.sum`, `pnpm-lock.yaml`, `ui/pnpm-lock.yaml`.
 - Generated manifests in `config/crd/bases/` and `manifests/`.
 
 To change CRDs: edit `api/v1alpha1/*_types.go`, then run `make manifests` (and `make generate`).
+
+## Toolchain — check this first, before any build/test/lint command
+
+[`mise.toml`](mise.toml) pins every tool this repo needs (Go, Node, pnpm, kubectl, helm, kind, yq, golangci-lint, uv). Load it once per session, from the repository root:
+
+```bash
+mise install        # idempotent — installs anything missing, no-op otherwise
+mise exec -- <cmd>  # run repo commands through it (or: eval "$(mise activate bash)")
+```
+
+Prefix with `mise exec --` unless the shell is already activated: a bare non-interactive shell resolves `pnpm`/`node` to whatever global install sits on `PATH` (nvm, an older mise version) instead of the pinned ones.
+
+If `mise` is not installed, stop and offer to install it (`curl https://mise.run | sh`, or the user's package manager) rather than silently falling back to system versions — those drift from CI.
 
 ## Build & Validation
 
@@ -49,4 +62,4 @@ Format: `<type>(<scope>): <description>`.
 
 - **Types:** `feat`, `fix`, `chore`, `docs`, `test`, `refactor`.
 - **Scopes** — suggested, not enforced. Prefer the closest fit (`controller`, `api`, `ui`, `helm`, `ci`, `deps`, `docker`); otherwise use another short, relevant scope or omit it.
-- CI gates each commit with commitlint (`@commitlint/config-conventional`) — self-check a message with `npx commitlint`.
+- CI gates each commit with commitlint (`@commitlint/config-conventional`) — self-check a message with `echo "<msg>" | pnpm exec commitlint --extends @commitlint/config-conventional` (the repo ships no `commitlint.config.js`; CI generates one).

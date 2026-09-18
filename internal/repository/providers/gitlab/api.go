@@ -9,7 +9,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/status"
 	log "github.com/sirupsen/logrus"
-	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

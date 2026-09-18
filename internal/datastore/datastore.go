@@ -30,6 +30,9 @@ func New(c *config.Config) *Datastore {
 }
 
 func (s *Datastore) Exec() {
+	if s.Config.Datastore.LogFormat == "json" {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
 	s.API = api.New(s.Config)
 	s.API.Storage = storage.New(*s.Config)
 	authz := authz.NewAuthz()

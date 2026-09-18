@@ -182,6 +182,12 @@ func (r *Reconciler) getPod(run *configv1alpha1.TerraformRun, layer *configv1alp
 	if len(overrideSpec.Image) > 0 {
 		defaultSpec.Containers[0].Image = overrideSpec.Image
 	}
+	if overrideSpec.PodSecurityContext != nil {
+		defaultSpec.SecurityContext = overrideSpec.PodSecurityContext
+	}
+	if overrideSpec.SecurityContext != nil {
+		defaultSpec.Containers[0].SecurityContext = overrideSpec.SecurityContext
+	}
 
 	if len(overrideSpec.ExtraInitArgs) > 0 {
 		defaultSpec.Containers[0].Env = append(defaultSpec.Containers[0].Env, corev1.EnvVar{
