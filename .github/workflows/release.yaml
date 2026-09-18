@@ -83,6 +83,11 @@ jobs:
           yq -i '.global.deployment.image.tag = env(IMAGE_TAG)' $CHART_PATH/values.yaml
           yq -i '.config.burrito.runner.image.tag = env(IMAGE_TAG)' $CHART_PATH/values.yaml
 
+      - name: Generate helm-docs
+        uses: docker://jnorwood/helm-docs@sha256:7e562b49ab6b1dbc50c3da8f2dd6ffa8a5c6bba327b1c6335cc15ce29267979c # v1.14.2
+        with:
+          args: --chart-search-root=deploy/charts
+
       - name: Commit and open PR
         env:
           GH_TOKEN: ${{ github.token }}

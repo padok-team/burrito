@@ -56,7 +56,7 @@ jobs:
           # main may have moved between the build and the merge of the bump PR: the
           # signed image would then no longer match the source about to be tagged.
           UNEXPECTED=$(git diff --name-only "$SOURCE_SHA" HEAD \
-            | grep -vxE "VERSION|${CHART_PATH#./}/Chart.yaml|${CHART_PATH#./}/values.yaml" || true)
+            | grep -vxE "VERSION|${CHART_PATH#./}/Chart.yaml|${CHART_PATH#./}/values.yaml|${CHART_PATH#./}/README.md" || true)
           if [[ -n "$UNEXPECTED" ]]; then
             echo "The release commit diverges from $SOURCE_SHA outside of the release files:"
             echo "$UNEXPECTED"
