@@ -21,6 +21,7 @@ They can be set in the Helm chart [values](https://github.com/padok-team/burrito
 |   `BURRITO_CONTROLLER_KUBERNETESWEBHOOKPORT`   |   port used by the validating webhook server embedded in the controllers    |               `9443`               |
 |   `BURRITO_CONTROLLER_MAXCONCURRENTRECONCILES` |    number of parallel resource reconciliation performed by the contoller    |                `0`                 |
 |   `BURRITO_CONTROLLER_MAXCONCURRENTRUNNERPODS` | maximum number for pods that run in parallel to perform plan/apply (0=inf)  |                `0`                 |
+|   `BURRITO_CONTROLLER_COMMITSTATUS_ENABLED`    |    whether plan/apply runs post a commit status (needs GitHub/GitLab API)   |               `true`               |
 |        `BURRITO_CONTROLLER_LOGFORMAT`          |           log format for the controller, either `text` or `json`            |               `text`               |
 
 ## Datastore's configuration
@@ -31,9 +32,10 @@ They can be set in the Helm chart [values](https://github.com/padok-team/burrito
 
 ## Server's configuration
 
-| Environment variable  |          Description          | Default |
-| :-------------------: | :---------------------------: | :-----: |
-| `BURRITO_SERVER_ADDR` | address the server listens on | `:8080` |
+| Environment variable       |                                  Description                                  | Default |
+| :------------------------: | :---------------------------------------------------------------------------: | :-----: |
+| `BURRITO_SERVER_ADDR`      |                         address the server listens on                         | `:8080` |
+| `BURRITO_SERVER_PUBLICURL` |   public URL of the dashboard for commit status links (empty disables them)   |  `""`   |
 
 !!! info
     For webhook configuration see [Setup a git webhook](./git-webhook.md).

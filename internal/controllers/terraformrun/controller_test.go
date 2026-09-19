@@ -15,6 +15,9 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformrun"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
+	"github.com/padok-team/burrito/internal/repository/credentials"
+	"github.com/padok-team/burrito/internal/repository/providers/mock"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	utils "github.com/padok-team/burrito/internal/testing"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,6 +81,7 @@ var _ = BeforeSuite(func() {
 		Clock:        &MockClock{},
 		Datastore:    datastore.NewMockClient(),
 		K8SLogClient: logClient,
+		Credentials:  credentials.NewCredentialStore(k8sClient, config.TestConfig().Controller.Timers.CredentialsTTL),
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
@@ -93,6 +97,7 @@ var _ = BeforeSuite(func() {
 		Clock:        &MockClock{},
 		Datastore:    datastore.NewMockClient(),
 		K8SLogClient: logClient,
+		Credentials:  credentials.NewCredentialStore(k8sClient, configMaxConcurrent.Controller.Timers.CredentialsTTL),
 		Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
 			Component: "burrito",
 		}),
@@ -352,8 +357,11 @@ var _ = Describe("Run", func() {
 			It("should not return an error", func() {
 				Expect(reconcileError).NotTo(HaveOccurred())
 			})
-			It("should set RequeueAfter to OnError", func() {
-				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.OnError))
+			It("should end in Failed state", func() {
+				Expect(run.Status.State).To(Equal("Failed"))
+			})
+			It("should not requeue, the bundle for a stale revision is never written", func() {
+				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
 			})
 		})
 		Describe("When a TerraformRun has errored once and still in grace period", Ordered, func() {
@@ -476,6 +484,48 @@ var _ = Describe("Run", func() {
 				pods, err := reconciler.GetLinkedPods(run)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods.Items)).To(Equal(2))
+			})
+		})
+		Describe("When a TerraformRun has a bundle missing for its revision", Ordered, func() {
+			var fakeProvider *mock.APIProvider
+			var customReconciler *controller.Reconciler
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-5",
+					Namespace: "default",
+				}
+				fakeProvider = &mock.APIProvider{}
+				customReconciler = &controller.Reconciler{
+					Client:       k8sClient,
+					Scheme:       scheme.Scheme,
+					Config:       config.TestConfig(),
+					Clock:        &MockClock{},
+					Datastore:    datastore.NewMockClient(),
+					K8SLogClient: reconciler.K8SLogClient,
+					Credentials:  reconciler.Credentials,
+					Recorder: record.NewBroadcasterForTests(1*time.Second).NewRecorder(scheme.Scheme, corev1.EventSource{
+						Component: "burrito",
+					}),
+					APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+						return fakeProvider, nil
+					},
+				}
+				result, run, reconcileError, err = getResultCustomConfig(name, customReconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in Failed state", func() {
+				Expect(run.Status.State).To(Equal("Failed"))
+			})
+			It("should not requeue", func() {
+				Expect(result.RequeueAfter).To(Equal(time.Duration(0)))
+			})
+			It("should post exactly one failure status", func() {
+				Expect(fakeProvider.SetStatusCalls).To(HaveLen(1))
 			})
 		})
 	})

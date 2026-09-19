@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,9 +9,10 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/repository/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -179,4 +181,61 @@ func TestAPIProvider_Comment_ReturnsErrorWhenListingNotesFails(t *testing.T) {
 	api := newTestAPIProvider(t, mux)
 	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
 	require.Error(t, err)
+}
+
+func TestAPIProvider_SetStatus_PostsRunningState(t *testing.T) {
+	var gotState string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/statuses/sha123", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			State string `json:"state"`
+		}
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		gotState = body.State
+		fmt.Fprint(w, `{}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	err := api.SetStatus(testRepository(), testPullRequest("42"), types.CommitStatus{
+		Phase:  types.PhasePlan,
+		State:  types.StateRunning,
+		Commit: "sha123",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "running", gotState)
+}
+
+// Commit statuses posted for a commit pushed directly to the base branch have no merge
+// request to attach to, so SetStatus is called with a nil one.
+func TestAPIProvider_SetStatus_AcceptsANilPullRequest(t *testing.T) {
+	called := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/statuses/sha123", func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		fmt.Fprint(w, `{}`)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	require.NotPanics(t, func() {
+		require.NoError(t, api.SetStatus(testRepository(), nil, types.CommitStatus{
+			Phase:  types.PhasePlan,
+			State:  types.StateSuccess,
+			Commit: "sha123",
+		}))
+	})
+	assert.True(t, called, "expected the status to be posted on the given commit")
+}
+
+func TestAPIProvider_SetStatus_DoesNotPanicWithoutAPullRequestNorACommit(t *testing.T) {
+	api := newTestAPIProvider(t, http.NewServeMux())
+	require.NotPanics(t, func() {
+		_ = api.SetStatus(testRepository(), nil, types.CommitStatus{Phase: types.PhasePlan, State: types.StateSuccess})
+	})
+}
+
+func TestToGitlabBuildState(t *testing.T) {
+	assert.Equal(t, gitlab.Running, toGitlabBuildState(types.StateRunning))
+	assert.Equal(t, gitlab.Pending, toGitlabBuildState(types.StatePending))
+	assert.Equal(t, gitlab.Success, toGitlabBuildState(types.StateSuccess))
+	assert.Equal(t, gitlab.Failed, toGitlabBuildState(types.StateFailure))
 }

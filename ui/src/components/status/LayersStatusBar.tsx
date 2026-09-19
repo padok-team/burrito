@@ -18,7 +18,8 @@ type StatusVariant =
   | 'disabled'
   | 'apply-needed'
   | 'plan-needed'
-  | 'running';
+  | 'running'
+  | 'retries-exhausted';
 
 interface StatusItem {
   label: string;
@@ -34,6 +35,7 @@ interface LayerCounts {
   running: number;
   applyNeeded: number;
   planNeeded: number;
+  retriesExhausted: number;
 }
 
 // Helper functions
@@ -51,7 +53,8 @@ const getVariantStyles = (
         : 'bg-nuances-400 text-nuances-50',
     'apply-needed': 'bg-status-warning-default text-nuances-black',
     'plan-needed': 'bg-status-warning-default text-nuances-black',
-    running: 'bg-blue-500 text-nuances-white'
+    running: 'bg-blue-500 text-nuances-white',
+    'retries-exhausted': 'bg-status-error-default text-nuances-white'
   };
 
   return `flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium leading-4 ${variantStyles[variant]}`;
@@ -71,7 +74,8 @@ const computeLayerCounts = (layers: Layer[]): LayerCounts => {
     error: 0,
     running: 0,
     applyNeeded: 0,
-    planNeeded: 0
+    planNeeded: 0,
+    retriesExhausted: 0
   };
 
   layers.forEach((layer) => {
@@ -96,6 +100,9 @@ const computeLayerCounts = (layers: Layer[]): LayerCounts => {
       case 'disabled':
         // Don't count disabled layers in any active status
         break;
+      case 'retriesExhausted':
+        counts.retriesExhausted++;
+        break;
     }
   });
 
@@ -116,7 +123,10 @@ const createCoreStatuses = (counts: LayerCounts): StatusItem[] => [
 const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {
   const additionalStatuses: StatusItem[] = [];
   const hasAdditionalStatuses =
-    counts.running > 0 || counts.applyNeeded > 0 || counts.planNeeded > 0;
+    counts.running > 0 ||
+    counts.applyNeeded > 0 ||
+    counts.planNeeded > 0 ||
+    counts.retriesExhausted > 0;
 
   if (!hasAdditionalStatuses) {
     return additionalStatuses;
@@ -152,6 +162,14 @@ const createAdditionalStatuses = (counts: LayerCounts): StatusItem[] => {
       label: 'Plan Needed',
       count: counts.planNeeded,
       variant: 'plan-needed'
+    });
+  }
+
+  if (counts.retriesExhausted > 0) {
+    additionalStatuses.push({
+      label: 'Max Retries',
+      count: counts.retriesExhausted,
+      variant: 'retries-exhausted'
     });
   }
 

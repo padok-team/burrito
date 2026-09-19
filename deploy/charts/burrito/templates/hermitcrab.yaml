@@ -45,8 +45,12 @@ spec:
         {{- toYaml .metadata.labels | nindent 8 }}
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .deployment.podSecurityContext | nindent 8 }}
       containers:
         - name: hermitcrab
+          securityContext:
+            {{- toYaml .deployment.securityContext | nindent 12 }}
           image: "{{ .deployment.image.repository }}:{{ .deployment.image.tag }}"
           imagePullPolicy: {{ .deployment.image.pullPolicy }}
           resources:

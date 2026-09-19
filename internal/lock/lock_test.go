@@ -100,6 +100,7 @@ var _ = Describe("Lock", func() {
 			Expect(locked).To(Equal(false))
 		})
 	})
+
 	Describe("GetLock and idempotent DeleteLock", Ordered, func() {
 		BeforeAll(func() {
 			layer = &configv1alpha1.TerraformLayer{}
@@ -136,6 +137,45 @@ var _ = Describe("Lock", func() {
 			err := lock.DeleteLock(context.TODO(), k8sClient, layer, run)
 			Expect(err).NotTo(HaveOccurred())
 			err = lock.DeleteLock(context.TODO(), k8sClient, layer, run)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("Lock key scoping", func() {
+		var mainLayer *configv1alpha1.TerraformLayer
+		var otherBranchLayer *configv1alpha1.TerraformLayer
+		var mainRun *configv1alpha1.TerraformRun
+		BeforeEach(func() {
+			mainLayer = &configv1alpha1.TerraformLayer{}
+			err := k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test",
+			}, mainLayer)
+			Expect(err).NotTo(HaveOccurred())
+
+			otherBranchLayer = &configv1alpha1.TerraformLayer{}
+			err = k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test-other-branch",
+			}, otherBranchLayer)
+			Expect(err).NotTo(HaveOccurred())
+
+			mainRun = &configv1alpha1.TerraformRun{}
+			err = k8sClient.Get(context.TODO(), types.NamespacedName{
+				Namespace: "default",
+				Name:      "test-run",
+			}, mainRun)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should not lock a layer on the same repository/path but a different branch", func() {
+			err := lock.CreateLock(context.TODO(), k8sClient, mainLayer, mainRun)
+			Expect(err).NotTo(HaveOccurred())
+
+			locked, err := lock.IsLayerLocked(context.TODO(), k8sClient, otherBranchLayer)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(locked).To(Equal(false))
+
+			err = lock.DeleteLock(context.TODO(), k8sClient, mainLayer, mainRun)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

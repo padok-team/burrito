@@ -42,6 +42,10 @@ func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformR
 	return p.pullRequests, nil
 }
 
+func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s repositorytypes.CommitStatus) error {
+	return nil
+}
+
 func newTerraformRepositoryTestScheme(t *testing.T) *runtime.Scheme {
 	t.Helper()
 	scheme := runtime.NewScheme()

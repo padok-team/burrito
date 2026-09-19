@@ -32,7 +32,8 @@ export interface StatesDropdownProps {
 const options: Array<{ value: LayerState; label: string }> = [
   { value: 'success', label: 'OK' },
   { value: 'warning', label: 'OutOfSync' },
-  { value: 'error', label: 'Error' }
+  { value: 'error', label: 'Error' },
+  { value: 'retriesExhausted', label: 'Max Retries' }
 ];
 
 const StatesDropdown: React.FC<StatesDropdownProps> = ({

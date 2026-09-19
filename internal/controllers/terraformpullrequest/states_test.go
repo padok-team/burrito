@@ -14,17 +14,17 @@ import (
 	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/record"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
-	"k8s.io/client-go/tools/record"
 )
 
 type fakeAPIProvider struct {
-	changes       []string
-	changesErr    error
-	commentErr    error
-	pullRequests  []configv1alpha1.TerraformPullRequest
+	changes         []string
+	changesErr      error
+	commentErr      error
+	pullRequests    []configv1alpha1.TerraformPullRequest
 	pullRequestsErr error
 }
 
@@ -41,6 +41,10 @@ func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository
 
 func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	return p.pullRequests, p.pullRequestsErr
+}
+
+func (p *fakeAPIProvider) SetStatus(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, s repositorytypes.CommitStatus) error {
+	return nil
 }
 
 func TestDiscoveryNeededHandlerReturnsOnErrorWhenLayerCreationFails(t *testing.T) {
