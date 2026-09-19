@@ -196,7 +196,7 @@ func (r *Reconciler) releaseOrphanedLayerLock(ctx context.Context, layer *config
 		return false, nil
 	}
 	run := &configv1alpha1.TerraformRun{}
-	err = r.Client.Get(ctx, types.NamespacedName{Namespace: layer.Namespace, Name: runName}, run)
+	err = r.Get(ctx, types.NamespacedName{Namespace: layer.Namespace, Name: runName}, run)
 	if errors.IsNotFound(err) {
 		return r.deleteOrphanedLayerLock(ctx, lease)
 	}
@@ -207,7 +207,7 @@ func (r *Reconciler) releaseOrphanedLayerLock(ctx context.Context, layer *config
 		return false, nil
 	}
 	pod := &corev1.Pod{}
-	err = r.Client.Get(ctx, types.NamespacedName{Namespace: layer.Namespace, Name: run.Status.RunnerPod}, pod)
+	err = r.Get(ctx, types.NamespacedName{Namespace: layer.Namespace, Name: run.Status.RunnerPod}, pod)
 	if errors.IsNotFound(err) {
 		return r.deleteOrphanedLayerLock(ctx, lease)
 	}
@@ -218,7 +218,7 @@ func (r *Reconciler) releaseOrphanedLayerLock(ctx context.Context, layer *config
 }
 
 func (r *Reconciler) deleteOrphanedLayerLock(ctx context.Context, lease *coordination.Lease) (bool, error) {
-	if err := r.Client.Delete(ctx, lease); err != nil && !errors.IsNotFound(err) {
+	if err := r.Delete(ctx, lease); err != nil && !errors.IsNotFound(err) {
 		return false, err
 	}
 	return true, nil

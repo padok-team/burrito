@@ -639,7 +639,7 @@ var _ = Describe("Layer", func() {
 		})
 		Describe("When a TerraformLayer is locked by a run whose runner pod is still running", Ordered, func() {
 			BeforeAll(func() {
-				err := k8sClient.Create(context.TODO(), &corev1.Pod{
+				err = k8sClient.Create(context.TODO(), &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "orphan-lock-pod-alive",
 						Namespace: "default",
