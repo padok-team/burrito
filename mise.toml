@@ -1,7 +1,7 @@
 [tools]
 # Language runtimes — pinned to the versions the repo declares for itself
 go = "1.27.1"      # Dockerfile golang builder (>= go.mod 1.26.0)
-node = "26.8.2"    # root package.json devEngines runtime
+node = "26.9.0"    # root package.json devEngines runtime
 pnpm = "12.4.2"   # root package.json devEngines packageManager; ui/ downloads its own via devEngines
 
 # Kubernetes & dev CLIs — pinned for a reproducible environment
