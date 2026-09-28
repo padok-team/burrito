@@ -123,6 +123,20 @@ func TestIsLayerAffected(t *testing.T) {
 			changes: []string{"docs/readme.md"},
 			want:    false,
 		},
+		{
+			name:    "additional trigger path is relative to layer path",
+			layer:   withAdditionalTriggerPaths(layer, "../modules/foo"),
+			pr:      pr,
+			changes: []string{"modules/foo/main.tf"},
+			want:    true,
+		},
+		{
+			name:    "additional trigger paths tolerate spaces after commas",
+			layer:   withAdditionalTriggerPaths(layer, "../docs, ../modules/foo"),
+			pr:      pr,
+			changes: []string{"modules/foo/main.tf"},
+			want:    true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -245,5 +259,10 @@ func withLayerBranch(layer configv1alpha1.TerraformLayer, branch string) configv
 
 func withAdditionalTargetRefs(layer configv1alpha1.TerraformLayer, refs ...string) configv1alpha1.TerraformLayer {
 	layer.Spec.AdditionalTargetRefs = refs
+	return layer
+}
+
+func withAdditionalTriggerPaths(layer configv1alpha1.TerraformLayer, paths string) configv1alpha1.TerraformLayer {
+	layer.Annotations = map[string]string{annotations.AdditionnalTriggerPaths: paths}
 	return layer
 }
