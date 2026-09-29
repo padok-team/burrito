@@ -35,8 +35,10 @@ jobs:
 
       - name: Check tag does not already exist
         id: check
+        env:
+          TAG: ${{ steps.version.outputs.value }}
         run: |
-          if git ls-remote --tags origin "${{ steps.version.outputs.value }}" | grep -q "${{ steps.version.outputs.value }}"; then
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
