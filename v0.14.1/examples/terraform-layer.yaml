@@ -1,0 +1,13 @@
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: my-layer
+  namespace: burrito-project
+spec:
+  branch: main
+  path: terraform
+  remediationStrategy:
+    autoApply: false
+  repository:
+    name: my-repository
+    namespace: burrito-project
