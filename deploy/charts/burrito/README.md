@@ -17,6 +17,7 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.controller.commitStatus.enabled | bool | `true` | Enable/Disable the commit statuses posted on a layer's commit for its plan and apply runs. Needs GitHub or GitLab credentials on the repository: layers served by the standard git provider have no API to post to and never get any. |
 | config.burrito.controller.defaultSyncWindows | list | `[]` | Default sync windows for layer reconciliation |
 | config.burrito.controller.healthProbeBindAddress | string | `":8081"` | Address to bind the controller health probe |
+| config.burrito.controller.instanceName | string | `""` | Name of this Burrito instance. Set a distinct value on each instance watching the same repository so each keeps its own pull request comment instead of overwriting the other's. |
 | config.burrito.controller.kubernetesWebhookPort | int | `9443` | Port used to handle the Kubernetes webhook |
 | config.burrito.controller.leaderElection.enabled | bool | `true` | Enable/Disable leader election |
 | config.burrito.controller.leaderElection.id | string | `"6d185457.terraform.padok.cloud"` | Leader election lock name |
