@@ -158,7 +158,7 @@ A Helm chart for handling a complete burrito deployment
 | hermitcrab.deployment.livenessProbe | object | `{"failureThreshold":10,"httpGet":{"httpHeaders":[{"name":"User-Agent","value":""}],"path":"/livez","port":80},"periodSeconds":10,"timeoutSeconds":5}` | Hermitcrab liveness probe configuration |
 | hermitcrab.deployment.metadata | object | `{"annotations":{},"labels":{}}` | Metadata configuration for Hermitcrab deployment |
 | hermitcrab.deployment.nodeSelector | object | `{}` | Hermitcrab node selector |
-| hermitcrab.deployment.podSecurityContext | object | `{}` | Pod security context for Hermitcrab. Merged with (and overrides) global.deployment.podSecurityContext |
+| hermitcrab.deployment.podSecurityContext | object | `{"runAsNonRoot":false}` | Pod security context for Hermitcrab. Merged with (and overrides) global.deployment.podSecurityContext |
 | hermitcrab.deployment.ports | list | `[{"containerPort":80,"name":"http"},{"containerPort":443,"name":"https"}]` | Hermitcrab ports configuration |
 | hermitcrab.deployment.readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/readyz","port":80},"periodSeconds":5,"timeoutSeconds":5}` | Hermitcrab readiness probe configuration |
 | hermitcrab.deployment.replicas | int | `1` | Hermitcrab replicas |
