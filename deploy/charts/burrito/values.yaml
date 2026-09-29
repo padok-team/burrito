@@ -182,7 +182,8 @@ hermitcrab:
       labels: {}
       annotations: {}
     # -- Pod security context for Hermitcrab. Merged with (and overrides) global.deployment.podSecurityContext
-    podSecurityContext: {}
+    podSecurityContext:
+      runAsNonRoot: false
     # -- Security context for the hermitcrab container. Merged with (and overrides) global.deployment.securityContext
     securityContext: {}
     # -- Hermitcrab replicas
