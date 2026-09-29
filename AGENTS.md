@@ -54,6 +54,7 @@ If `mise` is not installed, stop and offer to install it (`curl https://mise.run
 
 - Always check errors explicitly. Never `_ = err` or silently ignored returns.
 - No `panic()` in reconcilers — see `internal/controllers/AGENTS.md`.
+- **Coverage:** codecov/patch counts coverage per package, so test a changed line from a test in the *same package* (a test in another package doesn't cover it).
 - **Tests:** add new cases to the existing test suite for a package rather than creating a new suite from scratch. Controllers use BDD (ginkgo/gomega): each `controller_test.go` reads `Describe("When X …")` → `It("should Y …")` (run via `RunSpecs`) — add cases to that suite.
 
 ## Commits — Conventional Commits
@@ -62,4 +63,5 @@ Format: `<type>(<scope>): <description>`.
 
 - **Types:** `feat`, `fix`, `chore`, `docs`, `test`, `refactor`.
 - **Scopes** — suggested, not enforced. Prefer the closest fit (`controller`, `api`, `ui`, `helm`, `ci`, `deps`, `docker`); otherwise use another short, relevant scope or omit it.
+- Keep every line of the body ≤ 100 characters (`body-max-line-length`); wrap at ~72.
 - CI gates each commit with commitlint (`@commitlint/config-conventional`) — self-check a message with `echo "<msg>" | pnpm exec commitlint --extends @commitlint/config-conventional` (the repo ships no `commitlint.config.js`; CI generates one).
