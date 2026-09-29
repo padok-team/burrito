@@ -26,16 +26,22 @@ type ReportedLayer struct {
 type DefaultComment struct {
 	layers    []configv1alpha1.TerraformLayer
 	datastore datastore.Client
+	instance  string
 }
 
 type DefaultCommentInput struct {
 }
 
-func NewDefaultComment(layers []configv1alpha1.TerraformLayer, datastore datastore.Client) *DefaultComment {
+func NewDefaultComment(layers []configv1alpha1.TerraformLayer, datastore datastore.Client, instance string) *DefaultComment {
 	return &DefaultComment{
 		layers:    layers,
 		datastore: datastore,
+		instance:  instance,
 	}
+}
+
+func (c *DefaultComment) Marker() string {
+	return Marker(c.instance)
 }
 
 func (c *DefaultComment) Generate(commit string) (string, error) {
@@ -59,11 +65,13 @@ func (c *DefaultComment) Generate(commit string) (string, error) {
 
 	}
 	data := struct {
-		Commit string
-		Layers []ReportedLayer
+		Commit   string
+		Instance string
+		Layers   []ReportedLayer
 	}{
-		Commit: commit,
-		Layers: reportedLayers,
+		Commit:   commit,
+		Instance: c.instance,
+		Layers:   reportedLayers,
 	}
 	comment := bytes.NewBufferString("")
 	err := defaultTemplate.Execute(comment, data)

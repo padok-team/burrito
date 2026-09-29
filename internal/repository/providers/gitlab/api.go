@@ -90,14 +90,14 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 		log.Errorf("Error while generating comment: %s", err)
 		return err
 	}
-	body = comment.WithManagedMarker(body)
+	body = comment.WithManagedMarker(body, prComment.Marker())
 	id, err := strconv.ParseInt(pr.Spec.ID, 10, 64)
 	if err != nil {
 		log.Errorf("Error while parsing Gitlab merge request ID: %s", err)
 		return err
 	}
 	projectName := getGitlabNamespacedName(repository.Spec.Repository.Url)
-	managedNoteID, err := api.findManagedNoteID(projectName, id)
+	managedNoteID, err := api.findManagedNoteID(projectName, id, prComment.Marker())
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 	return nil
 }
 
-func (api *APIProvider) findManagedNoteID(projectName string, id int64) (int64, error) {
+func (api *APIProvider) findManagedNoteID(projectName string, id int64, marker string) (int64, error) {
 	opts := &gitlab.ListMergeRequestNotesOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 100,
@@ -129,7 +129,7 @@ func (api *APIProvider) findManagedNoteID(projectName string, id int64) (int64, 
 			return 0, err
 		}
 		for _, existingNote := range notes {
-			if existingNote != nil && comment.HasManagedMarker(existingNote.Body) {
+			if existingNote != nil && comment.HasManagedMarker(existingNote.Body, marker) {
 				return existingNote.ID, nil
 			}
 		}

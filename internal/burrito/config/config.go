@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -71,6 +72,7 @@ type ControllerConfig struct {
 	MaxConcurrentRunnerPods int                         `mapstructure:"maxConcurrentRunnerPods"`
 	LogFormat               string                      `mapstructure:"logFormat"`
 	CommitStatus            CommitStatusConfig          `mapstructure:"commitStatus"`
+	InstanceName            string                      `mapstructure:"instanceName"`
 }
 
 // CommitStatusConfig gates the commit statuses the controllers post on the layer's commit.
@@ -204,7 +206,21 @@ func (c *Config) Load(flags *pflag.FlagSet) error {
 		return err
 	}
 
-	return v.Unmarshal(c)
+	if err := v.Unmarshal(c); err != nil {
+		return err
+	}
+	return c.Controller.validate()
+}
+
+// instanceNamePattern keeps instanceName safe to embed in the hidden HTML comment marker
+// of pull request comments: no "-->", no whitespace, nothing that could break the marker.
+var instanceNamePattern = regexp.MustCompile(`^[A-Za-z0-9._-]*$`)
+
+func (c ControllerConfig) validate() error {
+	if !instanceNamePattern.MatchString(c.InstanceName) {
+		return fmt.Errorf("invalid controller.instanceName %q: only letters, digits, '.', '_' and '-' are allowed", c.InstanceName)
+	}
+	return nil
 }
 
 // bindEnvironmentVariables inspects iface's structure and recursively binds its

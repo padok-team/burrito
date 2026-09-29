@@ -90,14 +90,14 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 		log.Errorf("Error while generating comment: %s", err)
 		return err
 	}
-	body = comment.WithManagedMarker(body)
+	body = comment.WithManagedMarker(body, prComment.Marker())
 	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
 	id, err := strconv.Atoi(pr.Spec.ID)
 	if err != nil {
 		log.Errorf("Error while parsing Github pull request ID: %s", err)
 		return err
 	}
-	managedCommentID, err := api.findManagedCommentID(owner, repoName, id)
+	managedCommentID, err := api.findManagedCommentID(owner, repoName, id, prComment.Marker())
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 	return err
 }
 
-func (api *APIProvider) findManagedCommentID(owner string, repoName string, id int) (int64, error) {
+func (api *APIProvider) findManagedCommentID(owner string, repoName string, id int, marker string) (int64, error) {
 	opts := &github.IssueListCommentsOptions{
 		ListOptions: github.ListOptions{
 			PerPage: 100,
@@ -125,7 +125,7 @@ func (api *APIProvider) findManagedCommentID(owner string, repoName string, id i
 			return 0, err
 		}
 		for _, existingComment := range comments {
-			if existingComment != nil && comment.HasManagedMarker(existingComment.GetBody()) {
+			if existingComment != nil && comment.HasManagedMarker(existingComment.GetBody(), marker) {
 				return existingComment.GetID(), nil
 			}
 		}

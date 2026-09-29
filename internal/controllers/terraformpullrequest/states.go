@@ -117,7 +117,7 @@ func commentNeededHandler(ctx context.Context, r *Reconciler, repository *config
 		return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}
 	}
 
-	comment := comment.NewDefaultComment(layers, r.Datastore)
+	comment := comment.NewDefaultComment(layers, r.Datastore, r.Config.Controller.InstanceName)
 	err = provider.Comment(repository, pr, comment)
 	if err != nil {
 		r.Recorder.Event(pr, corev1.EventTypeWarning, "Reconciliation", "Failed to comment pull request")

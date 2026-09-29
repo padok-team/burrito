@@ -303,3 +303,19 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 
 // 	assert.Equal(t, expected, cfg)
 // }
+
+func TestConfig_InstanceNameValidation(t *testing.T) {
+	for name, ok := range map[string]bool{
+		"":            true,
+		"cluster-a.1": true,
+		"a --> b":     false,
+		"a b":         false,
+		"a>":          false,
+	} {
+		t.Setenv("BURRITO_CONTROLLER_INSTANCENAME", name)
+		err := (&config.Config{}).Load(pflag.NewFlagSet("test", pflag.ContinueOnError))
+		if (err == nil) != ok {
+			t.Errorf("instanceName %q: valid=%v, got err=%v", name, ok, err)
+		}
+	}
+}

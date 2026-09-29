@@ -15,6 +15,7 @@ type fakeComment struct{}
 func (c *fakeComment) Generate(commit string) (string, error) {
 	return "", nil
 }
+func (c *fakeComment) Marker() string { return "" }
 
 func TestAPIProvider_ListPullRequests(t *testing.T) {
 	api := &APIProvider{}

@@ -70,7 +70,7 @@ func TestDefaultCommentGenerate(t *testing.T) {
 			"pretty": []byte("pretty plan"),
 			"short":  []byte("+ create"),
 		},
-	})
+	}, "")
 
 	got, err := comment.Generate("abc123")
 	if err != nil {
@@ -86,7 +86,7 @@ func TestDefaultCommentGenerate(t *testing.T) {
 
 func TestDefaultCommentGenerateReturnsDatastoreError(t *testing.T) {
 	expectedErr := errors.New("datastore unavailable")
-	comment := NewDefaultComment([]configv1alpha1.TerraformLayer{{}}, &fakeDatastore{err: expectedErr})
+	comment := NewDefaultComment([]configv1alpha1.TerraformLayer{{}}, &fakeDatastore{err: expectedErr}, "")
 
 	_, err := comment.Generate("abc123")
 	if !errors.Is(err, expectedErr) {
@@ -103,7 +103,7 @@ func TestDefaultCommentGenerateReturnsShortPlanError(t *testing.T) {
 		errByFormat: map[string]error{
 			"short": expectedErr,
 		},
-	})
+	}, "")
 
 	_, err := comment.Generate("abc123")
 	if !errors.Is(err, expectedErr) {
@@ -113,15 +113,27 @@ func TestDefaultCommentGenerateReturnsShortPlanError(t *testing.T) {
 
 func TestManagedMarkerHelpers(t *testing.T) {
 	body := "hello"
-	withMarker := WithManagedMarker(body)
-	if !HasManagedMarker(withMarker) {
+	marker := Marker("")
+	withMarker := WithManagedMarker(body, marker)
+	if !HasManagedMarker(withMarker, marker) {
 		t.Fatalf("expected generated body to contain managed marker")
 	}
-	if got := WithManagedMarker(withMarker); got != withMarker {
+	if got := WithManagedMarker(withMarker, marker); got != withMarker {
 		t.Fatalf("expected WithManagedMarker to be idempotent")
 	}
-	if HasManagedMarker(body) {
+	if HasManagedMarker(body, marker) {
 		t.Fatalf("did not expect unmanaged body to contain marker")
+	}
+}
+
+func TestMarkerIsolatesInstances(t *testing.T) {
+	a, b, legacy := Marker("a"), Marker("b"), Marker("")
+	body := WithManagedMarker("hello", a)
+	if !HasManagedMarker(body, a) {
+		t.Fatalf("expected instance a to own its comment")
+	}
+	if HasManagedMarker(body, b) || HasManagedMarker(body, legacy) {
+		t.Fatalf("did not expect other instances to match instance a's comment")
 	}
 }
 

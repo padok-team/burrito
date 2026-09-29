@@ -1,4 +1,4 @@
-## :burrito: Burrito Report
+## :burrito: Burrito Report{{ if .Instance }} ({{ .Instance }}){{ end }}
 
 {{ len .Layers }} layer(s) affected with {{ .Commit }} commit.
 

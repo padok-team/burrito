@@ -3,6 +3,7 @@ package github
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +18,15 @@ import (
 )
 
 type fakeComment struct {
-	body string
+	body   string
+	marker string
+}
+
+func (c *fakeComment) Marker() string {
+	if c.marker == "" {
+		return comment.Marker("")
+	}
+	return c.marker
 }
 
 func (c *fakeComment) Generate(commit string) (string, error) {
@@ -256,4 +265,27 @@ func TestToGithubState(t *testing.T) {
 	assert.Equal(t, "pending", toGithubState(types.StatePending))
 	assert.Equal(t, "success", toGithubState(types.StateSuccess))
 	assert.Equal(t, "failure", toGithubState(types.StateFailure))
+}
+
+func TestAPIProvider_Comment_IgnoresCommentOfAnotherInstance(t *testing.T) {
+	created := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/issues/42/comments", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			_ = json.NewEncoder(w).Encode([]*github.IssueComment{
+				{ID: github.Ptr(int64(7)), Body: github.Ptr("other\n\n" + comment.Marker("a"))},
+			})
+		case http.MethodPost:
+			created = true
+			_ = json.NewEncoder(w).Encode(&github.IssueComment{})
+		default:
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+	})
+
+	api := newTestAPIProvider(t, mux)
+	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello", marker: comment.Marker("b")})
+	require.NoError(t, err)
+	assert.True(t, created, "expected instance b to create its own comment")
 }

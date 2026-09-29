@@ -3,6 +3,7 @@ package gitlab
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest/comment"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +18,15 @@ import (
 )
 
 type fakeComment struct {
-	body string
+	body   string
+	marker string
+}
+
+func (c *fakeComment) Marker() string {
+	if c.marker == "" {
+		return comment.Marker("")
+	}
+	return c.marker
 }
 
 func (c *fakeComment) Generate(commit string) (string, error) {
@@ -238,4 +247,25 @@ func TestToGitlabBuildState(t *testing.T) {
 	assert.Equal(t, gitlab.Pending, toGitlabBuildState(types.StatePending))
 	assert.Equal(t, gitlab.Success, toGitlabBuildState(types.StateSuccess))
 	assert.Equal(t, gitlab.Failed, toGitlabBuildState(types.StateFailure))
+}
+
+func TestAPIProvider_Comment_IgnoresNoteOfAnotherInstance(t *testing.T) {
+	created := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			fmt.Fprintf(w, `[{"id": 7, "body": "other\n\n%s"}]`, comment.Marker("a"))
+		case http.MethodPost:
+			created = true
+			fmt.Fprint(w, "{}")
+		default:
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+	})
+
+	api := newTestAPIProvider(t, mux)
+	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello", marker: comment.Marker("b")})
+	require.NoError(t, err)
+	assert.True(t, created, "expected instance b to create its own note")
 }
