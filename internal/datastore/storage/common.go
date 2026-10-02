@@ -23,6 +23,7 @@ const (
 	PrettyPlanFile         string = "pretty.plan"
 	ShortDiffFile          string = "short.diff"
 	GitBundleFileExtension string = ".gitbundle"
+	StateGraphFile         string = "stategraph.json"
 	RevisionFile           string = "latest"
 	LayersPrefix           string = "layers"
 	RepositoriesPrefix     string = "repositories"
@@ -48,6 +49,10 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 		key = fmt.Sprintf("%s/%s", prefix, PlanJsonFile)
 	}
 	return key
+}
+
+func computeStateGraphKey(namespace string, layer string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, StateGraphFile)
 }
 
 func computeGitBundleKey(namespace string, repository string, branch string, revision string) string {
@@ -224,6 +229,29 @@ func (s *Storage) PutGitBundle(namespace string, repository string, ref string, 
 	err = s.Backend.Set(computeGitBundleKey(namespace, repository, ref, commit), dataToStore, 0)
 	if err != nil {
 		return fmt.Errorf("failed to store git bundle: %w", err)
+	}
+	return nil
+}
+
+func (s *Storage) GetStateGraph(namespace string, layer string) ([]byte, error) {
+	data, err := s.Backend.Get(computeStateGraphKey(namespace, layer))
+	if err != nil {
+		return nil, err
+	} else {
+		return s.EncryptionManager.Decrypt(namespace, data)
+	}
+}
+
+func (s *Storage) PutStateGraph(namespace string, layer string, graph []byte) error {
+	dataToStore, err := s.EncryptionManager.Encrypt(namespace, graph)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.Backend.Set(computeStateGraphKey(namespace, layer), dataToStore, 0)
+	if err != nil {
+		return fmt.Errorf("failed to store state graph: %w", err)
 	}
 	return nil
 }

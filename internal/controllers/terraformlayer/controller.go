@@ -145,6 +145,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		lastRun = getRun(*run)
 		runHistory = updateLatestRuns(runHistory, *run, *configv1alpha1.GetRunHistoryPolicy(repository, layer).KeepLastRuns)
 	}
+	runs, err := r.getAllRuns(ctx, layer)
+	if err != nil {
+		log.Warningf("failed to list runs of layer %s, skipping commit info backfill: %s", layer.Name, err)
+	}
+	runHistory = backfillRunInfo(runHistory, runs)
+	lastRun = backfillRunInfo([]configv1alpha1.TerraformLayerRun{lastRun}, runs)[0]
 	layer.Status = configv1alpha1.TerraformLayerStatus{Conditions: conditions, State: getStateString(state), LastResult: layer.Status.LastResult, LastRun: lastRun, LatestRuns: runHistory}
 	err = r.Client.Status().Update(ctx, layer)
 	if err != nil {
@@ -197,11 +203,34 @@ func (r *Reconciler) cleanupRuns(ctx context.Context, layer *configv1alpha1.Terr
 
 func getRun(run configv1alpha1.TerraformRun) configv1alpha1.TerraformLayerRun {
 	return configv1alpha1.TerraformLayerRun{
-		Name:   run.Name,
-		Commit: "",
-		Date:   run.CreationTimestamp,
-		Action: run.Spec.Action,
+		Name:    run.Name,
+		Commit:  run.Status.Commit,
+		Author:  run.Status.Author,
+		Message: run.Status.Message,
+		Date:    run.CreationTimestamp,
+		Action:  run.Spec.Action,
 	}
+}
+
+// backfillRunInfo completes the history entries created before the runner patched the commit info
+// on their TerraformRun (the run is recorded in the layer status as soon as it is created).
+func backfillRunInfo(history []configv1alpha1.TerraformLayerRun, runs []*configv1alpha1.TerraformRun) []configv1alpha1.TerraformLayerRun {
+	byName := map[string]*configv1alpha1.TerraformRun{}
+	for _, run := range runs {
+		byName[run.Name] = run
+	}
+	result := make([]configv1alpha1.TerraformLayerRun, len(history))
+	copy(result, history)
+	for i, entry := range result {
+		run, ok := byName[entry.Name]
+		if entry.Commit != "" || !ok || run.Status.Commit == "" {
+			continue
+		}
+		result[i].Commit = run.Status.Commit
+		result[i].Author = run.Status.Author
+		result[i].Message = run.Status.Message
+	}
+	return result
 }
 
 func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha1.TerraformRun, keep int) []configv1alpha1.TerraformLayerRun {

@@ -41,6 +41,17 @@ Click on the layer card to view the Terraform or Terragrunt logs for that layer.
 
 A dedicated page for exploring the logs is also available.
 
+### Layer page
+
+Click on a layer to open its dedicated page. It shows:
+
+- The **state graph**: the resources managed by the layer and the dependencies between them, built from the Terraform state after each plan or apply.
+- The result of the **last plan** overlaid on the graph (resources to create, update or delete).
+- The **last commit** that triggered a run (hash, author and message).
+
+!!! note
+    The state graph is only available once a plan or an apply has run on the layer with a non-empty state.
+
 ### More to come
 
 Burrito is under active development, and we are working on adding more features to the UI such as:

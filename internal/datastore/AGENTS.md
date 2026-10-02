@@ -1,6 +1,6 @@
 # Scope: Datastore (`internal/datastore/`)
 
-Stores run artifacts (logs, plans, git bundles). Runs as its own binary
+Stores run artifacts (logs, plans, git bundles) and the per-layer state graph. Runs as its own binary
 (`cmd/datastore`): an Echo HTTP service (`datastore.go`) fronting a pluggable object store.
 `storage/` holds the backends, `api/` the HTTP handlers, `client/` the client the
 runner/server/controllers use to reach it.
@@ -14,7 +14,8 @@ runner/server/controllers use to reach it.
   **never call `Backend` directly**: `Storage` wraps every read/write with the per-namespace
   `EncryptionManager` (Put encrypts, Get decrypts). Bypassing it breaks the encryption contract.
 - Object keys are built centrally (`computeLogsKey`/`computePlanKey`/`computeGitBundleKey`) —
-  `layers/ns/layer/run/attempt/<file>`, `repositories/ns/repo/branch/rev.gitbundle`. Don't
+  `layers/ns/layer/run/attempt/<file>`, `layers/ns/layer/stategraph.json` (one per layer, no
+  run/attempt), `repositories/ns/repo/branch/rev.gitbundle`. Don't
   hand-build keys; keep the format constants and the client in sync.
 - The API is reached over HTTP through `datastore/client`, authorized by Kubernetes
   ServiceAccount token (audience `burrito`). A change to a handler in `api/` must be mirrored

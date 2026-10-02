@@ -26,12 +26,16 @@ type MockClient struct {
 	revisions map[string]string
 	// Store bundles in memory for testing
 	bundles map[string][]byte
+	// Store state graphs in memory for testing
+	stateGraphs map[string][]byte
 }
 
 func NewMockClient() *MockClient {
 	return &MockClient{
 		revisions: make(map[string]string),
 		bundles:   make(map[string][]byte),
+
+		stateGraphs: make(map[string][]byte),
 	}
 }
 
@@ -108,4 +112,17 @@ func (c *MockClient) GetGitBundle(namespace, name, ref, revision string) ([]byte
 		Err: fmt.Errorf("bundle not found"),
 		Nil: true,
 	}
+}
+
+func (c *MockClient) GetStateGraph(namespace string, layer string) ([]byte, error) {
+	graph, ok := c.stateGraphs[fmt.Sprintf("%s/%s", namespace, layer)]
+	if !ok {
+		return nil, &storageerrors.StorageError{Err: fmt.Errorf("no state graph for this layer"), Nil: true}
+	}
+	return graph, nil
+}
+
+func (c *MockClient) PutStateGraph(namespace string, layer string, graph []byte) error {
+	c.stateGraphs[fmt.Sprintf("%s/%s", namespace, layer)] = graph
+	return nil
 }
