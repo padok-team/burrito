@@ -10,6 +10,7 @@ export type PullRequest = {
   namespace: string;
   id: string;
   repository: string;
+  url: string;
   branch: string;
   base: string;
   state: PullRequestState;

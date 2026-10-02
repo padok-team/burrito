@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	urlutils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,6 +19,7 @@ type pullRequest struct {
 	Namespace            string  `json:"namespace"`
 	ID                   string  `json:"id"`
 	Repository           string  `json:"repository"`
+	URL                  string  `json:"url"`
 	Branch               string  `json:"branch"`
 	Base                 string  `json:"base"`
 	State                string  `json:"state"`
@@ -33,6 +37,15 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 	if err := a.Client.List(context.Background(), prs); err != nil {
 		log.Errorf("could not list TerraformPullRequests: %s", err)
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform pull requests: %s", err))
+	}
+	repositories := &configv1alpha1.TerraformRepositoryList{}
+	if err := a.Client.List(context.Background(), repositories); err != nil {
+		log.Errorf("could not list TerraformRepositories: %s", err)
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform repositories: %s", err))
+	}
+	repositoryURLs := map[string]string{}
+	for _, r := range repositories.Items {
+		repositoryURLs[fmt.Sprintf("%s/%s", r.Namespace, r.Name)] = r.Spec.Repository.Url
 	}
 	layers, runs, err := a.getLayersAndRuns()
 	if err != nil {
@@ -57,12 +70,14 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 		if prLayers == nil {
 			prLayers = []layer{}
 		}
+		repository := fmt.Sprintf("%s/%s", pr.Spec.Repository.Namespace, pr.Spec.Repository.Name)
 		results = append(results, pullRequest{
 			UID:                  string(pr.UID),
 			Name:                 pr.Name,
 			Namespace:            pr.Namespace,
 			ID:                   pr.Spec.ID,
-			Repository:           fmt.Sprintf("%s/%s", pr.Spec.Repository.Namespace, pr.Spec.Repository.Name),
+			Repository:           repository,
+			URL:                  pullRequestURL(repositoryURLs[repository], pr.Spec.ID),
 			Branch:               pr.Spec.Branch,
 			Base:                 pr.Spec.Base,
 			State:                pr.Status.State,
@@ -72,4 +87,22 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 		})
 	}
 	return c.JSON(http.StatusOK, &pullRequestsResponse{Results: results})
+}
+
+// pullRequestURL builds the web URL of a pull request from the repository URL.
+// The server has no access to the provider credentials, so GitLab is detected
+// from the host name; any other host is assumed to be GitHub-like.
+func pullRequestURL(repositoryURL, id string) string {
+	if repositoryURL == "" || id == "" {
+		return ""
+	}
+	base := urlutils.NormalizeUrl(repositoryURL)
+	parsed, err := url.Parse(base)
+	if err != nil || parsed.Host == "" {
+		return ""
+	}
+	if strings.Contains(strings.ToLower(parsed.Host), "gitlab") {
+		return fmt.Sprintf("%s/-/merge_requests/%s", base, id)
+	}
+	return fmt.Sprintf("%s/pull/%s", base, id)
 }

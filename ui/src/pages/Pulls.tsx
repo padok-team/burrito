@@ -74,6 +74,25 @@ const Pulls: React.FC = () => {
   const textMain = isLight ? 'text-nuances-black' : 'text-nuances-50';
   const textSub = isLight ? 'text-primary-600' : 'text-nuances-200';
 
+  const PullRequestLink: React.FC<{ pr: PullRequest; className?: string }> = ({
+    pr,
+    className
+  }) =>
+    pr.url ? (
+      <a
+        href={pr.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Open on the Git provider"
+        onClick={(e) => e.stopPropagation()}
+        className={`${className ?? ''} ${textMain} hover:underline`}
+      >
+        #{pr.id} ↗
+      </a>
+    ) : (
+      <span className={`${className ?? ''} ${textMain}`}>#{pr.id}</span>
+    );
+
   const selectPR = (pr: PullRequest) => {
     setSelectedLayer(null);
     updateParam('pr', prKey(pr));
@@ -126,7 +145,7 @@ const Pulls: React.FC = () => {
         />
       </div>
       <div className="flex flex-row flex-1 gap-6 min-h-0">
-        <div className="flex flex-col w-96 shrink-0 gap-3 overflow-auto">
+        <div className="flex flex-col w-96 shrink-0 gap-3 overflow-auto p-3 -m-3">
           {pullsQuery.isLoading && <span className={textSub}>Loading...</span>}
           {pullsQuery.isError && (
             <span className={textSub}>Could not load pull requests.</span>
@@ -135,9 +154,17 @@ const Pulls: React.FC = () => {
             <span className={textSub}>No pull requests found.</span>
           )}
           {filteredPulls.map((pr) => (
-            <button
+            <div
               key={pr.uid}
+              role="button"
+              tabIndex={0}
               onClick={() => selectPR(pr)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  selectPR(pr);
+                }
+              }}
               className={`
                 flex
                 flex-col
@@ -156,9 +183,7 @@ const Pulls: React.FC = () => {
               `}
             >
               <div className="flex justify-between items-center gap-2">
-                <span className={`text-lg font-bold ${textMain}`}>
-                  #{pr.id}
-                </span>
+                <PullRequestLink pr={pr} className="text-lg font-bold" />
                 <PullRequestStateTag state={pr.state} />
               </div>
               <span className={`text-sm font-medium ${textSub}`}>
@@ -172,10 +197,10 @@ const Pulls: React.FC = () => {
                 {pr.layers.length} ephemeral layer
                 {pr.layers.length === 1 ? '' : 's'}
               </span>
-            </button>
+            </div>
           ))}
         </div>
-        <div className="flex flex-col flex-1 min-w-0 gap-4 overflow-auto">
+        <div className="flex flex-col flex-1 min-w-0 gap-4 overflow-auto p-3 -m-3">
           {!currentPR ? (
             <span className={textSub}>
               Select a pull request to see its ephemeral layers.
@@ -185,7 +210,8 @@ const Pulls: React.FC = () => {
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-4">
                   <h2 className={`text-2xl font-bold ${textMain}`}>
-                    Pull request #{currentPR.id}
+                    Pull request{' '}
+                    <PullRequestLink pr={currentPR} className="underline" />
                   </h2>
                   <PullRequestStateTag state={currentPR.state} />
                 </div>
