@@ -17,7 +17,6 @@ import Tag from '@/components/widgets/Tag';
 import PullRequestStateTag from '@/components/widgets/PullRequestStateTag';
 
 import SearchIcon from '@/assets/icons/SearchIcon';
-import CodeBranchIcon from '@/assets/icons/CodeBranchIcon';
 
 const prKey = (pr: PullRequest) => `${pr.namespace}/${pr.name}`;
 const layerKey = (layer: Layer) => `${layer.namespace}/${layer.name}`;
@@ -191,13 +190,27 @@ const Pulls: React.FC = () => {
                 <PullRequestLink pr={pr} className="text-lg font-bold" />
                 <PullRequestStateTag state={pr.state} />
               </div>
-              <span className={`text-sm font-medium ${textSub}`}>
-                {pr.repository}
-              </span>
-              <span className={`flex items-center gap-1 text-sm ${textMain}`}>
-                <CodeBranchIcon height={16} width={16} />
-                {pr.branch} → {pr.base}
-              </span>
+              <div className="grid grid-cols-[min-content_1fr] items-start gap-x-7 gap-y-2">
+                {[
+                  ['Namespace', pr.namespace],
+                  ['Repository', pr.repository],
+                  ['Branch', `${pr.branch} → ${pr.base}`]
+                ].map(([label, value]) => (
+                  <React.Fragment key={label}>
+                    <span
+                      className={`text-base font-normal truncate ${textSub}`}
+                    >
+                      {label}
+                    </span>
+                    <span
+                      className={`text-base font-semibold truncate ${textMain}`}
+                      title={value}
+                    >
+                      {value}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </div>
               <span className={`text-sm ${textSub}`}>
                 {pr.layers.length} ephemeral layer
                 {pr.layers.length === 1 ? '' : 's'}
