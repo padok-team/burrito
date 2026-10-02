@@ -8,7 +8,8 @@ Serves the `ui/` dashboard and its JSON API. Echo v4 (`server.go`), one binary
 - The UI is embedded with `//go:embed all:dist` — the `ui/` build output must exist
   (`pnpm --dir ui build`) before the server binary is built, or the embed fails.
 - `/api/*` handlers in `api/` are the contract the `ui/` TypeScript consumes (`/layers`,
-  `/repositories`, `/logs/...`, `/run/.../attempts`, sync). Treat their response shapes like
+  `/layers/:ns/:layer`, `/layers/:ns/:layer/stategraph`, `/plans/...`, `/repositories`,
+  `/logs/...`, `/run/.../attempts`, sync). Treat their response shapes like
   the CRD↔UI contract: **flag breaking changes** and update `ui/` in step.
 - Reads live k8s state via a controller-runtime `client` and run artifacts via the
   `datastore/client` — the server owns no storage itself.
