@@ -167,6 +167,7 @@ func (s *Server) Exec() {
 	// Logger middleware should be applied after auth middleware to be able log user info
 	api.Use(middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 	api.GET("/layers", s.API.LayersHandler)
+	api.GET("/pulls", s.API.PullRequestsHandler)
 	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
 	api.GET("/repositories", s.API.RepositoriesHandler)
 	api.GET("/logs/:namespace/:layer/:run/:attempt", s.API.GetLogsHandler)

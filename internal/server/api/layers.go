@@ -69,43 +69,44 @@ func (a *API) LayersHandler(c echo.Context) error {
 	}
 	results := []layer{}
 	for _, l := range layers {
-		if err != nil {
-			log.Errorf("could not get latest run for layer %s: %s", l.Name, err)
-		}
-		run, ok := runs[fmt.Sprintf("%s/%s", l.Namespace, l.Status.LastRun.Name)]
-		runAPI := Run{}
-		running := false
-		if ok {
-			runAPI = Run{
-				Name:   run.Name,
-				Commit: "",
-				Date:   run.CreationTimestamp.Format(time.RFC3339),
-				Action: run.Spec.Action,
-			}
-			running = runStillRunning(run)
-		}
-		results = append(results, layer{
-			UID:              string(l.UID),
-			Name:             l.Name,
-			Namespace:        l.Namespace,
-			Repository:       fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
-			Branch:           l.Spec.Branch,
-			Path:             l.Spec.Path,
-			State:            a.getLayerState(l),
-			RunCount:         len(l.Status.LatestRuns),
-			LastRun:          runAPI,
-			LastRunAt:        l.Status.LastRun.Date.Format(time.RFC3339),
-			LastResult:       l.Status.LastResult,
-			IsRunning:        running,
-			IsPR:             a.isLayerPR(l),
-			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
-			ManualSyncStatus: utils.GetManualSyncStatus(l),
-		})
+		results = append(results, a.buildLayer(l, runs))
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
 		Results: results,
 	},
 	)
+}
+
+func (a *API) buildLayer(l configv1alpha1.TerraformLayer, runs map[string]configv1alpha1.TerraformRun) layer {
+	run, ok := runs[fmt.Sprintf("%s/%s", l.Namespace, l.Status.LastRun.Name)]
+	runAPI := Run{}
+	running := false
+	if ok {
+		runAPI = Run{
+			Name:   run.Name,
+			Commit: "",
+			Date:   run.CreationTimestamp.Format(time.RFC3339),
+			Action: run.Spec.Action,
+		}
+		running = runStillRunning(run)
+	}
+	return layer{
+		UID:              string(l.UID),
+		Name:             l.Name,
+		Namespace:        l.Namespace,
+		Repository:       fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
+		Branch:           l.Spec.Branch,
+		Path:             l.Spec.Path,
+		State:            a.getLayerState(l),
+		RunCount:         len(l.Status.LatestRuns),
+		LastRun:          runAPI,
+		LastRunAt:        l.Status.LastRun.Date.Format(time.RFC3339),
+		LastResult:       l.Status.LastResult,
+		IsRunning:        running,
+		IsPR:             a.isLayerPR(l),
+		LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
+		ManualSyncStatus: utils.GetManualSyncStatus(l),
+	}
 }
 
 func runStillRunning(run configv1alpha1.TerraformRun) bool {
