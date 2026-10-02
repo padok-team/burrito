@@ -10,5 +10,18 @@
       "Read(manifests/**)",
       "Read(ui/node_modules/**)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "grep -qE '\"file_path\": *\"[^\"]*deploy/charts/[^\"]*/values\\.yaml\"' || exit 0; cd \"$CLAUDE_PROJECT_DIR\" && mise run helm-docs >&2"
+          }
+        ]
+      }
+    ]
   }
 }
