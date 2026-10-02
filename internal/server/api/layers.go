@@ -134,7 +134,7 @@ func (a *API) LayersHandler(c echo.Context) error {
 			}
 			running = runStillRunning(run)
 		}
-		r, ok := repositories[fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name)]
+		r := repositories[fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name)]
 		results = append(results, layer{
 			UID:              string(l.UID),
 			Name:             l.Name,
