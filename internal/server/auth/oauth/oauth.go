@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -110,22 +111,22 @@ func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to verify ID token")
 	}
 
-	// Extract claims
+	// Extract raw claims once; use for both typed struct and arbitrary claim validation
+	var rawClaims map[string]interface{}
+	if err := idToken.Claims(&rawClaims); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
+	}
+
+	// Unmarshal into typed struct for standard OIDC claims
 	var claims struct {
 		Sub     string `json:"sub"`
 		Email   string `json:"email"`
 		Name    string `json:"name"`
 		Picture string `json:"picture"`
 	}
-	if err := idToken.Claims(&claims); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
-	}
-
-	// Extract raw claims to check arbitrary/custom claims (e.g. groups, roles) against
-	// RequiredClaims, which the typed struct above does not capture.
-	var rawClaims map[string]interface{}
-	if err := idToken.Claims(&rawClaims); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
+	claimsBytes, _ := json.Marshal(rawClaims)
+	if err := json.Unmarshal(claimsBytes, &claims); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to unmarshal claims")
 	}
 
 	if !claimsSatisfyRequirements(rawClaims, o.RequiredClaims) {
@@ -183,16 +184,19 @@ func claimValues(value interface{}) []string {
 		}
 		return values
 	default:
-		return nil
+		log.Debugf("unexpected claim type %T; ignoring", value)
+		return []string{}
 	}
 }
 
 func containsAny(values []string, allowed []string) bool {
+	allowedSet := make(map[string]struct{}, len(allowed))
+	for _, a := range allowed {
+		allowedSet[a] = struct{}{}
+	}
 	for _, v := range values {
-		for _, a := range allowed {
-			if v == a {
-				return true
-			}
+		if _, ok := allowedSet[v]; ok {
+			return true
 		}
 	}
 	return false
