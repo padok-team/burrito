@@ -1,0 +1,19 @@
+ui/src/pages/Login.tsx
+  s_3793cc05a735e3::t_7f4ab7b12d4ef0 110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b6bd4fb64d72ccf65368c4e96847e3a815e933d6",
+  "prompts": {},
+  "sessions": {
+    "s_3793cc05a735e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42a895df-cd81-4580-bd52-90f0e28c6d79",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Guillaume Leccese <guillaume.leccese@ext.bpifrance.fr>"
+    }
+  }
+}
