@@ -72,6 +72,11 @@ const Pulls: React.FC = () => {
 
   const isLight = theme === 'light';
   const textMain = isLight ? 'text-nuances-black' : 'text-nuances-50';
+  // Tighter than the global shadow-light/dark (32px blur) so it fits in the
+  // padding of the scrolling columns instead of being clipped.
+  const cardStyle = isLight
+    ? 'bg-nuances-white shadow-[0px_0px_12px_0px_rgba(121,140,140,0.24)]'
+    : 'bg-nuances-400 shadow-[0px_0px_12px_0px_rgba(143,143,143,0.32)]';
   const textSub = isLight ? 'text-primary-600' : 'text-nuances-200';
 
   const PullRequestLink: React.FC<{ pr: PullRequest; className?: string }> = ({
@@ -145,7 +150,7 @@ const Pulls: React.FC = () => {
         />
       </div>
       <div className="flex flex-row flex-1 gap-6 min-h-0">
-        <div className="flex flex-col w-96 shrink-0 gap-3 overflow-auto p-3 -m-3">
+        <div className="flex flex-col w-[26rem] shrink-0 gap-3 overflow-auto p-4 -m-4">
           {pullsQuery.isLoading && <span className={textSub}>Loading...</span>}
           {pullsQuery.isError && (
             <span className={textSub}>Could not load pull requests.</span>
@@ -179,7 +184,7 @@ const Pulls: React.FC = () => {
                     ? 'outline-blue-400'
                     : 'outline-transparent'
                 }
-                ${isLight ? 'bg-nuances-white shadow-light' : 'bg-nuances-400 shadow-dark'}
+                ${cardStyle}
               `}
             >
               <div className="flex justify-between items-center gap-2">
@@ -200,7 +205,7 @@ const Pulls: React.FC = () => {
             </div>
           ))}
         </div>
-        <div className="flex flex-col flex-1 min-w-0 gap-4 overflow-auto p-3 -m-3">
+        <div className="flex flex-col flex-1 min-w-0 gap-4 overflow-auto p-4 -m-4">
           {!currentPR ? (
             <span className={textSub}>
               Select a pull request to see its ephemeral layers.
@@ -246,7 +251,7 @@ const Pulls: React.FC = () => {
                         ? 'outline-blue-400'
                         : 'outline-transparent'
                     }
-                    ${isLight ? 'bg-nuances-white shadow-light' : 'bg-nuances-400 shadow-dark'}
+                    ${cardStyle}
                   `}
                 >
                   <div className="flex justify-between items-center gap-2">
