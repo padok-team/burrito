@@ -20,6 +20,9 @@ import (
 )
 
 type Runner struct {
+	previousCLIConfig string
+	hadCLIConfig      bool
+
 	config     *config.Config
 	exec       tools.BaseExec
 	Datastore  datastore.Client
@@ -112,9 +115,22 @@ func (r *Runner) Init() error {
 // Enable Hermitcrab network mirror configuration.
 func (r *Runner) EnableHermitcrab() error {
 	log.Infof("Hermitcrab configuration detected, creating network mirror configuration...")
+	r.previousCLIConfig, r.hadCLIConfig = os.LookupEnv("TF_CLI_CONFIG_FILE")
 	err := runnerutils.CreateNetworkMirrorConfig(r.config.Runner.RepositoryPath, r.config.Hermitcrab.URL)
 	if err != nil {
 		log.Errorf("error creating network mirror configuration: %s", err)
+	}
+	return err
+}
+
+// Disable Hermitcrab network mirror configuration.
+func (r *Runner) DisableHermitcrab() error {
+	log.Infof("removing Hermitcrab network mirror configuration...")
+	err := runnerutils.RemoveNetworkMirrorConfig(r.config.Runner.RepositoryPath, r.config.Hermitcrab.URL)
+	if err != nil {
+		log.Errorf("error removing network mirror configuration: %s", err)
+	} else if r.hadCLIConfig {
+		err = os.Setenv("TF_CLI_CONFIG_FILE", r.previousCLIConfig)
 	}
 	return err
 }
