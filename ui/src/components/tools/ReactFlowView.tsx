@@ -72,6 +72,7 @@ const ReactFlowView: React.FC<ReactFlowViewProps> = ({
       fitViewOptions={fitViewOptions}
       onNodeClick={(_, n) => onNodeClick && onNodeClick(n.id)}
       className={flowClass}
+      proOptions={{ hideAttribution: true }}
     >
       <Background
         gap={32}
