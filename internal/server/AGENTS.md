@@ -12,8 +12,9 @@ Serves the `ui/` dashboard and its JSON API. Echo v4 (`server.go`), one binary
   the CRD↔UI contract: **flag breaking changes** and update `ui/` in step.
 - Reads live k8s state via a controller-runtime `client` and run artifacts via the
   `datastore/client` — the server owns no storage itself.
-- Auth is OIDC (`auth/oauth`) or Basic (`auth/basic`), selected by config; with neither the
-  server is public (it warns). Auth backends implement `auth.AuthHandlers`; sessions are
+- Auth is OIDC (`auth/oauth`) and/or Basic (`auth/basic`), independently enabled by config
+  (both can run at once — e.g. basic auth as an admin fallback alongside OIDC); with neither
+  the server is public (it warns). Auth backends implement `auth.AuthHandlers`; sessions are
   cookie-based (`burrito_session`). Keep new `/api` routes behind `authMiddleware`.
 - `POST /api/webhook` is intentionally unauthenticated (handled by `internal/webhook`);
   don't move it behind auth.

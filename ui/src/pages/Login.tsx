@@ -1,12 +1,12 @@
 import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 import { ThemeContext } from '@/contexts/ThemeContext';
 import {
   basicAuth,
   getUserInfo,
-  getAuthType,
+  getAuthMethods,
   UserInfo
 } from '@/clients/auth/client';
 
@@ -22,18 +22,19 @@ import SSOButton from '@/components/buttons/SSOButton';
 const Login: React.FC = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
-  // Fetch supported auth method from server
+  const [searchParams] = useSearchParams();
+  const accessDenied = searchParams.get('error') === 'access_denied';
+  // Fetch supported auth methods from server (both can be enabled at once)
   const {
-    data: authType,
-    isLoading: isAuthTypeLoading,
-    isError: isAuthTypeError
+    data: authMethods,
+    isLoading: isAuthMethodsLoading,
+    isError: isAuthMethodsError
   } = useQuery({
-    queryKey: ['authType'],
-    queryFn: getAuthType,
+    queryKey: ['authMethods'],
+    queryFn: getAuthMethods,
     retry: false,
     refetchOnWindowFocus: false
   });
-  const isBasicAuth = authType === 'basic';
 
   // Form state
   const [username, setUsername] = useState('');
@@ -58,9 +59,9 @@ const Login: React.FC = () => {
     }
   });
 
-  // show loading or error state while fetching auth type
-  if (isAuthTypeLoading) return <div>Loading...</div>;
-  if (isAuthTypeError) return <div>Error loading auth method</div>;
+  // show loading or error state while fetching auth methods
+  if (isAuthMethodsLoading) return <div>Loading...</div>;
+  if (isAuthMethodsError) return <div>Error loading auth methods</div>;
 
   // Redirect to /layers if already authenticated
   if (isSuccess) {
@@ -104,7 +105,12 @@ const Login: React.FC = () => {
             </span>
           </div>
           <div className="flex flex-col items-center justify-center gap-8 w-full">
-            {isBasicAuth ? (
+            {accessDenied && (
+              <div className="text-sm text-status-error-default">
+                You don&apos;t have permission to access this Burrito instance.
+              </div>
+            )}
+            {authMethods?.basicAuth && (
               <form
                 onSubmit={handleLogin}
                 className="flex flex-col items-center justify-center gap-8 w-full"
@@ -142,7 +148,23 @@ const Login: React.FC = () => {
                   {loginMutation.isPending ? 'Logging in...' : 'Login'}
                 </Button>
               </form>
-            ) : (
+            )}
+            {authMethods?.basicAuth && authMethods?.oidc && (
+              <div className="flex items-center gap-3 w-full">
+                <div
+                  className={`h-px flex-1 ${theme === 'light' ? 'border-t border-nuances-200' : 'border-t border-nuances-300'}`}
+                />
+                <span
+                  className={`text-xs uppercase ${theme === 'light' ? 'text-nuances-300' : 'text-nuances-200'}`}
+                >
+                  or
+                </span>
+                <div
+                  className={`h-px flex-1 ${theme === 'light' ? 'border-t border-nuances-200' : 'border-t border-nuances-300'}`}
+                />
+              </div>
+            )}
+            {authMethods?.oidc && (
               <div className="flex flex-col items-center justify-center gap-4 w-full">
                 <SSOButton
                   className="w-full"

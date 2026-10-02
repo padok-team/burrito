@@ -21,16 +21,22 @@ export const basicAuth = async (formData: {
 };
 
 /**
- * Fetches the supported authentication method from the server.
- * Expects JSON response: { type: 'basic' | 'oauth' }
+ * Fetches the authentication methods enabled on the server. Both can be
+ * enabled at once (e.g. OIDC with a basic-auth admin account kept as a
+ * fallback).
+ * Expects JSON response: { oidc: boolean, basicAuth: boolean }
  */
-export async function getAuthType(): Promise<'basic' | 'oauth'> {
+export interface AuthMethods {
+  oidc: boolean;
+  basicAuth: boolean;
+}
+
+export async function getAuthMethods(): Promise<AuthMethods> {
   const res = await fetch('/auth/type', { credentials: 'include' });
   if (!res.ok) {
-    throw new Error(`Failed to fetch auth type: ${res.status}`);
+    throw new Error(`Failed to fetch auth methods: ${res.status}`);
   }
-  const data = (await res.json()) as { type: string };
-  return data.type?.toLowerCase() === 'oauth' ? 'oauth' : 'basic';
+  return res.json();
 }
 
 /**

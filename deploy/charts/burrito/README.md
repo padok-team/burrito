@@ -55,6 +55,7 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.server.oidc.enabled | bool | `false` | Enable/Disable OIDC authentication for the Burrito server |
 | config.burrito.server.oidc.issuerUrl | string | `""` | OIDC issuer URL |
 | config.burrito.server.oidc.redirectUrl | string | `""` | OIDC Redirect URL, should be the Burrito server URL with /auth/callback appended (ex: https://burrito.example.com/auth/callback) |
+| config.burrito.server.oidc.requiredClaims | object | `{}` | Map of claim name to allowed values; a user is authorized only if the ID token satisfies every listed claim (e.g. {"groups": ["burrito-admins"]}). Empty means no restriction: any authenticated user is authorized (default). |
 | config.burrito.server.oidc.scopes | list | `["openid","profile","email"]` | OIDC scopes to request |
 | config.burrito.server.publicUrl | string | `""` | Externally-reachable URL of the Burrito dashboard, used to build "Details" links on commit statuses. Leave empty to default to server.ingress's URL when it is enabled, or to disable those links if it isn't (ex: https://burrito.example.com) |
 | config.burrito.server.session.maxAge | int | `86400` | Session max age in seconds, after which the session will expire |
