@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
 func getStateGraphArgs(c echo.Context) (string, string, error) {
@@ -23,6 +24,9 @@ func (a *API) GetStateGraphHandler(c echo.Context) error {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 	content, err := a.Datastore.GetStateGraph(namespace, layer)
+	if storageerrors.NotFound(err) {
+		return c.String(http.StatusNotFound, "no state graph for this layer")
+	}
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "could not get state graph, there's an issue with the storage backend")
 	}

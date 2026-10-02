@@ -256,6 +256,7 @@ func TestGetStateGraphHandler(t *testing.T) {
 	}{
 		{name: "ok", values: []string{"default", "layer"}, store: &stubDatastore{content: []byte(`{}`)}, expected: http.StatusOK},
 		{name: "missing params", values: []string{"default", ""}, store: &stubDatastore{}, expected: http.StatusBadRequest},
+		{name: "not found", values: []string{"default", "layer"}, store: &stubDatastore{err: &storageerrors.StorageError{Err: errors.New("nil"), Nil: true}}, expected: http.StatusNotFound},
 		{name: "storage error", values: []string{"default", "layer"}, store: &stubDatastore{err: errors.New("boom")}, expected: http.StatusInternalServerError},
 	}
 	for _, tt := range tests {

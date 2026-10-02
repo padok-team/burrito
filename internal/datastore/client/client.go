@@ -111,10 +111,10 @@ func (c *DefaultClient) PutPlan(namespace string, layer string, run string, atte
 		http.MethodPut,
 		bytes.NewBuffer(content),
 	)
-	req.Header.Set("Content-Type", "application/octet-stream")
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/octet-stream")
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
@@ -185,10 +185,10 @@ func (c *DefaultClient) PutLogs(namespace string, layer string, run string, atte
 		http.MethodPut,
 		bytes.NewBuffer(content),
 	)
-	req.Header.Set("Content-Type", "application/octet-stream")
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/octet-stream")
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
@@ -320,10 +320,10 @@ func (c *DefaultClient) PutStateGraph(namespace string, layer string, content []
 		http.MethodPut,
 		bytes.NewBuffer(content),
 	)
-	req.Header.Set("Content-Type", "application/octet-stream")
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/octet-stream")
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
