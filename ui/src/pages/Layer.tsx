@@ -406,6 +406,13 @@ const Layer: React.FC = () => {
         `}
       >
         <div className="p-6 pb-3">
+          <Button
+            theme={theme}
+            variant="tertiary"
+            onClick={() => navigate('/layers')}
+          >
+            ← Back to layers
+          </Button>
           <h1
             className={`
               text-[32px]
