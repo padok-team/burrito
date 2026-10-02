@@ -44,9 +44,13 @@ const Layer: React.FC = () => {
   });
 
   const syncSelectedLayer = async (layer: Layer) => {
-    const sync = await syncLayer(layer.namespace, layer.name);
-    if (sync.status === 200) {
-      setIsManualSyncPending(true);
+    try {
+      const sync = await syncLayer(layer.namespace, layer.name);
+      if (sync.status === 200) {
+        setIsManualSyncPending(true);
+      }
+    } catch (error) {
+      console.error('could not trigger layer sync', error);
     }
   };
   const layer = layerQuery.data;
@@ -181,13 +185,17 @@ const Layer: React.FC = () => {
     if (!selectedResourceData) {
       return [];
     }
-    if (
-      selectedPlanDetails?.action === 'create' &&
-      selectedPlanDetails.planHasOnlyCreates
-    ) {
-      return [];
+    const instances = selectedResourceData.instances ?? [];
+    if (!selectedPlanDetails) {
+      return instances;
     }
-    return selectedResourceData.instances ?? [];
+    // Instances that only come from the plan do not exist yet: keep the others.
+    const created = new Set(
+      selectedPlanDetails.futureInstances
+        .filter((instance) => instance.action === 'create')
+        .map((instance) => instance.addr)
+    );
+    return instances.filter((instance) => !created.has(instance.addr));
   }, [selectedPlanDetails, selectedResourceData]);
 
   const futureInstances = selectedPlanDetails?.futureInstances ?? [];

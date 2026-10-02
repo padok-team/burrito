@@ -88,7 +88,7 @@ function baseAddr(addr: string): string {
 }
 
 function extractIndex(addr: string): string | null {
-  const match = addr.match(/\[(.*)\]$/);
+  const match = addr.match(/\[[^[\]]*\]$/);
   return match ? match[0] : null;
 }
 
@@ -223,7 +223,8 @@ function cloneInstance(
       ? [...instance.dependencies]
       : undefined,
     attributes: instance.attributes ? { ...instance.attributes } : undefined,
-    created_at: instance.created_at
+    created_at: instance.created_at,
+    index: instance.index
   };
 }
 
@@ -266,7 +267,7 @@ export function augmentStateGraphWithPlan(
         ) {
           existing.instances = planInst.map(cloneInstance);
         }
-        if (existing.instances_count === 0) {
+        if (!existing.instances_count) {
           existing.instances_count = planInst?.length ?? changes.length;
         }
         continue;

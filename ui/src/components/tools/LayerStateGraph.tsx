@@ -57,16 +57,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
     setGraph(augmentedGraph);
     buildReactFlow(augmentedGraph).then((res) => {
       if (cancelled) return;
-      const withVariant = {
-        nodes: res.nodes.map((node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            variant
-          }
-        })),
-        edges: res.edges
-      };
+      const withVariant = res;
       if (!plan) {
         setRf(withVariant);
         return;
@@ -99,7 +90,19 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [augmentedGraph, plan, variant]);
+  }, [augmentedGraph, plan]);
+
+  // The theme only changes node colors: apply it without re-running the layout.
+  const themedRf = useMemo<ReactFlowGraph>(
+    () => ({
+      nodes: rf.nodes.map((node) => ({
+        ...node,
+        data: { ...node.data, variant }
+      })),
+      edges: rf.edges
+    }),
+    [rf, variant]
+  );
 
   const hasGraphData = (graph?.nodes?.length ?? 0) > 0;
   const infoTextClass =
@@ -160,7 +163,7 @@ const LayerStateGraph: React.FC<LayerStateGraphProps> = ({
   return (
     <div className="h-full w-full">
       <ReactFlowView
-        rf={rf}
+        rf={themedRf}
         variant={variant}
         onNodeClick={(id) => {
           if (!onNodeClick || !graph?.nodes) return;

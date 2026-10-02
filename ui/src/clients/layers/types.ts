@@ -44,7 +44,7 @@ export type StateGraphNode = {
   name: string;
   module?: string;
   provider: string;
-  instances_count: number;
+  instances_count?: number;
   instances?: Array<StateGraphResourceInstance>;
 };
 
@@ -53,6 +53,7 @@ export type StateGraphResourceInstance = {
   dependencies?: string[];
   attributes?: Record<string, unknown>;
   created_at?: string;
+  index?: string;
 };
 
 export type StateGraphEdge = {
