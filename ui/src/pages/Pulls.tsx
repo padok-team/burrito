@@ -54,6 +54,7 @@ const Pulls: React.FC = () => {
       .filter(
         (pr) =>
           pr.id.toLowerCase().includes(term) ||
+          pr.title.toLowerCase().includes(term) ||
           pr.name.toLowerCase().includes(term) ||
           pr.branch.toLowerCase().includes(term)
       )
@@ -130,7 +131,7 @@ const Pulls: React.FC = () => {
       <Input
         variant={theme}
         className="w-full"
-        placeholder="Search by pull request ID or branch"
+        placeholder="Search by title, ID or branch"
         leftIcon={<SearchIcon />}
         value={search}
         onChange={(e) => updateParam('search', e.target.value)}
@@ -187,9 +188,21 @@ const Pulls: React.FC = () => {
               `}
             >
               <div className="flex justify-between items-center gap-2">
-                <PullRequestLink pr={pr} className="text-lg font-bold" />
+                {pr.title ? (
+                  <span
+                    className={`text-lg font-black truncate ${textMain}`}
+                    title={pr.title}
+                  >
+                    {pr.title}
+                  </span>
+                ) : (
+                  <PullRequestLink pr={pr} className="text-lg font-black" />
+                )}
                 <PullRequestStateTag state={pr.state} />
               </div>
+              {pr.title && (
+                <PullRequestLink pr={pr} className="text-sm font-semibold" />
+              )}
               <div className="grid grid-cols-[min-content_1fr] items-start gap-x-7 gap-y-2">
                 {[
                   ['Namespace', pr.namespace],
@@ -228,11 +241,18 @@ const Pulls: React.FC = () => {
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-4">
                   <h2 className={`text-2xl font-bold ${textMain}`}>
-                    Pull request{' '}
-                    <PullRequestLink pr={currentPR} className="underline" />
+                    {currentPR.title || (
+                      <PullRequestLink pr={currentPR} className="underline" />
+                    )}
                   </h2>
                   <PullRequestStateTag state={currentPR.state} />
                 </div>
+                {currentPR.title && (
+                  <PullRequestLink
+                    pr={currentPR}
+                    className="text-sm font-semibold"
+                  />
+                )}
                 <span className={`text-sm ${textSub}`}>
                   {currentPR.namespace}/{currentPR.name} ·{' '}
                   {currentPR.repository} · {currentPR.branch} → {currentPR.base}

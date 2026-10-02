@@ -139,6 +139,10 @@ spec:
                 type: string
               state:
                 type: string
+              title:
+                description: Title is the pull request title as last read from the
+                  Git provider.
+                type: string
             type: object
         type: object
     served: true

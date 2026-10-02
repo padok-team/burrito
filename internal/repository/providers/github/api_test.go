@@ -257,3 +257,33 @@ func TestToGithubState(t *testing.T) {
 	assert.Equal(t, "success", toGithubState(types.StateSuccess))
 	assert.Equal(t, "failure", toGithubState(types.StateFailure))
 }
+
+func TestAPIProvider_GetPullRequestTitle_ReturnsTitle(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/pulls/42", func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		_ = json.NewEncoder(w).Encode(&github.PullRequest{Number: github.Ptr(42), Title: github.Ptr("Add a bucket")})
+	})
+
+	api := newTestAPIProvider(t, mux)
+	title, err := api.GetPullRequestTitle(testRepository(), testPullRequest("42"))
+	require.NoError(t, err)
+	assert.Equal(t, "Add a bucket", title)
+}
+
+func TestAPIProvider_GetPullRequestTitle_ReturnsErrorWhenGetFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/owner/repo/pulls/42", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	_, err := api.GetPullRequestTitle(testRepository(), testPullRequest("42"))
+	require.Error(t, err)
+}
+
+func TestAPIProvider_GetPullRequestTitle_ReturnsErrorOnInvalidID(t *testing.T) {
+	api := newTestAPIProvider(t, http.NewServeMux())
+	_, err := api.GetPullRequestTitle(testRepository(), testPullRequest("not-a-number"))
+	require.Error(t, err)
+}

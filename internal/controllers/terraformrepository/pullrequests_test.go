@@ -35,6 +35,10 @@ func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository
 	return nil
 }
 
+func (p *fakeAPIProvider) GetPullRequestTitle(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
+	return "", nil
+}
+
 func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	if p.err != nil {
 		return nil, p.err

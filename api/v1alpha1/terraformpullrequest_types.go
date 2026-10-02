@@ -37,6 +37,8 @@ type TerraformPullRequestStatus struct {
 	State                string             `json:"state,omitempty"`
 	LastDiscoveredCommit string             `json:"lastDiscoveredCommit,omitempty"`
 	LastCommentedCommit  string             `json:"lastCommentedCommit,omitempty"`
+	// Title is the pull request title as last read from the Git provider.
+	Title string `json:"title,omitempty"`
 }
 
 // +kubebuilder:object:root=true

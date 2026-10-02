@@ -25,6 +25,7 @@ type pullRequest struct {
 	State                string  `json:"state"`
 	LastDiscoveredCommit string  `json:"lastDiscoveredCommit"`
 	LastCommentedCommit  string  `json:"lastCommentedCommit"`
+	Title                string  `json:"title"`
 	Layers               []layer `json:"layers"`
 }
 
@@ -83,6 +84,7 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 			State:                pr.Status.State,
 			LastDiscoveredCommit: pr.Status.LastDiscoveredCommit,
 			LastCommentedCommit:  pr.Status.LastCommentedCommit,
+			Title:                pr.Status.Title,
 			Layers:               prLayers,
 		})
 	}

@@ -9,6 +9,7 @@ export type PullRequest = {
   name: string;
   namespace: string;
   id: string;
+  title: string;
   repository: string;
   url: string;
   branch: string;

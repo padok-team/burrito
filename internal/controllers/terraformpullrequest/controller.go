@@ -87,6 +87,7 @@ func (r *Reconciler) reconcilePullRequest(ctx context.Context, pr *configv1alpha
 	}
 
 	state := r.GetState(ctx, pr)
+	r.refreshTitle(ctx, repository, pr, &state)
 	result := state.Handler(ctx, r, repository, pr)
 	pr.Status = state.Status
 	err = r.Client.Status().Update(ctx, pr)
@@ -97,6 +98,27 @@ func (r *Reconciler) reconcilePullRequest(ctx context.Context, pr *configv1alpha
 	}
 	logger.Infof("finished reconciliation cycle for pull request %s/%s", pr.Namespace, pr.Name)
 	return result, nil
+}
+
+// refreshTitle reads the pull request title from the Git provider. To limit API calls it only
+// does so when the title is not known yet or when a new commit is about to be discovered.
+// It is best effort: on failure the previously known title is kept.
+func (r *Reconciler) refreshTitle(ctx context.Context, repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest, state *State) {
+	if pr.Status.Title != "" && state.Status.State != DiscoveryNeeded {
+		return
+	}
+	logger := logrus.WithContext(ctx)
+	provider, err := r.getAPIProvider(repository)
+	if err != nil {
+		logger.Warnf("could not get API provider to read the title of pull request %s: %s", pr.Name, err)
+		return
+	}
+	title, err := provider.GetPullRequestTitle(repository, pr)
+	if err != nil {
+		logger.Warnf("could not read the title of pull request %s: %s", pr.Name, err)
+		return
+	}
+	state.Status.Title = title
 }
 
 // SetupWithManager sets up the controller with the Manager.
