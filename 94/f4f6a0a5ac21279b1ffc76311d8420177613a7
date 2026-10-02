@@ -1,0 +1,19 @@
+deploy/charts/burrito/README.md
+  s_3793cc05a735e3::t_0fc7cfead42783 3,7-12,17-18,22-24,28,30-32,34-35,39,41,43-47,50-58,60-61,64,66-68,70,72,79-83,85-97,101-102,104-105,109-119,121-124,126-131,138-139,141-143,148-150,152,159-160,162-165,172,178-187,190-193,195-196,200-201,208,212,214-220
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "94f4f6a0a5ac21279b1ffc76311d8420177613a7",
+  "prompts": {},
+  "sessions": {
+    "s_3793cc05a735e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42a895df-cd81-4580-bd52-90f0e28c6d79",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Guillaume Leccese <guillaume.leccese@ext.bpifrance.fr>"
+    }
+  }
+}
