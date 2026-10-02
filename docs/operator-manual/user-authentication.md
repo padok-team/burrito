@@ -11,6 +11,12 @@ SAML authentication is not supported at this time but will be added in the futur
 
 When OIDC is disabled (`server.oidc.enabled: false`), Burrito falls back to a built-in basic authentication scheme. This mode is **not recommended for production**.
 
+Basic Authentication can also stay enabled alongside OIDC (`server.basicAuth.enabled: true` and
+`server.oidc.enabled: true` at the same time) to keep the admin account available as a
+fallback — for example if OIDC's `requiredClaims` is misconfigured and locks every SSO user
+out. When both are enabled, the login page shows the SSO button and the username/password
+form together.
+
 ### Configuration
 
 ```yaml

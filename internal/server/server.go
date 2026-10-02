@@ -95,21 +95,26 @@ func (s *Server) Exec() {
 	s.API.Client = s.client
 	s.Webhook = webhook.New(s.config, *client)
 
-	// Initialize authentication handlers based on configuration
-	var authHandlers a.AuthHandlers
+	// Initialize authentication handlers based on configuration. OIDC and basic auth can be
+	// enabled together, e.g. to keep a basic-auth admin account as a fallback in case OIDC is
+	// misconfigured (such as requiredClaims locking everyone out).
+	var oidcHandlers *oauth.OAuthAuthHandlers
+	var basicHandlers *basic.BasicAuthHandlers
 	if s.config.Server.OIDC.Enabled {
 		log.Infof("OIDC authentication enabled, issuer: %s", s.config.Server.OIDC.IssuerURL)
-		authHandlers, err = oauth.New(s.config, bgctx, *client, cookieName)
+		oidcHandlers, err = oauth.New(s.config, bgctx, *client, cookieName)
 		if err != nil {
 			log.Fatalf("error initializing OIDC: %s", err)
 		}
-	} else if s.config.Server.BasicAuth.Enabled {
+	}
+	if s.config.Server.BasicAuth.Enabled {
 		log.Info("Basic authentication enabled. Credentials will be stored in burrito-admin-credentials secret in the main burrito namespace.")
-		authHandlers, err = basic.New(s.config, bgctx, *client, cookieName)
+		basicHandlers, err = basic.New(s.config, bgctx, *client, cookieName)
 		if err != nil {
 			log.Fatalf("error initializing basic auth: %s", err)
 		}
-	} else {
+	}
+	if oidcHandlers == nil && basicHandlers == nil {
 		log.Warn("No authentication method enabled! The server is publicly accessible. This is NOT recommended for production environments.")
 	}
 
@@ -138,17 +143,24 @@ func (s *Server) Exec() {
 	// Auth routes (no authentication required)
 	if s.getAuthEnabled() {
 		auth := e.Group("/auth", middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
-		auth.Add(authHandlers.GetLoginHTTPMethod(), "/login", authHandlers.HandleLogin)
-		auth.GET("/callback", authHandlers.HandleCallback)
+		if oidcHandlers != nil {
+			auth.Add(oidcHandlers.GetLoginHTTPMethod(), "/login", oidcHandlers.HandleLogin)
+			auth.GET("/callback", oidcHandlers.HandleCallback)
+		}
+		if basicHandlers != nil {
+			auth.Add(basicHandlers.GetLoginHTTPMethod(), "/login", basicHandlers.HandleLogin)
+			if oidcHandlers == nil {
+				auth.GET("/callback", basicHandlers.HandleCallback)
+			}
+		}
 		auth.POST("/logout", func(c echo.Context) error {
 			return a.HandleLogout(c, cookieName)
 		})
 		auth.GET("/type", func(c echo.Context) error {
-			authType := "basic"
-			if s.config.Server.OIDC.Enabled {
-				authType = "oauth"
-			}
-			return c.JSON(http.StatusOK, map[string]string{"type": authType})
+			return c.JSON(http.StatusOK, map[string]bool{
+				"oidc":      oidcHandlers != nil,
+				"basicAuth": basicHandlers != nil,
+			})
 		})
 		auth.GET("/user", s.authMiddleware()(func(c echo.Context) error {
 			return a.HandleUserInfo(c)
