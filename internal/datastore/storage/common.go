@@ -51,6 +51,10 @@ func computePlanKey(namespace string, layer string, run string, attempt string, 
 	return key
 }
 
+func computeStateGraphKey(namespace string, layer string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, StateGraphFile)
+}
+
 func computeGitBundleKey(namespace string, repository string, branch string, revision string) string {
 	return fmt.Sprintf("%s/%s/%s/%s/%s%s", RepositoriesPrefix, namespace, repository, branch, revision, GitBundleFileExtension)
 }
@@ -230,7 +234,7 @@ func (s *Storage) PutGitBundle(namespace string, repository string, ref string, 
 }
 
 func (s *Storage) GetStateGraph(namespace string, layer string) ([]byte, error) {
-	data, err := s.Backend.Get(fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, StateGraphFile))
+	data, err := s.Backend.Get(computeStateGraphKey(namespace, layer))
 	if err != nil {
 		return nil, err
 	} else {
@@ -245,7 +249,7 @@ func (s *Storage) PutStateGraph(namespace string, layer string, graph []byte) er
 		return err
 	}
 
-	err = s.Backend.Set(fmt.Sprintf("%s/%s/%s/%s", LayersPrefix, namespace, layer, StateGraphFile), dataToStore, 0)
+	err = s.Backend.Set(computeStateGraphKey(namespace, layer), dataToStore, 0)
 	if err != nil {
 		return fmt.Errorf("failed to store state graph: %w", err)
 	}

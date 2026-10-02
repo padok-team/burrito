@@ -129,28 +129,7 @@ func (r *Runner) execPlan() (string, error) {
 		return "", err
 	}
 
-	state, err := r.exec.StatePull(r.workingDir)
-	if err != nil {
-		log.Errorf("could not pull state for state graph creation: %s", err)
-		return "", err
-	}
-	if len(state) == 0 {
-		log.Info("empty state, this likely means no resources are managed yet, skipping state graph creation")
-		return b64.StdEncoding.EncodeToString(sum[:]), nil
-	} else {
-		log.Infof("successfully pulled state for state graph creation")
-		stateGraph, err := stategraph.BuildGraphFromState(state)
-		if err != nil {
-			log.Errorf("could not build state graph: %s", err)
-			return "", err
-		}
-		err = r.Datastore.PutStateGraph(r.Layer.Namespace, r.Layer.Name, stateGraph)
-		if err != nil {
-			log.Errorf("could not put state graph in datastore: %s", err)
-			return "", err
-		}
-		log.Info("successfully created and stored state graph in datastore")
-	}
+	r.publishStateGraph()
 
 	log.Infof("%s plan ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
@@ -192,29 +171,32 @@ func (r *Runner) execApply() (string, error) {
 		log.Errorf("could not put short plan in datastore: %s", err)
 	}
 
-	state, err := r.exec.StatePull(r.workingDir)
-	if err != nil {
-		log.Errorf("could not pull state for state graph creation: %s", err)
-		return "", err
-	}
-	if len(state) == 0 {
-		log.Info("empty state, this likely means no resources are managed yet, skipping state graph creation")
-		return b64.StdEncoding.EncodeToString(sum[:]), nil
-	} else {
-		log.Infof("successfully pulled state for state graph creation")
-		stateGraph, err := stategraph.BuildGraphFromState(state)
-		if err != nil {
-			log.Errorf("could not build state graph: %s", err)
-			return "", err
-		}
-		err = r.Datastore.PutStateGraph(r.Layer.Namespace, r.Layer.Name, stateGraph)
-		if err != nil {
-			log.Errorf("could not put state graph in datastore: %s", err)
-			return "", err
-		}
-		log.Info("successfully created and stored state graph in datastore")
-	}
+	r.publishStateGraph()
 
 	log.Infof("%s apply ran successfully", r.exec.TenvName())
 	return b64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
+// publishStateGraph pulls the state and stores its graph in the datastore.
+// The graph is a UI nicety: failures are logged and never fail the run.
+func (r *Runner) publishStateGraph() {
+	state, err := r.exec.StatePull(r.workingDir)
+	if err != nil {
+		log.Warnf("could not pull state for state graph creation: %s", err)
+		return
+	}
+	if len(state) == 0 {
+		log.Info("empty state, this likely means no resources are managed yet, skipping state graph creation")
+		return
+	}
+	stateGraph, err := stategraph.BuildGraphFromState(state)
+	if err != nil {
+		log.Warnf("could not build state graph: %s", err)
+		return
+	}
+	if err := r.Datastore.PutStateGraph(r.Layer.Namespace, r.Layer.Name, stateGraph); err != nil {
+		log.Warnf("could not put state graph in datastore: %s", err)
+		return
+	}
+	log.Info("successfully created and stored state graph in datastore")
 }
