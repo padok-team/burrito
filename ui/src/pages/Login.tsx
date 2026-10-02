@@ -107,9 +107,7 @@ const Login: React.FC = () => {
           </div>
           <div className="flex flex-col items-center justify-center gap-8 w-full">
             {accessDenied && (
-              <div
-                className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}
-              >
+              <div className="text-sm text-status-error-default">
                 You don&apos;t have permission to access this Burrito instance.
               </div>
             )}
