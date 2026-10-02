@@ -1,0 +1,22 @@
+internal/server/auth/oauth/oauth.go
+  s_3793cc05a735e3::t_19acc943553206 193-196,198-199
+  s_3793cc05a735e3::t_2c875d6be0e729 7
+  s_3793cc05a735e3::t_c6bfef6cac6a10 114-120,127-129
+  s_3793cc05a735e3::t_93fb3a42b73803 187-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e3c8dbb31dd7ed2a8635807e7c6441219014a225",
+  "prompts": {},
+  "sessions": {
+    "s_3793cc05a735e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42a895df-cd81-4580-bd52-90f0e28c6d79",
+        "model": "claude-haiku-4-5-20251001"
+      },
+      "human_author": "Guillaume Leccese <guillaume.leccese@ext.bpifrance.fr>"
+    }
+  }
+}
