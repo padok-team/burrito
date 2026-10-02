@@ -112,7 +112,7 @@ const Layer: React.FC = () => {
     ),
     queryFn: () => fetchPlan(namespace, name, latestRunId, latestAttempt!),
     enabled: !!latestRunId && latestAttempt !== null,
-    select: (data) => parseTerraformPlan(data)
+    select: parseTerraformPlan
   });
 
   const planHighlights = planQuery.data ?? null;
