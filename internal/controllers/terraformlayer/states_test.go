@@ -313,3 +313,28 @@ func assertEventContains(t *testing.T, recorder *record.FakeRecorder, want strin
 		t.Fatalf("expected event containing %q, got none", want)
 	}
 }
+
+func TestBackfillRunInfo(t *testing.T) {
+	history := []configv1alpha1.TerraformLayerRun{
+		{Name: "pending"},
+		{Name: "done", Commit: "old", Author: "a", Message: "m"},
+		{Name: "unknown"},
+	}
+	runs := []*configv1alpha1.TerraformRun{
+		{ObjectMeta: metav1.ObjectMeta{Name: "pending"}, Status: configv1alpha1.TerraformRunStatus{Commit: "abc", Author: "me", Message: "msg"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "done"}, Status: configv1alpha1.TerraformRunStatus{Commit: "new"}},
+	}
+	got := backfillRunInfo(history, runs)
+	if got[0].Commit != "abc" || got[0].Author != "me" || got[0].Message != "msg" {
+		t.Errorf("pending entry not backfilled: %+v", got[0])
+	}
+	if got[1].Commit != "old" {
+		t.Errorf("entry with a commit must be kept, got %+v", got[1])
+	}
+	if got[2].Commit != "" {
+		t.Errorf("entry without a matching run must be kept, got %+v", got[2])
+	}
+	if history[0].Commit != "" {
+		t.Errorf("input history must not be mutated")
+	}
+}
