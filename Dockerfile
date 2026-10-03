@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.27.0@sha256:bde3983e9c939224420ddaf6b784cc30e09b035a4dea01f581230c50809f372e
+# syntax=docker/dockerfile:1.27.1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
 # Build Burrito UI
 
@@ -17,7 +17,7 @@ ENV VITE_API_BASE_URL=/api
 RUN pnpm run build
 
 # Build the manager binary
-FROM docker.io/library/golang:1.27.1-alpine@sha256:cf6fca6641884b8433441b2b0652976f975e1d0fdd26d177eaaf8596087f3125 AS builder
+FROM docker.io/library/golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/burrito
@@ -67,7 +67,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
     -o bin/burrito main.go
 
-FROM docker.io/library/alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+FROM docker.io/library/alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
 
 WORKDIR /home/burrito
 
