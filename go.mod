@@ -170,7 +170,7 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.4
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.0
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bombsimon/logrusr/v4 v4.2.0
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
