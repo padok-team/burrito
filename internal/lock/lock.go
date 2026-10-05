@@ -47,17 +47,28 @@ func getLeaseLock(layer *configv1alpha1.TerraformLayer, run *configv1alpha1.Terr
 }
 
 func IsLayerLocked(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer) (bool, error) {
-	err := c.Get(ctx, types.NamespacedName{
-		Name:      getLeaseName(layer),
-		Namespace: layer.Namespace,
-	}, &coordination.Lease{})
-	if errors.IsNotFound(err) {
-		return false, nil
-	}
+	lease, err := GetLock(ctx, c, layer)
 	if err != nil {
 		return false, err
 	}
-	return true, nil
+	return lease != nil, nil
+}
+
+// GetLock returns the Lease holding the lock on the given layer, or nil when
+// the layer is not locked.
+func GetLock(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer) (*coordination.Lease, error) {
+	lease := &coordination.Lease{}
+	err := c.Get(ctx, types.NamespacedName{
+		Name:      getLeaseName(layer),
+		Namespace: layer.Namespace,
+	}, lease)
+	if errors.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return lease, nil
 }
 
 func CreateLock(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) error {
@@ -67,5 +78,11 @@ func CreateLock(ctx context.Context, c client.Client, layer *configv1alpha1.Terr
 
 func DeleteLock(ctx context.Context, c client.Client, layer *configv1alpha1.TerraformLayer, run *configv1alpha1.TerraformRun) error {
 	leaseLock := getLeaseLock(layer, run)
-	return c.Delete(ctx, leaseLock)
+	err := c.Delete(ctx, leaseLock)
+	if errors.IsNotFound(err) {
+		// The lock may already have been released (e.g. as an orphaned lock
+		// cleaned up by the layer controller): nothing left to do.
+		return nil
+	}
+	return err
 }
