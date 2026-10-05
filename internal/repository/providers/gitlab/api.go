@@ -140,6 +140,18 @@ func (api *APIProvider) findManagedNoteID(projectName string, id int64) (int64, 
 	}
 }
 
+func (api *APIProvider) GetPullRequestTitle(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
+	id, err := strconv.ParseInt(pr.Spec.ID, 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("could not parse Gitlab merge request ID: %w", err)
+	}
+	mergeRequest, _, err := api.client.MergeRequests.GetMergeRequest(getGitlabNamespacedName(repository.Spec.Repository.Url), id, nil)
+	if err != nil {
+		return "", err
+	}
+	return mergeRequest.Title, nil
+}
+
 func (api *APIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	state := "opened"
 	listOpts := &gitlab.ListProjectMergeRequestsOptions{

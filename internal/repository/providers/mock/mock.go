@@ -110,6 +110,10 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 	return nil
 }
 
+func (api *APIProvider) GetPullRequestTitle(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
+	return fmt.Sprintf("Mock pull request %s", pr.Spec.ID), nil
+}
+
 func (api *APIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	log.Infof("Mock provider listing open pull requests for %s/%s", repository.Namespace, repository.Name)
 	if !strings.Contains(repository.Spec.Repository.Url, "burrito-sync") {
