@@ -2,8 +2,6 @@ package terraformpullrequest
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"slices"
 
@@ -16,6 +14,7 @@ import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
+	"github.com/padok-team/burrito/internal/utils"
 	logrus "github.com/sirupsen/logrus"
 )
 
@@ -171,7 +170,7 @@ func (r *Reconciler) deleteTempLayersByLabel(ctx context.Context, pr *configv1al
 }
 
 func tempLayerGenerateName(layerName string, pr *configv1alpha1.TerraformPullRequest) string {
-	hash := shortHash(fmt.Sprintf("%s/%s/%s", pr.Namespace, pr.Name, pr.Spec.ID))
+	hash := utils.ShortHash(fmt.Sprintf("%s/%s/%s", pr.Namespace, pr.Name, pr.Spec.ID))
 	prefix := fmt.Sprintf("%s-pr-%s-", layerName, hash)
 	if len(prefix) <= maxGenerateNamePrefixLength {
 		return prefix
@@ -182,10 +181,5 @@ func tempLayerGenerateName(layerName string, pr *configv1alpha1.TerraformPullReq
 func managedByLabelValue(pr *configv1alpha1.TerraformPullRequest) string {
 	// Kubernetes label values max out at 63 chars; a stable hash keeps long PR
 	// names valid while still linking generated layers back to the same PR.
-	return fmt.Sprintf("pr-%s", shortHash(fmt.Sprintf("%s/%s", pr.Namespace, pr.Name)))
-}
-
-func shortHash(value string) string {
-	sum := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(sum[:])[:16]
+	return fmt.Sprintf("pr-%s", utils.ShortHash(fmt.Sprintf("%s/%s", pr.Namespace, pr.Name)))
 }
