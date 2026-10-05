@@ -68,18 +68,25 @@ jobs:
           persist-credentials: true # The bump branch push below authenticates with them
 
       - name: Bump VERSION file
-        run: echo "${{ inputs.version }}" > VERSION
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: echo "$RELEASE_VERSION" > VERSION
 
       - name: Bump Helm Chart versions
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          export CHART_VERSION=$(echo "${{ inputs.version }}" | sed 's/v//g')
-          export APP_VERSION="${{ inputs.version }}"
+          export CHART_VERSION=$(echo "$RELEASE_VERSION" | sed 's/v//g')
+          export APP_VERSION="$RELEASE_VERSION"
           yq -i '.version = env(CHART_VERSION)' $CHART_PATH/Chart.yaml
           yq -i '.appVersion = env(APP_VERSION)' $CHART_PATH/Chart.yaml
 
       - name: Pin image tag and digest in values.yaml
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
         run: |
-          export IMAGE_TAG="${{ inputs.version }}@${{ needs.build-and-push.outputs.digest }}"
+          export IMAGE_TAG="${RELEASE_VERSION}@${IMAGE_DIGEST}"
           yq -i '.global.deployment.image.tag = env(IMAGE_TAG)' $CHART_PATH/values.yaml
           yq -i '.config.burrito.runner.image.tag = env(IMAGE_TAG)' $CHART_PATH/values.yaml
 

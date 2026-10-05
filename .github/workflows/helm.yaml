@@ -52,7 +52,7 @@ jobs:
           persist-credentials: false
 
       - name: Helm Render
-        run: helm template ${{ env.CHART_PATH }}
+        run: helm template "$CHART_PATH"
 
   helm-push:
     name: Helm Push
@@ -68,7 +68,9 @@ jobs:
           persist-credentials: false
 
       - name: GHCR Login
-        run: echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | helm registry login ghcr.io -u "$GITHUB_REPOSITORY_OWNER" --password-stdin
 
       - name: Compute versions
         shell: bash
@@ -90,12 +92,12 @@ jobs:
           fi
 
       - name: Helm Package
-        run: helm package ${{ env.CHART_PATH }} -u --version ${{ env.VERSION }} --app-version ${{ env.APP_VERSION }}
+        run: helm package "$CHART_PATH" -u --version "$VERSION" --app-version "$APP_VERSION"
 
       - name: Helm Push
         id: push
         run: |
-          helm push ./${{ env.CHART_NAME }}-${{ env.VERSION }}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts 2>&1 | tee push.log
+          helm push "./${CHART_NAME}-${VERSION}.tgz" "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/charts" 2>&1 | tee push.log
           echo "digest=$(grep -oP '(?<=Digest: ).*' push.log)" >> "$GITHUB_OUTPUT"
 
       - name: Install Cosign
@@ -109,4 +111,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sign Helm chart
-        run: cosign sign --yes ${{ env.CHART_REPO }}/${{ env.CHART_NAME }}@${{ steps.push.outputs.digest }}
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "${CHART_REPO}/${CHART_NAME}@${DIGEST}"
