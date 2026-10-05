@@ -8,7 +8,7 @@ import (
 	"crypto/rand"
 
 	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/server/utils"
 	log "github.com/sirupsen/logrus"
