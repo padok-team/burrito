@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
