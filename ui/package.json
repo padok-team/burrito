@@ -29,7 +29,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.3.2",
-    "eslint": "10.11.0",
+    "eslint": "10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "3.9.9",
     "tailwindcss": "^4.3.3",
@@ -40,12 +40,12 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.19.0",
+      "version": "24.21.0",
       "onFail": "download"
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "11.21.0",
+      "version": "11.28.5",
       "onFail": "download"
     }
   }
