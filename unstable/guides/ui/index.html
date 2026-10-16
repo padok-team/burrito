@@ -529,6 +529,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#layer-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Layer page
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#more-to-come" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1818,6 +1829,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#layer-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Layer page
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#more-to-come" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1883,6 +1905,17 @@
 <p>Click on the layer card to view the Terraform or Terragrunt logs for that layer. You can explore previous runs and view the logs for each run. The maximum number of logs to keep is configurable.
 <img alt="Logs" src="../../assets/demo/logs.png" /></p>
 <p>A dedicated page for exploring the logs is also available.</p>
+<h3 id="layer-page">Layer page<a class="headerlink" href="#layer-page" title="Permanent link">&para;</a></h3>
+<p>Click on a layer to open its dedicated page. It shows:</p>
+<ul>
+<li>The <strong>state graph</strong>: the resources managed by the layer and the dependencies between them, built from the Terraform state after each plan or apply.</li>
+<li>The result of the <strong>last plan</strong> overlaid on the graph (resources to create, update or delete).</li>
+<li>The <strong>last commit</strong> that triggered a run (hash, author and message).</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The state graph is only available once a plan or an apply has run on the layer with a non-empty state.</p>
+</div>
 <h3 id="more-to-come">More to come<a class="headerlink" href="#more-to-come" title="Permanent link">&para;</a></h3>
 <p>Burrito is under active development, and we are working on adding more features to the UI such as:</p>
 <ul>
