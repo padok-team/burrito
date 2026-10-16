@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -243,6 +244,55 @@ var _ = Describe("Metrics", func() {
 				metrics.UpdateRepositoryMetrics(repo)
 			}).NotTo(Panic())
 			Expect(metrics.Metrics).NotTo(BeNil())
+		})
+	})
+
+	Describe("DeleteLayerMetrics", func() {
+		layer := func(namespace, name string) configv1alpha1.TerraformLayer {
+			return configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					Repository: configv1alpha1.TerraformLayerRepository{Name: "test-repo"},
+				},
+			}
+		}
+
+		It("should only remove the status metrics of the deleted layer", func() {
+			m := metrics.GetMetrics()
+			m.LayerStatusGauge.Reset()
+			metrics.UpdateLayerMetrics(layer("test-namespace", "deleted-layer"))
+			metrics.UpdateLayerMetrics(layer("test-namespace", "other-layer"))
+			metrics.UpdateLayerMetrics(layer("other-namespace", "deleted-layer"))
+			Expect(testutil.CollectAndCount(m.LayerStatusGauge)).To(Equal(3))
+
+			metrics.DeleteLayerMetrics("test-namespace", "deleted-layer")
+
+			Expect(testutil.CollectAndCount(m.LayerStatusGauge)).To(Equal(2))
+			Expect(m.LayerStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": "test-namespace", "layer_name": "deleted-layer"})).To(Equal(0))
+		})
+	})
+
+	Describe("DeleteRepositoryMetrics", func() {
+		repo := func(namespace, name string) configv1alpha1.TerraformRepository {
+			return configv1alpha1.TerraformRepository{
+				ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					Repository: configv1alpha1.TerraformRepositoryRepository{Url: "https://github.com/test/repo"},
+				},
+			}
+		}
+
+		It("should only remove the status metrics of the deleted repository", func() {
+			m := metrics.GetMetrics()
+			m.RepositoryStatusGauge.Reset()
+			metrics.UpdateRepositoryMetrics(repo("test-namespace", "deleted-repo"))
+			metrics.UpdateRepositoryMetrics(repo("test-namespace", "other-repo"))
+			Expect(testutil.CollectAndCount(m.RepositoryStatusGauge)).To(Equal(2))
+
+			metrics.DeleteRepositoryMetrics("test-namespace", "deleted-repo")
+
+			Expect(testutil.CollectAndCount(m.RepositoryStatusGauge)).To(Equal(1))
+			Expect(m.RepositoryStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": "test-namespace", "repository_name": "deleted-repo"})).To(Equal(0))
 		})
 	})
 

@@ -12,10 +12,12 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	utils "github.com/padok-team/burrito/internal/testing"
+	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -702,6 +704,26 @@ var _ = Describe("Layer", func() {
 			err := k8sClient.List(context.TODO(), runs, client.InNamespace("cleanup"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(runs.Items)).To(Equal(5))
+		})
+	})
+	Describe("When a TerraformLayer has been deleted", Ordered, func() {
+		BeforeAll(func() {
+			metrics.UpdateLayerMetrics(configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{Name: "deleted-layer", Namespace: "default"},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					Repository: configv1alpha1.TerraformLayerRepository{Name: "burrito"},
+				},
+			})
+			result, reconcileError = reconciler.Reconcile(context.TODO(), reconcile.Request{
+				NamespacedName: types.NamespacedName{Name: "deleted-layer", Namespace: "default"},
+			})
+		})
+		It("should not return an error", func() {
+			Expect(reconcileError).NotTo(HaveOccurred())
+		})
+		It("should remove its status metrics", func() {
+			deleted := metrics.GetMetrics().LayerStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": "default", "layer_name": "deleted-layer"})
+			Expect(deleted).To(Equal(0))
 		})
 	})
 	Describe("Sync Window Cases", func() {

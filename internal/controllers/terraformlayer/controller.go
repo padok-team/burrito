@@ -91,6 +91,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	err := r.Client.Get(ctx, req.NamespacedName, layer)
 	if errors.IsNotFound(err) {
 		log.Errorf("resource not found. Ignoring since object must be deleted: %s", err)
+		metrics.DeleteLayerMetrics(req.Namespace, req.Name)
 		return ctrl.Result{}, nil
 	}
 	if err != nil {

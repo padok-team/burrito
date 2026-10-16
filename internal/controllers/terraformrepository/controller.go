@@ -85,6 +85,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Errorf("failed to get TerraformRepository: %s", err)
 		// If the repository is not found, it might have been deleted
 		if errors.IsNotFound(err) {
+			metrics.DeleteRepositoryMetrics(req.Namespace, req.Name)
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, client.IgnoreNotFound(err)

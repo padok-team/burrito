@@ -12,11 +12,13 @@ import (
 	"github.com/padok-team/burrito/internal/burrito/config"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	mock "github.com/padok-team/burrito/internal/repository/providers/mock"
 	utils "github.com/padok-team/burrito/internal/testing"
+	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -928,6 +930,26 @@ var _ = Describe("Run", func() {
 				_, err := reconciler.Datastore.GetGitBundle("namespace-c", "provisioning", "main", mock.GetMockRevision("main"))
 				Expect(err).To(HaveOccurred())
 			})
+		})
+	})
+	Describe("When a TerraformRepository has been deleted", Ordered, func() {
+		BeforeAll(func() {
+			metrics.UpdateRepositoryMetrics(configv1alpha1.TerraformRepository{
+				ObjectMeta: metav1.ObjectMeta{Name: "deleted-repo", Namespace: "default"},
+				Spec: configv1alpha1.TerraformRepositorySpec{
+					Repository: configv1alpha1.TerraformRepositoryRepository{Url: "https://github.com/padok-team/burrito"},
+				},
+			})
+			_, reconcileError = reconciler.Reconcile(context.TODO(), reconcile.Request{
+				NamespacedName: types.NamespacedName{Name: "deleted-repo", Namespace: "default"},
+			})
+		})
+		It("should not return an error", func() {
+			Expect(reconcileError).NotTo(HaveOccurred())
+		})
+		It("should remove its status metrics", func() {
+			deleted := metrics.GetMetrics().RepositoryStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": "default", "repository_name": "deleted-repo"})
+			Expect(deleted).To(Equal(0))
 		})
 	})
 })
