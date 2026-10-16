@@ -26,6 +26,9 @@ type fakeAPIProvider struct {
 	commentErr      error
 	pullRequests    []configv1alpha1.TerraformPullRequest
 	pullRequestsErr error
+	title           string
+	titleErr        error
+	titleCalls      int
 }
 
 func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) ([]string, error) {
@@ -37,6 +40,11 @@ func (p *fakeAPIProvider) GetChanges(repository *configv1alpha1.TerraformReposit
 
 func (p *fakeAPIProvider) Comment(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest, c comment.Comment) error {
 	return p.commentErr
+}
+
+func (p *fakeAPIProvider) GetPullRequestTitle(repository *configv1alpha1.TerraformRepository, pullRequest *configv1alpha1.TerraformPullRequest) (string, error) {
+	p.titleCalls++
+	return p.title, p.titleErr
 }
 
 func (p *fakeAPIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
@@ -440,5 +448,95 @@ func TestCommentNeededHandlerPostsCommentAndUpdatesStatus(t *testing.T) {
 	}
 	if state.Status.LastCommentedCommit != "sha" {
 		t.Fatalf("expected last commented commit to be set, got %q", state.Status.LastCommentedCommit)
+	}
+}
+
+func TestGetStatePreservesTitle(t *testing.T) {
+	scheme := newTerraformPullRequestTestScheme(t)
+	reconciler := &Reconciler{Client: fake.NewClientBuilder().WithScheme(scheme).Build()}
+	pr := terraformPullRequest("default", "repo", "1", "feature", "sha")
+	pr.Status.Title = "Add a bucket"
+
+	state := reconciler.GetState(context.Background(), pr)
+	if state.Status.Title != "Add a bucket" {
+		t.Fatalf("expected GetState to keep the title, got %q", state.Status.Title)
+	}
+}
+
+func TestRefreshTitle(t *testing.T) {
+	tests := []struct {
+		name          string
+		currentTitle  string
+		state         string
+		provider      *fakeAPIProvider
+		factoryErr    error
+		expectedTitle string
+		expectedCalls int
+	}{
+		{
+			name:          "fetches the title when it is not known yet",
+			state:         Idle,
+			provider:      &fakeAPIProvider{title: "Add a bucket"},
+			expectedTitle: "Add a bucket",
+			expectedCalls: 1,
+		},
+		{
+			name:          "skips the provider when the title is known and no new commit",
+			currentTitle:  "Add a bucket",
+			state:         Idle,
+			provider:      &fakeAPIProvider{title: "Renamed"},
+			expectedTitle: "Add a bucket",
+			expectedCalls: 0,
+		},
+		{
+			name:          "refreshes the title when a new commit needs discovery",
+			currentTitle:  "Add a bucket",
+			state:         DiscoveryNeeded,
+			provider:      &fakeAPIProvider{title: "Renamed"},
+			expectedTitle: "Renamed",
+			expectedCalls: 1,
+		},
+		{
+			name:          "keeps the previous title when the provider fails",
+			currentTitle:  "Add a bucket",
+			state:         DiscoveryNeeded,
+			provider:      &fakeAPIProvider{titleErr: errors.New("boom")},
+			expectedTitle: "Add a bucket",
+			expectedCalls: 1,
+		},
+		{
+			name:          "keeps the previous title when the provider cannot be built",
+			currentTitle:  "Add a bucket",
+			state:         DiscoveryNeeded,
+			provider:      &fakeAPIProvider{},
+			factoryErr:    errors.New("no credentials"),
+			expectedTitle: "Add a bucket",
+			expectedCalls: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			reconciler := &Reconciler{
+				APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+					if tc.factoryErr != nil {
+						return nil, tc.factoryErr
+					}
+					return tc.provider, nil
+				},
+			}
+			pr := terraformPullRequest("default", "repo", "1", "feature", "sha")
+			pr.Status.Title = tc.currentTitle
+			state := &State{Status: configv1alpha1.TerraformPullRequestStatus{State: tc.state, Title: tc.currentTitle}}
+
+			reconciler.refreshTitle(context.Background(), terraformRepository("default", "repo"), pr, state)
+
+			if state.Status.Title != tc.expectedTitle {
+				t.Errorf("expected title %q, got %q", tc.expectedTitle, state.Status.Title)
+			}
+			if tc.provider.titleCalls != tc.expectedCalls {
+				t.Errorf("expected %d provider calls, got %d", tc.expectedCalls, tc.provider.titleCalls)
+			}
+		})
 	}
 }

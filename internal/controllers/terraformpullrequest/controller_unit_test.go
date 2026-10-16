@@ -7,6 +7,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/burrito/config"
+	repositorytypes "github.com/padok-team/burrito/internal/repository/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ktypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -98,6 +99,9 @@ func TestReconcilePullRequestReturnsErrorWhenStatusUpdateFails(t *testing.T) {
 		Client:   cl,
 		Config:   config.TestConfig(),
 		Recorder: record.NewFakeRecorder(10),
+		APIProviderFactory: func(repository *configv1alpha1.TerraformRepository) (repositorytypes.APIProvider, error) {
+			return &fakeAPIProvider{title: "title"}, nil
+		},
 	}
 
 	result, err := reconciler.reconcilePullRequest(context.Background(), pr)

@@ -37,6 +37,7 @@ type TerraformPullRequestStatus struct {
 	State                string             `json:"state,omitempty"`
 	LastDiscoveredCommit string             `json:"lastDiscoveredCommit,omitempty"`
 	LastCommentedCommit  string             `json:"lastCommentedCommit,omitempty"`
+	Title                string             `json:"title,omitempty"`
 }
 
 // +kubebuilder:object:root=true
