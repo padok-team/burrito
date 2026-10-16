@@ -257,3 +257,30 @@ status:
   lastRun:
     name: run-failed-exhausted-apply
     namespace: default
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformLayer
+metadata:
+  name: error-case-10
+  namespace: default
+  annotations:
+    runner.terraform.padok.cloud/plan-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+    runner.terraform.padok.cloud/plan-date: Sun May  7 11:21:53 UTC 2023
+    runner.terraform.padok.cloud/plan-sum: ""
+    webhook.terraform.padok.cloud/branch-commit: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+    webhook.terraform.padok.cloud/relevant-commit: ca9b6c80ac8fb5cd837ae9b374b79ff33f472558
+spec:
+  branch: main
+  path: error-case-ten/
+  remediationStrategy:
+    autoApply: true
+  repository:
+    name: burrito
+    namespace: default
+  terraform:
+    enabled: true
+    version: 1.3.1
+status:
+  lastRun:
+    name: run-failed-exhausted-plan-unrelated-commit
+    namespace: default

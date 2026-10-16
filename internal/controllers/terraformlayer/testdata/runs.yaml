@@ -66,3 +66,18 @@ spec:
 status:
   state: "Failed"
   retries: 5
+---
+apiVersion: config.terraform.padok.cloud/v1alpha1
+kind: TerraformRun
+metadata:
+  name: run-failed-exhausted-plan-unrelated-commit
+  namespace: default
+spec:
+  action: plan
+  layer:
+    name: error-case-10
+    namespace: default
+    revision: cb9f15b90861c8c4364cdde63d17837c7a9ccca9
+status:
+  state: "Failed"
+  retries: 5

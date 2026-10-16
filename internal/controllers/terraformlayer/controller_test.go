@@ -681,6 +681,32 @@ var _ = Describe("Layer", func() {
 				Expect(len(runs.Items)).To(Equal(0))
 			})
 		})
+		Describe("When a TerraformLayer last plan run has reached the retry limit and the branch moved without touching the layer", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-10",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in MaxRetriesReached state", func() {
+				Expect(layer.Status.State).To(Equal("MaxRetriesReached"))
+			})
+			It("should set RequeueAfter to DriftDetection", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
+			})
+			It("should not have created any TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
 	})
 	// TODO: test cleanup of runs
 	Describe("Cleanup case", Ordered, func() {
