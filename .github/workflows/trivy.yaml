@@ -27,8 +27,9 @@ jobs:
           persist-credentials: false
 
       # Always generate a SARIF report. On pull requests, GitHub code scanning
-      # compares it with main and the "Code scanning results / Trivy" check only
-      # fails for vulnerabilities introduced by the PR, not pre-existing ones.
+      # compares it with main and the "Trivy" check fails only on new HIGH+
+      # alerts introduced by the PR, not on pre-existing ones. Keep the default
+      # SARIF category, it must match the one used on main for the comparison.
       - name: Run Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -42,4 +43,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           sarif_file: trivy-results.sarif
-          category: trivy
