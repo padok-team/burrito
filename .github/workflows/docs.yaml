@@ -61,6 +61,8 @@ jobs:
         # A reusable workflow inherits the event of its caller, so github.event_name is
         # never 'workflow_call'. The release input is the only reliable signal here.
         if: inputs.version != ''
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          uv run mike deploy --push --update-aliases ${{ inputs.version }} latest
-          echo "Deployed version ${{ inputs.version }} to GitHub Pages"
+          uv run mike deploy --push --update-aliases "$VERSION" latest
+          echo "Deployed version $VERSION to GitHub Pages"
