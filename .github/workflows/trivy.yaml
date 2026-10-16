@@ -26,33 +26,21 @@ jobs:
         with:
           persist-credentials: false
 
-      # On pull requests, fail the job when HIGH/CRITICAL issues are found so
-      # they surface directly in the PR checks.
-      - name: Run Trivy (pull request)
-        if: github.event_name == 'pull_request'
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: table
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: 1
-
-      # On release, generate a SARIF report and upload it to the GitHub
-      # Security tab instead of failing the release.
-      - name: Run Trivy (release)
-        if: github.event_name == 'push' || github.event_name == 'schedule'
+      # Always generate a SARIF report. On pull requests, GitHub code scanning
+      # compares it with main and the "Trivy" check fails only on new HIGH+
+      # alerts introduced by the PR, not on pre-existing ones. Keep the default
+      # SARIF category, it must match the one used on main for the comparison.
+      - name: Run Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
           format: sarif
           output: trivy-results.sarif
+          severity: HIGH,CRITICAL
           ignore-unfixed: true
 
       - name: Upload Trivy results to GitHub Security tab
-        if: github.event_name == 'push' || github.event_name == 'schedule'
         uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           sarif_file: trivy-results.sarif
