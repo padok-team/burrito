@@ -3,6 +3,7 @@ package metrics
 import (
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -72,6 +73,15 @@ func UpdateLayerMetrics(layer configv1alpha1.TerraformLayer) {
 	m.LayerStatusGauge.WithLabelValues(namespace, layerName, repositoryName, status).Set(1)
 }
 
+// DeleteLayerMetrics removes the status metrics of a deleted layer
+func DeleteLayerMetrics(namespace, layerName string) {
+	m := GetMetrics()
+	if m == nil {
+		return
+	}
+	m.LayerStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": namespace, "layer_name": layerName})
+}
+
 // UpdateRepositoryMetrics updates all metrics related to a specific repository
 func UpdateRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	m := GetMetrics()
@@ -91,6 +101,15 @@ func UpdateRepositoryMetrics(repo configv1alpha1.TerraformRepository) {
 	}
 
 	m.RepositoryStatusGauge.WithLabelValues(namespace, name, url, status).Set(1)
+}
+
+// DeleteRepositoryMetrics removes the status metrics of a deleted repository
+func DeleteRepositoryMetrics(namespace, name string) {
+	m := GetMetrics()
+	if m == nil {
+		return
+	}
+	m.RepositoryStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": namespace, "repository_name": name})
 }
 
 // UpdateRunMetrics updates all metrics related to runs
