@@ -31,6 +31,11 @@
   --color-nuances-white: #ffffff;
   --color-nuances-black: #000000;
 
+  --color-terraform-create: #10b981;
+  --color-terraform-delete: #ef4444;
+  --color-terraform-update: #f59e0b;
+  --color-terraform-replace: #8b5cf6;
+
   --color-status-error-default: #e14029;
   --color-status-error-light: #f9d9d4;
 

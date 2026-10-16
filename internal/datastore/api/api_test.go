@@ -314,3 +314,37 @@ var _ = Describe("Datastore API", func() {
 		})
 	})
 })
+
+var _ = Describe("Datastore API State Graph", func() {
+	Describe("When the state graph is stored", func() {
+		It("should return it with a 200 OK", func() {
+			params := map[string]string{"namespace": "default", "layer": "stategraph"}
+			put := getContext(http.MethodPut, "/stategraph", params, []byte(`{"nodes":[]}`))
+			Expect(API.PutStateGraphHandler(put)).To(Succeed())
+			Expect(put.Response().Status).To(Equal(http.StatusOK))
+
+			get := getContext(http.MethodGet, "/stategraph", params, nil)
+			Expect(API.GetStateGraphHandler(get)).To(Succeed())
+			Expect(get.Response().Status).To(Equal(http.StatusOK))
+		})
+	})
+	Describe("When the state graph is not stored", func() {
+		It("should return a 404 Not Found", func() {
+			context := getContext(http.MethodGet, "/stategraph", map[string]string{"namespace": "default", "layer": "unknown"}, nil)
+			Expect(API.GetStateGraphHandler(context)).To(Succeed())
+			Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+		})
+	})
+	Describe("When parameters are missing", func() {
+		It("should return a 400 Bad Request on get", func() {
+			context := getContext(http.MethodGet, "/stategraph", map[string]string{"namespace": "default"}, nil)
+			Expect(API.GetStateGraphHandler(context)).To(Succeed())
+			Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
+		})
+		It("should return a 400 Bad Request on put", func() {
+			context := getContext(http.MethodPut, "/stategraph", map[string]string{"layer": "stategraph"}, []byte(`{}`))
+			Expect(API.PutStateGraphHandler(context)).To(Succeed())
+			Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
+		})
+	})
+})

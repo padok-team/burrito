@@ -10,7 +10,7 @@ lifecycle (`Exec`: init clients → fetch code → install binaries → init →
 - Entry is `Runner.Exec()` and runs **once** then exits. It uses `logrus` (not the
   controllers' `logr`/`ctx` logging) — match the surrounding style here.
 - Never shell out to `terraform`/`terragrunt` directly: go through `tools.BaseExec`
-  (`Init`/`Plan`/`Apply`/`Show`, `TenvName()`), which resolves versions via tenv. Add tool
+  (`Init`/`Plan`/`Apply`/`Show`/`StatePull`, `TenvName()`), which resolves versions via tenv. Add tool
   support under `tools/`.
 - Source code is **not** cloned from the remote: the runner pulls a git bundle from the
   datastore (`Datastore.GetGitBundle`) and `git clone`s it locally.
@@ -18,6 +18,9 @@ lifecycle (`Exec`: init clients → fetch code → install binaries → init →
   `plan` writes formats `pretty`/`json`/`short`/`bin`; `apply` reuses the `bin` plan artifact
   (unless `GetApplyWithoutPlanArtifactEnabled`). Results are surfaced to the layer via
   `annotations.Add`, not by mutating status directly.
+- After `plan`/`apply` the runner pulls the state, builds the graph (`stategraph/`) and stores it
+  via `Datastore.PutStateGraph`; this is best effort and must not fail the run. `Init` also
+  patches `TerraformRun.status` with the commit info (needs RBAC `terraformruns/status`).
 - `Action` is `plan` or `apply`; an unknown action signals a controller/runner version
   mismatch — keep the two in sync.
 
