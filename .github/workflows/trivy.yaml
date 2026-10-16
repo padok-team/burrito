@@ -37,6 +37,7 @@ jobs:
           scan-ref: .
           format: sarif
           output: trivy-results.sarif
+          severity: HIGH,CRITICAL
           ignore-unfixed: true
 
       - name: Upload Trivy results to GitHub Security tab
