@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	urlutils "github.com/padok-team/burrito/internal/utils/url"
 	log "github.com/sirupsen/logrus"
