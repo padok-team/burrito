@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/padok-team/burrito/internal/burrito/config"
@@ -58,7 +58,7 @@ var _ = BeforeSuite(func() {
 	e = echo.New()
 })
 
-func getContext(method string, path string, params map[string]string, body []byte) echo.Context {
+func getContext(method string, path string, params map[string]string, body []byte) *echo.Context {
 	buf := bytes.NewBuffer(body)
 	req := httptest.NewRequest(method, path, buf)
 	rec := httptest.NewRecorder()
@@ -67,6 +67,12 @@ func getContext(method string, path string, params map[string]string, body []byt
 		context.QueryParams().Add(k, v)
 	}
 	return context
+}
+
+func statusOf(c *echo.Context) int {
+	r, err := echo.UnwrapResponse(c.Response())
+	Expect(err).NotTo(HaveOccurred())
+	return r.Status
 }
 
 var _ = Describe("Datastore API", func() {
@@ -82,7 +88,7 @@ var _ = Describe("Datastore API", func() {
 					}, nil)
 					err := API.GetLogsHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
+					Expect(statusOf(context)).To(Equal(http.StatusOK))
 				})
 			})
 			Describe("When attempt is not present and log is present in storage", func() {
@@ -94,7 +100,7 @@ var _ = Describe("Datastore API", func() {
 					}, nil)
 					err := API.GetLogsHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
+					Expect(statusOf(context)).To(Equal(http.StatusOK))
 				})
 			})
 			Describe("Log does not exist", func() {
@@ -108,7 +114,7 @@ var _ = Describe("Datastore API", func() {
 						}, nil)
 						err := API.GetLogsHandler(context)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+						Expect(statusOf(context)).To(Equal(http.StatusNotFound))
 					})
 				})
 				Describe("When attempt is not present", func() {
@@ -120,7 +126,7 @@ var _ = Describe("Datastore API", func() {
 						}, nil)
 						err := API.GetLogsHandler(context)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+						Expect(statusOf(context)).To(Equal(http.StatusNotFound))
 					})
 				})
 			})
@@ -137,7 +143,7 @@ var _ = Describe("Datastore API", func() {
 						}, nil)
 						err := API.GetPlanHandler(context)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(context.Response().Status).To(Equal(http.StatusOK))
+						Expect(statusOf(context)).To(Equal(http.StatusOK))
 					})
 					It("should return the plan with a 200 OK if attempt is not present", func() {
 						context := getContext(http.MethodGet, "/plans", map[string]string{
@@ -147,7 +153,7 @@ var _ = Describe("Datastore API", func() {
 						}, nil)
 						err := API.GetPlanHandler(context)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(context.Response().Status).To(Equal(http.StatusOK))
+						Expect(statusOf(context)).To(Equal(http.StatusOK))
 					})
 				})
 				Describe("Format is present", func() {
@@ -161,7 +167,7 @@ var _ = Describe("Datastore API", func() {
 						}, nil)
 						err := API.GetPlanHandler(context)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(context.Response().Status).To(Equal(http.StatusOK))
+						Expect(statusOf(context)).To(Equal(http.StatusOK))
 					})
 					It("should return the plan with a 200 OK if attempt is not present", func() {
 						context := getContext(http.MethodGet, "/plans", map[string]string{
@@ -172,7 +178,7 @@ var _ = Describe("Datastore API", func() {
 						}, nil)
 						err := API.GetPlanHandler(context)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(context.Response().Status).To(Equal(http.StatusOK))
+						Expect(statusOf(context)).To(Equal(http.StatusOK))
 					})
 				})
 			})
@@ -186,7 +192,7 @@ var _ = Describe("Datastore API", func() {
 					}, nil)
 					err := API.GetPlanHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+					Expect(statusOf(context)).To(Equal(http.StatusNotFound))
 				})
 				It("should return 404 Not found if attempt is not present", func() {
 					context := getContext(http.MethodGet, "/plans", map[string]string{
@@ -196,7 +202,7 @@ var _ = Describe("Datastore API", func() {
 					}, nil)
 					err := API.GetPlanHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+					Expect(statusOf(context)).To(Equal(http.StatusNotFound))
 				})
 			})
 		})
@@ -212,7 +218,7 @@ var _ = Describe("Datastore API", func() {
 					}, body)
 					err := API.PutGitBundleHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
+					Expect(statusOf(context)).To(Equal(http.StatusOK))
 				})
 
 				It("should return 400 Bad Request when missing parameters", func() {
@@ -224,7 +230,7 @@ var _ = Describe("Datastore API", func() {
 					}, body)
 					err := API.PutGitBundleHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
+					Expect(statusOf(context)).To(Equal(http.StatusBadRequest))
 				})
 			})
 		})
@@ -240,7 +246,7 @@ var _ = Describe("Datastore API", func() {
 					}, body)
 					err := API.PutLogsHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
+					Expect(statusOf(context)).To(Equal(http.StatusOK))
 				})
 			})
 			Describe("Plans", func() {
@@ -255,7 +261,7 @@ var _ = Describe("Datastore API", func() {
 					}, body)
 					err := API.PutPlanHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
+					Expect(statusOf(context)).To(Equal(http.StatusOK))
 				})
 			})
 		})
@@ -297,7 +303,7 @@ var _ = Describe("Datastore API", func() {
 					// Store plan with encryption
 					err = encryptedAPI.PutPlanHandler(context)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(context.Response().Status).To(Equal(http.StatusOK))
+					Expect(statusOf(context)).To(Equal(http.StatusOK))
 
 					// Verify that data was stored encrypted by checking the raw backend
 					// The encrypted data should be different from the original
@@ -321,30 +327,30 @@ var _ = Describe("Datastore API State Graph", func() {
 			params := map[string]string{"namespace": "default", "layer": "stategraph"}
 			put := getContext(http.MethodPut, "/stategraph", params, []byte(`{"nodes":[]}`))
 			Expect(API.PutStateGraphHandler(put)).To(Succeed())
-			Expect(put.Response().Status).To(Equal(http.StatusOK))
+			Expect(statusOf(put)).To(Equal(http.StatusOK))
 
 			get := getContext(http.MethodGet, "/stategraph", params, nil)
 			Expect(API.GetStateGraphHandler(get)).To(Succeed())
-			Expect(get.Response().Status).To(Equal(http.StatusOK))
+			Expect(statusOf(get)).To(Equal(http.StatusOK))
 		})
 	})
 	Describe("When the state graph is not stored", func() {
 		It("should return a 404 Not Found", func() {
 			context := getContext(http.MethodGet, "/stategraph", map[string]string{"namespace": "default", "layer": "unknown"}, nil)
 			Expect(API.GetStateGraphHandler(context)).To(Succeed())
-			Expect(context.Response().Status).To(Equal(http.StatusNotFound))
+			Expect(statusOf(context)).To(Equal(http.StatusNotFound))
 		})
 	})
 	Describe("When parameters are missing", func() {
 		It("should return a 400 Bad Request on get", func() {
 			context := getContext(http.MethodGet, "/stategraph", map[string]string{"namespace": "default"}, nil)
 			Expect(API.GetStateGraphHandler(context)).To(Succeed())
-			Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
+			Expect(statusOf(context)).To(Equal(http.StatusBadRequest))
 		})
 		It("should return a 400 Bad Request on put", func() {
 			context := getContext(http.MethodPut, "/stategraph", map[string]string{"layer": "stategraph"}, []byte(`{}`))
 			Expect(API.PutStateGraphHandler(context)).To(Succeed())
-			Expect(context.Response().Status).To(Equal(http.StatusBadRequest))
+			Expect(statusOf(context)).To(Equal(http.StatusBadRequest))
 		})
 	})
 })

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
 )
@@ -18,7 +18,7 @@ type repositoriesResponse struct {
 	Results []repository `json:"results"`
 }
 
-func (a *API) RepositoriesHandler(c echo.Context) error {
+func (a *API) RepositoriesHandler(c *echo.Context) error {
 	repositories := &configv1alpha1.TerraformRepositoryList{}
 	err := a.Client.List(context.Background(), repositories)
 	if err != nil {

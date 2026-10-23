@@ -5,11 +5,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
-func getStateGraphArgs(c echo.Context) (string, string, error) {
+func getStateGraphArgs(c *echo.Context) (string, string, error) {
 	namespace := c.QueryParam("namespace")
 	layer := c.QueryParam("layer")
 	if namespace == "" || layer == "" {
@@ -18,7 +18,7 @@ func getStateGraphArgs(c echo.Context) (string, string, error) {
 	return namespace, layer, nil
 }
 
-func (a *API) GetStateGraphHandler(c echo.Context) error {
+func (a *API) GetStateGraphHandler(c *echo.Context) error {
 	var err error
 	var content []byte
 	namespace, layer, err := getStateGraphArgs(c)
@@ -30,13 +30,13 @@ func (a *API) GetStateGraphHandler(c echo.Context) error {
 		return c.String(http.StatusNotFound, "No state graph for this layer")
 	}
 	if err != nil {
-		c.Logger().Errorf("Could not get state graph, there's an issue with the storage backend : %s", err)
+		c.Logger().Error("Could not get state graph, there's an issue with the storage backend", "error", err)
 		return c.String(http.StatusInternalServerError, "could not get state graph, there's an issue with the storage backend")
 	}
 	return c.JSONBlob(http.StatusOK, content)
 }
 
-func (a *API) PutStateGraphHandler(c echo.Context) error {
+func (a *API) PutStateGraphHandler(c *echo.Context) error {
 	var err error
 	namespace, layer, err := getStateGraphArgs(c)
 	if err != nil {

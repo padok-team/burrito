@@ -1,11 +1,15 @@
 package datastore
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	"github.com/padok-team/burrito/internal/datastore/api"
 	"github.com/padok-team/burrito/internal/datastore/storage"
@@ -58,14 +62,21 @@ func (s *Datastore) Exec() {
 	api.GET("/repository/revision/bundle", s.API.GetGitBundleHandler)
 	api.HEAD("/repository/revision/bundle", s.API.HeadGitBundleHandler)
 	api.POST("/encrypt", s.API.EncryptAllFilesHandler)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	sc := echo.StartConfig{Address: s.Config.Datastore.Addr}
+	var err error
 	if s.Config.Datastore.TLS {
-		e.Logger.Fatal(e.StartTLS(s.Config.Datastore.Addr, DefaultCertPath, DefaultKeyPath))
+		err = sc.StartTLS(ctx, e, DefaultCertPath, DefaultKeyPath)
 	} else {
-		e.Logger.Fatal(e.Start(s.Config.Datastore.Addr))
+		err = sc.Start(ctx, e)
+	}
+	if err != nil {
+		log.Fatalf("datastore stopped: %v", err)
 	}
 }
 
-func handleHealthz(c echo.Context) error {
+func handleHealthz(c *echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
@@ -75,11 +86,10 @@ func getLoggerConfig() middleware.RequestLoggerConfig {
 		LogMethod:        true,
 		LogURI:           true,
 		LogStatus:        true,
-		LogError:         true,
 		LogLatency:       true,
 		LogContentLength: true,
 		LogResponseSize:  true,
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			user, _ := c.Get("serviceAccount").(string)
 			log.WithFields(log.Fields{
 				"service_account": user,
