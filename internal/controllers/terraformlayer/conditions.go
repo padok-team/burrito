@@ -311,7 +311,7 @@ func (r *Reconciler) HasLastRunReachedRetryLimit(layer *configv1alpha1.Terraform
 		condition.Status = metav1.ConditionFalse
 		return condition, lastRunRetryInfo{action: run.Spec.Action}
 	}
-	currentRevision := layer.Annotations[annotations.LastRelevantCommit]
+	currentRevision := layer.Annotations[annotations.LastBranchCommit]
 	if currentRevision != "" && run.Spec.Layer.Revision != currentRevision {
 		condition.Reason = "NewRevisionAvailable"
 		condition.Message = "The last run reached retry limit but a new revision is available"

@@ -12,10 +12,12 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
+	"github.com/padok-team/burrito/internal/controllers/metrics"
 	controller "github.com/padok-team/burrito/internal/controllers/terraformlayer"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	utils "github.com/padok-team/burrito/internal/testing"
+	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -681,6 +683,32 @@ var _ = Describe("Layer", func() {
 				Expect(len(runs.Items)).To(Equal(0))
 			})
 		})
+		Describe("When a TerraformLayer last plan run has reached the retry limit and the branch moved without touching the layer", Ordered, func() {
+			BeforeAll(func() {
+				name = types.NamespacedName{
+					Name:      "error-case-10",
+					Namespace: "default",
+				}
+				result, layer, reconcileError, err = getResult(name, reconciler)
+			})
+			It("should still exist", func() {
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("should not return an error", func() {
+				Expect(reconcileError).NotTo(HaveOccurred())
+			})
+			It("should end in MaxRetriesReached state", func() {
+				Expect(layer.Status.State).To(Equal("MaxRetriesReached"))
+			})
+			It("should set RequeueAfter to DriftDetection", func() {
+				Expect(result.RequeueAfter).To(Equal(reconciler.Config.Controller.Timers.DriftDetection))
+			})
+			It("should not have created any TerraformRun", func() {
+				runs, err := getLinkedRuns(k8sClient, layer)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(runs.Items)).To(Equal(0))
+			})
+		})
 	})
 	// TODO: test cleanup of runs
 	Describe("Cleanup case", Ordered, func() {
@@ -702,6 +730,26 @@ var _ = Describe("Layer", func() {
 			err := k8sClient.List(context.TODO(), runs, client.InNamespace("cleanup"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(runs.Items)).To(Equal(5))
+		})
+	})
+	Describe("When a TerraformLayer has been deleted", Ordered, func() {
+		BeforeAll(func() {
+			metrics.UpdateLayerMetrics(configv1alpha1.TerraformLayer{
+				ObjectMeta: metav1.ObjectMeta{Name: "deleted-layer", Namespace: "default"},
+				Spec: configv1alpha1.TerraformLayerSpec{
+					Repository: configv1alpha1.TerraformLayerRepository{Name: "burrito"},
+				},
+			})
+			result, reconcileError = reconciler.Reconcile(context.TODO(), reconcile.Request{
+				NamespacedName: types.NamespacedName{Name: "deleted-layer", Namespace: "default"},
+			})
+		})
+		It("should not return an error", func() {
+			Expect(reconcileError).NotTo(HaveOccurred())
+		})
+		It("should remove its status metrics", func() {
+			deleted := metrics.GetMetrics().LayerStatusGauge.DeletePartialMatch(prometheus.Labels{"namespace": "default", "layer_name": "deleted-layer"})
+			Expect(deleted).To(Equal(0))
 		})
 	})
 	Describe("Sync Window Cases", func() {

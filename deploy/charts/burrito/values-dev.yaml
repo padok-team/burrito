@@ -8,6 +8,9 @@ config:
     datastore:
       storage:
         mock: true
+    server:
+      basicAuth:
+        enabled: false
     controller:
       timers:
         driftDetection: 10m
@@ -25,3 +28,9 @@ tenants:
   - namespace:
       create: true
       name: "burrito-project"
+      metadata:
+        labels: {}
+        annotations: {}
+    metadata:
+      labels: {}
+      annotations: {}

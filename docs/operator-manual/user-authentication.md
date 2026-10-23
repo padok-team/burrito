@@ -11,6 +11,12 @@ SAML authentication is not supported at this time but will be added in the futur
 
 When OIDC is disabled (`server.oidc.enabled: false`), Burrito falls back to a built-in basic authentication scheme. This mode is **not recommended for production**.
 
+Basic Authentication can also stay enabled alongside OIDC (`server.basicAuth.enabled: true` and
+`server.oidc.enabled: true` at the same time) to keep the admin account available as a
+fallback — for example if OIDC's `requiredClaims` is misconfigured and locks every SSO user
+out. When both are enabled, the login page shows the SSO button and the username/password
+form together.
+
 ### Configuration
 
 ```yaml
@@ -65,6 +71,9 @@ config:
           - "openid"
           - "profile"
           - "email"
+        requiredClaims:
+          groups:
+            - "burrito-admins"
 ...
 server:
   deployment:
@@ -80,6 +89,7 @@ server:
 | `clientId`                | Registered client ID                                                     |
 | `redirectUrl`             | Callback URL for OIDC (must match the one registered with your provider) |
 | `scopes`                  | OIDC scopes to request                                                   |
+| `requiredClaims`          | Map of claim name to allowed values, used to authorize users (see below) |
 
 ## Disabling Authentication
 
@@ -87,4 +97,23 @@ If both Basic Authentication and OIDC are disabled, the Burrito server will be p
 
 ### Authorization
 
-For the moment, Burrito does not implement authorization mechanisms. All users that are able to authenticate with the configured OIDC provider will be able to access the Burrito UI.
+By default, any user able to authenticate with the configured OIDC provider is authorized to
+access the Burrito UI. To restrict access, set `requiredClaims` to a map of claim name to the
+list of values that satisfy it:
+
+```yaml
+server:
+  oidc:
+    requiredClaims:
+      groups:
+        - "burrito-admins"
+        - "platform-team"
+```
+
+A user is authorized only if **every** configured claim has a matching value on their ID
+token — a claim is satisfied if its value (a plain string, or an array such as `groups`)
+contains at least one of the allowed values. Users whose token doesn't satisfy the required
+claims are redirected back to the login page with an error.
+
+This is an all-or-nothing gate on the whole Burrito instance — there is currently no
+per-tenant/per-namespace authorization based on claims.

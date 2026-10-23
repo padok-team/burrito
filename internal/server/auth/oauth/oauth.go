@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -23,6 +24,7 @@ type OAuthAuthHandlers struct {
 	OAuth2Config    *oauth2.Config
 	SessionCookie   string
 	LoginHTTPMethod string
+	RequiredClaims  map[string][]string
 }
 
 func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie string) (*OAuthAuthHandlers, error) {
@@ -44,6 +46,7 @@ func New(c *config.Config, ctx context.Context, cl client.Client, sessionCookie 
 	}
 	oauth.SessionCookie = sessionCookie
 	oauth.LoginHTTPMethod = http.MethodGet
+	oauth.RequiredClaims = c.Server.OIDC.RequiredClaims
 
 	return oauth, nil
 }
@@ -108,15 +111,27 @@ func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to verify ID token")
 	}
 
-	// Extract claims
+	// Extract raw claims once; use for both typed struct and arbitrary claim validation
+	var rawClaims map[string]interface{}
+	if err := idToken.Claims(&rawClaims); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
+	}
+
+	// Unmarshal into typed struct for standard OIDC claims
 	var claims struct {
 		Sub     string `json:"sub"`
 		Email   string `json:"email"`
 		Name    string `json:"name"`
 		Picture string `json:"picture"`
 	}
-	if err := idToken.Claims(&claims); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to extract claims")
+	claimsBytes, _ := json.Marshal(rawClaims)
+	if err := json.Unmarshal(claimsBytes, &claims); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to unmarshal claims")
+	}
+
+	if !claimsSatisfyRequirements(rawClaims, o.RequiredClaims) {
+		log.Warnf("OIDC login denied for subject %s: required claims not satisfied", claims.Sub)
+		return c.Redirect(http.StatusTemporaryRedirect, "/login?error=access_denied")
 	}
 
 	// Upgrade session cookie to SameSite=Strict after successful login
@@ -134,6 +149,57 @@ func (o *OAuthAuthHandlers) HandleCallback(c echo.Context) error {
 
 	// Redirect to layers page
 	return c.Redirect(http.StatusTemporaryRedirect, "/layers")
+}
+
+// claimsSatisfyRequirements checks that, for every claim name in required, the ID token's
+// claim value (a string, or an array of strings such as a "groups" claim) contains at least
+// one of the allowed values. All required claims must be satisfied. An empty or nil required
+// map always passes.
+func claimsSatisfyRequirements(claims map[string]interface{}, required map[string][]string) bool {
+	for claimName, allowedValues := range required {
+		value, ok := claims[claimName]
+		if !ok {
+			return false
+		}
+
+		if !containsAny(claimValues(value), allowedValues) {
+			return false
+		}
+	}
+	return true
+}
+
+// claimValues normalizes a decoded claim value into a slice of strings, supporting both a
+// single string claim and an array claim (e.g. "groups").
+func claimValues(value interface{}) []string {
+	switch v := value.(type) {
+	case string:
+		return []string{v}
+	case []interface{}:
+		values := make([]string, 0, len(v))
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				values = append(values, s)
+			}
+		}
+		return values
+	default:
+		log.Debugf("unexpected claim type %T; ignoring", value)
+		return []string{}
+	}
+}
+
+func containsAny(values []string, allowed []string) bool {
+	allowedSet := make(map[string]struct{}, len(allowed))
+	for _, a := range allowed {
+		allowedSet[a] = struct{}{}
+	}
+	for _, v := range values {
+		if _, ok := allowedSet[v]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 func generateRandomString(length int) string {

@@ -39,16 +39,7 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 		log.Errorf("could not list TerraformPullRequests: %s", err)
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform pull requests: %s", err))
 	}
-	repositories := &configv1alpha1.TerraformRepositoryList{}
-	if err := a.Client.List(context.Background(), repositories); err != nil {
-		log.Errorf("could not list TerraformRepositories: %s", err)
-		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform repositories: %s", err))
-	}
-	repositoryURLs := map[string]string{}
-	for _, r := range repositories.Items {
-		repositoryURLs[fmt.Sprintf("%s/%s", r.Namespace, r.Name)] = r.Spec.Repository.Url
-	}
-	layers, runs, err := a.getLayersAndRuns()
+	layers, runs, indexedRepositories, err := a.getLayersRunsRepositories()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("could not list terraform layers or runs: %s", err))
 	}
@@ -59,7 +50,7 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 		for _, ref := range l.OwnerReferences {
 			if ref.Kind == "TerraformPullRequest" {
 				key := fmt.Sprintf("%s/%s", l.Namespace, ref.Name)
-				layersByPR[key] = append(layersByPR[key], a.buildLayer(l, runs))
+				layersByPR[key] = append(layersByPR[key], a.buildLayer(l, runs, indexedRepositories))
 				break
 			}
 		}
@@ -78,7 +69,7 @@ func (a *API) PullRequestsHandler(c echo.Context) error {
 			Namespace:            pr.Namespace,
 			ID:                   pr.Spec.ID,
 			Repository:           repository,
-			URL:                  pullRequestURL(repositoryURLs[repository], pr.Spec.ID),
+			URL:                  pullRequestURL(indexedRepositories[repository].Spec.Repository.Url, pr.Spec.ID),
 			Branch:               pr.Spec.Branch,
 			Base:                 pr.Spec.Base,
 			State:                pr.Status.State,

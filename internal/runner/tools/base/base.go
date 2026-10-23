@@ -73,6 +73,17 @@ func (t *BaseTool) Show(planArtifactPath, mode string) ([]byte, error) {
 	return out, nil
 }
 
+func (t *BaseTool) StatePull(workingDir string) ([]byte, error) {
+	t.WorkingDir = workingDir
+	cmd := exec.Command(t.ExecPath, "state", "pull")
+	cmd.Dir = t.WorkingDir
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (t *BaseTool) GetExecPath() string {
 	return t.ExecPath
 }
