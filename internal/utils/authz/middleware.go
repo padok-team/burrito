@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/patrickmn/go-cache"
 	v1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +48,7 @@ func (a *Authz) AddServiceAccount(namespace string, name string) {
 
 // Process is the middleware function.
 func (a *Authz) Process(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		authz := c.Request().Header.Get("Authorization")
 		if authz == "" {
 			return echo.NewHTTPError(http.StatusUnauthorized, "missing Authorization header")

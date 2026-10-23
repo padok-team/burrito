@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -14,7 +14,7 @@ type GetAttemptsResponse struct {
 	Count int `json:"count"`
 }
 
-func getRunAttemptArgs(c echo.Context) (string, string, error) {
+func getRunAttemptArgs(c *echo.Context) (string, string, error) {
 	namespace := c.Param("namespace")
 	run := c.Param("run")
 	if namespace == "" || run == "" {
@@ -23,7 +23,7 @@ func getRunAttemptArgs(c echo.Context) (string, string, error) {
 	return namespace, run, nil
 }
 
-func (a *API) GetAttemptsHandler(c echo.Context) error {
+func (a *API) GetAttemptsHandler(c *echo.Context) error {
 	namespace, run, err := getRunAttemptArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())

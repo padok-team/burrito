@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	storageerrors "github.com/padok-team/burrito/internal/datastore/storage/error"
 )
 
-func getStateGraphArgs(c echo.Context) (string, string, error) {
+func getStateGraphArgs(c *echo.Context) (string, string, error) {
 	namespace := c.Param("namespace")
 	layer := c.Param("layer")
 	if namespace == "" || layer == "" {
@@ -18,7 +18,7 @@ func getStateGraphArgs(c echo.Context) (string, string, error) {
 }
 
 // stategraph/${namespace}/${layer}
-func (a *API) GetStateGraphHandler(c echo.Context) error {
+func (a *API) GetStateGraphHandler(c *echo.Context) error {
 	namespace, layer, err := getStateGraphArgs(c)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())

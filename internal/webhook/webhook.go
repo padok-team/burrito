@@ -5,7 +5,7 @@ import (
 	"html"
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/padok-team/burrito/internal/burrito/config"
 	repo "github.com/padok-team/burrito/internal/repository"
 	"github.com/padok-team/burrito/internal/repository/credentials"
@@ -33,8 +33,8 @@ func New(config *config.Config, client client.Client) *Webhook {
 	}
 }
 
-func (w *Webhook) GetHttpHandler() func(c echo.Context) error {
-	return func(c echo.Context) error {
+func (w *Webhook) GetHttpHandler() func(c *echo.Context) error {
+	return func(c *echo.Context) error {
 		log.Infof("webhook event received...")
 		r := c.Request()
 		event, err := w.tryGetEventFromPayload(r)
