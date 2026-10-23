@@ -1,5 +1,6 @@
 export const reactQueryKeys = {
   layers: ['layers'],
+  pulls: ['pulls'],
   repositories: ['repositories'],
   layer: (namespace: string, layer: string) => ['layer', namespace, layer],
   attempts: (namespace: string, layer: string, runId: string) => [

@@ -180,6 +180,7 @@ func (s *Server) Exec() {
 	api.Use(middleware.RequestLoggerWithConfig(utils.LoggerMiddlewareConfig))
 	api.GET("/layers", s.API.LayersHandler)
 	api.GET("/layers/:namespace/:layer", s.API.LayerHandler)
+	api.GET("/pulls", s.API.PullRequestsHandler)
 	api.POST("/layers/:namespace/:layer/sync", s.API.SyncLayerHandler)
 	api.GET("/layers/:namespace/:layer/stategraph", s.API.GetStateGraphHandler)
 	api.GET("/plans/:namespace/:layer/:run/:attempt", s.API.GetPlanHandler)

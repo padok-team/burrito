@@ -136,6 +136,19 @@ func (api *APIProvider) findManagedCommentID(owner string, repoName string, id i
 	}
 }
 
+func (api *APIProvider) GetPullRequestTitle(repository *configv1alpha1.TerraformRepository, pr *configv1alpha1.TerraformPullRequest) (string, error) {
+	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
+	id, err := strconv.Atoi(pr.Spec.ID)
+	if err != nil {
+		return "", fmt.Errorf("could not parse Github pull request ID: %w", err)
+	}
+	pullRequest, _, err := api.client.PullRequests.Get(context.TODO(), owner, repoName, id)
+	if err != nil {
+		return "", err
+	}
+	return pullRequest.GetTitle(), nil
+}
+
 func (api *APIProvider) ListPullRequests(repository *configv1alpha1.TerraformRepository) ([]configv1alpha1.TerraformPullRequest, error) {
 	owner, repoName := parseGithubUrl(repository.Spec.Repository.Url)
 	opts := &github.PullRequestListOptions{

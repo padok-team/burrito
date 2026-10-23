@@ -41,6 +41,7 @@ func (r *Reconciler) GetState(ctx context.Context, pr *configv1alpha1.TerraformP
 			Conditions:           conditions,
 			LastDiscoveredCommit: pr.Status.LastDiscoveredCommit,
 			LastCommentedCommit:  pr.Status.LastCommentedCommit,
+			Title:                pr.Status.Title,
 		},
 	}
 	switch {

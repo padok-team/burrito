@@ -117,50 +117,51 @@ func (a *API) LayersHandler(c echo.Context) error {
 	}
 	results := []layer{}
 	for _, l := range layers {
-		if err != nil {
-			log.Errorf("could not get latest run for layer %s: %s", l.Name, err)
-		}
-		run, ok := runs[fmt.Sprintf("%s/%s", l.Namespace, l.Status.LastRun.Name)]
-		runAPI := Run{}
-		running := false
-		if ok {
-			runAPI = Run{
-				Name:    run.Name,
-				Commit:  run.Status.Commit,
-				Author:  run.Status.Author,
-				Message: run.Status.Message,
-				Date:    run.CreationTimestamp.Format(time.RFC3339),
-				Action:  run.Spec.Action,
-			}
-			running = runStillRunning(run)
-		}
-		r := repositories[fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name)]
-		results = append(results, layer{
-			UID:              string(l.UID),
-			Name:             l.Name,
-			Namespace:        l.Namespace,
-			Repository:       fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
-			Branch:           l.Spec.Branch,
-			Path:             l.Spec.Path,
-			State:            a.getLayerState(l),
-			RunCount:         len(l.Status.LatestRuns),
-			LastRun:          runAPI,
-			LastRunAt:        l.Status.LastRun.Date.Format(time.RFC3339),
-			LastResult:       l.Status.LastResult,
-			IsRunning:        running,
-			IsPR:             a.isLayerPR(l),
-			LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
-			ManualSyncStatus: utils.GetManualSyncStatus(l),
-			AutoApply:        configv1alpha1.GetAutoApplyEnabled(&r, &l),
-			OpenTofu:         configv1alpha1.GetOpenTofuEnabled(&r, &l),
-			Terraform:        configv1alpha1.GetTerraformEnabled(&r, &l),
-			Terragrunt:       configv1alpha1.GetTerragruntEnabled(&r, &l),
-		})
+		results = append(results, a.buildLayer(l, runs, repositories))
 	}
 	return c.JSON(http.StatusOK, &layersResponse{
 		Results: results,
 	},
 	)
+}
+
+func (a *API) buildLayer(l configv1alpha1.TerraformLayer, runs map[string]configv1alpha1.TerraformRun, repositories map[string]configv1alpha1.TerraformRepository) layer {
+	run, ok := runs[fmt.Sprintf("%s/%s", l.Namespace, l.Status.LastRun.Name)]
+	runAPI := Run{}
+	running := false
+	if ok {
+		runAPI = Run{
+			Name:    run.Name,
+			Commit:  run.Status.Commit,
+			Author:  run.Status.Author,
+			Message: run.Status.Message,
+			Date:    run.CreationTimestamp.Format(time.RFC3339),
+			Action:  run.Spec.Action,
+		}
+		running = runStillRunning(run)
+	}
+	r := repositories[fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name)]
+	return layer{
+		UID:              string(l.UID),
+		Name:             l.Name,
+		Namespace:        l.Namespace,
+		Repository:       fmt.Sprintf("%s/%s", l.Spec.Repository.Namespace, l.Spec.Repository.Name),
+		Branch:           l.Spec.Branch,
+		Path:             l.Spec.Path,
+		State:            a.getLayerState(l),
+		RunCount:         len(l.Status.LatestRuns),
+		LastRun:          runAPI,
+		LastRunAt:        l.Status.LastRun.Date.Format(time.RFC3339),
+		LastResult:       l.Status.LastResult,
+		IsRunning:        running,
+		IsPR:             a.isLayerPR(l),
+		LatestRuns:       transformLatestRuns(l.Status.LatestRuns),
+		ManualSyncStatus: utils.GetManualSyncStatus(l),
+		AutoApply:        configv1alpha1.GetAutoApplyEnabled(&r, &l),
+		OpenTofu:         configv1alpha1.GetOpenTofuEnabled(&r, &l),
+		Terraform:        configv1alpha1.GetTerraformEnabled(&r, &l),
+		Terragrunt:       configv1alpha1.GetTerragruntEnabled(&r, &l),
+	}
 }
 
 func (a *API) LayerHandler(c echo.Context) error {
