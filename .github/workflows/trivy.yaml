@@ -11,6 +11,7 @@ on:
   # same behavior as push events (SARIF report uploaded to the Security tab).
   schedule:
     - cron: "0 8 * * *" # Every day at 08:00 UTC
+  workflow_dispatch:
 
 permissions: {}
 
@@ -44,3 +45,45 @@ jobs:
         uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           sarif_file: trivy-results.sarif
+
+  # Scans the latest released image (OS packages + binaries), which the fs scan
+  # above cannot see. :latest tracks main, so the latest GitHub release is scanned
+  # instead: new findings tell when a new release is worth cutting.
+  # Scheduled/manual only: a PR change is not in any published image yet.
+  scan-image:
+    name: Image Vulnerability Scan
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Required to upload SARIF to the GitHub Security tab
+    steps:
+      # "releases/latest" is the newest published, non-draft, non-prerelease release.
+      - name: Resolve latest release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh api "repos/${{ github.repository }}/releases/latest" --jq .tag_name)
+          if [[ -z "$TAG" ]]; then
+            echo "No release found."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Run Trivy on image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/${{ github.repository }}:${{ steps.release.outputs.tag }}
+          format: sarif
+          output: trivy-image-results.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+      # Distinct category so this upload does not overwrite the fs scan results.
+      - name: Upload Trivy image results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          sarif_file: trivy-image-results.sarif
+          category: trivy-image
