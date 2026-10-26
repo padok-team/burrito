@@ -35,6 +35,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
+          version: v0.76.1
           scan-ref: .
           format: sarif
           output: trivy-results.sarif
@@ -75,9 +76,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
-          # trivy-action pins an older Trivy by default, and a fresh vulnerability
-          # DB/scanner matters most for this scan.
-          version: latest
+          version: v0.76.1
           image-ref: ghcr.io/${{ github.repository }}:${{ steps.release.outputs.tag }}
           format: sarif
           output: trivy-image-results.sarif
