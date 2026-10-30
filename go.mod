@@ -29,7 +29,7 @@ require (
 	github.com/labstack/echo-contrib/v5 v5.0.1
 	github.com/labstack/echo/v5 v5.4.2
 	github.com/labstack/gommon v0.5.0
-	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.24.1
