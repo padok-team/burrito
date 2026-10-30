@@ -20,7 +20,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.3
 	github.com/go-playground/webhooks v5.17.0+incompatible
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v92 v92.0.0
+	github.com/google/go-github/v93 v93.0.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/gruntwork-io/go-commons v0.17.2
 	github.com/hashicorp/go-multierror v1.1.1
