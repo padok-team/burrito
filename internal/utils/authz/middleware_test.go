@@ -83,8 +83,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(err).NotTo(HaveOccurred())
 	Authz.AddServiceAccount("default", "authorized")
+	Authz.AddTenantServiceAccount("tenant-a", "burrito-runner")
 	createServiceAccount("default", "unauthorized")
 	createServiceAccount("default", "authorized")
+	Client.CoreV1().Namespaces().Create(context.TODO(), &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "tenant-a"}}, metav1.CreateOptions{})
+	createServiceAccount("tenant-a", "burrito-runner")
 	e = echo.New()
 })
 
@@ -129,6 +132,34 @@ var _ = Describe("Authz", func() {
 				err := Authz.Process(debugHandler)(context).(*echo.HTTPError)
 				Expect(err.Code).To(Equal(401))
 			})
+		})
+	})
+	Describe("Tenant service account", Ordered, func() {
+		var token string
+		process := func(namespace string) error {
+			path := "/"
+			if namespace != "" {
+				path = "/?namespace=" + namespace
+			}
+			req := httptest.NewRequest(http.MethodGet, path, nil)
+			req.Header.Set(echo.HeaderAuthorization, token)
+			return Authz.Process(debugHandler)(e.NewContext(req, httptest.NewRecorder()))
+		}
+		BeforeAll(func() {
+			token, _ = createToken("datastore", "tenant-a", "burrito-runner")
+		})
+		It("should allow access to its own namespace", func() {
+			Expect(process("tenant-a")).To(Succeed())
+		})
+		It("should return 403 for another namespace, also when the token is cached", func() {
+			Expect(process("tenant-b").(*echo.HTTPError).Code).To(Equal(403))
+		})
+		It("should return 403 when no namespace is given", func() {
+			Expect(process("").(*echo.HTTPError).Code).To(Equal(403))
+		})
+		It("should let a non-tenant service account access any namespace", func() {
+			token, _ = createToken("datastore", "default", "authorized")
+			Expect(process("tenant-b")).To(Succeed())
 		})
 	})
 })

@@ -27,6 +27,8 @@ type DatastoreConfig struct {
 	CertificateSecretName     string        `mapstructure:"certificateSecretName"`
 	Storage                   StorageConfig `mapstructure:"storage"`
 	AuthorizedServiceAccounts []string      `mapstructure:"serviceAccounts"`
+	// TenantServiceAccounts may only access datastore artifacts of their own namespace
+	TenantServiceAccounts []string `mapstructure:"tenantServiceAccounts"`
 	LogFormat                 string        `mapstructure:"logFormat"`
 }
 

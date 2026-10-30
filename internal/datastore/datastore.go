@@ -40,6 +40,10 @@ func (s *Datastore) Exec() {
 		l := strings.Split(sa, "/")
 		authz.AddServiceAccount(l[0], l[1])
 	}
+	for _, sa := range s.Config.Datastore.TenantServiceAccounts {
+		l := strings.Split(sa, "/")
+		authz.AddTenantServiceAccount(l[0], l[1])
+	}
 	authz.SetAudience("burrito")
 	log.Infof("starting burrito datastore...")
 	e := echo.New()
