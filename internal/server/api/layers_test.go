@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
@@ -115,11 +115,14 @@ func (s *stubDatastore) GetStateGraph(namespace, layer string) ([]byte, error) {
 	return s.content, s.err
 }
 
-func newTestContext(names, values []string) (echo.Context, *httptest.ResponseRecorder) {
+func newTestContext(names, values []string) (*echo.Context, *httptest.ResponseRecorder) {
 	rec := httptest.NewRecorder()
 	c := echo.New().NewContext(httptest.NewRequest(http.MethodGet, "/", nil), rec)
-	c.SetParamNames(names...)
-	c.SetParamValues(values...)
+	pv := make(echo.PathValues, len(names))
+	for i, n := range names {
+		pv[i] = echo.PathValue{Name: n, Value: values[i]}
+	}
+	c.SetPathValues(pv)
 	return c, rec
 }
 
