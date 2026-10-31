@@ -20,6 +20,8 @@ type (
 		Client          client.Clientset
 		Audience        string
 		ServiceAccounts []string
+		// TenantServiceAccounts maps a tenant service account username to the only namespace it may access
+		TenantServiceAccounts map[string]string
 	}
 )
 
@@ -46,6 +48,14 @@ func (a *Authz) AddServiceAccount(namespace string, name string) {
 	a.ServiceAccounts = append(a.ServiceAccounts, fmt.Sprintf("system:serviceaccount:%s:%s", namespace, name))
 }
 
+// AddTenantServiceAccount allows a service account restricted to requests on its own namespace.
+func (a *Authz) AddTenantServiceAccount(namespace string, name string) {
+	if a.TenantServiceAccounts == nil {
+		a.TenantServiceAccounts = map[string]string{}
+	}
+	a.TenantServiceAccounts[fmt.Sprintf("system:serviceaccount:%s:%s", namespace, name)] = namespace
+}
+
 // Process is the middleware function.
 func (a *Authz) Process(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c *echo.Context) error {
@@ -53,35 +63,41 @@ func (a *Authz) Process(next echo.HandlerFunc) echo.HandlerFunc {
 		if authz == "" {
 			return echo.NewHTTPError(http.StatusUnauthorized, "missing Authorization header")
 		}
-		sa, found := a.Cache.Get(authz)
-		if found {
-			c.Set("serviceAccount", sa)
-			return next(c)
+		cached, found := a.Cache.Get(authz)
+		username, _ := cached.(string)
+		if !found {
+			tr := &v1.TokenReview{
+				Spec: v1.TokenReviewSpec{
+					Token:     authz,
+					Audiences: []string{a.Audience},
+				},
+			}
+			result, err := a.Client.AuthenticationV1().TokenReviews().Create(context.Background(), tr, metav1.CreateOptions{})
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "error validating token")
+			}
+			if !result.Status.Authenticated {
+				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
+			}
+			username = result.Status.User.Username
+			if !a.isServiceAccountAllowed(username) {
+				return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized user")
+			}
+			a.Cache.Set(authz, username, cache.DefaultExpiration)
 		}
-		ctx := context.Background()
-		tr := &v1.TokenReview{
-			Spec: v1.TokenReviewSpec{
-				Token:     authz,
-				Audiences: []string{a.Audience},
-			},
+		// tenant service accounts may only access artifacts of their own namespace
+		if namespace, isTenant := a.TenantServiceAccounts[username]; isTenant && c.QueryParam("namespace") != namespace {
+			return echo.NewHTTPError(http.StatusForbidden, "service account not allowed to access this namespace")
 		}
-		result, err := a.Client.AuthenticationV1().TokenReviews().Create(ctx, tr, metav1.CreateOptions{})
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "error validating token")
-		}
-		if !result.Status.Authenticated {
-			return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
-		}
-		if !a.isServiceAccountAllowed(result.Status.User.Username) {
-			return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized user")
-		}
-		a.Cache.Set(authz, result.Status.User.Username, cache.DefaultExpiration)
-		c.Set("serviceAccount", result.Status.User.Username)
+		c.Set("serviceAccount", username)
 		return next(c)
 	}
 }
 
 func (a *Authz) isServiceAccountAllowed(username string) bool {
+	if _, ok := a.TenantServiceAccounts[username]; ok {
+		return true
+	}
 	for _, sa := range a.ServiceAccounts {
 		if sa == username {
 			return true
