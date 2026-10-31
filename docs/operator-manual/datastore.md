@@ -212,6 +212,54 @@ datastore:
 !!! note
     On clusters without IRSA support, provide static credentials instead, as shown in the [Private S3 endpoint](#private-s3-endpoint) section.
 
+### AWS S3 with EKS Pod Identity
+
+[EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) is the
+successor to IRSA and does not need an OIDC provider. The bucket policy above stays the same; only
+the way the role is assumed changes: instead of a federated principal per cluster, the role trusts
+the single principal `pods.eks.amazonaws.com`, so one role can be reused by several clusters.
+
+```hcl
+data "aws_iam_policy_document" "burrito_datastore_pod_identity" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:TagSession"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "burrito_datastore_pod_identity" {
+  name               = "burrito-datastore-pod-identity"
+  assume_role_policy = data.aws_iam_policy_document.burrito_datastore_pod_identity.json
+}
+
+resource "aws_iam_role_policy_attachment" "burrito_datastore_pod_identity" {
+  role       = aws_iam_role.burrito_datastore_pod_identity.name
+  policy_arn = aws_iam_policy.burrito_datastore.arn
+}
+
+resource "aws_eks_pod_identity_association" "burrito_datastore" {
+  cluster_name    = "<your-cluster-name>"
+  namespace       = "burrito-system"
+  service_account = "burrito-datastore"
+  role_arn        = aws_iam_role.burrito_datastore_pod_identity.arn
+}
+```
+
+`aws_iam_policy.burrito_datastore` is the policy from the IRSA example above. Nothing needs to be
+added to `datastore.serviceAccount.metadata`: the association is what points the EKS Pod Identity
+Agent at the role, and the agent injects the credential variables into the `burrito-datastore` pods
+itself.
+
+!!! note
+    Pod Identity needs the `eks-pod-identity-agent` add-on on the cluster (it is built into EKS
+    Auto Mode). The node role must also be allowed to call `eks-auth:AssumeRoleForPodIdentity`,
+    which the AWS managed `AmazonEKSWorkerNodePolicy` already grants. On private subnets, the nodes
+    need a PrivateLink endpoint for the EKS Auth API.
+
 ### Azure Blob Storage
 
 The datastore authenticates with `DefaultAzureCredential`, which supports managed identities
