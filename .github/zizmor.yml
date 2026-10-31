@@ -1,6 +1,4 @@
 rules:
-  template-injection:
-    disable: true
   artipacked:
     ignore:
       - docs.yaml
