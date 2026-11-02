@@ -72,6 +72,9 @@ jobs:
   lint-go:
     name: Lint Go
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read # Required by only-new-issues to fetch the PR diff
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -90,8 +93,10 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
-          version: latest
-          args: --issues-exit-code=0
+          # Keep in sync with golangci-lint in mise.toml.
+          version: v2.14.0
+          # main still carries existing issues: fail only on the ones a change introduces.
+          only-new-issues: true
 
   build-and-push:
     permissions:
