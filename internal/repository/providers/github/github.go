@@ -11,7 +11,7 @@ import (
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	wh "github.com/go-playground/webhooks/github"
+	wh "github.com/go-playground/webhooks/v6/github"
 	"github.com/google/go-github/v92/github"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"

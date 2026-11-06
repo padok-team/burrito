@@ -16,6 +16,7 @@ Available authentication methods:
 - [GitHub App](./git-authentication/github-app.md) (recommended for GitHub)
 - [GitHub API token](./git-authentication/github-token.md)
 - [GitLab API token](./git-authentication/gitlab-token.md)
+- [Gitea / Forgejo API token](./git-authentication/gitea-token.md)
 
 ## Repository Credentials
 
@@ -89,10 +90,11 @@ Authentication methods:
 - Token-based authentication:
     - `githubToken` - GitHub API token
     - `gitlabToken` - GitLab API token
+    - `giteaToken` - Gitea/Forgejo API token
 
 Additional fields:
 
-- `provider` - The Git provider (`github`, `gitlab` or `standard`)
+- `provider` - The Git provider (`github`, `gitlab`, `gitea` (or its alias `forgejo`) or `standard`)
 - `url` - The repository URL or domain for matching
 - `webhookSecret` - Secret used for webhook validation
 

@@ -5,7 +5,7 @@ import (
 	nethttp "net/http"
 	"strconv"
 
-	wh "github.com/go-playground/webhooks/gitlab"
+	wh "github.com/go-playground/webhooks/v6/gitlab"
 	utils "github.com/padok-team/burrito/internal/utils/url"
 	"github.com/padok-team/burrito/internal/webhook/event"
 	log "github.com/sirupsen/logrus"

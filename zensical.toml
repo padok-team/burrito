@@ -28,6 +28,7 @@ nav = [
       { "GitHub App" = "operator-manual/git-authentication/github-app.md" },
       { "GitHub Token" = "operator-manual/git-authentication/github-token.md" },
       { "GitLab Token" = "operator-manual/git-authentication/gitlab-token.md" },
+      { "Gitea / Forgejo Token" = "operator-manual/git-authentication/gitea-token.md" },
     ] },
     "operator-manual/pr-mr-workflow.md",
     "operator-manual/git-webhook.md",
