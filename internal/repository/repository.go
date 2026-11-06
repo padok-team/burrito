@@ -5,6 +5,7 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"
+	"github.com/padok-team/burrito/internal/repository/providers/gitea"
 	"github.com/padok-team/burrito/internal/repository/providers/github"
 	"github.com/padok-team/burrito/internal/repository/providers/gitlab"
 	"github.com/padok-team/burrito/internal/repository/providers/mock"
@@ -46,6 +47,10 @@ func GetProviderFromCredentials(RepositoryCredentials credentials.Credential) (t
 		provider = &github.Github{Config: RepositoryCredentials}
 	case "gitlab":
 		provider = &gitlab.Gitlab{Config: RepositoryCredentials}
+	// "forgejo" is an alias: Forgejo exposes a Gitea-compatible API and
+	// sends Gitea-compatible webhooks, so both keys use the same provider.
+	case "gitea", "forgejo":
+		provider = &gitea.Gitea{Config: RepositoryCredentials}
 	case "standard":
 		provider = &standard.Standard{Config: RepositoryCredentials}
 	case "mock":

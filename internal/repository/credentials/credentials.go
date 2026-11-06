@@ -184,6 +184,7 @@ type Credential struct {
 	// Token auth
 	GitHubToken string `json:"githubToken,omitempty"`
 	GitLabToken string `json:"gitlabToken,omitempty"`
+	GiteaToken  string `json:"giteaToken,omitempty"`
 	// Repository URL
 	URL string `json:"url,omitempty"`
 	// Secret for webhook handling

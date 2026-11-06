@@ -12,7 +12,7 @@ import (
 	"github.com/padok-team/burrito/internal/repository/providers/gitlab"
 	"github.com/padok-team/burrito/internal/webhook/event"
 
-	webhook "github.com/go-playground/webhooks/gitlab"
+	webhook "github.com/go-playground/webhooks/v6/gitlab"
 	"github.com/stretchr/testify/assert"
 )
 

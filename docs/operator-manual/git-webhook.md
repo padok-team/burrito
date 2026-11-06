@@ -11,7 +11,7 @@ Otherwise, Burrito will poll repositories for changes, which may not be as effic
 
 Expose the `burrito-server` service to the internet using the method of your choice. (e.g. ingress, port-forward & ngrok for local testing...). Accessing the URL on the browser should display the Burrito UI.
 
-## Configure a webhook on GitHub or GitLab
+## Configure a webhook on GitHub, GitLab or Gitea/Forgejo
 
 Create a webhook (with a secret!) in the repository you want to receive events from.
 The target URL must point to the exposed `burrito-server` on the `/api/webhook` path.
@@ -20,6 +20,8 @@ Only `application/json` content type is supported.
 **GitHub triggers:** The webhook should be triggered on `push` and `pull_request` events.
 
 **GitLab triggers:** The webhook should be triggered on `Push events` from all branches and `Merge request events`.
+
+**Gitea/Forgejo triggers:** The webhook should be a `Gitea` webhook triggered on `push` and `pull request` events.
 
 ## Configure the webhook secret in credentials
 
