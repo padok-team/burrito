@@ -1,5 +1,5 @@
 # Burrito configuration
-## Ref: https://docs.burrito.tf/operator-manual/advanced-configuration/
+## Ref: https://docs.burrito.tf/latest/operator-manual/advanced-configuration/
 config:
   # -- Create ConfigMap with Burrito configuration
   create: true
