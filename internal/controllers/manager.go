@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	corev1 "k8s.io/api/core/v1"
@@ -34,6 +35,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	logrusr "github.com/bombsimon/logrusr/v4"
 	"github.com/padok-team/burrito/internal/controllers/metrics"
@@ -41,6 +44,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformpullrequest"
 	"github.com/padok-team/burrito/internal/controllers/terraformrepository"
 	"github.com/padok-team/burrito/internal/controllers/terraformrun"
+	"github.com/padok-team/burrito/internal/controllers/validatingwebhook"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/sirupsen/logrus"
@@ -103,6 +107,9 @@ func (c *Controllers) Exec() {
 		Cache: cache.Options{
 			DefaultNamespaces: cacheNamespaces,
 		},
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port: c.config.Controller.KubernetesWebhookPort,
+		}),
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
 	if err != nil {
@@ -195,6 +202,15 @@ func (c *Controllers) Exec() {
 		}
 	}
 	//+kubebuilder:scaffold:builder
+
+	// Register the Burrito validating admission webhook handlers.
+	validator := validatingwebhook.NewValidator(scheme)
+	hookServer := mgr.GetWebhookServer()
+	hookServer.Register("/validate-config-terraform-padok-cloud-v1alpha1-terraformlayer", &admission.Webhook{Handler: validator})
+	hookServer.Register("/validate-config-terraform-padok-cloud-v1alpha1-terraformrepository", &admission.Webhook{Handler: validator})
+	hookServer.Register("/validate-config-terraform-padok-cloud-v1alpha1-terraformrun", &admission.Webhook{Handler: validator})
+	hookServer.Register("/validate-config-terraform-padok-cloud-v1alpha1-terraformpullrequest", &admission.Webhook{Handler: validator})
+	log.Info("Validating webhook handlers registered")
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		log.Fatalf("unable to set up health check: %s", err)

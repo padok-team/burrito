@@ -1,0 +1,107 @@
+{{- /*
+Expand the name of the chart.
+*/ -}}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if .Values.webhook.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ $name }}-validating-webhook
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+webhooks:
+  - name: terraformlayers.config.terraform.padok.cloud
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: burrito-controllers
+        path: /validate-config-terraform-padok-cloud-v1alpha1-terraformlayer
+        port: {{ .Values.webhook.port }}
+      caBundle: {{ .Values.webhook.caBundle | quote }}
+    rules:
+      - apiGroups:
+          - config.terraform.padok.cloud
+        apiVersions:
+          - v1alpha1
+        resources:
+          - terraformlayers
+        operations:
+          - CREATE
+          - UPDATE
+  - name: terraformrepositories.config.terraform.padok.cloud
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: burrito-controllers
+        path: /validate-config-terraform-padok-cloud-v1alpha1-terraformrepository
+        port: {{ .Values.webhook.port }}
+      caBundle: {{ .Values.webhook.caBundle | quote }}
+    rules:
+      - apiGroups:
+          - config.terraform.padok.cloud
+        apiVersions:
+          - v1alpha1
+        resources:
+          - terraformrepositories
+        operations:
+          - CREATE
+          - UPDATE
+  - name: terraformruns.config.terraform.padok.cloud
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: burrito-controllers
+        path: /validate-config-terraform-padok-cloud-v1alpha1-terraformrun
+        port: {{ .Values.webhook.port }}
+      caBundle: {{ .Values.webhook.caBundle | quote }}
+    rules:
+      - apiGroups:
+          - config.terraform.padok.cloud
+        apiVersions:
+          - v1alpha1
+        resources:
+          - terraformruns
+        operations:
+          - CREATE
+          - UPDATE
+  - name: terraformpullrequests.config.terraform.padok.cloud
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: burrito-controllers
+        path: /validate-config-terraform-padok-cloud-v1alpha1-terraformpullrequest
+        port: {{ .Values.webhook.port }}
+      caBundle: {{ .Values.webhook.caBundle | quote }}
+    rules:
+      - apiGroups:
+          - config.terraform.padok.cloud
+        apiVersions:
+          - v1alpha1
+        resources:
+          - terraformpullrequests
+        operations:
+          - CREATE
+          - UPDATE
+{{- end }}
