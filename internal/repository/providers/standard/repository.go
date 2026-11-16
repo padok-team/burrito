@@ -120,6 +120,7 @@ func (p *GitProvider) Bundle(ref string) ([]byte, error) {
 	// Checkout the specific branch
 	checkoutOpts := &git.CheckoutOptions{
 		Branch: reference.Name(),
+    	Force:  true,
 	}
 
 	log.Infof("checking out branch %s", reference.Name())
