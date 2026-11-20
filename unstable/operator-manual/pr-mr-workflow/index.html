@@ -1878,7 +1878,7 @@
 
 
 <h1 id="prmr-workflow">PR/MR Workflow<a class="headerlink" href="#prmr-workflow" title="Permanent link">&para;</a></h1>
-<p align="center"><img src="../../../assets/design/pr-mr-workflow.excalidraw.png" width="1000px" /></p>
+<p align="center"><img src="../../assets/design/pr-mr-workflow.excalidraw.png" width="1000px" /></p>
 
 <div class="admonition info">
 <p class="admonition-title">Info</p>
@@ -1895,7 +1895,7 @@
 <h3 id="the-pull-request-controller">The pull request controller<a class="headerlink" href="#the-pull-request-controller" title="Permanent link">&para;</a></h3>
 <p>The pull request controller is a Kubernetes controller which continuously monitors declared <code>TerraformPullRequest</code> resources.</p>
 <p>It is responsible for creating temporary <code>TerraformLayer</code> resources linked to the Pull Request it was generated from. Once all the <code>TerraformLayer</code> have planned, it will send a comment containing the plan results to the pull request.</p>
-<p align="center"><img src="../../../assets/demo/comment.png" width="1000px" /></p>
+<p align="center"><img src="../../assets/demo/comment.png" width="1000px" /></p>
 
 <h4 id="implementation">Implementation<a class="headerlink" href="#implementation" title="Permanent link">&para;</a></h4>
 <p>The status of a <code>TerraformPulLRequest</code> is defined using the <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties">conditions standards defined by the community</a>.</p>
