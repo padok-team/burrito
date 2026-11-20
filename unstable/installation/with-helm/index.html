@@ -1822,7 +1822,7 @@
 <p>Learn more about these values in the chart's <a href="https://github.com/padok-team/burrito/tree/main/deploy/charts/burrito/README.md">README file</a> and <a href="../../operator-manual/multi-tenant-architecture/">Multi-tenant architecture</a>.</p>
 </div>
 <h2 id="3-optional-verify-image-and-chart-signatures">3. (Optional) Verify image and chart signatures<a class="headerlink" href="#3-optional-verify-image-and-chart-signatures" title="Permanent link">&para;</a></h2>
-<p>Every Docker image and Helm chart pushed to GHCR is signed with <a href="https://docs.sigstore.dev/cosign/overview/">cosign</a> using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.</p>
+<p>Every Docker image and Helm chart pushed to GHCR is signed with <a href="https://docs.sigstore.dev/cosign/signing/overview/">cosign</a> using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.</p>
 <p>Signing happens right after the artifact is pushed, by digest, in <code>build-and-push.yaml</code> (job <code>merge</code>) and <code>helm.yaml</code> (job <code>helm-push</code>). It requires the <code>id-token: write</code> permission, which every workflow calling these reusable workflows must grant.</p>
 <p>To verify a signature:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Docker image</span>

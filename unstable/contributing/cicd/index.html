@@ -1959,7 +1959,7 @@
 </ul>
 <p>The image digest is also pinned in <code>values.yaml</code> to guarantee reproducible installs.</p>
 <h2 id="signing">Signing<a class="headerlink" href="#signing" title="Permanent link">&para;</a></h2>
-<p>Every Docker image and Helm chart pushed to GHCR is signed with <a href="https://docs.sigstore.dev/cosign/overview/">cosign</a> using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.</p>
+<p>Every Docker image and Helm chart pushed to GHCR is signed with <a href="https://docs.sigstore.dev/cosign/signing/overview/">cosign</a> using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.</p>
 <p>Signing happens right after the artifact is pushed, by digest, in <code>build-and-push.yaml</code> (job <code>merge</code>) and <code>helm.yaml</code> (job <code>helm-push</code>). It requires the <code>id-token: write</code> permission, which every workflow calling these reusable workflows must grant.</p>
 <p>To verify a signature:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Docker image</span>
