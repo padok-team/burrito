@@ -61,7 +61,7 @@ tenants:
 
 ## 3. (Optional) Verify image and chart signatures
 
-Every Docker image and Helm chart pushed to GHCR is signed with [cosign](https://docs.sigstore.dev/cosign/overview/) using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.
+Every Docker image and Helm chart pushed to GHCR is signed with [cosign](https://docs.sigstore.dev/cosign/signing/overview/) using keyless (OIDC) signing — no private key material is stored or managed. The signature is bound to the GitHub Actions run that produced the artifact and is stored alongside it in GHCR.
 
 Signing happens right after the artifact is pushed, by digest, in `build-and-push.yaml` (job `merge`) and `helm.yaml` (job `helm-push`). It requires the `id-token: write` permission, which every workflow calling these reusable workflows must grant.
 

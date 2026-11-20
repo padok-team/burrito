@@ -34,7 +34,7 @@ We welcome suggestions for improvements. Please use the issue tracker to submit 
 ### Prerequisites
 
 - [Go 1.26+](https://go.dev/dl/) (matches `go.mod`/CI) — required for `make build`, `make test`, `make vet`, `golangci-lint`, and `go install` of tools such as `dlv`
-- Docker with [Buildx](https://docs.docker.com/build/buildx/) and Compose — the `make upgrade-*-kind` and `make test` targets are docker-specific (`docker buildx build --load`, `kind load docker-image`, `docker compose`)
+- Docker with [Buildx](https://docs.docker.com/build/concepts/overview/#buildx) and Compose — the `make upgrade-*-kind` and `make test` targets are docker-specific (`docker buildx build --load`, `kind load docker-image`, `docker compose`)
 - Git
 - [Kind](https://kind.sigs.k8s.io/)
 - [Helm](https://helm.sh/)

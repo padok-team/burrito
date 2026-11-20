@@ -43,7 +43,7 @@ To learn more about burrito [go to the complete documentation](https://docs.burr
 
 ### Contribution, Discussion and Support
 
-Please read our [Contribution Guide](https://docs.burrito.tf/contributing/) for more information on how to get involved.
+Please read our [Contribution Guide](https://docs.burrito.tf/latest/contributing/) for more information on how to get involved.
 
 Current maintainers:
 
