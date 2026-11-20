@@ -19,6 +19,7 @@ package terraformlayer
 import (
 	"context"
 	e "errors"
+	"slices"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -28,7 +29,6 @@ import (
 	"github.com/padok-team/burrito/internal/lock"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -235,22 +235,17 @@ func backfillRunInfo(history []configv1alpha1.TerraformLayerRun, runs []*configv
 }
 
 func updateLatestRuns(runs []configv1alpha1.TerraformLayerRun, run configv1alpha1.TerraformRun, keep int) []configv1alpha1.TerraformLayerRun {
-	oldestRun := &configv1alpha1.TerraformLayerRun{
-		Date: metav1.NewTime(time.Now()),
+	// The run that was just created must stay in the history, otherwise cleanupRuns deletes it.
+	keep = max(keep, 1)
+	latest := append(slices.Clone(runs), getRun(run))
+	slices.SortStableFunc(latest, func(a, b configv1alpha1.TerraformLayerRun) int {
+		return a.Date.Compare(b.Date.Time)
+	})
+	// Trim instead of swapping a single entry, so that a lowered history policy applies to existing layers.
+	if len(latest) > keep {
+		latest = latest[len(latest)-keep:]
 	}
-	var oldestRunIndex int
-	newRun := getRun(run)
-	for i, r := range runs {
-		if r.Date.Before(&oldestRun.Date) {
-			oldestRun = &r
-			oldestRunIndex = i
-		}
-	}
-	if oldestRun == nil || len(runs) < keep {
-		return append(runs, newRun)
-	}
-	rs := append(runs[:oldestRunIndex], runs[oldestRunIndex+1:]...)
-	return append(rs, newRun)
+	return latest
 }
 
 // SetupWithManager sets up the controller with the Manager.
