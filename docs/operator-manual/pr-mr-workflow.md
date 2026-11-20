@@ -1,6 +1,6 @@
 # PR/MR Workflow
 
-<p align="center"><img src="../../assets/design/pr-mr-workflow.excalidraw.png" width="1000px" /></p>
+<p align="center"><img src="../assets/design/pr-mr-workflow.excalidraw.png" width="1000px" /></p>
 
 !!! info
     In this documentation all references to pull requests can be change to merge requests for GitLab. However, the resulting Kubernetes object will still be named `TerraformPullRequest`.
@@ -22,7 +22,7 @@ The pull request controller is a Kubernetes controller which continuously monito
 
 It is responsible for creating temporary `TerraformLayer` resources linked to the Pull Request it was generated from. Once all the `TerraformLayer` have planned, it will send a comment containing the plan results to the pull request.
 
-<p align="center"><img src="../../assets/demo/comment.png" width="1000px" /></p>
+<p align="center"><img src="../assets/demo/comment.png" width="1000px" /></p>
 
 #### Implementation
 

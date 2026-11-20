@@ -1,6 +1,6 @@
 # Architectural Overview
 
-<p align="center"><img src="../../assets/design/architecture-overview.png" width="1000px" /></p>
+<p align="center"><img src="../assets/design/architecture-overview.png" width="1000px" /></p>
 
 ## Components
 
