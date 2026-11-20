@@ -17,6 +17,7 @@ on:
       - "docs/**"
       - "pyproject.toml"
       - "uv.lock"
+      - "zensical.toml"
 
 permissions: {}
 
