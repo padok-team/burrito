@@ -21,7 +21,7 @@ You can create a custom badge for your GitHub App to display on your GitHub repo
 
 We suggest using the following one:
 
-<p align="center"><img src="../../../assets/icon/burrito.png" width="200px" /></p>
+<p align="center"><img src="../../assets/icon/burrito.png" width="200px" /></p>
 
 ## Install the GitHub App
 
@@ -35,9 +35,9 @@ You need the **Installation ID** and **App ID** to configure Burrito.
 
 <!-- markdownlint-disable MD032 -->
 1. Get the **Installation ID** from the URL of the installed app, such as:
-  <p align="center"><img src="../../../assets/pr-mr-workflow/github_installation_id.png" /></p>
+  <p align="center"><img src="../../assets/pr-mr-workflow/github_installation_id.png" /></p>
 2. Get the **App ID** from the app's General tab.
-  <p align="center"><img src="../../../assets/pr-mr-workflow/github_app_id.png" /></p>
+  <p align="center"><img src="../../assets/pr-mr-workflow/github_app_id.png" /></p>
 <!-- markdownlint-enable MD032 -->
 
 ## Generate a private key

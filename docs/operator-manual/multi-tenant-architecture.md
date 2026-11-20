@@ -1,6 +1,6 @@
 # Multi-tenant architecture
 
-<p align="center"><img src="../../assets/design/multi-tenant-architecture.excalidraw.png" width="1000px" /></p>
+<p align="center"><img src="../assets/design/multi-tenant-architecture.excalidraw.png" width="1000px" /></p>
 
 With our [Helm chart](../installation/with-helm.md) we provide a way to setup multi-tenancy with burrito. This is useful when working at scale, when you controls multiple Terraform projects with burrito across several teams.
 
