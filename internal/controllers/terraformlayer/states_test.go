@@ -301,6 +301,100 @@ func TestApplyNeededSkipsRunWhenLastBranchCommitIsEmpty(t *testing.T) {
 	assertEventContains(t, recorder, "Layer has no last branch commit annotation, Apply run not created")
 }
 
+func TestPlanIsDestructive(t *testing.T) {
+	for _, tc := range []struct {
+		lastResult string
+		want       bool
+	}{
+		{"Plan: 0 to create, 0 to update, 0 to delete", false},
+		{"Plan: 3 to create, 1 to update, 0 to delete", false},
+		{"Plan: 0 to create, 0 to update, 1 to delete", true},
+		{"Plan: 0 to create, 0 to update, 12 to delete", true},
+		{"Plan: 1 to create, 0 to update, 2 to delete", true},
+		{"", false},
+	} {
+		if got := planIsDestructive(tc.lastResult); got != tc.want {
+			t.Errorf("planIsDestructive(%q) = %t, want %t", tc.lastResult, got, tc.want)
+		}
+	}
+}
+
+func TestApplyNeededSkipsRunWhenNonDestructiveApplyBlocksADestructivePlan(t *testing.T) {
+	recorder := record.NewFakeRecorder(1)
+	reconciler := &Reconciler{
+		Client:   failOnCreateClient{t: t},
+		Recorder: recorder,
+		Config:   config.TestConfig(),
+	}
+	enabled := true
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pwet",
+			Namespace: "default",
+			Annotations: map[string]string{
+				annotations.LastBranchCommit: "abc123",
+				annotations.LastPlanRun:      "plan-run/0",
+			},
+		},
+		Status: configv1alpha1.TerraformLayerStatus{
+			LastResult: "Plan: 0 to create, 0 to update, 2 to delete",
+		},
+	}
+	repository := &configv1alpha1.TerraformRepository{
+		Spec: configv1alpha1.TerraformRepositorySpec{
+			RemediationStrategy: configv1alpha1.RemediationStrategy{
+				AutoApply:           &enabled,
+				NonDestructiveApply: &enabled,
+			},
+		},
+	}
+
+	result, run := (&ApplyNeeded{}).getHandler()(context.Background(), reconciler, layer, repository)
+
+	if run != nil {
+		t.Fatalf("expected no run when a destructive plan is blocked by nonDestructiveApply")
+	}
+	if result.RequeueAfter != reconciler.Config.Controller.Timers.DriftDetection {
+		t.Fatalf("expected DriftDetection requeue, got %s", result.RequeueAfter)
+	}
+	assertEventContains(t, recorder, "nonDestructiveApply is enabled")
+}
+
+func TestApplyNeededCreatesRunWhenNonDestructiveApplyAndPlanIsNotDestructive(t *testing.T) {
+	recordingClient := &createRecordingClient{}
+	provider := &mock.APIProvider{}
+	reconciler := reconcilerWithFakeProvider(recordingClient, provider)
+	enabled := true
+	layer := &configv1alpha1.TerraformLayer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "pwet",
+			Namespace: "default",
+			Annotations: map[string]string{
+				annotations.LastBranchCommit: "sha-same",
+				annotations.LastPlanCommit:   "sha-same",
+				annotations.LastPlanRun:      "plan-run/0",
+			},
+		},
+		Status: configv1alpha1.TerraformLayerStatus{
+			LastResult: "Plan: 1 to create, 0 to update, 0 to delete",
+		},
+	}
+	repository := &configv1alpha1.TerraformRepository{
+		Spec: configv1alpha1.TerraformRepositorySpec{
+			RemediationStrategy: configv1alpha1.RemediationStrategy{
+				AutoApply:           &enabled,
+				NonDestructiveApply: &enabled,
+			},
+		},
+	}
+
+	_, run := (&ApplyNeeded{}).getHandler()(context.Background(), reconciler, layer, repository)
+
+	if run == nil {
+		t.Fatalf("expected a run to be created when nonDestructiveApply is on but the plan is not destructive")
+	}
+}
+
 func assertEventContains(t *testing.T, recorder *record.FakeRecorder, want string) {
 	t.Helper()
 
