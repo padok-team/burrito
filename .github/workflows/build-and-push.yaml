@@ -36,17 +36,22 @@ jobs:
           persist-credentials: false
 
       - name: Prepare
+        env:
+          PLATFORM: ${{ matrix.platform.name }}
         run: |
-          platform=${{ matrix.platform.name }}
+          platform="$PLATFORM"
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
       - name: Get Build timestamp and branch name
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.head_ref || github.ref_name }}
         run: |
           echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-          if [[ -n "${{ inputs.version }}" ]]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          if [[ -n "$INPUT_VERSION" ]]; then
+            echo "VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           else
-            echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+            echo "VERSION=$( echo "$REF_NAME" | tr '/' '-' )" >> $GITHUB_ENV
           fi
 
       - name: Docker tags & labels
@@ -92,9 +97,11 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=${{ env.REGISTRY_PUSH }}
 
       - name: Export digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
+          digest="$DIGEST"
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
@@ -126,11 +133,14 @@ jobs:
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
 
       - name: Get branch name
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.head_ref || github.ref_name }}
         run: |
-          if [[ -n "${{ inputs.version }}" ]]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+          if [[ -n "$INPUT_VERSION" ]]; then
+            echo "VERSION=$INPUT_VERSION" >> $GITHUB_ENV
           else
-            echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
+            echo "VERSION=$( echo "$REF_NAME" | tr '/' '-' )" >> $GITHUB_ENV
           fi
 
       - name: Docker tags & labels
@@ -160,14 +170,16 @@ jobs:
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+            $(printf "${REGISTRY_IMAGE}@sha256:%s " *)
 
       - name: Inspect image
         id: inspect
         if: env.REGISTRY_PUSH == 'true'
+        env:
+          META_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
-          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }} | grep -m1 '^Digest:' | awk '{print $2}')
+          docker buildx imagetools inspect "${REGISTRY_IMAGE}:${META_VERSION}"
+          DIGEST=$(docker buildx imagetools inspect "${REGISTRY_IMAGE}:${META_VERSION}" | grep -m1 '^Digest:' | awk '{print $2}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Install Cosign
@@ -176,4 +188,6 @@ jobs:
 
       - name: Sign image
         if: env.REGISTRY_PUSH == 'true'
-        run: cosign sign --yes ${{ env.REGISTRY_IMAGE }}@${{ steps.inspect.outputs.digest }}
+        env:
+          DIGEST: ${{ steps.inspect.outputs.digest }}
+        run: cosign sign --yes "${REGISTRY_IMAGE}@${DIGEST}"
