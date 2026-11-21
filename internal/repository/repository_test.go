@@ -15,7 +15,7 @@ import (
 // "Adding a provider = add a case here"), so keeping this list in sync with it
 // guarantees that every provider reachable in production is exercised by the
 // non-regression test below.
-var allProviderKeys = []string{"github", "gitlab", "standard", "mock"}
+var allProviderKeys = []string{"github", "gitlab", "gitea", "forgejo", "standard", "mock"}
 
 // TestGetWebhookProvider_RejectsEmptyWebhookSecret is a security non-regression
 // test: no provider must ever hand back a usable webhook provider when the
@@ -43,7 +43,7 @@ func TestGetWebhookProvider_RejectsEmptyWebhookSecret(t *testing.T) {
 // correctly-configured path: providers that support webhooks must still return
 // a working webhook provider when a secret is configured.
 func TestGetWebhookProvider_AcceptsNonEmptyWebhookSecret(t *testing.T) {
-	for _, key := range []string{"github", "gitlab"} {
+	for _, key := range []string{"github", "gitlab", "gitea", "forgejo"} {
 		t.Run(key, func(t *testing.T) {
 			provider, err := repository.GetProviderFromCredentials(credentials.Credential{
 				Provider:      key,

@@ -1,0 +1,112 @@
+{
+  "action": "opened",
+  "number": 20,
+  "pull_request": {
+    "id": 101,
+    "url": "https://gitea.example.com/padok-team/burrito-examples/pulls/20",
+    "number": 20,
+    "user": {
+      "id": 3,
+      "login": "padok-team",
+      "login_name": "",
+      "full_name": "",
+      "email": "team@padok.fr",
+      "avatar_url": "https://gitea.example.com/avatars/3"
+    },
+    "title": "Add demo layer",
+    "body": "",
+    "labels": [],
+    "milestone": null,
+    "assignee": null,
+    "assignees": null,
+    "state": "open",
+    "is_locked": false,
+    "comments": 0,
+    "html_url": "https://gitea.example.com/padok-team/burrito-examples/pulls/20",
+    "diff_url": "https://gitea.example.com/padok-team/burrito-examples/pulls/20.diff",
+    "patch_url": "https://gitea.example.com/padok-team/burrito-examples/pulls/20.patch",
+    "mergeable": true,
+    "merged": false,
+    "merged_at": null,
+    "merge_commit_sha": null,
+    "merged_by": null,
+    "base": {
+      "label": "main",
+      "ref": "main",
+      "sha": "5c82d59f27e0b1a5a3f2e4a743ff95a58a09f38b",
+      "repo_id": 37,
+      "repo": {
+        "id": 37,
+        "name": "burrito-examples",
+        "owner": {
+          "id": 3,
+          "login": "padok-team"
+        },
+        "full_name": "padok-team/burrito-examples"
+      }
+    },
+    "head": {
+      "label": "demo",
+      "ref": "demo",
+      "sha": "faf5e25402a9bd10f7318c8a2cd984af576c687f",
+      "repo_id": 37,
+      "repo": {
+        "id": 37,
+        "name": "burrito-examples",
+        "owner": {
+          "id": 3,
+          "login": "padok-team"
+        },
+        "package": null,
+        "full_name": "padok-team/burrito-examples"
+      }
+    },
+    "merge_base": "5c82d59f27e0b1a5a3f2e4a743ff95a58a09f38b",
+    "due_date": null,
+    "created_at": "2026-01-15T11:00:00Z",
+    "updated_at": "2026-01-15T11:00:00Z",
+    "closed_at": null
+  },
+  "repository": {
+    "id": 37,
+    "owner": {
+      "id": 3,
+      "login": "padok-team",
+      "login_name": "",
+      "full_name": "",
+      "email": "team@padok.fr",
+      "avatar_url": "https://gitea.example.com/avatars/3"
+    },
+    "name": "burrito-examples",
+    "full_name": "padok-team/burrito-examples",
+    "description": "",
+    "empty": false,
+    "private": false,
+    "fork": false,
+    "template": false,
+    "parent": null,
+    "mirror": false,
+    "size": 1234,
+    "html_url": "https://gitea.example.com/padok-team/burrito-examples",
+    "ssh_url": "git@gitea.example.com:padok-team/burrito-examples.git",
+    "clone_url": "https://gitea.example.com/padok-team/burrito-examples.git",
+    "original_url": "",
+    "website": "",
+    "stars_count": 1,
+    "forks_count": 2,
+    "watchers_count": 3,
+    "open_issues_count": 0,
+    "open_pr_counter": 1,
+    "default_branch": "main",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2026-01-15T11:00:00Z"
+  },
+  "sender": {
+    "id": 3,
+    "login": "padok-team",
+    "login_name": "",
+    "full_name": "",
+    "email": "team@padok.fr",
+    "avatar_url": "https://gitea.example.com/avatars/3"
+  }
+}
