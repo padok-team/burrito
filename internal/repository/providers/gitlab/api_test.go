@@ -24,8 +24,15 @@ func (c *fakeComment) Generate(commit string) (string, error) {
 	return c.body, nil
 }
 
+// testCurrentUserID is the ID of the Gitlab user of the token in tests.
+const testCurrentUserID = 1
+
 func newTestAPIProvider(t *testing.T, mux *http.ServeMux) *APIProvider {
 	t.Helper()
+	mux.HandleFunc("/api/v4/user", func(w http.ResponseWriter, r *http.Request) {
+		_, err := fmt.Fprintf(w, `{"id": %d}`, testCurrentUserID)
+		require.NoError(t, err)
+	})
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 	client, err := gitlab.NewClient("test-token", gitlab.WithBaseURL(server.URL), gitlab.WithoutRetries())
@@ -85,7 +92,7 @@ func TestAPIProvider_Comment_EditsExistingManagedNote(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes", func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodGet, r.Method)
-		fmt.Fprint(w, `[{"id": 7, "body": "previous body\n\n<!-- burrito:pull-request-comment -->"}]`)
+		fmt.Fprint(w, `[{"id": 7, "author": {"id": 1}, "body": "previous body\n\n<!-- burrito:pull-request-comment -->"}]`)
 	})
 	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes/7", func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodPut, r.Method)
@@ -104,7 +111,7 @@ func TestAPIProvider_Comment_FindsManagedNoteAcrossPages(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("page") == "2" {
-			fmt.Fprint(w, `[{"id": 7, "body": "previous body\n\n<!-- burrito:pull-request-comment -->"}]`)
+			fmt.Fprint(w, `[{"id": 7, "author": {"id": 1}, "body": "previous body\n\n<!-- burrito:pull-request-comment -->"}]`)
 			return
 		}
 		w.Header().Set("X-Next-Page", "2")
@@ -121,6 +128,54 @@ func TestAPIProvider_Comment_FindsManagedNoteAcrossPages(t *testing.T) {
 	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
 	require.NoError(t, err)
 	assert.True(t, edited, "expected the managed note on the second page to be found and edited")
+}
+
+func TestAPIProvider_Comment_IgnoresManagedNoteOfAnotherUser(t *testing.T) {
+	created := false
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			// written by another Burrito instance, with its own token
+			_, err := fmt.Fprint(w, `[{"id": 7, "author": {"id": 2}, "body": "other instance\n\n<!-- burrito:pull-request-comment -->"}]`)
+			require.NoError(t, err)
+		case http.MethodPost:
+			created = true
+			_, err := fmt.Fprint(w, "{}")
+			require.NoError(t, err)
+		default:
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+	})
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes/7", func(w http.ResponseWriter, r *http.Request) {
+		t.Fatalf("the note of another user must not be edited (%s)", r.Method)
+	})
+
+	api := newTestAPIProvider(t, mux)
+	err := api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
+	require.NoError(t, err)
+	assert.True(t, created, "expected a new note instead of editing the note of another user")
+}
+
+func TestAPIProvider_Comment_ReturnsErrorWhenCurrentUserFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/v4/projects/owner%2Frepo/merge_requests/42/notes", func(w http.ResponseWriter, r *http.Request) {
+		t.Fatalf("notes must not be listed without the current user (%s)", r.Method)
+	})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/v4/user" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		mux.ServeHTTP(w, r)
+	}))
+	t.Cleanup(server.Close)
+	client, err := gitlab.NewClient("test-token", gitlab.WithBaseURL(server.URL), gitlab.WithoutRetries())
+	require.NoError(t, err)
+	api := &APIProvider{client: client}
+
+	err = api.Comment(testRepository(), testPullRequest("42"), &fakeComment{body: "hello"})
+	require.Error(t, err)
 }
 
 func TestAPIProvider_ListPullRequests_ReturnsMappedMergeRequests(t *testing.T) {
