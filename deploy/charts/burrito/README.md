@@ -35,13 +35,14 @@ A Helm chart for handling a complete burrito deployment
 | config.burrito.datastore.addr | string | `":8080"` | Datastore exposed port |
 | config.burrito.datastore.hostname | string | `"burrito-datastore.burrito-system.svc.cluster.local"` | Datastore hostname, used by controller, server and runner to reach the datastore |
 | config.burrito.datastore.logFormat | string | `"text"` | Log format for the datastore, either "text" or "json" |
-| config.burrito.datastore.serviceAccounts | list | `[]` | Service accounts that are allowed to access the datastore API in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that) |
+| config.burrito.datastore.serviceAccounts | list | `[]` | Service accounts that are allowed to access the datastore API for every namespace, in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that) |
 | config.burrito.datastore.storage.azure.container | string | `""` | Azure storage container name |
 | config.burrito.datastore.storage.azure.storageAccount | string | `""` | Azure storage account name |
 | config.burrito.datastore.storage.gcs.bucket | string | `""` | GCS bucket name |
 | config.burrito.datastore.storage.mock | bool | `false` | Use in-memory storage for testing - not intended for production use, data will be lost on datastore restart |
 | config.burrito.datastore.storage.s3.bucket | string | `""` | S3 bucket name |
 | config.burrito.datastore.storage.s3.usePathStyle | bool | `false` | S3 option for bucket name in path instead of as subdomain |
+| config.burrito.datastore.tenantServiceAccounts | list | `[]` | Service accounts that are allowed to access the datastore API only for their own namespace, in namespace/name format. Tenant service accounts (including `burrito-runner`) are added automatically |
 | config.burrito.hermitcrab | object | `{}` | Provider cache custom configuration |
 | config.burrito.runner.args | list | `["runner","start"]` | Arguments to pass to the Burrito runner container |
 | config.burrito.runner.command | list | `["burrito"]` | Command to run in the Burrito runner container |
