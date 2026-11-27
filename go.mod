@@ -43,9 +43,9 @@ require (
 	gitlab.com/gitlab-org/api/client-go/v3 v3.15.0
 	golang.org/x/oauth2 v0.37.0
 	google.golang.org/api v0.300.0
-	k8s.io/api v0.37.1
-	k8s.io/apimachinery v0.37.1
-	k8s.io/client-go v0.37.1
+	k8s.io/api v0.37.2
+	k8s.io/apimachinery v0.37.2
+	k8s.io/client-go v0.37.2
 	sigs.k8s.io/controller-runtime v0.25.2
 )
 
