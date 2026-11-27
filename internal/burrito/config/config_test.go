@@ -222,84 +222,97 @@ func TestConfig_EnvVarOverrides(t *testing.T) {
 	assert.Equal(t, expected, cfg)
 }
 
-// TODO: make that test pass
-// func TestConfig_FlagOverrides(t *testing.T) {
-// 	// Read the test configuration file
-// 	configFile, err := os.ReadFile("testdata/test-config-1.yaml")
-// 	if err != nil {
-// 		t.Fatalf("failed to read test configuration file: %v", err)
-// 	}
+// writeTestConfigFile copies testdata/test-config-1.yaml to ./config.yaml, where Load looks
+// for it, and removes it when the test ends.
+func writeTestConfigFile(t *testing.T) {
+	t.Helper()
+	configFile, err := os.ReadFile("testdata/test-config-1.yaml")
+	if err != nil {
+		t.Fatalf("failed to read test configuration file: %v", err)
+	}
+	err = os.WriteFile("config.yaml", configFile, 0644)
+	if err != nil {
+		t.Fatalf("failed to create test configuration file: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := os.Remove("config.yaml"); err != nil {
+			t.Errorf("failed to remove test configuration file: %v", err)
+		}
+	})
+}
 
-// 	err = os.WriteFile("config.yaml", configFile, 0644)
-// 	if err != nil {
-// 		t.Fatalf("failed to create test configuration file: %v", err)
-// 	}
-// 	defer os.Remove("config.yaml")
+// newControllerFlags mimics how cmd/ declares flags: each flag writes straight into the
+// Config field it targets, before Load runs. Load then unmarshals the configuration file
+// and environment variables on top of the struct.
+func newControllerFlags(cfg *config.Config) *pflag.FlagSet {
+	flags := pflag.NewFlagSet("controllers", pflag.ContinueOnError)
+	flags.DurationVar(&cfg.Controller.Timers.DriftDetection, "drift-detection-period", 4*time.Hour, "")
+	flags.DurationVar(&cfg.Controller.Timers.RepositorySync, "repository-sync-period", 5*time.Minute, "")
+	flags.IntVar(&cfg.Controller.TerraformMaxRetries, "terraform-max-retries", 5, "")
+	flags.StringVar(&cfg.Controller.LogFormat, "log-format", "text", "")
+	return flags
+}
 
-// 	// Create an empty test flag set
-// 	flags := pflag.NewFlagSet("controllers", pflag.ContinueOnError)
-// 	flags.String("drift-detection-period", "1m", "drift-detection-period")
+func loadWithArgs(t *testing.T, args []string) *config.Config {
+	t.Helper()
+	cfg := &config.Config{}
+	flags := newControllerFlags(cfg)
+	if err := flags.Parse(args); err != nil {
+		t.Fatalf("failed to parse flags: %v", err)
+	}
+	if err := cfg.Load(flags); err != nil {
+		t.Fatalf("failed to load configuration: %v", err)
+	}
+	return cfg
+}
 
-// 	// Create a test config instance
-// 	cfg := &config.Config{}
+func TestConfig_FlagOverrides(t *testing.T) {
+	t.Run("flag default is kept when neither the config file nor env set the key", func(t *testing.T) {
+		cfg := loadWithArgs(t, nil)
+		assert.Equal(t, 4*time.Hour, cfg.Controller.Timers.DriftDetection)
+		assert.Equal(t, 5*time.Minute, cfg.Controller.Timers.RepositorySync)
+		assert.Equal(t, "text", cfg.Controller.LogFormat)
+	})
 
-// 	// Load the configuration
-// 	err = cfg.Load(flags)
-// 	if err != nil {
-// 		t.Fatalf("failed to load configuration: %v", err)
-// 	}
+	t.Run("explicit flag is used when neither the config file nor env set the key", func(t *testing.T) {
+		writeTestConfigFile(t)
+		// timers.repositorySync is absent from the configuration file.
+		cfg := loadWithArgs(t, []string{"--repository-sync-period=7m"})
+		assert.Equal(t, 7*time.Minute, cfg.Controller.Timers.RepositorySync)
+		// Keys the flags don't target still come from the configuration file.
+		assert.Equal(t, []string{"default", "burrito"}, cfg.Controller.Namespaces)
+	})
 
-// 	// Assert the loaded values
-// 	expected := &config.Config{
-// 		Runner: config.RunnerConfig{
-// 			Action: "apply",
-// 			Layer: config.Layer{
-// 				Name:      "test",
-// 				Namespace: "default",
-// 			},
-// 			Repository: config.RepositoryConfig{
-// 				SSHPrivateKey: "private-key",
-// 				Username:      "test",
-// 				Password:      "password",
-// 			},
-// 			SSHKnownHostsConfigMapName: "burrito-ssh-known-hosts",
-// 		},
-// 		Controller: config.ControllerConfig{
-// 			Namespaces: []string{"default", "burrito"},
-// 			Timers: config.ControllerTimers{
-// 				DriftDetection:     1 * time.Minute,
-// 				OnError:            1 * time.Minute,
-// 				WaitAction:         1 * time.Minute,
-// 				FailureGracePeriod: 15 * time.Second,
-// 			},
-// 			Types: []string{"layer", "repository", "pullrequest"},
-// 			LeaderElection: config.LeaderElectionConfig{
-// 				Enabled: true,
-// 				ID:      "6d185457.terraform.padok.cloud",
-// 			},
-// 			MetricsBindAddress:     ":8080",
-// 			HealthProbeBindAddress: ":8081",
-// 			KubernetesWebhookPort:  9443,
-// 			GithubConfig: config.GithubConfig{
-// 				APIToken: "github-token",
-// 			},
-// 			GitlabConfig: config.GitlabConfig{
-// 				APIToken: "gitlab-token",
-// 				URL:      "https://gitlab.example.com",
-// 			},
-// 		},
-// 		Server: config.ServerConfig{
-// 			Addr: ":8080",
-// 			Webhook: config.WebhookConfig{
-// 				Github: config.WebhookGithubConfig{
-// 					Secret: "github-secret",
-// 				},
-// 				Gitlab: config.WebhookGitlabConfig{
-// 					Secret: "gitlab-secret",
-// 				},
-// 			},
-// 		},
-// 	}
+	t.Run("explicit flag is used when env sets an unrelated key", func(t *testing.T) {
+		t.Setenv("BURRITO_CONTROLLER_LOGFORMAT", "json")
+		cfg := loadWithArgs(t, []string{"--terraform-max-retries=9"})
+		assert.Equal(t, 9, cfg.Controller.TerraformMaxRetries)
+		assert.Equal(t, "json", cfg.Controller.LogFormat)
+	})
+}
 
-// 	assert.Equal(t, expected, cfg)
-// }
+// TestConfig_Precedence pins the current order: environment variable > configuration file >
+// CLI flag (explicit or default). Flags are applied to the struct before Load unmarshals the
+// file and the environment on top, so any key set in the file wins over an explicit flag.
+// Note that this differs from the order stated in #144/#146 (flags above the file).
+func TestConfig_Precedence(t *testing.T) {
+	t.Run("config file overrides an explicit flag", func(t *testing.T) {
+		writeTestConfigFile(t)
+		// timers.driftDetection is 20m in the configuration file.
+		cfg := loadWithArgs(t, []string{"--drift-detection-period=1m"})
+		assert.Equal(t, 20*time.Minute, cfg.Controller.Timers.DriftDetection)
+	})
+
+	t.Run("env overrides an explicit flag", func(t *testing.T) {
+		t.Setenv("BURRITO_CONTROLLER_TERRAFORMMAXRETRIES", "32")
+		cfg := loadWithArgs(t, []string{"--terraform-max-retries=9"})
+		assert.Equal(t, 32, cfg.Controller.TerraformMaxRetries)
+	})
+
+	t.Run("env overrides both the config file and an explicit flag", func(t *testing.T) {
+		writeTestConfigFile(t)
+		t.Setenv("BURRITO_CONTROLLER_TIMERS_DRIFTDETECTION", "10m")
+		cfg := loadWithArgs(t, []string{"--drift-detection-period=1m"})
+		assert.Equal(t, 10*time.Minute, cfg.Controller.Timers.DriftDetection)
+	})
+}
