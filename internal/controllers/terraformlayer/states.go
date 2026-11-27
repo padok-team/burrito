@@ -3,6 +3,7 @@ package terraformlayer
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
@@ -115,6 +116,14 @@ func (s *ApplyNeeded) getHandler() Handler {
 			log.Infof("autoApply is disabled for layer %s, no apply action taken", layer.Name)
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
 		}
+		// Block the apply when nonDestructiveApply is enabled and the last plan would
+		// destroy resources: the layer stays in ApplyNeeded and waits for the next
+		// drift detection, like a layer whose autoApply is disabled.
+		if configv1alpha1.GetNonDestructiveApplyEnabled(repository, layer) && planIsDestructive(layer.Status.LastResult) {
+			log.Infof("nonDestructiveApply is enabled for layer %s and the last plan is destructive, no apply action taken", layer.Name)
+			r.Recorder.Event(layer, corev1.EventTypeNormal, "Reconciliation", "Layer plan contains destructive changes and nonDestructiveApply is enabled, no apply action taken")
+			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.DriftDetection}, nil
+		}
 		// Check for sync windows that would block the apply action
 		if isActionBlocked(r, layer, repository, syncwindow.ApplyAction) {
 			return ctrl.Result{RequeueAfter: r.Config.Controller.Timers.WaitAction}, nil
@@ -187,6 +196,18 @@ func (r *Reconciler) postCommitStatus(ctx context.Context, layer *configv1alpha1
 func getStateString(state State) string {
 	t := strings.Split(fmt.Sprintf("%T", state), ".")
 	return t[len(t)-1]
+}
+
+// destructivePlanRe matches a non-zero delete count in a layer's lastResult
+// summary, e.g. the "3 to delete" of "Plan: 0 to create, 0 to update, 3 to
+// delete" produced by runner.GetDiff. A Replace is counted as a delete there,
+// so a resource replacement is treated as destructive too.
+var destructivePlanRe = regexp.MustCompile(`[1-9][0-9]* to delete`)
+
+// planIsDestructive reports whether a layer's lastResult plan summary destroys
+// at least one resource.
+func planIsDestructive(lastResult string) bool {
+	return destructivePlanRe.MatchString(lastResult)
 }
 
 func isActionBlocked(r *Reconciler, layer *configv1alpha1.TerraformLayer, repository *configv1alpha1.TerraformRepository, action syncwindow.Action) bool {

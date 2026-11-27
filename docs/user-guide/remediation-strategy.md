@@ -8,13 +8,18 @@ The configuration of the `TerraformLayer` will take precedence.
 
 ## `spec.remediationStrategy` API reference
 
-|        Field         |  Type   |                    Default                    |                                  Effect                                   |
-| :------------------: | :-----: | :-------------------------------------------: | :-----------------------------------------------------------------------: |
-|     `autoApply`      | Boolean |                    `false`                    |       If `true` when a `plan` shows drift, it will run an `apply`.        |
-| `onError.maxRetries` | Integer | `5` or value defined in Burrito configuration | How many times Burrito should retry a `plan`/`apply` when a runner fails. |
+|         Field         |  Type   |                    Default                    |                                             Effect                                             |
+| :-------------------: | :-----: | :-------------------------------------------: | :--------------------------------------------------------------------------------------------: |
+|      `autoApply`      | Boolean |                    `false`                    |                     If `true` when a `plan` shows drift, it will run an `apply`.                |
+| `nonDestructiveApply` | Boolean |                    `false`                    | If `true`, Burrito will not run an `apply` when the latest `plan` would destroy any resources. |
+| `onError.maxRetries`  | Integer | `5` or value defined in Burrito configuration |            How many times Burrito should retry a `plan`/`apply` when a runner fails.            |
 
 !!! warning
     This operator is still experimental. Use `spec.remediationStrategy.autoApply: true` at your own risk.
+
+!!! tip
+    On critical layers, combine `autoApply: true` with `nonDestructiveApply: true` to keep drift
+    remediation automated while leaving any `plan` that would delete resources for a human to apply.
 
 ## Example
 
