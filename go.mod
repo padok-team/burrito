@@ -2,7 +2,7 @@ module github.com/padok-team/burrito
 
 go 1.27.0
 
-toolchain go1.27.3
+toolchain go1.27.4
 
 require (
 	cloud.google.com/go/storage v1.69.0
