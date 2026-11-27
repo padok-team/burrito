@@ -7,11 +7,15 @@ import (
 
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/annotations"
+	"github.com/padok-team/burrito/internal/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const managedByLabel = "burrito/managed-by"
 
 type Action string
 
@@ -22,8 +26,28 @@ const (
 
 func GetDefaultLabels(layer *configv1alpha1.TerraformLayer) map[string]string {
 	return map[string]string{
-		"burrito/managed-by": layer.Name,
+		managedByLabel: managedByLabelValue(layer),
 	}
+}
+
+func managedByLabelValue(layer *configv1alpha1.TerraformLayer) string {
+	// Kubernetes label values max out at 63 bytes; a stable hash keeps long
+	// layer names valid while still linking created runs back to the layer.
+	return fmt.Sprintf("layer-%s", utils.ShortHash(fmt.Sprintf("%s/%s", layer.Namespace, layer.Name)))
+}
+
+// managedByLabelSelectorValues returns every "burrito/managed-by" value a run
+// belonging to this layer may carry: the current hash-based value, plus the
+// legacy raw layer name for runs created before that hashing was introduced.
+// The legacy value is only included when it's a valid label value, since a
+// layer name that isn't (the case this hashing fixes) could never have been
+// used as a label before either.
+func managedByLabelSelectorValues(layer *configv1alpha1.TerraformLayer) []string {
+	values := []string{managedByLabelValue(layer)}
+	if len(validation.IsValidLabelValue(layer.Name)) == 0 {
+		values = append(values, layer.Name)
+	}
+	return values
 }
 
 func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, revision string, action Action) configv1alpha1.TerraformRun {
@@ -61,15 +85,12 @@ func (r *Reconciler) getRun(layer *configv1alpha1.TerraformLayer, revision strin
 
 func (r *Reconciler) getAllRuns(ctx context.Context, layer *configv1alpha1.TerraformLayer) ([]*configv1alpha1.TerraformRun, error) {
 	list := &configv1alpha1.TerraformRunList{}
-	labelSelector := labels.NewSelector()
-	for key, value := range GetDefaultLabels(layer) {
-		requirement, err := labels.NewRequirement(key, selection.Equals, []string{value})
-		if err != nil {
-			return []*configv1alpha1.TerraformRun{}, err
-		}
-		labelSelector = labelSelector.Add(*requirement)
+	requirement, err := labels.NewRequirement(managedByLabel, selection.In, managedByLabelSelectorValues(layer))
+	if err != nil {
+		return []*configv1alpha1.TerraformRun{}, err
 	}
-	err := r.Client.List(
+	labelSelector := labels.NewSelector().Add(*requirement)
+	err = r.Client.List(
 		ctx,
 		list,
 		client.MatchingLabelsSelector{Selector: labelSelector},
