@@ -43,6 +43,7 @@ import (
 	"github.com/padok-team/burrito/internal/controllers/terraformrun"
 	datastore "github.com/padok-team/burrito/internal/datastore/client"
 	"github.com/padok-team/burrito/internal/repository/credentials"
+	"github.com/padok-team/burrito/internal/webhook/validating"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
@@ -117,6 +118,12 @@ func (c *Controllers) Exec() {
 		aggregator.Start(context.Background())
 	}()
 	log.Info("Started metrics aggregator")
+
+	// Register the TerraformLayer validating webhook
+	if err := validating.NewTerraformLayerValidator(mgr.GetClient()).SetupWebhookWithManager(mgr); err != nil {
+		log.Fatalf("unable to register validating webhook: %s", err)
+	}
+	log.Info("Registered TerraformLayer validating webhook")
 
 	datastoreClient := datastore.NewDefaultClient(c.config.Datastore)
 	credentialStore := credentials.NewCredentialStore(mgr.GetClient(), c.config.Controller.Timers.CredentialsTTL)
