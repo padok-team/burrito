@@ -117,7 +117,14 @@ func (api *APIProvider) Comment(repository *configv1alpha1.TerraformRepository, 
 	return nil
 }
 
+// findManagedNoteID only returns a managed note written by the token's user: GitLab only lets the
+// author edit a note, and several Burrito instances (one per environment, each with its own token)
+// may comment on the same merge request.
 func (api *APIProvider) findManagedNoteID(projectName string, id int64) (int64, error) {
+	currentUser, _, err := api.client.Users.CurrentUser()
+	if err != nil {
+		return 0, fmt.Errorf("could not get the Gitlab user of the token: %w", err)
+	}
 	opts := &gitlab.ListMergeRequestNotesOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 100,
@@ -129,7 +136,8 @@ func (api *APIProvider) findManagedNoteID(projectName string, id int64) (int64, 
 			return 0, err
 		}
 		for _, existingNote := range notes {
-			if existingNote != nil && comment.HasManagedMarker(existingNote.Body) {
+			if existingNote != nil && existingNote.Author.ID == currentUser.ID &&
+				comment.HasManagedMarker(existingNote.Body) {
 				return existingNote.ID, nil
 			}
 		}
