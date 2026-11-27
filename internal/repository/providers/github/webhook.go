@@ -5,7 +5,7 @@ import (
 	nethttp "net/http"
 	"strconv"
 
-	wh "github.com/go-playground/webhooks/github"
+	wh "github.com/go-playground/webhooks/v6/github"
 
 	"github.com/labstack/gommon/log"
 	utils "github.com/padok-team/burrito/internal/utils/url"

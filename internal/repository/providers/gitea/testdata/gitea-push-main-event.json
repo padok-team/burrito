@@ -1,0 +1,83 @@
+{
+  "ref": "refs/heads/main",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "2ebd0cab3bddb8c4c664b0b2fe8b1a0c6c1c1e1b",
+  "compare_url": "https://gitea.example.com/padok-team/burrito-examples/compare/0000000000000000000000000000000000000000...2ebd0cab3bddb8c4c664b0b2fe8b1a0c6c1c1e1b",
+  "commits": [
+    {
+      "id": "2ebd0cab3bddb8c4c664b0b2fe8b1a0c6c1c1e1b",
+      "message": "Update terraform layers",
+      "url": "https://gitea.example.com/padok-team/burrito-examples/commit/2ebd0cab3bddb8c4c664b0b2fe8b1a0c6c1c1e1b",
+      "author": {
+        "name": "Padobot",
+        "email": "padobot@padok.fr",
+        "username": "padobot"
+      },
+      "committer": {
+        "name": "Padobot",
+        "email": "padobot@padok.fr",
+        "username": "padobot"
+      },
+      "verification": null,
+      "timestamp": "2026-01-15T10:00:00Z",
+      "added": ["modules/random-pets/main.tf"],
+      "removed": [],
+      "modified": ["terragrunt/random-pets/test/inputs.hcl", "modules/random-pets/variables.tf"]
+    }
+  ],
+  "head_commit": null,
+  "repository": {
+    "id": 37,
+    "owner": {
+      "id": 3,
+      "login": "padok-team",
+      "login_name": "",
+      "full_name": "",
+      "email": "team@padok.fr",
+      "avatar_url": "https://gitea.example.com/avatars/3",
+      "is_admin": false
+    },
+    "name": "burrito-examples",
+    "full_name": "padok-team/burrito-examples",
+    "description": "",
+    "empty": false,
+    "private": false,
+    "fork": false,
+    "template": false,
+    "parent": null,
+    "mirror": false,
+    "size": 1234,
+    "html_url": "https://gitea.example.com/padok-team/burrito-examples",
+    "ssh_url": "git@gitea.example.com:padok-team/burrito-examples.git",
+    "clone_url": "https://gitea.example.com/padok-team/burrito-examples.git",
+    "original_url": "",
+    "website": "",
+    "stars_count": 1,
+    "forks_count": 2,
+    "watchers_count": 3,
+    "open_issues_count": 0,
+    "open_pr_counter": 0,
+    "default_branch": "main",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2026-01-15T10:00:00Z",
+    "archived": false
+  },
+  "pusher": {
+    "id": 3,
+    "login": "padok-team",
+    "login_name": "",
+    "full_name": "",
+    "email": "team@padok.fr",
+    "avatar_url": "https://gitea.example.com/avatars/3",
+    "is_admin": false
+  },
+  "sender": {
+    "id": 3,
+    "login": "padok-team",
+    "login_name": "",
+    "full_name": "",
+    "email": "team@padok.fr",
+    "avatar_url": "https://gitea.example.com/avatars/3",
+    "is_admin": false
+  }
+}

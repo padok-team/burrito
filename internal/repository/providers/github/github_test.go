@@ -3,7 +3,7 @@ package github_test
 import (
 	"bytes"
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -16,7 +16,7 @@ import (
 	"github.com/padok-team/burrito/internal/repository/providers/github"
 	"github.com/padok-team/burrito/internal/webhook/event"
 
-	webhook "github.com/go-playground/webhooks/github"
+	webhook "github.com/go-playground/webhooks/v6/github"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,11 +54,11 @@ func TestGithub_GetEventFromWebhookPayload_PushEvent(t *testing.T) {
 
 	req.Header.Set("X-GitHub-Event", "push")
 
-	mac := hmac.New(sha1.New, []byte(secret))
+	mac := hmac.New(sha256.New, []byte(secret))
 	_, err = mac.Write(payloadBytes)
 	assert.NoError(t, err)
 	expectedMac := hex.EncodeToString(mac.Sum(nil))
-	req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha1=%s", expectedMac))
+	req.Header.Set("X-Hub-Signature-256", fmt.Sprintf("sha256=%s", expectedMac))
 
 	parsed, ok := webhookProvider.ParseWebhookPayload(req)
 	assert.True(t, ok)
@@ -108,11 +108,11 @@ func TestGithub_GetEventFromWebhookPayload_PullRequestEvent(t *testing.T) {
 
 	req.Header.Set("X-GitHub-Event", "pull_request")
 
-	mac := hmac.New(sha1.New, []byte(secret))
+	mac := hmac.New(sha256.New, []byte(secret))
 	_, err = mac.Write(payloadBytes)
 	assert.NoError(t, err)
 	expectedMac := hex.EncodeToString(mac.Sum(nil))
-	req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha1=%s", expectedMac))
+	req.Header.Set("X-Hub-Signature-256", fmt.Sprintf("sha256=%s", expectedMac))
 
 	parsed, ok := webhookProvider.ParseWebhookPayload(req)
 	assert.True(t, ok)

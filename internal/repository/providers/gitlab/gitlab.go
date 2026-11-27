@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	wh "github.com/go-playground/webhooks/gitlab"
+	wh "github.com/go-playground/webhooks/v6/gitlab"
 	configv1alpha1 "github.com/padok-team/burrito/api/v1alpha1"
 	"github.com/padok-team/burrito/internal/repository/credentials"
 	"github.com/padok-team/burrito/internal/repository/providers/standard"
