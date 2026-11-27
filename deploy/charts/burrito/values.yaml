@@ -56,8 +56,10 @@ config:
     datastore:
       # -- Log format for the datastore, either "text" or "json"
       logFormat: text
-      # -- Service accounts that are allowed to access the datastore API in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that)
+      # -- Service accounts that are allowed to access the datastore API for every namespace, in namespace/name format (not the service account used by the datastore pods, check datastore.serviceAccount.metadata for that)
       serviceAccounts: []
+      # -- Service accounts that are allowed to access the datastore API only for their own namespace, in namespace/name format. Tenant service accounts (including `burrito-runner`) are added automatically
+      tenantServiceAccounts: []
       storage:
         # -- Use in-memory storage for testing - not intended for production use, data will be lost on datastore restart
         mock: false

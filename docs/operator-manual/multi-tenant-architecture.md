@@ -11,6 +11,8 @@ The setup is split across multiple Kubernetes namespaces:
 
 Thanks to Kubernetes native RBAC system you can restrict access for your users only to the namespaces their burrito resources live.
 
+Tenant service accounts (the default `burrito-runner` and those declared under `tenants[].serviceAccounts`) are registered in the datastore's `tenantServiceAccounts` configuration: they can only read and write datastore artifacts (bundles, logs, plans, state graphs) of their own namespace. Service accounts listed in `config.burrito.datastore.serviceAccounts` (the controllers and the server by default) can access every namespace, so don't add tenant service accounts there.
+
 ## Configuring multi-tenancy with the Helm chart
 
 ### 1. Configure basic tenants
