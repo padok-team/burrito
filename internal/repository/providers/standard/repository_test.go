@@ -206,3 +206,72 @@ func TestBundle_NonDefaultBranch_DirectDescendant(t *testing.T) {
 	assert.Equal(t, commitD, ref.Hash(),
 		"feature branch should point to the new remote tip D after pull, not the stale C (%s)", commitC)
 }
+
+// TestBundle_NonDefaultBranch_UnstagedChanges covers switching to a non-default
+// branch when the cached clone has an unstaged change to a tracked file.
+// Checkout must discard the local change, just like the hard reset that follows.
+func TestBundle_NonDefaultBranch_UnstagedChanges(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git CLI not available")
+	}
+
+	// Commit A on master.
+	remoteDir := t.TempDir()
+	remoteRepo, err := git.PlainInit(remoteDir, false)
+	require.NoError(t, err)
+
+	wt, err := remoteRepo.Worktree()
+	require.NoError(t, err)
+	sig := testSig()
+
+	require.NoError(t, os.WriteFile(filepath.Join(remoteDir, "README.md"), []byte("initial"), 0644))
+	_, err = wt.Add("README.md")
+	require.NoError(t, err)
+	commitA, err := wt.Commit("initial commit", &git.CommitOptions{Author: sig})
+	require.NoError(t, err)
+
+	// Commit B changes the same file on feature, leaving master at A.
+	require.NoError(t, remoteRepo.Storer.SetReference(
+		plumbing.NewHashReference("refs/heads/feature", commitA),
+	))
+	require.NoError(t, wt.Checkout(&git.CheckoutOptions{Branch: "refs/heads/feature"}))
+	require.NoError(t, os.WriteFile(filepath.Join(remoteDir, "README.md"), []byte("feature content"), 0644))
+	_, err = wt.Add("README.md")
+	require.NoError(t, err)
+	commitB, err := wt.Commit("feature commit", &git.CommitOptions{Author: sig})
+	require.NoError(t, err)
+	require.NoError(t, wt.Checkout(&git.CheckoutOptions{Branch: "refs/heads/master"}))
+
+	// Clone on master and leave an unstaged edit in the local worktree.
+	localDir := t.TempDir()
+	cloned, err := git.PlainClone(localDir, false, &git.CloneOptions{URL: remoteDir})
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(localDir, "README.md"), []byte("local edit"), 0644))
+
+	workingDir := t.TempDir()
+	p := &GitProvider{
+		RepoURL:        remoteDir,
+		gitRepository:  cloned,
+		repositoryPath: localDir,
+		workingDir:     workingDir,
+	}
+
+	// Without Force, checkout fails with "worktree contains unstaged changes".
+	_, err = p.Bundle("feature")
+	require.NoError(t, err, "Bundle() on non-default branch should discard unstaged changes")
+
+	ref, err := cloned.Head()
+	require.NoError(t, err)
+	assert.Equal(t, plumbing.NewBranchReferenceName("feature"), ref.Name())
+	assert.Equal(t, commitB, ref.Hash(), "feature branch should point to commit B")
+
+	content, err := os.ReadFile(filepath.Join(localDir, "README.md"))
+	require.NoError(t, err)
+	assert.Equal(t, "feature content", string(content), "worktree should contain the remote branch content")
+
+	localWT, err := cloned.Worktree()
+	require.NoError(t, err)
+	status, err := localWT.Status()
+	require.NoError(t, err)
+	assert.True(t, status.IsClean(), "index and worktree should match HEAD: %s", status)
+}
